@@ -76,19 +76,3 @@ contains
     deallocate(tickArr)
   end subroutine showTicker
 end module TickerType
-
-
-program test
-  use TickerType
-  implicit none
-  type(Ticker) :: testTicker
-  integer :: i
-
-  testTicker = constructTicker(20, 10)
-
-  do i = 1, testTicker%totalTicks
-    call sleep(1)
-    call testTicker%incrementTick
-    call testTicker%showTicker
-  end do
-end program test
