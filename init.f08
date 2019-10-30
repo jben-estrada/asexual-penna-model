@@ -223,7 +223,7 @@ module SaveFormat
   !>  Module containing formats of data files.
   ! -------------------------------------------------------------------------- !
   use UpdateArray, only: arrayInsert, arrayRemoveElem
-  use iso_fortran_env, only: real64
+  use iso_fortran_env, only: real64, int64
   implicit none
   private
 
@@ -258,6 +258,9 @@ module SaveFormat
   
   ! Max character length
   integer, parameter :: MAXLEN = 32
+  ! Default kinds
+  integer, parameter :: writeRealKind = real64
+  integer, parameter :: writeIntKind = int64
 
   ! Population size record. fileCount => 1
   character(len=MAXLEN), parameter :: popFilename = "pop_size_f08.csv"
@@ -467,9 +470,9 @@ contains
   ! === WRITER WRITE ===
   subroutine writer_write_int(self, flag, arg)
     implicit none
-    class(Writer), intent(inout) :: self
-    integer, intent(in)          :: arg
-    integer, intent(in)          :: flag
+    class(Writer), intent(inout)            :: self
+    integer(kind=writeIntKind), intent(in)  :: arg
+    integer, intent(in)                     :: flag
 
     if (.not.any(self%liveFlags == flag)) return
     write(units(flag), formats(flag)) arg
@@ -478,9 +481,9 @@ contains
 
   subroutine writer_write_real(self, flag, arg)
     implicit none
-    class(Writer), intent(inout)  :: self
-    real(kind=real64), intent(in) :: arg
-    integer, intent(in)           :: flag
+    class(Writer), intent(inout)         :: self
+    real(kind=writeRealKind), intent(in) :: arg
+    integer, intent(in)                  :: flag
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -490,9 +493,9 @@ contains
 
   subroutine writer_write_intArray(self, flag, arg)
     implicit none
-    class(Writer), intent(inout) :: self
-    integer, intent(in)          :: arg(:)
-    integer, intent(in)          :: flag
+    class(Writer), intent(inout)           :: self
+    integer(kind=writeIntKind), intent(in) :: arg(:)
+    integer, intent(in)                    :: flag
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -502,9 +505,9 @@ contains
 
   subroutine writer_write_realArray(self, flag, arg)
     implicit none
-    class(Writer), intent(inout)  :: self
-    real(kind=real64), intent(in) :: arg(:)
-    integer, intent(in)           :: flag
+    class(Writer), intent(inout)         :: self
+    real(kind=writeRealKind), intent(in) :: arg(:)
+    integer, intent(in)                  :: flag
 
     if (.not.any(self%liveFlags == flag)) return
 

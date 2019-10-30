@@ -9,17 +9,20 @@ program Main
   use iso_fortran_env, only: real64
   implicit none
 
+  integer, parameter :: timingRealKind = real64  ! Kind for time values.
+
   integer :: timeSteps
   integer :: sampleSize_        ! NOTE: Suffixed with `_` so that they won't be 
   integer :: startPopSize_      !       read by the internal procedures.
   integer :: popArrSize
   integer :: recordFlag_
-  real(kind=real64) :: meanTime
+  real(kind=timingRealKind) :: meanTime
 
   ! Record flags. NOTE: This is different from the flags in the
   ! `Saveformat` module!
-  integer, parameter :: pop_recFlag = 1
-  integer, parameter :: demog_recFlag = 2
+  ! TODO: Allow multiple flags.
+  integer, parameter :: pop_recFlag = 1   ! Record population
+  integer, parameter :: demog_recFlag = 2 ! 
   integer, parameter :: death_recFlag = 3
 
   ! Initialize model parameters
@@ -132,11 +135,11 @@ contains
     integer, intent(in) :: startingPopSize
     integer, intent(in) :: arraySize
     integer, intent(in) :: recordFlag
-    real(kind=real64), intent(out) :: wallTime
+    real(kind=timingRealKind), intent(out) :: wallTime
 
-    real(kind=real64) :: startTime
-    real(kind=real64) :: endTime
-    real(kind=real64) :: sum
+    real(kind=timingRealKind) :: startTime
+    real(kind=timingRealKind) :: endTime
+    real(kind=timingRealKind) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
     type(Ticker) :: runTicker
     integer :: i
@@ -162,8 +165,8 @@ contains
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
     call timeWriter%initialize
-    call timeWriter%write(timeFlag, [real(maxTimeStep, kind=real64), &
-        real(startingPopSize, kind=real64), wallTime])
+    call timeWriter%write(timeFlag, [real(maxTimeStep, kind=timingRealKind), &
+        real(startingPopSize, kind=timingRealKind), wallTime])
     call timeWriter%close
   end subroutine multipleRun
 
