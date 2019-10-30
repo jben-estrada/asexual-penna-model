@@ -34,6 +34,8 @@ program Main
       recordFlag_)
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
+
+  ! Wrap up.
   call deallocVerhulstWeights
 contains
 
