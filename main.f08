@@ -137,13 +137,9 @@ contains
     real(kind=real64) :: endTime
     real(kind=real64) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
-    type(Ticker) :: runTicker     ! `Ticker` object as to show run progress.
     integer :: i
 
     ! Initialize `runTicker`
-    ! print *, 1
-    ! runTicker = constructTicker(20, sampleSize)
-    ! print *, 2
 
     ! Call and time the `run` subroutine
     sum = 0
@@ -152,8 +148,6 @@ contains
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
       call cpu_time(endTime)
       sum = sum + (endTime - startTime)*1e3
-      ! call runTicker%incrementTick
-      ! call runTicker%showTicker
     end do
 
     ! Get average wall time.
