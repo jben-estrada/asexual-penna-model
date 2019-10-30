@@ -155,7 +155,7 @@ contains
     do i = 1, modelParamCount
       select case(i)
       case(1)
-        MODEL_T = values(i)
+        MODEL_L = values(i)
       case(2)
         MODEL_T = values(i)
       case(3)
