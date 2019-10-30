@@ -35,22 +35,19 @@ contains
   end function constructTicker
 
 
-  subroutine incrementTick(self, show, increment)
+  subroutine incrementTick(self, show)
     implicit none
     class(Ticker), intent(inout) :: self
     logical, optional :: show
-    integer, optional :: increment
+    logical :: show_
 
     if (self%index == self%totalTicks) return
 
-    if (present(increment)) then
-      self%index = self%index + increment
-    else
-      self%index = self%index + 1
-    end if
+    self%index = self%index + 1
 
     if (present(show)) then
-      if (show) then
+      show_ = show
+      if (show_) then
         call self%showTicker
       end if
     end if
@@ -76,19 +73,3 @@ contains
     deallocate(tickArr)
   end subroutine showTicker
 end module TickerType
-
-
-program test
-  use TickerType
-  implicit none
-  type(Ticker) :: testTicker
-  integer :: i
-
-  testTicker = constructTicker(20, 10)
-
-  do i = 1, testTicker%totalTicks
-    call sleep(1)
-    call testTicker%incrementTick
-    call testTicker%showTicker
-  end do
-end program test

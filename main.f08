@@ -4,6 +4,7 @@ program Main
   use SaveFormat
   use PersonType
   use Demographics
+  use TickerType
   use Flag, only: ALIVE
   use iso_fortran_env, only: real64
   implicit none
@@ -135,8 +136,14 @@ contains
     real(kind=real64) :: startTime
     real(kind=real64) :: endTime
     real(kind=real64) :: sum
-    type(Writer) :: timeWriter
+    type(Writer) :: timeWriter    ! `Writer` object to write timings stats
+    type(Ticker) :: runTicker     ! `Ticker` object as to show run progress.
     integer :: i
+
+    ! Initialize `runTicker`
+    ! print *, 1
+    ! runTicker = constructTicker(20, sampleSize)
+    ! print *, 2
 
     ! Call and time the `run` subroutine
     sum = 0
@@ -145,11 +152,13 @@ contains
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
       call cpu_time(endTime)
       sum = sum + (endTime - startTime)*1e3
+      ! call runTicker%incrementTick
+      ! call runTicker%showTicker
     end do
 
     ! Get average wall time.
     wallTime = sum/sampleSize
-    print "(a, f10.3, a)", "Average time: ", wallTime, " ms"
+    print "(/a, f10.3, a)", "Average time: ", wallTime, " ms"
 
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
