@@ -252,6 +252,11 @@ contains
   end function getPopArrSize
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initializeRunWriter
+  !>  Initialize a `Writer` object based on the flag `recordFlag` passed. 
+  !   There are three flags: `pop_recFlag`, `demog_recFlag` and `death_recflag`
+  ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
     implicit none
     type(Writer), intent(inout) :: runWriter

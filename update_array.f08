@@ -10,6 +10,11 @@ module UpdateArray
   implicit none
   private
 
+  ! -------------------------------------------------------------------------- !
+  ! GENERIC SUBROUTINE: arrayInsert
+  !>  Insert a number (either integer4 (int32) or real8 (int64)) of either rank
+  !   0 or 1 at the `k`th index of an array of same type. 
+  ! -------------------------------------------------------------------------- !
   interface arrayInsert
     procedure :: arrayInsert_int
     procedure :: arrayInsert_intRange
@@ -17,17 +22,29 @@ module UpdateArray
     procedure :: arrayInsert_realRange
   end interface arrayInsert
 
+  ! -------------------------------------------------------------------------- !
+  ! GENERIC SUBROUTINE: generateIndices
+  !>  Remove the `k`th element of an array.
+  ! -------------------------------------------------------------------------- !
   interface arrayRemove
     procedure :: arrayRemove_int
     procedure :: arrayRemove_real
   end interface arrayRemove
 
+  ! -------------------------------------------------------------------------- !
+  ! GENERIC SUBROUTINE: arrayRemoveRange
+  !>  Remove a range of elements from an array.
+  ! -------------------------------------------------------------------------- !
   interface arrayRemoveRange
     procedure :: arrayRemoveRange_int
     procedure :: arrayRemoveRange_real
   end interface arrayRemoveRange
 
-
+  ! -------------------------------------------------------------------------- !
+  ! GENERIC SUBROUTINE: arrayRemoveElem
+  !>  Remove the specified element from an array. If the element is not found,
+  !   the subroutine passes silently.
+  ! -------------------------------------------------------------------------- !
   interface arrayRemoveElem
     procedure :: arrayRemoveElem_int
     procedure :: arrayRemoveElem_real
@@ -40,7 +57,7 @@ module UpdateArray
   public :: alloc_check
 contains
 
-  ! === ARRAY INSERT ===
+  ! === ARRAY INSERT SPECIFIC PROCEDURES===
   subroutine arrayInsert_int(array, k, newElem)
     implicit none
     integer, allocatable, intent(inout):: array(:)
@@ -216,7 +233,7 @@ contains
     deallocate(temp)
   end subroutine arrayRemove_real
 
-  ! === ARRAY REMOVE RANGE ===
+  ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_int(array, a, b)
     implicit none
     integer, allocatable, intent(inout) :: array(:)
@@ -288,7 +305,7 @@ contains
     deallocate(temp)
   end subroutine arrayRemoveRange_real
 
-  ! === ARRAY REMOVE ELEMENT ===
+  ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_int(array, elem)
     implicit none
     integer, allocatable, intent(inout) :: array(:)
@@ -323,6 +340,12 @@ contains
   end subroutine arrayRemoveElem_real
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: alloc_check
+  !>  Check whether the statements `allocate`, `deallocate` or `move_alloc` are
+  !   run successfully. If they fail, the program is stopped. Otherwise, do
+  !   nothing.
+  ! -------------------------------------------------------------------------- !
   subroutine alloc_check(x)
     implicit none
     integer, intent(in) :: x
