@@ -47,7 +47,7 @@ contains
 
 
   !----------------------------------------------------------------------------!
-  ! SUBROUTINE: incrementTick
+  ! BOUND SUBROUTINE: [Ticker%]incrementTick
   !>  Increment `index` attribute of a `Ticker` type. The increment value can
   !   be optionally changed. It can optionally show the ticker progress as well.
   !----------------------------------------------------------------------------!
@@ -73,7 +73,7 @@ contains
   end subroutine incrementTick
 
   !----------------------------------------------------------------------------!
-  ! SUBROUTINE: showTicker
+  ! BOUND SUBROUTINE: [Ticker%]showTicker
   !>  Show the ticker progres.
   !----------------------------------------------------------------------------!
   subroutine showTicker(self)

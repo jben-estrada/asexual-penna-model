@@ -72,6 +72,10 @@ module Model
   private :: getCharArrayIndex
 contains
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: readIni
+  !>  Read the model parameters from a .ini file.
+  ! -------------------------------------------------------------------------- !
   subroutine readIni
     implicit none
     integer :: status
@@ -116,7 +120,11 @@ contains
     close(modelUnit)
   end subroutine readIni
 
-
+  
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: readVerhulstWeights
+  !>  Read the Verhulst weights values from a .ini file.
+  ! -------------------------------------------------------------------------- !
   subroutine readVerhulstWeights
     implicit none
     ! TODO
@@ -125,12 +133,20 @@ contains
   end subroutine readVerhulstWeights
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: deallocVerhulstWeights
+  !>  Deallocate `MODEL_VERHULST_W` array.
+  ! -------------------------------------------------------------------------- !
   subroutine deallocVerhulstWeights
     implicit none
     if (allocated(MODEL_VERHULST_W)) deallocate(MODEL_VERHULST_W)
   end subroutine deallocVerhulstWeights
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignParameters
+  !>  Assign model parameters from an array of integer `values`.
+  ! -------------------------------------------------------------------------- !
   subroutine assignParameters(values)
     implicit none
     integer, intent(in) :: values(:)
@@ -158,6 +174,12 @@ contains
   end subroutine assignParameters
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getCharArrayIndex
+  !>  Get the corresponding index of `elem` in a rank-1 array of characters
+  !   `elem`. If `elem` is not found in `array`, it returns `nullValue` which
+  !   is set to 0.
+  ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(array, elem) result(i)
     implicit none
     character(len=MAXLEN), intent(in) :: array(:)

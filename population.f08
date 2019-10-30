@@ -86,7 +86,10 @@ contains
     end if
   end subroutine checkDeath
 
-
+  !----------------------------------------------------------------------------!
+  ! FUNCTION: getBinDigit
+  !>  Get the `k`th binary digit of the integer `number`.
+  !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
     implicit none
     integer(kind=stdIntKind), intent(in) :: number
@@ -125,7 +128,11 @@ contains
     end do
   end subroutine checkBirth
 
-
+  !----------------------------------------------------------------------------!
+  ! SUBROUTINE: changePopArraySize
+  !>  Extend the size of `popArray` by some number `sizeChange` to accommodate
+  !   more `Person` objects.
+  !----------------------------------------------------------------------------!
   subroutine changePopArraySize(popArray, sizeChange)
     implicit none
     type(Person), allocatable, intent(inout) :: popArray(:)

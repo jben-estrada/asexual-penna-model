@@ -1,11 +1,19 @@
 module RandInd
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
-  ! Module containing procedures for generating unique set of integers.
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ !
+  !----------------------------------------------------------------------------!
+  ! MODULE:  Module name
+  !----------------------------------------------------------------------------!
+  ! DESCRIPTION: 
+  !>  Module containing procedures for generating array of random integers.
+  !----------------------------------------------------------------------------!
   use PersonType, only: stdIntKind, stdRealKind
   implicit none
 contains
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: generateIndices
+  !>  Generate a rank-1 array of unique integers in the interval [lower, upper].
+  !   The length of the generated array is that of the passed `indices`.
+  ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
     implicit none
     integer(kind=stdIntKind), intent(in) :: upper
@@ -34,6 +42,10 @@ contains
   end subroutine generateIndices
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: generateRandInt
+  !>  Generate a random integer in the interval [a, b].
+  ! -------------------------------------------------------------------------- !
   function generateRandInt(a, b) result(out)
     implicit none
     integer(kind=stdIntKind), intent(in) :: a
