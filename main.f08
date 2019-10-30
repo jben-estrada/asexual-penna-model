@@ -33,6 +33,8 @@ program Main
       recordFlag_)
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
+  
+  call deallocVerhulstWeights
 contains
 
   ! -------------------------------------------------------------------------- !
@@ -113,7 +115,6 @@ contains
     call runWriter%close
     deallocate(currPop, nextPop)
     call deallocDstrb
-    call deallocVerhulstWeights
   end subroutine run
 
 
