@@ -292,8 +292,10 @@ module SaveFormat
   integer, public, parameter :: genomeDstrbFlag = 4
   integer, public, parameter :: deathFlag = 5
 
-  ! `Writer` constructor. NOTE: Fortran Intellisense don't like overloading
-  ! the default constructor (via interface)
+  !----------------------------------------------------------------------------!
+  ! GENERIC SUBROUTINE: constructWriter
+  !>  Construct a `Writer` type.
+  !----------------------------------------------------------------------------!
   interface constructWriter
     procedure :: constructWriter_array
     procedure :: constructWriter_scalar
@@ -301,7 +303,7 @@ module SaveFormat
   public :: constructWriter
 contains
 
-  ! === `Writer` constructor ===
+  ! === `Writer` CONSTRUCTOR PROCEDURES ===
   function constructWriter_array(flags, initialize) result(new)
     integer, intent(in) :: flags(:)
     logical, optional   :: initialize
@@ -353,8 +355,13 @@ contains
     end if
   end function constructWriter_scalar
 
-
-  ! === WRITER INITIALIZE ===
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]initialize
+  !>  Initialize the files specified to be written on. The files are specified
+  !   by the integer `flag`. Optionally, multiple `flag`s can be passed as an
+  !   automatic array of integers.
+  !----------------------------------------------------------------------------!
+  ! === INITIALIZE `Writer` SPECIFIC PROCEDURES === 
   subroutine initializeWriter(filename, unit, position)
     character(len=*), intent(in) :: filename
     character(len=*), intent(in) :: position
@@ -430,7 +437,11 @@ contains
     end do
   end subroutine writer_listInitialize
 
-
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]write
+  !>  Write `arg` into the file specified by `flag`. The procedure can accept
+  !   real and integer arguments of rank 0 or 1.
+  !----------------------------------------------------------------------------!
   ! === WRITER WRITE ===
   subroutine writer_write_int(self, flag, arg)
     implicit none
@@ -478,7 +489,13 @@ contains
     write(units(flag), formats(flag)) arg
   end subroutine writer_write_realArray
 
-  ! === WRITER CLOSE ===
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]close
+  !>  Close a unit for writing files specified by the integer `flag`. To close
+  !   multiple units, a rank-1 array of integers `flags` can be passed. To close
+  !   all units, pass nothing. 
+  !----------------------------------------------------------------------------!
+  ! === WRITER CLOSE SPECIFIC PROCEDURES=== 
   subroutine writer_closeAll(self)
     implicit none
     class(Writer), intent(inout) :: self
@@ -529,7 +546,10 @@ contains
     end do
   end subroutine writer_listclose
 
-
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]destructor
+  !>  Deallocate the allocatable attributes `enabledFlags` and `liveFlags`.
+  !----------------------------------------------------------------------------!
   subroutine destructor(self)
     implicit none
     type(Writer), intent(inout) :: self
