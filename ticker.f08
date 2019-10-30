@@ -41,16 +41,21 @@ contains
     logical, optional :: show
     integer, optional :: increment
 
+    integer :: increment_
+    logical :: show_
+
     if (self%index == self%totalTicks) return
 
     if (present(increment)) then
-      self%index = self%index + increment
+      increment_ = increment
+      self%index = self%index + increment_
     else
       self%index = self%index + 1
     end if
 
     if (present(show)) then
-      if (show) then
+      show_ = show
+      if (show_) then
         call self%showTicker
       end if
     end if

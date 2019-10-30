@@ -154,7 +154,7 @@ contains
 
     ! Get average wall time.
     wallTime = sum/sampleSize
-    print "(a, f10.3, a)", "Average time: ", wallTime, " ms"
+    print "(/a, f10.3, a)", "Average time: ", wallTime, " ms"
 
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
