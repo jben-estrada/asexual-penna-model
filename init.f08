@@ -37,7 +37,6 @@ module Model
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: real64, int64
   implicit none
-
   integer, save :: MODEL_L = 32              ! Genome length (unmodifiable)
   integer, save :: MODEL_T = 3               ! Mutation threshold
   integer, save :: MODEL_B = 1               ! Birth rate
