@@ -34,7 +34,6 @@ program Main
       recordFlag_)
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
-  
   call deallocVerhulstWeights
 contains
 
@@ -137,9 +136,11 @@ contains
     real(kind=real64) :: endTime
     real(kind=real64) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
+    type(Ticker) :: runTicker
     integer :: i
 
     ! Initialize `runTicker`
+    runTicker = constructTicker(20, sampleSize)
 
     ! Call and time the `run` subroutine
     sum = 0
@@ -148,6 +149,8 @@ contains
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
       call cpu_time(endTime)
       sum = sum + (endTime - startTime)*1e3
+      call runTicker%incrementTick
+      call runTicker%showTicker
     end do
 
     ! Get average wall time.
