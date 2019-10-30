@@ -35,19 +35,22 @@ contains
   end function constructTicker
 
 
-  subroutine incrementTick(self, show)
+  subroutine incrementTick(self, show, increment)
     implicit none
     class(Ticker), intent(inout) :: self
     logical, optional :: show
-    logical :: show_
+    integer, optional :: increment
 
     if (self%index == self%totalTicks) return
 
-    self%index = self%index + 1
+    if (present(increment)) then
+      self%index = self%index + increment
+    else
+      self%index = self%index + 1
+    end if
 
     if (present(show)) then
-      show_ = show
-      if (show_) then
+      if (show) then
         call self%showTicker
       end if
     end if
