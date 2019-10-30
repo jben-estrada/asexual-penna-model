@@ -22,8 +22,8 @@ program Main
   ! `Saveformat` module!
   ! TODO: Allow multiple flags.
   integer, parameter :: pop_recFlag = 1   ! Record population
-  integer, parameter :: demog_recFlag = 2 ! 
-  integer, parameter :: death_recFlag = 3
+  integer, parameter :: demog_recFlag = 2 ! Record age and genome demographics
+  integer, parameter :: death_recFlag = 3 ! Record death count
 
   ! Initialize model parameters
   call readIni
@@ -105,7 +105,7 @@ contains
       popSize = popSize + indexOffset
 
       ! Record population size and age demographics
-      call runWriter%write(popFlag, popSize)
+      call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
       call runWriter%write(ageDstrbFlag, demog_ageDstrb)
       call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
 

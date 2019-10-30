@@ -3,7 +3,7 @@ module SaveFormat
   ! MODULE:  SaveFormat
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing formats of data files.
+  !>  Module containing procedures for saving data
   ! -------------------------------------------------------------------------- !
   use UpdateArray, only: arrayInsert, arrayRemoveElem
   use iso_fortran_env, only: real64, int64
