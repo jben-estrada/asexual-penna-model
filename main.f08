@@ -140,7 +140,9 @@ contains
     integer :: i
 
     ! Initialize `runTicker`
-    runTicker = constructTicker(20, sampleSize)
+    ! print *, 1
+    ! runTicker = constructTicker(20, sampleSize)
+    ! print *, 2
 
     ! Call and time the `run` subroutine
     sum = 0
@@ -149,7 +151,8 @@ contains
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
       call cpu_time(endTime)
       sum = sum + (endTime - startTime)*1e3
-      call runTicker%incrementTick(show=.true.)
+      ! call runTicker%incrementTick
+      ! call runTicker%showTicker
     end do
 
     ! Get average wall time.
