@@ -42,8 +42,8 @@ module SaveFormat
   ! Max character length
   integer, parameter :: MAXLEN = 32
   ! Default kinds
-  integer, parameter :: writeRealKind = real64
-  integer, parameter :: writeIntKind = int64
+  integer, public, parameter :: writeRealKind = real64
+  integer, public, parameter :: writeIntKind = int64
 
   ! Population size record. fileCount => 1
   character(len=MAXLEN), parameter :: popFilename = "pop_size_f08.csv"
