@@ -1,2 +1,7 @@
 time_f08.csv
 pop_size_f08.csv
+__sandbox.f08
+/results
+/.vscode
+/__deprecated
+/obj

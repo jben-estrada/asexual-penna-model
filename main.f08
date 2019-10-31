@@ -25,6 +25,10 @@ program Main
   integer, parameter :: demog_recFlag = 2 ! Record age and genome demographics
   integer, parameter :: death_recFlag = 3 ! Record death count
 
+  ! Separator character for pretty printing
+  integer :: k  ! Index var for `separator`
+  character, parameter :: separator(27) = [("=", k = 1, 27)]
+
   ! Initialize model parameters
   call readIni
   call readVerhulstWeights
@@ -37,6 +41,7 @@ program Main
       recordFlag_)
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
+  print "(27(a))", separator
 
   ! Wrap up.
   call deallocVerhulstWeights
@@ -223,7 +228,6 @@ contains
     integer, intent(in) :: arraySize
     integer, intent(in) :: recordFlag
 
-    integer :: i
     logical :: toRecord
 
     if (recordFlag /= nullFlag) then
@@ -232,12 +236,15 @@ contains
       toRecord = .false.
     end if
 
-    print "(a,/*(a))", "Penna model simulation", ("-", i = 1, 27)
+    print "(27(a))", separator 
+    print "(a)", "Penna model simulation"
+    print "(27(a))", separator 
     print "(3(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize, &
         "Array size", arraySize
-    print "(a20, L7/)", "Record result", toRecord
+    print "(a20, L7)", "Record result", toRecord
+    print "(27(a))", separator
   end subroutine printArgs
 
 
