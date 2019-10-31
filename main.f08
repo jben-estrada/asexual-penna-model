@@ -6,10 +6,12 @@ program Main
   use Demographics
   use TickerType
   use Flag, only: ALIVE
-  use iso_fortran_env, only: real64
+  use iso_fortran_env, only: real64, int64
   implicit none
 
-  integer, parameter :: timingRealKind = real64  ! Kind for time values.
+  ! Integer and real kinds for timing vars.
+  integer, parameter :: timingRealKind = real64
+  integer, parameter :: timingIntKind = int64
 
   integer :: timeSteps
   integer :: sampleSize_        ! NOTE: Suffixed with `_` so that they won't be 
@@ -87,7 +89,7 @@ contains
         ! Check for death event
         call checkDeath(currPop(idx), popSize, indexOffset)
 
-        ! Evaluate alive indiv
+        ! Evaluate the alive ones
         if (currPop(idx)%deathIndex == ALIVE) then
           currPop(idx)%age = currPop(idx)%age + 1
           call checkBirth(currPop(idx), idx, popSize, nextPop, indexOffset)
@@ -99,7 +101,7 @@ contains
             call updateGenomeDstrb(currPop(idx)%genome, demog_genomeDstrb)
           end if
 
-          ! Push the alive indiv into the next generation
+          ! Push the alive ones into the next generation
           if (step < maxTimestep) then
             nextPop(idx + indexOffset) = currPop(idx)
           end if
@@ -142,29 +144,42 @@ contains
     integer, intent(in) :: recordFlag
     real(kind=timingRealKind), intent(out) :: wallTime
 
-    real(kind=timingRealKind) :: startTime
-    real(kind=timingRealKind) :: endTime
+    integer(kind=timingIntKind) :: startTimeInt
+    integer(kind=timingIntKind) :: endTimeInt
+    real(kind=timingRealKind) :: startTimeReal
+    real(kind=timingRealKind) :: endTimeReal
+
+    real(kind=timingRealKind) :: clockRate
+
     real(kind=timingRealKind) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
-    type(Ticker) :: runTicker
+    type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar.
     integer :: i
 
     ! Initialize `runTicker`
     runTicker = constructTicker(20, sampleSize)
 
     ! Call and time the `run` subroutine
-    sum = 0
+    sum = 0.
     do i = 1, sampleSize
-      call cpu_time(startTime)
+      ! Start timer
+      call system_clock(count=startTimeInt, count_rate=clockRate)  
+      startTimeReal = real(startTimeInt, kind=timingRealKind)/clockRate
+
+      ! Run the actual simulation
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
-      call cpu_time(endTime)
-      sum = sum + (endTime - startTime)*1e3
+
+      ! End timer
+      call system_clock(count=endTimeInt, count_rate=clockRate)
+      endTimeReal = real(endTimeInt, kind=timingRealKind)/clockRate
+
+      sum = sum + (endTimeReal - startTimeReal)*1e3
       call runTicker%incrementTick
       call runTicker%showTicker
     end do
 
     ! Get average wall time.
-    wallTime = sum/sampleSize
+    wallTime = sum/real(sampleSize, kind=timingRealKind)
     print "(/a, f10.3, a)", "Average time: ", wallTime, " ms"
 
     ! Record mean time.
