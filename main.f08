@@ -39,6 +39,7 @@ program Main
   ! Get sizes of population arrays.
   popArrSize = getPopArrSize(startPopSize_)   ! TODO
 
+  ! Pretty print cmd arguments and some model parameters.
   call printArgs(timeSteps, sampleSize_, startPopSize_, popArrSize, &
       recordFlag_)
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
@@ -153,7 +154,7 @@ contains
 
     real(kind=timingRealKind) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
-    type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar.
+    type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
     integer :: i
 
     ! Initialize `runTicker`
@@ -257,7 +258,7 @@ contains
     print "(3(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize, &
-        "Array size", arraySize
+        "Max pop size", arraySize
     print "(a20, L7)", "Record result", toRecord
     print "(27(a))", separator
   end subroutine printArgs
