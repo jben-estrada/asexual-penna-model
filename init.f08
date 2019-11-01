@@ -37,16 +37,16 @@ module Model
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: real64, int64
   implicit none
-  integer, save :: MODEL_L = 32              ! Genome length (unmodifiable)
-  integer, save :: MODEL_T = 3               ! Mutation threshold
-  integer, save :: MODEL_B = 1               ! Birth rate
-  integer, save :: MODEL_M = 1               ! Mutation rate
-  integer, save :: MODEL_R = 9               ! Reproduction age
-  integer, save :: MODEL_R_MAX = 9           ! Maximum reproduction age
-  integer, save :: MODEL_K = 20000           ! Carrying capacity
-  integer, save :: MODEL_N0_D = 100          ! Default starting pop size
-  integer, save :: MODEL_TIME_STEPS_D = 100  ! Default total time steps
-  real, allocatable, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
+  integer, protected, save :: MODEL_L = 32        ! Genome length (unmodifiable)
+  integer, protected, save :: MODEL_T = 3         ! Mutation threshold
+  integer, protected, save :: MODEL_B = 1         ! Birth rate
+  integer, protected, save :: MODEL_M = 1         ! Mutation rate
+  integer, protected, save :: MODEL_R = 9         ! Reproduction age
+  integer, protected, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
+  integer, protected, save :: MODEL_K = 20000     ! Carrying capacity
+  integer, protected, save :: MODEL_N0_D = 100    ! Starting pop size
+  integer, protected, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
+  real, allocatable, protected, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   ! -------------------------------------------------------------------------- !
   ! Standard integer and real kinds.
   ! NOTE: This does not apply for counter, timing and throwaway variables.
@@ -212,3 +212,11 @@ module Flag
       DEAD_MUTATION, &
       DEAD_VERHULST]
 end module Flag
+
+
+module StdKind
+  implicit none
+  
+contains
+  
+end module StdKind
