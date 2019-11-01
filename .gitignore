@@ -5,3 +5,5 @@ __sandbox.f08
 /.vscode
 /__deprecated
 /obj
+*.mod
+*.smod
