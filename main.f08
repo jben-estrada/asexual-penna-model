@@ -6,7 +6,7 @@ program Main
   use Demographics
   use TickerType
   use Flag, only: ALIVE
-  use StdKind, only: timingIntKind, timingRealKind
+  use StdKind, only: timingIntKind, timingRealKind, writeIntKind
   implicit none
 
   integer :: timeSteps

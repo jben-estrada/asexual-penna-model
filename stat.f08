@@ -7,7 +7,7 @@ module Demographics
   ! -------------------------------------------------------------------------- !
   use Model
   use Gene
-  use StdKind, only: personRealKind
+  use StdKind, only: personRealKind, personIntKind
   implicit none
   integer, parameter :: DEMOG_LAST_STEPS = 300
 
@@ -41,7 +41,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine updateAgeDstrb(age, dstrb)
     implicit none
-    integer(kind=stdIntKind), intent(in) :: age
+    integer(kind=personIntKind), intent(in) :: age
     real(kind=personRealKind), intent(inout) :: dstrb(:)
 
     dstrb(age) = dstrb(age) + 1
@@ -55,9 +55,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome, genomeDstrb)
     implicit none
-    real(kind=stdIntKind), intent(inout) :: genomeDstrb(:)
-    integer(kind=stdIntKind), intent(in) :: genome
-    integer(kind=stdIntKind) :: i
+    real(kind=personIntKind), intent(inout) :: genomeDstrb(:)
+    integer(kind=personIntKind), intent(in) :: genome
+    integer(kind=personIntKind) :: i
 
     do i = 1, MODEL_L
       if (getBinDigit(genome, i) == GENE_UNHEALTHY) then
@@ -69,9 +69,9 @@ contains
 
   function getBinDigit(number, k) result(bit)
     implicit none
-    integer(kind=stdIntKind), intent(in) :: number
-    integer(kind=stdIntKind), intent(in) :: k
-    integer(kind=stdIntKind) :: bit
+    integer(kind=personIntKind), intent(in) :: number
+    integer(kind=personIntKind), intent(in) :: k
+    integer(kind=personIntKind) :: bit
 
     bit = iand(shiftr(number, k - 1), 1)
   end function getBinDigit

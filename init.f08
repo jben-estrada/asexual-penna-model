@@ -208,15 +208,18 @@ end module Flag
 
 
 module StdKind
+  ! -------------------------------------------------------------------------- !
+  ! MODULE:  StdKind
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION: 
+  !>  Module containing standard kinds for variables in related parts.
+  ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: int64, real64
   implicit none
   integer, parameter :: personIntKind = int64
   integer, parameter :: personRealKind = real64
   integer, parameter :: timingRealKind = real64
   integer, parameter :: timingIntKind = int64
-<<<<<<< HEAD
   integer, parameter :: writeRealKind = real64
   integer, parameter :: writeIntKind = int64
-=======
->>>>>>> 89f82b7... Moved timing kinds to StdKind module
 end module StdKind
