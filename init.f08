@@ -48,13 +48,6 @@ module Model
   integer, protected, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
   real, allocatable, protected, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   ! -------------------------------------------------------------------------- !
-  ! Standard integer and real kinds.
-  ! NOTE: This does not apply for counter, timing and throwaway variables.
-  !       This is solely for variables related to gene and genomes.
-  integer, parameter :: stdIntKind = int64
-  integer, parameter :: stdRealKind = real64
-  ! -------------------------------------------------------------------------- !
-
   integer, private, parameter :: modelParamCount = 7
   integer, private, parameter :: MAXLEN = 32
   integer, private, parameter :: nullValue = -1
@@ -62,8 +55,8 @@ module Model
       ["L", "T", "B", "M", "R", "S", "K"]
   character(len=MAXLEN), private, parameter :: endOfList = "//"
 
-  character(len=MAXLEN) :: modelFilename = "model.ini"
-  character(len=MAXLEN) :: vWeightsFilename = "verhulst_weights.ini"
+  character(len=MAXLEN), protected :: modelFilename = "model.ini"
+  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
   integer, private, parameter :: modelUnit = 99
   integer, private, parameter :: vWeightUnit = 98
 
@@ -215,8 +208,8 @@ end module Flag
 
 
 module StdKind
+  use iso_fortran_env, only: int64, real64
   implicit none
-  
-contains
-  
+  integer, parameter :: personIntKind = int64
+  integer, parameter :: personRealKind = real64
 end module StdKind
