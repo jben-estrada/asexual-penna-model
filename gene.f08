@@ -5,12 +5,12 @@ module Gene
   ! DESCRIPTION:
   !>  Module containing gene parameters and procedures for generating genomes.
   ! -------------------------------------------------------------------------- !
-  use Model, only: stdIntKind
+  use StdKind, only: personIntKind
   implicit none
 
-  integer(kind=stdIntKind), parameter :: GENE_HEALTHY = 0
-  integer(kind=stdIntKind), parameter :: GENE_UNHEALTHY = 1
-  integer(kind=stdIntKind), parameter :: GENE_GENES(2) = &
+  integer(kind=personIntKind), parameter :: GENE_HEALTHY = 0
+  integer(kind=personIntKind), parameter :: GENE_UNHEALTHY = 1
+  integer(kind=personIntKind), parameter :: GENE_GENES(2) = &
       [GENE_HEALTHY, GENE_UNHEALTHY]
 contains
 
@@ -21,7 +21,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function Gene_randomGene() result(gene)
     integer :: randIndex
-    integer(kind=stdIntKind) :: gene
+    integer(kind=personIntKind) :: gene
     real    :: rand
     
     call random_number(rand)
@@ -47,7 +47,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function gene_generateGenome(L)
     integer, intent(in) :: L
-    integer(kind=stdIntKind) :: gene_generateGenome(L)
+    integer(kind=personIntKind) :: gene_generateGenome(L)
     integer :: i
     gene_generateGenome = [(GENE_HEALTHY, i = 1, L)]
   end function gene_generateGenome

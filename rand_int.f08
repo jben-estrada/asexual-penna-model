@@ -5,7 +5,7 @@ module RandInd
   ! DESCRIPTION: 
   !>  Module containing procedures for generating array of random integers.
   !----------------------------------------------------------------------------!
-  use PersonType, only: stdIntKind, stdRealKind
+  use StdKind, only: personIntKind, personRealKind
   implicit none
 contains
 
@@ -16,12 +16,12 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
     implicit none
-    integer(kind=stdIntKind), intent(in) :: upper
-    integer(kind=stdIntKind), intent(in) :: lower
-    integer(kind=stdIntKind), intent(out) :: indices(:)
+    integer(kind=personIntKind), intent(in) :: upper
+    integer(kind=personIntKind), intent(in) :: lower
+    integer(kind=personIntKind), intent(out) :: indices(:)
     
-    integer(kind=stdIntKind) :: index
-    real(kind=stdRealKind) :: random
+    integer(kind=personIntKind) :: index
+    real(kind=personRealKind) :: random
     integer :: i
     integer :: L
 
@@ -48,11 +48,11 @@ contains
   ! -------------------------------------------------------------------------- !
   function generateRandInt(a, b) result(out)
     implicit none
-    integer(kind=stdIntKind), intent(in) :: a
-    integer(kind=stdIntKind), intent(in) :: b
-    integer(kind=stdIntKind) :: out
+    integer(kind=personIntKind), intent(in) :: a
+    integer(kind=personIntKind), intent(in) :: b
+    integer(kind=personIntKind) :: out
 
-    real(kind=stdRealKind) :: random
+    real(kind=personRealKind) :: random
   
     call random_number(random)
     out = floor(random*(b - a + 1)) + a

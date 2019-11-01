@@ -7,11 +7,12 @@ module Demographics
   ! -------------------------------------------------------------------------- !
   use Model
   use Gene
+  use StdKind, only: personRealKind
   implicit none
   integer, parameter :: DEMOG_LAST_STEPS = 300
 
-  real(kind=stdRealKind), allocatable, save :: demog_ageDstrb(:) 
-  real(kind=stdRealKind), allocatable, save :: demog_genomeDstrb(:)
+  real(kind=personRealKind), allocatable, save :: demog_ageDstrb(:) 
+  real(kind=personRealKind), allocatable, save :: demog_genomeDstrb(:)
 
   interface writeDemog
     procedure :: writeDemogReal, writeDemogInt
@@ -30,8 +31,8 @@ contains
     if (.not.allocated(demog_genomeDstrb)) then
       allocate(demog_genomeDstrb(MODEL_L))
     end if
-    demog_ageDstrb(:) = 0._stdRealKind
-    demog_genomeDstrb(:) = 0._stdRealKind
+    demog_ageDstrb(:) = 0._personRealKind
+    demog_genomeDstrb(:) = 0._personRealKind
   end subroutine resetDstrbs
 
   ! -------------------------------------------------------------------------- !
@@ -41,7 +42,7 @@ contains
   subroutine updateAgeDstrb(age, dstrb)
     implicit none
     integer(kind=stdIntKind), intent(in) :: age
-    real(kind=stdRealKind), intent(inout) :: dstrb(:)
+    real(kind=personRealKind), intent(inout) :: dstrb(:)
 
     dstrb(age) = dstrb(age) + 1
   end subroutine updateAgeDstrb

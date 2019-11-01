@@ -6,7 +6,7 @@ module SaveFormat
   !>  Module containing procedures for saving data
   ! -------------------------------------------------------------------------- !
   use UpdateArray, only: arrayInsert, arrayRemoveElem
-  use iso_fortran_env, only: real64, int64
+  use StdKind, only: writeIntKind, writeRealKind
   implicit none
   private
 
@@ -41,9 +41,6 @@ module SaveFormat
   
   ! Max character length
   integer, parameter :: MAXLEN = 32
-  ! Default kinds
-  integer, public, parameter :: writeRealKind = real64
-  integer, public, parameter :: writeIntKind = int64
 
   ! Population size record. fileCount => 1
   character(len=MAXLEN), parameter :: popFilename = "pop_size_f08.csv"

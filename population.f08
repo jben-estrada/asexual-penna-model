@@ -5,12 +5,13 @@ module PersonType
   ! DESCRIPTION: 
   !>  Module containing the `Person` derived type.
   ! -------------------------------------------------------------------------- !
-  use Model, only: MODEL_L, stdIntKind, stdRealKind
+  use Model, only: MODEL_L
+  use StdKind, only: personIntKind, personRealKind
   implicit none
 
   type :: Person
-    integer(kind=stdIntKind) :: age
-    integer(kind=stdIntKind) :: genome
+    integer(kind=personIntKind) :: age
+    integer(kind=personIntKind) :: genome
     integer :: deathIndex               ! Only counters
     integer :: mutationCount            ! Only counters
   end type Person
@@ -48,10 +49,10 @@ contains
     integer, intent(inout) :: popSize       ! Counters have default kind.
     type(Person), intent(inout) :: indiv
 
-    integer(kind=stdIntKind) :: nextAge
-    real(kind=stdRealKind) :: verhulstWeight
-    real(kind=stdRealKind) :: verhulstFactor
-    real(kind=stdRealKind) :: random
+    integer(kind=personIntKind) :: nextAge
+    real(kind=personRealKind) :: verhulstWeight
+    real(kind=personRealKind) :: verhulstFactor
+    real(kind=personRealKind) :: random
 
     nextAge = indiv%age + 1                     ! Hypothetical age
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
@@ -92,9 +93,9 @@ contains
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
     implicit none
-    integer(kind=stdIntKind), intent(in) :: number
-    integer(kind=stdIntKind), intent(in) :: k
-    integer(kind=stdIntKind) :: bit
+    integer(kind=personIntKind), intent(in) :: number
+    integer(kind=personIntKind), intent(in) :: k
+    integer(kind=personIntKind) :: bit
 
     bit = iand(shiftr(number, k - 1), 1)
   end function getBinDigit
@@ -170,11 +171,11 @@ contains
   subroutine initializeIndiv(indiv, genome)
     implicit none
     type(Person), intent(inout) :: indiv
-    integer(kind=stdIntKind), intent(in) :: genome
-    integer(kind=stdIntKind) :: mutations(MODEL_M)
+    integer(kind=personIntKind), intent(in) :: genome
+    integer(kind=personIntKind) :: mutations(MODEL_M)
     integer :: i    ! Counters have default kind.
 
-    call generateIndices(1_stdIntKind, int(MODEL_L, kind=stdIntKind), &
+    call generateIndices(1_personIntKind, int(MODEL_L, kind=personIntKind), &
         mutations)
 
     indiv%genome = genome

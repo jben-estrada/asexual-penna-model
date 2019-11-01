@@ -6,12 +6,8 @@ program Main
   use Demographics
   use TickerType
   use Flag, only: ALIVE
-  use iso_fortran_env, only: real64, int64
+  use StdKind, only: timingIntKind, timingRealKind
   implicit none
-
-  ! Integer and real kinds for timing vars.
-  integer, parameter :: timingRealKind = real64
-  integer, parameter :: timingIntKind = int64
 
   integer :: timeSteps
   integer :: sampleSize_        ! NOTE: Suffixed with `_` so that they won't be 

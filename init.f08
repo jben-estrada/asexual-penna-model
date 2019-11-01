@@ -212,4 +212,11 @@ module StdKind
   implicit none
   integer, parameter :: personIntKind = int64
   integer, parameter :: personRealKind = real64
+  integer, parameter :: timingRealKind = real64
+  integer, parameter :: timingIntKind = int64
+<<<<<<< HEAD
+  integer, parameter :: writeRealKind = real64
+  integer, parameter :: writeIntKind = int64
+=======
+>>>>>>> 89f82b7... Moved timing kinds to StdKind module
 end module StdKind
