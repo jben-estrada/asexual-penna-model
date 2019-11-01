@@ -3,8 +3,8 @@ module TickerType
   ! MODULE:  TickerType
   !----------------------------------------------------------------------------!
   ! DESCRIPTION: 
-  !>  Module containing a Ticker derived type for displaying "ticker" or 
-  !   progress bar.
+  !>  Module containing a Ticker derived type for displaying "ticker"
+  !!  or progress bar.
   !----------------------------------------------------------------------------!
   implicit none
   private
@@ -48,8 +48,9 @@ contains
 
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Ticker%]incrementTick
-  !>  Increment `index` attribute of a `Ticker` type. The increment value can
-  !   be optionally changed. It can optionally show the ticker progress as well.
+  !>  Increment `index` attribute of a `Ticker` type. The increment
+  !!  value can be optionally changed. It can optionally show the
+  !!  ticker progress as well.
   !----------------------------------------------------------------------------!
   subroutine incrementTick(self, show, increment)
     implicit none

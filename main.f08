@@ -2,7 +2,7 @@ program Main
   use Model, only: readIni, readVerhulstWeights, deallocVerhulstWeights
   use StdKind, only: timingIntKind, timingRealKind, writeIntKind
   implicit none
-  ! Arguments to run the simulation
+  ! Arguments to run the simulation.
   integer :: timeSteps
   integer :: sampleSize_ 
   integer :: startPopSize_ 
@@ -15,15 +15,15 @@ program Main
   integer, parameter :: demog_recFlag = 2 ! Record age and genome demographics
   integer, parameter :: death_recFlag = 3 ! Record death count
 
-  ! Separator character array for pretty printing
+  ! Separator character array for pretty printing.
   integer :: k  ! Index variable for `separator`
   character, parameter :: separator(27) = [("=", k = 1, 27)]
   
-  ! Initialize model parameters
+  ! Initialize model parameters.
   call readIni
   call readVerhulstWeights
 
-  ! Get command line arguments
+  ! Get command line arguments.
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
   ! Get sizes of population arrays. TODO: Generalize
   popArrSize = getPopArrSize(startPopSize_)
@@ -32,7 +32,7 @@ program Main
   call printArgs(timeSteps, sampleSize_, startPopSize_, popArrSize, &
       recordFlag_)
 
-  ! Simulate the Penna model
+  ! Simulate the Penna model.
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
 
@@ -67,53 +67,53 @@ contains
     integer :: demogStep        ! Index for demographics
     type(Writer) :: runWriter   ! A `Writer` object for recording the run.
 
-    ! Initialize the current population
+    ! Initialize the current population.
     allocate(currPop(arraySize), nextPop(arraySize))
     call generatePopulation(currPop, startPopSize)
 
     ! Initialize variables.
     popSize = startPopSize
     indexOffset = 0
-    call resetDstrbs  ! Initialize demographics
+    call resetDstrbs  ! Initialize demographics.
 
-    ! Initialize writer
+    ! Initialize writer.
     call initializeRunWriter(runWriter, recordFlag)
 
     ! === MAIN LOOP ===
     do step = 1, maxTimestep
       ! === EVALUATE EACH INDIVIDUALS ===
       do idx = 1, popSize
-        ! Check for death event
+        ! Check for death event.
         call checkDeath(currPop(idx), popSize, indexOffset)
 
-        ! Evaluate the alive ones
+        ! Evaluate the alive ones.
         if (currPop(idx)%deathIndex == ALIVE) then
           currPop(idx)%age = currPop(idx)%age + 1
           call checkBirth(currPop(idx), idx, popSize, nextPop, indexOffset)
 
-          ! Record demographics
+          ! Record demographics.
           if (step <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
             demogStep = DEMOG_LAST_STEPS - step + 1
             call updateAgeDstrb(currPop(idx)%age, demog_ageDstrb)
             call updateGenomeDstrb(currPop(idx)%genome, demog_genomeDstrb)
           end if
 
-          ! Push the alive ones into the next generation
+          ! Push the alive ones into the next generation.
           if (step < maxTimestep) then
             nextPop(idx + indexOffset) = currPop(idx)
           end if
         end if
       end do
       ! === EVAL END ===
-      ! Update population size
+      ! Update population size.
       popSize = popSize + indexOffset
 
-      ! Record population size and age demographics
+      ! Record population size and age demographics.
       call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
       call runWriter%write(ageDstrbFlag, demog_ageDstrb)
       call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
 
-      ! Reset variables
+      ! Reset variables.
       currPop = nextPop
       indexOffset = 0
       call resetDstrbs
@@ -155,20 +155,20 @@ contains
     type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
     integer :: i
 
-    ! Initialize `runTicker`
+    ! Initialize `runTicker`.
     runTicker = constructTicker(20, sampleSize)
 
-    ! Call and time the `run` subroutine
+    ! Call and time the `run` subroutine.
     sum = 0.
     do i = 1, sampleSize
-      ! Start timer
+      ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=timingRealKind)/clockRate
 
-      ! Run the actual simulation
+      ! Run the actual simulation.
       call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
 
-      ! End timer
+      ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
       endTimeReal = real(endTimeInt, kind=timingRealKind)/clockRate
 
@@ -206,7 +206,7 @@ contains
     integer :: i, cmdInt, cmdError
     character(len=32) :: cmdArg
 
-    ! Default values for cmd arguments
+    ! Default values for cmd arguments.
     maxTimestep = MODEL_TIME_STEPS_D
     sampleSize = 1
     startPopSize = MODEL_N0_D
@@ -282,8 +282,9 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeRunWriter
-  !>  Initialize a `Writer` object based on the flag `recordFlag` passed. 
-  !   There are three flags: `pop_recFlag`, `demog_recFlag` and `death_recflag`
+  !>  Initialize a `Writer` object based on the flag `recordFlag`
+  !!  passed.  There are three flags: `pop_recFlag`, `demog_recFlag`
+  !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
     use SaveFormat

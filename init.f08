@@ -168,9 +168,9 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: getCharArrayIndex
-  !>  Get the corresponding index of `elem` in a rank-1 array of characters
-  !   `elem`. If `elem` is not found in `array`, it returns `nullValue` which
-  !   is set to 0.
+  !>  Get the corresponding index of `elem` in a rank-1 array of 
+  !!  characters `elem`. If `elem` is not found in `array`, it
+  !!  returns `nullValue` which is set to 0.
   ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(array, elem) result(i)
     implicit none

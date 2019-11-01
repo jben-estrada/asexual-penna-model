@@ -171,7 +171,8 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeIndiv
-  !>  Initialize `indiv` with genes inhereted from another `Person` type.
+  !>  Initialize `indiv` with genes inhereted from another `Person`
+  !!  type.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv, genome)
     use PersonType

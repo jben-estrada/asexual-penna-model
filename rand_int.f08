@@ -3,7 +3,8 @@ module RandInd
   ! MODULE:  Module name
   !----------------------------------------------------------------------------!
   ! DESCRIPTION: 
-  !>  Module containing procedures for generating array of random integers.
+  !>  Module containing procedures for generating array of random
+  !!  integers.
   !----------------------------------------------------------------------------!
   use StdKind, only: personIntKind, personRealKind
   implicit none
@@ -11,8 +12,9 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: generateIndices
-  !>  Generate a rank-1 array of unique integers in the interval [lower, upper].
-  !   The length of the generated array is that of the passed `indices`.
+  !>  Generate a rank-1 array of unique integers in the interval
+  !!  [lower, upper]. The length of the generated array is that of
+  !!  the passed `indices`.
   ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
     implicit none

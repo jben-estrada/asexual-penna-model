@@ -3,7 +3,8 @@ module Gene
   ! MODULE:  Gene
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing gene parameters and procedures for generating genomes.
+  !>  Module containing gene parameters and procedures for generating
+  !!  genomes.
   ! -------------------------------------------------------------------------- !
   use StdKind, only: personIntKind
   implicit none
@@ -16,8 +17,8 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION:  Gene_randomGene
-  !>  Generate a random gene. There is (should be) 1/2 probability of giving
-  !   a healthy or an unhealthy gene.
+  !>  Generate a random gene. There is (should be) 1/2 probability of
+  !!  giving a healthy or an unhealthy gene.
   ! -------------------------------------------------------------------------- !
   function Gene_randomGene() result(gene)
     integer :: randIndex
@@ -33,7 +34,8 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION:  gene_MutatedGene
-  !>  Generate a mutated gene. As of now, it only returns unhealthy genes.
+  !>  Generate a mutated gene. As of now, it only returns unhealthy
+  !!  genes.
   ! -------------------------------------------------------------------------- !
   function gene_MutatedGene() result(gene)
     integer :: gene
