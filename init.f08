@@ -47,16 +47,17 @@ module Model
   integer, protected, save :: MODEL_N0_D = 100    ! Starting pop size
   integer, protected, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
   real, allocatable, protected, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
+
+  integer, private, parameter :: MAXLEN = 32
+  character(len=MAXLEN), protected :: modelFilename = "model.ini"
+  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
   ! -------------------------------------------------------------------------- !
   integer, private, parameter :: modelParamCount = 7
-  integer, private, parameter :: MAXLEN = 32
   integer, private, parameter :: nullValue = -1
   character(len=MAXLEN), private, parameter :: extParamName(modelParamCount) = &
       ["L", "T", "B", "M", "R", "S", "K"]
   character(len=MAXLEN), private, parameter :: endOfList = "//"
 
-  character(len=MAXLEN), protected :: modelFilename = "model.ini"
-  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
   integer, private, parameter :: modelUnit = 99
   integer, private, parameter :: vWeightUnit = 98
 
