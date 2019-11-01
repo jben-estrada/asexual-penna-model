@@ -6,7 +6,7 @@ module UpdateArray
   !>  Module containing procedures for array manipulations which involve
   !   allocations and deallocations.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: real64, int32
+  use StdKind, only: arrayIntKind, arrayRealKind
   implicit none
   private
 
@@ -55,9 +55,6 @@ module UpdateArray
   public :: arrayRemoveRange
   public :: arrayRemoveElem
   public :: alloc_check
-
-  integer, parameter :: arrayRealKind = real64
-  integer, parameter :: arrayIntKind = int32
 contains
 
   ! === ARRAY INSERT SPECIFIC PROCEDURES===

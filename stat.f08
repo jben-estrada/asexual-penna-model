@@ -5,7 +5,7 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Model
+  
   use Gene
   use StdKind, only: personRealKind, personIntKind
   implicit none
@@ -24,6 +24,7 @@ contains
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
   subroutine resetDstrbs
+    use Model, only: MODEL_L
     implicit none
     if (.not.allocated(demog_ageDstrb)) then
       allocate(demog_ageDstrb(0:MODEL_L))
@@ -54,6 +55,7 @@ contains
   !   TODO
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome, genomeDstrb)
+    use Model, only: MODEL_L
     implicit none
     real(kind=personIntKind), intent(inout) :: genomeDstrb(:)
     integer(kind=personIntKind), intent(in) :: genome
@@ -67,6 +69,10 @@ contains
   end subroutine updateGenomeDstrb
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getBinDigit
+  !>  Get the `k`th binary digit of the integer `number`.
+  ! -------------------------------------------------------------------------- !
   function getBinDigit(number, k) result(bit)
     implicit none
     integer(kind=personIntKind), intent(in) :: number
@@ -84,7 +90,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine writeDemogReal(dstrb, unit, format)
     implicit none
-    real(kind=real64), intent(in) :: dstrb
+    real(kind=personRealKind), intent(in) :: dstrb
     character(len=*), intent(in) :: format
     integer, intent(in) :: unit
 

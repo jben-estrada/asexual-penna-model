@@ -1,49 +1,44 @@
 program Main
-  use Pop
-  use Model
-  use SaveFormat
-  use PersonType
-  use Demographics
-  use TickerType
-  use Flag, only: ALIVE
+  use Model, only: readIni, readVerhulstWeights, deallocVerhulstWeights
   use StdKind, only: timingIntKind, timingRealKind, writeIntKind
   implicit none
-
+  ! Arguments to run the simulation
   integer :: timeSteps
-  integer :: sampleSize_        ! NOTE: Suffixed with `_` so that they won't be 
-  integer :: startPopSize_      !       read by the internal procedures.
+  integer :: sampleSize_ 
+  integer :: startPopSize_ 
   integer :: popArrSize
   integer :: recordFlag_
   real(kind=timingRealKind) :: meanTime
 
-  ! Record flags. NOTE: This is different from the flags in the
-  ! `Saveformat` module!
-  ! TODO: Allow multiple flags.
+  ! Record flags. TODO: Allow multiple flags.
   integer, parameter :: pop_recFlag = 1   ! Record population
   integer, parameter :: demog_recFlag = 2 ! Record age and genome demographics
   integer, parameter :: death_recFlag = 3 ! Record death count
 
-  ! Separator character for pretty printing
-  integer :: k  ! Index var for `separator`
+  ! Separator character array for pretty printing
+  integer :: k  ! Index variable for `separator`
   character, parameter :: separator(27) = [("=", k = 1, 27)]
-
+  
   ! Initialize model parameters
   call readIni
   call readVerhulstWeights
+
   ! Get command line arguments
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
-  ! Get sizes of population arrays.
-  popArrSize = getPopArrSize(startPopSize_)   ! TODO
+  ! Get sizes of population arrays. TODO: Generalize
+  popArrSize = getPopArrSize(startPopSize_)
 
   ! Pretty print cmd arguments and some model parameters.
   call printArgs(timeSteps, sampleSize_, startPopSize_, popArrSize, &
       recordFlag_)
+
+  ! Simulate the Penna model
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
-  print "(27(a))", separator
 
   ! Wrap up.
   call deallocVerhulstWeights
+  print "(*(a))", separator
 contains
 
   ! -------------------------------------------------------------------------- !
@@ -51,6 +46,11 @@ contains
   !>  Run the Penna model simulation.
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, arraySize, recordFlag)
+    use Pop
+    use SaveFormat
+    use PersonType
+    use Demographics
+    use Flag, only: ALIVE
     implicit none
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: startPopSize
@@ -133,6 +133,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, arraySize, &
         recordFlag, wallTime)
+    use SaveFormat
+    use TickerType
     implicit none
     integer, intent(in) :: maxTimeStep
     integer, intent(in) :: sampleSize   
@@ -193,6 +195,8 @@ contains
   !>  Get command line arguments.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag)
+    use Model, only: MODEL_TIME_STEPS_D, MODEL_N0_D
+    use SaveFormat, only: nullFlag
     implicit none
     integer, intent(out) :: maxTimestep
     integer, intent(out) :: sampleSize
@@ -233,6 +237,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printArgs(maxTimestep, sampleSize, startPopSize, arraySize, &
         recordFlag)
+    use SaveFormat, only: nullFlag
     implicit none
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: sampleSize
@@ -248,15 +253,15 @@ contains
       toRecord = .false.
     end if
 
-    print "(27(a))", separator 
+    print "(*(a))", separator 
     print "(a)", "Penna model simulation"
-    print "(27(a))", separator 
+    print "(*(a))", separator 
     print "(3(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize, &
         "Max pop size", arraySize
     print "(a20, L7)", "Record result", toRecord
-    print "(27(a))", separator
+    print "(*(a))", separator
   end subroutine printArgs
 
 
@@ -267,6 +272,7 @@ contains
   !  Make a procedure that predicts array size base on the model params
   ! -------------------------------------------------------------------------- !
   function getPopArrSize(startPopSize) result(arrSize)
+    use Model, only: MODEL_L, MODEL_R
     implicit none
     integer, intent(in) :: startPopSize
     integer :: arrSize
@@ -280,6 +286,7 @@ contains
   !   There are three flags: `pop_recFlag`, `demog_recFlag` and `death_recflag`
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
+    use SaveFormat
     implicit none
     type(Writer), intent(inout) :: runWriter
     integer, intent(in) :: recordFlag

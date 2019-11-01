@@ -35,7 +35,6 @@ module Model
   !
   !  NOTE: Parameters with `_D` suffixes are default values
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: real64, int64
   implicit none
   integer, protected, save :: MODEL_L = 32        ! Genome length (unmodifiable)
   integer, protected, save :: MODEL_T = 3         ! Mutation threshold
@@ -215,7 +214,7 @@ module StdKind
   ! DESCRIPTION: 
   !>  Module containing standard kinds for variables in related parts.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: int64, real64
+  use iso_fortran_env, only: int64, int32, real64
   implicit none
   integer, parameter :: personIntKind = int64
   integer, parameter :: personRealKind = real64
@@ -223,4 +222,6 @@ module StdKind
   integer, parameter :: timingIntKind = int64
   integer, parameter :: writeRealKind = real64
   integer, parameter :: writeIntKind = int64
+  integer, parameter :: arrayIntKind = int32
+  integer, parameter :: arrayRealKind = real64
 end module StdKind

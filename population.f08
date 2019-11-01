@@ -25,11 +25,6 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
-  use Model
-  use Gene
-  use Flag
-  use PersonType
-  use RandInd, only: generateIndices
   implicit none
   private
 
@@ -38,12 +33,16 @@ module Pop
   public :: generatePopulation
 contains
 
-
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: checkDeath
   !>  Check whether `indiv` will die in the current time step or not.
   ! -------------------------------------------------------------------------- !
   subroutine checkDeath(indiv, popSize, indexOffset)
+    use Model
+    use Flag
+    use PersonType
+    use Gene, only: GENE_UNHEALTHY
+    use StdKind, only: personIntKind, personRealKind
     implicit none
     integer, intent(inout) :: indexOffset   ! Counters have default kind.
     integer, intent(inout) :: popSize       ! Counters have default kind.
@@ -92,6 +91,7 @@ contains
   !>  Get the `k`th binary digit of the integer `number`.
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
+    use StdKind, only: personIntKind, personRealKind
     implicit none
     integer(kind=personIntKind), intent(in) :: number
     integer(kind=personIntKind), intent(in) :: k
@@ -106,6 +106,8 @@ contains
   !>  Check whether `indiv` will reproduce at the current time step.
   ! -------------------------------------------------------------------------- !
   subroutine checkBirth(indiv, index, popSize, popArray, indexOffset)
+    use Model
+    use PersonType
     implicit none
     type(Person), allocatable, intent(inout) :: popArray(:)
     integer, intent(inout)                   :: indexOffset
@@ -135,6 +137,7 @@ contains
   !   more `Person` objects.
   !----------------------------------------------------------------------------!
   subroutine changePopArraySize(popArray, sizeChange)
+    use PersonType
     implicit none
     type(Person), allocatable, intent(inout) :: popArray(:)
     integer, intent(in) :: sizeChange
@@ -156,6 +159,8 @@ contains
   !>  Initialize `indiv` with a healthy genome.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv)
+    use PersonType
+    use Gene, only: GENE_HEALTHY
     implicit none
     type(Person), intent(inout) :: indiv
 
@@ -169,6 +174,10 @@ contains
   !>  Initialize `indiv` with genes inhereted from another `Person` type.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv, genome)
+    use PersonType
+    use Gene, only: GENE_HEALTHY
+    use Model, only: MODEL_M
+    use RandInd, only: generateIndices
     implicit none
     type(Person), intent(inout) :: indiv
     integer(kind=personIntKind), intent(in) :: genome
@@ -181,7 +190,6 @@ contains
     indiv%genome = genome
     do i = 1, size(mutations)
       if (getBinDigit(indiv%genome, mutations(i)) == GENE_HEALTHY) then
-        ! indiv%genome = indiv%genome + 2**(mutations(i) - 1)
         indiv%genome = ior(indiv%genome, shiftl(1, mutations(i) - 1))
       end if
     end do
@@ -195,6 +203,8 @@ contains
   !>  Assign initial values to the scalar attributes of `indiv`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeScalarAttrs(indiv)
+    use PersonType
+    use Flag, only: ALIVE
     implicit none
     type(Person), intent(inout) :: indiv
 
@@ -209,6 +219,7 @@ contains
   !>  Generate population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(population, startPopSize)
+    use PersonType
     implicit none
     type(Person), intent(inout) :: population(:)
     integer, intent(in) :: startPopSize   ! Counters have default kind.

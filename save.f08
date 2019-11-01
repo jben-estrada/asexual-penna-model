@@ -10,7 +10,7 @@ module SaveFormat
   implicit none
   private
 
-  ! `Writer` derived type. A unified interface for writing files.
+  ! `Writer` derived type. A reusable unified interface for writing files.
   type, public :: Writer
     private
     integer, public, allocatable :: enabledFlags(:)
@@ -106,6 +106,11 @@ module SaveFormat
     procedure :: constructWriter_scalar
   end interface constructWriter
   public :: constructWriter
+
+  interface 
+    module subroutine testSub
+    end subroutine
+  end interface
 contains
 
   ! === `Writer` CONSTRUCTOR PROCEDURES ===
