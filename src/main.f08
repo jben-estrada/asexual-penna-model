@@ -51,6 +51,7 @@ contains
     use PersonType
     use Demographics
     use Flag, only: ALIVE
+    use Model, only: MODEL_K
     implicit none
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: startPopSize
@@ -81,6 +82,13 @@ contains
 
     ! === MAIN LOOP ===
     do step = 1, maxTimestep
+
+      ! Exit from the loop if the population size exceeds the carrying capacity.
+      if (popSize > MODEL_K) then
+        print "(a)", "The population has exceeded the carrying capacity!"
+        exit
+      end if
+
       ! === EVALUATE EACH INDIVIDUALS ===
       do idx = 1, popSize
         ! Check for death event.
