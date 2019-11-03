@@ -99,18 +99,14 @@ module SaveFormat
 
   !----------------------------------------------------------------------------!
   ! GENERIC SUBROUTINE: constructWriter
-  !>  Construct a `Writer` type.
+  !>  Construct a `Writer` object.
   !----------------------------------------------------------------------------!
   interface constructWriter
     procedure :: constructWriter_array
     procedure :: constructWriter_scalar
   end interface constructWriter
-  public :: constructWriter
 
-  interface 
-    module subroutine testSub
-    end subroutine
-  end interface
+  public :: constructWriter
 contains
 
   ! === `Writer` CONSTRUCTOR PROCEDURES ===

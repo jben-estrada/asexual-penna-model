@@ -43,7 +43,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
-  !>  Run the Penna model simulation.
+  !>  Simulate the Penna model.
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, arraySize, recordFlag)
     use Pop
@@ -282,7 +282,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeRunWriter
-  !>  Initialize a `Writer` object based on the flag `recordFlag`
+  !>  Initialize a `Writer` object based on the integer `recordFlag`
   !!  passed.  There are three flags: `pop_recFlag`, `demog_recFlag`
   !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
