@@ -120,9 +120,11 @@ contains
       popSize = popSize + indexOffset
 
       ! Record population size and age demographics.
-      call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
-      call runWriter%write(ageDstrbFlag, demog_ageDstrb)
-      call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
+      if (recordFlag /= nullFlag) then
+        call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
+        call runWriter%write(ageDstrbFlag, demog_ageDstrb)
+        call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
+      end if
 
       ! Reset variables.
       currPop = nextPop

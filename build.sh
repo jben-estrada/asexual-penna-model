@@ -6,17 +6,17 @@ out="penna.exe"
 j=1
 for i in src/*.f08
 do
-  $GF -c $i -J obj/ -o obj/a$j.o
+  $GF -c $i -J obj/ -o obj/a$j.o -O3
   j=$(($j + 1))
 done
 
-# Assemble together object files
+# Link together object files
 assemblestr=$GF
 for i in obj/*.o
 do
   assemblestr+=" $i"
 done
-assemblestr+=" -o $out"
+assemblestr+=" -o $out -O3"
 
 eval $assemblestr
 echo "Building done.."
