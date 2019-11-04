@@ -5,18 +5,24 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  
   use Gene
   use StdKind, only: personRealKind, personIntKind
   implicit none
-  integer, parameter :: DEMOG_LAST_STEPS = 300
+  private
 
-  real(kind=personRealKind), allocatable, save :: demog_ageDstrb(:) 
-  real(kind=personRealKind), allocatable, save :: demog_genomeDstrb(:)
+  real(kind=personRealKind), public, allocatable, save :: demog_ageDstrb(:) 
+  real(kind=personRealKind), public, allocatable, save :: demog_genomeDstrb(:)
+  
+  integer, public, parameter :: DEMOG_LAST_STEPS = 300
 
   interface writeDemog
     procedure :: writeDemogReal, writeDemogInt
   end interface writeDemog
+
+  public :: resetDstrbs
+  public :: updateAgeDstrb
+  public :: updateGenomeDstrb
+  public :: deallocDstrb
 contains
 
   ! -------------------------------------------------------------------------- !

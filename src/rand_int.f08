@@ -8,6 +8,10 @@ module RandInd
   !----------------------------------------------------------------------------!
   use StdKind, only: personIntKind, personRealKind
   implicit none
+  private
+
+  public :: generateIndices
+  public :: generateRandInt
 contains
 
   ! -------------------------------------------------------------------------- !
@@ -18,12 +22,13 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
     implicit none
+
     integer(kind=personIntKind), intent(in) :: upper
     integer(kind=personIntKind), intent(in) :: lower
     integer(kind=personIntKind), intent(out) :: indices(:)
     
     integer(kind=personIntKind) :: index
-    real(kind=personRealKind) :: random
+    real(kind=personRealKind)   :: random
     integer :: i
     integer :: L
 
@@ -50,11 +55,12 @@ contains
   ! -------------------------------------------------------------------------- !
   function generateRandInt(a, b) result(out)
     implicit none
+
     integer(kind=personIntKind), intent(in) :: a
     integer(kind=personIntKind), intent(in) :: b
-    integer(kind=personIntKind) :: out
 
-    real(kind=personRealKind) :: random
+    integer(kind=personIntKind) :: out
+    real(kind=personRealKind)   :: random
   
     call random_number(random)
     out = floor(random*(b - a + 1)) + a

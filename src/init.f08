@@ -36,32 +36,39 @@ module Model
   !  NOTE: Parameters with `_D` suffixes are default values
   ! -------------------------------------------------------------------------- !
   implicit none
-  integer, protected, save :: MODEL_L = 32        ! Genome length (unmodifiable)
-  integer, protected, save :: MODEL_T = 3         ! Mutation threshold
-  integer, protected, save :: MODEL_B = 1         ! Birth rate
-  integer, protected, save :: MODEL_M = 1         ! Mutation rate
-  integer, protected, save :: MODEL_R = 9         ! Reproduction age
-  integer, protected, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
-  integer, protected, save :: MODEL_K = 20000     ! Carrying capacity
-  integer, protected, save :: MODEL_N0_D = 100    ! Starting pop size
-  integer, protected, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
-  real, allocatable, protected, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
+  private
 
-  integer, private, parameter :: MAXLEN = 32
-  character(len=MAXLEN), protected :: modelFilename = "model.ini"
-  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
+  integer, public, save :: MODEL_L = 32        ! Genome length (unmodifiable)
+  integer, public, save :: MODEL_T = 3         ! Mutation threshold
+  integer, public, save :: MODEL_B = 1         ! Birth rate
+  integer, public, save :: MODEL_M = 1         ! Mutation rate
+  integer, public, save :: MODEL_R = 9         ! Reproduction age
+  integer, public, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
+  integer, public, save :: MODEL_K = 20000     ! Carrying capacity
+  integer, public, save :: MODEL_N0_D = 100    ! Starting pop size
+  integer, public, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
+
+  real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   ! -------------------------------------------------------------------------- !
-  integer, private, parameter :: modelParamCount = 7
-  integer, private, parameter :: nullValue = -1
-  character(len=MAXLEN), private, parameter :: extParamName(modelParamCount) = &
+  ! Filenames from which model parameters are obtained.
+  integer, parameter            :: MAXLEN = 32
+  character(len=MAXLEN), public :: modelFilename = "model.ini"
+  character(len=MAXLEN), public :: vWeightsFilename = "verhulst_weights.ini"
+  ! -------------------------------------------------------------------------- !
+  integer, parameter :: modelParamCount = 7
+  integer, parameter :: nullValue = -1
+
+  character(len=MAXLEN), parameter :: extParamName(modelParamCount) = &
       ["L", "T", "B", "M", "R", "S", "K"]
-  character(len=MAXLEN), private, parameter :: endOfList = "//"
+  character(len=MAXLEN), parameter :: endOfList = "//"
 
-  integer, private, parameter :: modelUnit = 99
-  integer, private, parameter :: vWeightUnit = 98
+  ! Units for writing on files.
+  integer, parameter :: modelUnit = 99
+  integer, parameter :: vWeightUnit = 98
 
-  private :: assignParameters
-  private :: getCharArrayIndex
+  public :: readIni
+  public :: readVerhulstWeights
+  public :: deallocVerhulstWeights
 contains
 
   ! -------------------------------------------------------------------------- !
@@ -70,11 +77,13 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine readIni
     implicit none
+
     integer :: status
     integer :: readStatus
     integer :: i
     integer :: values(modelParamCount)
     integer :: tempValue
+
     character(len=MAXLEN) :: key
 
     ! Initialize `value`
@@ -120,6 +129,7 @@ contains
   subroutine readVerhulstWeights
     implicit none
     ! TODO
+  
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
     MODEL_VERHULST_W(:) = 0.
   end subroutine readVerhulstWeights
@@ -131,6 +141,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine deallocVerhulstWeights
     implicit none
+  
     if (allocated(MODEL_VERHULST_W)) deallocate(MODEL_VERHULST_W)
   end subroutine deallocVerhulstWeights
 
@@ -141,8 +152,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignParameters(values)
     implicit none
+
     integer, intent(in) :: values(:)
-    integer :: i
+    integer             :: i
 
     ! NOTE: I can't think of a more elegant solution to this.
     do i = 1, modelParamCount
@@ -174,6 +186,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(array, elem) result(i)
     implicit none
+
     character(len=MAXLEN), intent(in) :: array(:)
     character(len=MAXLEN), intent(in) :: elem
 
@@ -216,6 +229,7 @@ module StdKind
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: int64, int32, real64
   implicit none
+
   integer, parameter :: personIntKind = int64
   integer, parameter :: personRealKind = real64
   integer, parameter :: timingRealKind = real64

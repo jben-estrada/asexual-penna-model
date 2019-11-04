@@ -8,12 +8,13 @@ module PersonType
   use Model, only: MODEL_L
   use StdKind, only: personIntKind, personRealKind
   implicit none
+  private
 
-  type :: Person
+  type, public :: Person
     integer(kind=personIntKind) :: age
     integer(kind=personIntKind) :: genome
-    integer :: deathIndex               ! Only counters
-    integer :: mutationCount            ! Only counters
+    integer                     :: deathIndex     ! Only counters
+    integer                     :: mutationCount  ! Only counters
   end type Person
 end module PersonType
 
@@ -44,14 +45,15 @@ contains
     use Gene, only: GENE_UNHEALTHY
     use StdKind, only: personIntKind, personRealKind
     implicit none
-    integer, intent(inout) :: indexOffset   ! Counters have default kind.
-    integer, intent(inout) :: popSize       ! Counters have default kind.
+
+    integer, intent(inout)      :: indexOffset   ! Counters have default kind.
+    integer, intent(inout)      :: popSize       ! Counters have default kind.
     type(Person), intent(inout) :: indiv
 
     integer(kind=personIntKind) :: nextAge
-    real(kind=personRealKind) :: verhulstWeight
-    real(kind=personRealKind) :: verhulstFactor
-    real(kind=personRealKind) :: random
+    real(kind=personRealKind)   :: verhulstWeight
+    real(kind=personRealKind)   :: verhulstFactor
+    real(kind=personRealKind)   :: random
 
     nextAge = indiv%age + 1                     ! Hypothetical age
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
@@ -93,6 +95,7 @@ contains
   function getBinDigit(number, k) result(bit)
     use StdKind, only: personIntKind, personRealKind
     implicit none
+
     integer(kind=personIntKind), intent(in) :: number
     integer(kind=personIntKind), intent(in) :: k
     integer(kind=personIntKind) :: bit
@@ -109,11 +112,12 @@ contains
     use Model
     use PersonType
     implicit none
+
     type(Person), allocatable, intent(inout) :: popArray(:)
     integer, intent(inout)                   :: indexOffset
-    type(Person), intent(in) :: indiv
-    integer, intent(in)      :: index
-    integer, intent(in)      :: popSize
+    integer, intent(in)                      :: index
+    integer, intent(in)                      :: popSize
+    type(Person), intent(in)                 :: indiv
     integer :: i    ! Counters have default kind.
 
     ! Check for valid age.
@@ -162,6 +166,7 @@ contains
     use PersonType
     use Gene, only: GENE_HEALTHY
     implicit none
+
     type(Person), intent(inout) :: indiv
 
     indiv%genome = GENE_HEALTHY
@@ -177,9 +182,11 @@ contains
   subroutine initializeIndiv(indiv, genome)
     use PersonType
     use Gene, only: GENE_HEALTHY
-    use Model, only: MODEL_M
+    use Model, only: MODEL_M, MODEL_L
     use RandInd, only: generateIndices
+    use StdKind, only: personIntKind, personRealKind
     implicit none
+
     type(Person), intent(inout) :: indiv
     integer(kind=personIntKind), intent(in) :: genome
     integer(kind=personIntKind) :: mutations(MODEL_M)

@@ -10,6 +10,7 @@ module SaveFormat
   implicit none
   private
 
+  ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
   type, public :: Writer
     private
@@ -35,7 +36,7 @@ module SaveFormat
     procedure :: writer_write_intArray
     procedure :: writer_write_realArray
   end type
-
+  ! -------------------------------------------------------------------------- !
   ! Number of Files to save
   integer, public, parameter :: FILECOUNT = 5
   
@@ -73,7 +74,7 @@ module SaveFormat
   character(len=MAXLEN), parameter :: deathFormat = "(i6)"
   character(len=MAXLEN), parameter :: deathPosition = "asis"
   integer, parameter :: deathUnit = 104
-
+  ! -------------------------------------------------------------------------- !
   ! Filename array
   character(len=MAXLEN), parameter :: filenames(FILECOUNT) = &
       [popFilename, timeFilename, ageDstrbFilename, genomeDstrbFilename, &
@@ -88,7 +89,8 @@ module SaveFormat
   ! Unit array
   integer, parameter :: units(FILECOUNT) = &
       [popUnit, timeUnit, ageDstrbUnit, genomeDstrbUnit, deathUnit]
-
+  ! -------------------------------------------------------------------------- !
+  
   ! File flags
   integer, public, parameter :: nullFlag = 0
   integer, public, parameter :: popFlag = 1
@@ -115,8 +117,8 @@ contains
     logical, optional   :: initialize
 
     type(Writer) :: new
-    integer :: i
-    integer :: flag
+    integer      :: i
+    integer      :: flag
 
     allocate(new%enabledFlags(0))
     allocate(new%liveFlags(0))
@@ -169,6 +171,8 @@ contains
   !----------------------------------------------------------------------------!
   ! === INITIALIZE `Writer` SPECIFIC PROCEDURES === 
   subroutine initializeWriter(filename, unit, position)
+    implicit none
+
     character(len=*), intent(in) :: filename
     character(len=*), intent(in) :: position
     integer, intent(in)          :: unit
@@ -209,6 +213,7 @@ contains
 
   subroutine writer_initialize(self, flag)
     implicit none
+
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flag
 
@@ -226,6 +231,7 @@ contains
 
   subroutine writer_listInitialize(self, flags)
     implicit none
+
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flags(:)
 
@@ -251,6 +257,7 @@ contains
   ! === WRITER WRITE ===
   subroutine writer_write_int(self, flag, arg)
     implicit none
+
     class(Writer), intent(inout)            :: self
     integer(kind=writeIntKind), intent(in)  :: arg
     integer, intent(in)                     :: flag
@@ -262,6 +269,7 @@ contains
 
   subroutine writer_write_real(self, flag, arg)
     implicit none
+
     class(Writer), intent(inout)         :: self
     real(kind=writeRealKind), intent(in) :: arg
     integer, intent(in)                  :: flag
@@ -274,6 +282,7 @@ contains
 
   subroutine writer_write_intArray(self, flag, arg)
     implicit none
+
     class(Writer), intent(inout)           :: self
     integer(kind=writeIntKind), intent(in) :: arg(:)
     integer, intent(in)                    :: flag
@@ -286,6 +295,7 @@ contains
 
   subroutine writer_write_realArray(self, flag, arg)
     implicit none
+
     class(Writer), intent(inout)         :: self
     real(kind=writeRealKind), intent(in) :: arg(:)
     integer, intent(in)                  :: flag
@@ -323,6 +333,7 @@ contains
 
   subroutine writer_close(self, flag)
     implicit none
+
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flag
 
@@ -338,8 +349,10 @@ contains
 
   subroutine writer_listclose(self, flags)
     implicit none
+
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flags(:)
+
     integer :: i
 
     do i = 1, size(flags)

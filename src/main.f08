@@ -2,6 +2,7 @@ program Main
   use Model, only: readIni, readVerhulstWeights, deallocVerhulstWeights
   use StdKind, only: timingIntKind, timingRealKind, writeIntKind
   implicit none
+  ! -------------------------------------------------------------------------- !
   ! Arguments to run the simulation.
   integer :: timeSteps
   integer :: sampleSize_ 
@@ -18,7 +19,8 @@ program Main
   ! Separator character array for pretty printing.
   integer :: k  ! Index variable for `separator`
   character, parameter :: separator(27) = [("=", k = 1, 27)]
-  
+  ! -------------------------------------------------------------------------- !
+
   ! Initialize model parameters.
   call readIni
   call readVerhulstWeights
@@ -53,6 +55,7 @@ contains
     use Flag, only: ALIVE
     use Model, only: MODEL_K
     implicit none
+
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: startPopSize
     integer, intent(in) :: arraySize
@@ -61,12 +64,12 @@ contains
     type(Person), allocatable :: currPop(:) ! Current population array
     type(Person), allocatable :: nextPop(:) ! Next population array
 
-    integer :: popSize          ! Current population size
-    integer :: step             ! Time step 
-    integer :: idx              ! Index of individual
-    integer :: indexOffset      ! Offset due to deaths and births
-    integer :: demogStep        ! Index for demographics
-    type(Writer) :: runWriter   ! A `Writer` object for recording the run.
+    type(Writer) :: runWriter     ! A `Writer` object for recording the run.
+    integer      :: popSize       ! Current population size
+    integer      :: step          ! Time step 
+    integer      :: idx           ! Index of individual
+    integer      :: indexOffset   ! Offset due to deaths and births
+    integer      :: demogStep     ! Index for demographics
 
     ! Initialize the current population.
     allocate(currPop(arraySize), nextPop(arraySize))
@@ -153,12 +156,11 @@ contains
 
     integer(kind=timingIntKind) :: startTimeInt
     integer(kind=timingIntKind) :: endTimeInt
-    real(kind=timingRealKind) :: startTimeReal
-    real(kind=timingRealKind) :: endTimeReal
+    real(kind=timingRealKind)   :: startTimeReal
+    real(kind=timingRealKind)   :: endTimeReal
+    real(kind=timingRealKind)   :: clockRate
+    real(kind=timingRealKind)   :: sum
 
-    real(kind=timingRealKind) :: clockRate
-
-    real(kind=timingRealKind) :: sum
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
     type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
     integer :: i
@@ -206,6 +208,7 @@ contains
     use Model, only: MODEL_TIME_STEPS_D, MODEL_N0_D
     use SaveFormat, only: nullFlag
     implicit none
+
     integer, intent(out) :: maxTimestep
     integer, intent(out) :: sampleSize
     integer, intent(out) :: startPopSize
@@ -247,6 +250,7 @@ contains
         recordFlag)
     use SaveFormat, only: nullFlag
     implicit none
+
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: sampleSize
     integer, intent(in) :: startPopSize
@@ -282,8 +286,9 @@ contains
   function getPopArrSize(startPopSize) result(arrSize)
     use Model, only: MODEL_L, MODEL_R
     implicit none
+
     integer, intent(in) :: startPopSize
-    integer :: arrSize
+    integer             :: arrSize
     arrSize = startPopSize*(MODEL_L/MODEL_R + 1) + 1  ! Added an extra space
   end function getPopArrSize
 
@@ -297,8 +302,9 @@ contains
   subroutine initializeRunWriter(runWriter, recordFlag)
     use SaveFormat
     implicit none
+
     type(Writer), intent(inout) :: runWriter
-    integer, intent(in) :: recordFlag
+    integer, intent(in)         :: recordFlag
 
     runWriter = constructWriter([popFlag, ageDstrbFlag, genomeDstrbFlag, &
         deathFlag])
