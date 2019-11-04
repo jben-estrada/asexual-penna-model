@@ -17,7 +17,7 @@ program Main
   integer, parameter :: death_recFlag = 3 ! Record death count
 
   ! Separator character array for pretty printing.
-  integer :: k  ! Index variable for `separator`
+  integer              :: k  ! Index variable for `separator`
   character, parameter :: separator(27) = [("=", k = 1, 27)]
   ! -------------------------------------------------------------------------- !
 
@@ -147,6 +147,7 @@ contains
     use SaveFormat
     use TickerType
     implicit none
+
     integer, intent(in) :: maxTimeStep
     integer, intent(in) :: sampleSize   
     integer, intent(in) :: startingPopSize
@@ -205,7 +206,7 @@ contains
   !>  Get command line arguments.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag)
-    use Model, only: MODEL_TIME_STEPS_D, MODEL_N0_D
+    use Model, only: MODEL_TIME_STEPS, MODEL_N0
     use SaveFormat, only: nullFlag
     implicit none
 
@@ -218,9 +219,9 @@ contains
     character(len=32) :: cmdArg
 
     ! Default values for cmd arguments.
-    maxTimestep = MODEL_TIME_STEPS_D
+    maxTimestep = MODEL_TIME_STEPS
     sampleSize = 1
-    startPopSize = MODEL_N0_D
+    startPopSize = MODEL_N0
     recordFlag = nullFlag
 
     do i = 1, 4

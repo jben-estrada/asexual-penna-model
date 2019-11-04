@@ -45,8 +45,8 @@ module Model
   integer, public, save :: MODEL_R = 9         ! Reproduction age
   integer, public, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
   integer, public, save :: MODEL_K = 20000     ! Carrying capacity
-  integer, public, save :: MODEL_N0_D = 100    ! Starting pop size
-  integer, public, save :: MODEL_TIME_STEPS_D = 100  ! Total time steps
+  integer, public, save :: MODEL_N0 = 100    ! Starting pop size
+  integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
 
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   ! -------------------------------------------------------------------------- !
