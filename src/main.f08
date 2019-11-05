@@ -25,9 +25,8 @@ program Main
   call readIni
   call readVerhulstWeights
 
-  ! Get command line arguments.
+  ! Get command line arguments and pop array size.
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
-  ! Get sizes of population arrays. TODO: Generalize
   popArrSize = getPopArrSize(startPopSize_)
 
   ! Pretty print cmd arguments and some model parameters.
@@ -79,14 +78,11 @@ contains
     popSize = startPopSize
     indexOffset = 0
     call resetDstrbs  ! Initialize demographics.
-
-    ! Initialize writer.
-    call initializeRunWriter(runWriter, recordFlag)
+    call initializeRunWriter(runWriter, recordFlag) ! Initialize writer.
 
     ! === MAIN LOOP ===
     do step = 1, maxTimestep
 
-      ! Exit from the loop if the population size exceeds the carrying capacity.
       if (popSize > MODEL_K) then
         print "(a)", "The population has exceeded the carrying capacity!"
         exit
@@ -94,7 +90,6 @@ contains
 
       ! === EVALUATE EACH INDIVIDUALS ===
       do idx = 1, popSize
-        ! Check for death event.
         call checkDeath(currPop(idx), popSize, indexOffset)
 
         ! Evaluate the alive ones.
@@ -281,7 +276,7 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: getPopArrSize
+  ! FUNCTION: getPopArrSize
   !>  Get the size of the population arrays.
   ! TODO: 
   !  Make a procedure that predicts array size base on the model params

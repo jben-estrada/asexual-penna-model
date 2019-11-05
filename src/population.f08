@@ -120,7 +120,7 @@ contains
     type(Person), intent(in)                 :: indiv
     integer :: i    ! Counters have default kind.
 
-    ! Check for valid age.
+    ! Check for valid reproduction age.
     if (MODEL_R > indiv%age .or. indiv%age > MODEL_R_MAX) return
 
     if (popSize + MODEL_B > size(popArray)) then
@@ -137,8 +137,8 @@ contains
 
   !----------------------------------------------------------------------------!
   ! SUBROUTINE: changePopArraySize
-  !>  Extend the size of `popArray` by some number `sizeChange` to accommodate
-  !   more `Person` objects.
+  !>  Extend the size of `popArray` by some integer `sizeChange` to
+  !!  accommodate more `Person` objects.
   !----------------------------------------------------------------------------!
   subroutine changePopArraySize(popArray, sizeChange)
     use PersonType
@@ -176,7 +176,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeIndiv
-  !>  Initialize `indiv` with genes inhereted from another `Person`
+  !>  Initialize `indiv` with genes inherited from another `Person`
   !!  type.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv, genome)
@@ -208,15 +208,16 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeScalarAttrs
-  !>  Assign initial values to the scalar attributes of `indiv`.
+  !>  Initialize scalar attributes of `indiv`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeScalarAttrs(indiv)
     use PersonType
+    use StdKind, only: personIntKind
     use Flag, only: ALIVE
     implicit none
     type(Person), intent(inout) :: indiv
 
-    indiv%age = 0
+    indiv%age = 0_personIntKind
     indiv%mutationCount = 0
     indiv%deathIndex = ALIVE
   end subroutine initializeScalarAttrs

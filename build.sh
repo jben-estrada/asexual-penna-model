@@ -6,6 +6,7 @@ out="penna.exe"
 j=1
 for i in src/*.f08
 do
+  echo "Compiling '$i'..."
   $GF -c $i -J obj/ -o obj/a$j.o -O3
   j=$(($j + 1))
 done
@@ -18,5 +19,5 @@ do
 done
 assemblestr+=" -o $out -O3"
 
-eval $assemblestr
-echo "Building done.."
+echo "Linking together the object files..."
+eval $assemblestr && echo "Building done.."

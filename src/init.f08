@@ -8,32 +8,32 @@ module Model
   !   Parameters
   !   ----------
   !     L : integer
-  !         Length of genome of each individual.
+  !         Genome length.
   !     T : integer
-  !         Threshold for number of mutations.
+  !         Mutation threshold.
   !     B : integer
-  !         Number of births an individual can give.
+  !         Birth rate.
   !     M : integer
-  !         Number of mutations an individual will incur.
+  !         Number of mutations individuals incur at birth.
   !     R : integer
-  !         The age at which individuals can reproduce.
+  !         The age at which individuals reproduce.
   !     R_max : integer
-  !         The inclusive upper limit age an individual can reproduce.
+  !         The inclusive upper limit of age an individual
+  !         can reproduce.
   !     N_start : integer
   !         Starting population count.
   !     K : integer
   !         Carrying capacity.
   !     Verhulst weight : array[real]
-  !         Weights of the Verhulst factor per age. 
-  !         Modified Verhulst factors become as so.
-  !                         v_i = 1 - (N(t)/K)*w_i
+  !         Weights of the Verhulst factor per age.
+  !         NOTE: Verhulst factor is defined as so
+  !
+  !               V_a = 1 - (N(t)/K)*w_a
   ! 
-  !         where v_k  : Verhulst factor at age `i`.
+  !         where V_a  : Verhulst factor at age `a`.
   !               N(t) : Population size at time `t`.
   !               K    : The carrying capacity.
-  !               w_k  : Verhulst weight at age `i`.
-  !
-  !  NOTE: Parameters with `_D` suffixes are default values
+  !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
   implicit none
   private
@@ -45,7 +45,7 @@ module Model
   integer, public, save :: MODEL_R = 9         ! Reproduction age
   integer, public, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
   integer, public, save :: MODEL_K = 20000     ! Carrying capacity
-  integer, public, save :: MODEL_N0 = 100    ! Starting pop size
+  integer, public, save :: MODEL_N0 = 100      ! Starting pop size
   integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
 
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
@@ -208,6 +208,8 @@ module Flag
   ! DESCRIPTION: 
   !>  Module containing `flags` for indicating an individual's state.
   ! -------------------------------------------------------------------------- !
+  implicit none
+
   integer, parameter :: ALIVE = 1
   integer, parameter :: DEAD_OLD_AGE = 2
   integer, parameter :: DEAD_MUTATION = 3
@@ -229,13 +231,17 @@ module StdKind
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: int64, int32, real64
   implicit none
+  private
 
-  integer, parameter :: personIntKind = int64
-  integer, parameter :: personRealKind = real64
-  integer, parameter :: timingRealKind = real64
-  integer, parameter :: timingIntKind = int64
-  integer, parameter :: writeRealKind = real64
-  integer, parameter :: writeIntKind = int64
-  integer, parameter :: arrayIntKind = int32
-  integer, parameter :: arrayRealKind = real64
+  integer, public, parameter :: personRealKind = real64
+  integer, public, parameter :: personIntKind = int64
+
+  integer, public, parameter :: timingRealKind = real64
+  integer, public, parameter :: timingIntKind = int64
+
+  integer, public, parameter :: writeRealKind = real64
+  integer, public, parameter :: writeIntKind = int64
+
+  integer, public, parameter :: arrayRealKind = real64
+  integer, public, parameter :: arrayIntKind = int32
 end module StdKind

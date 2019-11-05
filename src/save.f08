@@ -111,7 +111,7 @@ module SaveFormat
   public :: constructWriter
 contains
 
-  ! === `Writer` CONSTRUCTOR PROCEDURES ===
+  ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   function constructWriter_array(flags, initialize) result(new)
     integer, intent(in) :: flags(:)
     logical, optional   :: initialize
