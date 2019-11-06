@@ -2,6 +2,7 @@ program Main
   use Model, only: readIni, readVerhulstWeights, deallocVerhulstWeights
   use StdKind, only: timingIntKind, timingRealKind, writeIntKind
   implicit none
+
   ! -------------------------------------------------------------------------- !
   ! Arguments to run the simulation.
   integer :: timeSteps
@@ -29,9 +30,8 @@ program Main
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
   popArrSize = getPopArrSize(startPopSize_)
 
-  ! Pretty print cmd arguments and some model parameters.
-  call printArgs(timeSteps, sampleSize_, startPopSize_, popArrSize, &
-      recordFlag_)
+  ! Pretty print cmd arguments.
+  call printArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
 
   ! Simulate the Penna model.
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
@@ -211,9 +211,11 @@ contains
     integer, intent(out) :: sampleSize
     integer, intent(out) :: startPopSize
     integer, intent(out) :: recordFlag
-
-    integer :: i, cmdInt, cmdError
+    
     character(len=32) :: cmdArg
+    integer           :: cmdInt
+    integer           :: cmdError
+    integer           :: i
 
     ! Default values for cmd arguments.
     maxTimestep = MODEL_TIME_STEPS
@@ -244,15 +246,13 @@ contains
   ! SUBROUTINE: printArgs
   !>  Print various parameters.
   ! -------------------------------------------------------------------------- !
-  subroutine printArgs(maxTimestep, sampleSize, startPopSize, arraySize, &
-        recordFlag)
+  subroutine printArgs(maxTimestep, sampleSize, startPopSize, recordFlag)
     use SaveFormat, only: nullFlag
     implicit none
 
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: sampleSize
     integer, intent(in) :: startPopSize
-    integer, intent(in) :: arraySize
     integer, intent(in) :: recordFlag
 
     logical :: toRecord
@@ -266,10 +266,9 @@ contains
     print "(*(a))", separator 
     print "(a)", "Penna model simulation"
     print "(*(a))", separator 
-    print "(3(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
+    print "(2(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
-        "Starting pop size", startPopSize, &
-        "Max pop size", arraySize
+        "Starting pop size", startPopSize
     print "(a20, L7)", "Record result", toRecord
     print "(*(a))", separator
   end subroutine printArgs
@@ -302,7 +301,7 @@ contains
     implicit none
 
     type(Writer), intent(inout) :: runWriter
-    integer, intent(in)         :: recordFlag
+    integer,      intent(in)    :: recordFlag
 
     runWriter = constructWriter([popFlag, ageDstrbFlag, genomeDstrbFlag, &
         deathFlag])

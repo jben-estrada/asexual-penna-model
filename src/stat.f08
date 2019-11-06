@@ -62,7 +62,6 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: updateGenomeDstrb
   !>  Update the genome demographics.
-  !   TODO
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome, genomeDstrb)
     use Model, only: MODEL_L
@@ -97,7 +96,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writeDemogReal
   !>  Write `dstrb` array of type real(8) to an external file.
-  !   NOTE: DEPRECATED
+  !!  NOTE: DEPRECATED
   ! -------------------------------------------------------------------------- !
   subroutine writeDemogReal(dstrb, unit, format)
     implicit none
@@ -112,7 +111,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writeDemogInt
   !>  Write `dstrb` array of type integer(4) to an external file.
-  !   NOTE: DEPRECATED
+  !!  NOTE: DEPRECATED
   ! -------------------------------------------------------------------------- !
   subroutine writeDemogInt(dstrb, unit, format)
     implicit none

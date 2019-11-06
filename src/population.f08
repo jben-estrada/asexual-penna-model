@@ -46,8 +46,8 @@ contains
     use StdKind, only: personIntKind, personRealKind
     implicit none
 
-    integer, intent(inout)      :: indexOffset   ! Counters have default kind.
-    integer, intent(inout)      :: popSize       ! Counters have default kind.
+    integer,      intent(inout) :: indexOffset   ! Counters have default kind.
+    integer,      intent(inout) :: popSize       ! Counters have default kind.
     type(Person), intent(inout) :: indiv
 
     integer(kind=personIntKind) :: nextAge
@@ -98,7 +98,7 @@ contains
 
     integer(kind=personIntKind), intent(in) :: number
     integer(kind=personIntKind), intent(in) :: k
-    integer(kind=personIntKind) :: bit
+    integer(kind=personIntKind)             :: bit
 
     bit = iand(shiftr(number, k - 1), 1)
   end function getBinDigit
@@ -114,17 +114,18 @@ contains
     implicit none
 
     type(Person), allocatable, intent(inout) :: popArray(:)
-    integer, intent(inout)                   :: indexOffset
-    integer, intent(in)                      :: index
-    integer, intent(in)                      :: popSize
-    type(Person), intent(in)                 :: indiv
+    integer,                   intent(inout) :: indexOffset
+    integer,                   intent(in)    :: index
+    integer,                   intent(in)    :: popSize
+    type(Person),              intent(in)    :: indiv
     integer :: i    ! Counters have default kind.
 
     ! Check for valid reproduction age.
     if (MODEL_R > indiv%age .or. indiv%age > MODEL_R_MAX) return
 
     if (popSize + MODEL_B > size(popArray)) then
-      print *, "***Population size will exceed the initially allotted size."
+      print "(2(a), i10)", "***Population size will exceed the initially", &
+          " allotted size. Initial max size: ", size(popArray)
       call changePopArraySize(popArray, MODEL_B) 
     end if
 
@@ -144,10 +145,10 @@ contains
     use PersonType
     implicit none
     type(Person), allocatable, intent(inout) :: popArray(:)
-    integer, intent(in) :: sizeChange
+    integer,                   intent(in)    :: sizeChange
 
     type(Person), allocatable :: temp(:)
-    integer :: oldSize
+    integer                   :: oldSize
 
     oldSize = size(popArray)
     call move_alloc(popArray, temp)
@@ -157,7 +158,7 @@ contains
     deallocate(temp)
   end subroutine changePopArraySize
 
-
+  
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
   !>  Initialize `indiv` with a healthy genome.
@@ -166,7 +167,6 @@ contains
     use PersonType
     use Gene, only: GENE_HEALTHY
     implicit none
-
     type(Person), intent(inout) :: indiv
 
     indiv%genome = GENE_HEALTHY
@@ -187,9 +187,9 @@ contains
     use StdKind, only: personIntKind, personRealKind
     implicit none
 
-    type(Person), intent(inout) :: indiv
-    integer(kind=personIntKind), intent(in) :: genome
-    integer(kind=personIntKind) :: mutations(MODEL_M)
+    type(Person),                intent(inout) :: indiv
+    integer(kind=personIntKind), intent(in)    :: genome
+    integer(kind=personIntKind)                :: mutations(MODEL_M)
     integer :: i    ! Counters have default kind.
 
     call generateIndices(1_personIntKind, int(MODEL_L, kind=personIntKind), &
@@ -231,8 +231,9 @@ contains
     use PersonType
     implicit none
     type(Person), intent(inout) :: population(:)
-    integer, intent(in) :: startPopSize   ! Counters have default kind.
-    integer :: i                          ! Counters have default kind.
+    integer,      intent(in)    :: startPopSize   ! Counters have default kind.
+
+    integer :: i  ! Counters have default kind.
 
     do i = 1, startPopSize
       call initializeHealthyIndiv(population(i))

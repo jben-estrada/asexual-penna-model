@@ -21,9 +21,9 @@ contains
   !!  giving a healthy or an unhealthy gene.
   ! -------------------------------------------------------------------------- !
   function Gene_randomGene() result(gene)
-    integer :: randIndex
     integer(kind=personIntKind) :: gene
-    real    :: rand
+    integer                     :: randIndex
+    real                        :: rand
     
     call random_number(rand)
 
@@ -48,9 +48,10 @@ contains
   !>  Generate an array of genes of length `L`.
   ! -------------------------------------------------------------------------- !
   function gene_generateGenome(L)
-    integer, intent(in) :: L
+    integer, intent(in)         :: L
     integer(kind=personIntKind) :: gene_generateGenome(L)
-    integer :: i
+    integer                     :: i
+
     gene_generateGenome = [(GENE_HEALTHY, i = 1, L)]
   end function gene_generateGenome
 end module Gene

@@ -271,8 +271,8 @@ contains
     implicit none
 
     class(Writer), intent(inout)         :: self
-    real(kind=writeRealKind), intent(in) :: arg
     integer, intent(in)                  :: flag
+    real(kind=writeRealKind), intent(in) :: arg
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -284,8 +284,8 @@ contains
     implicit none
 
     class(Writer), intent(inout)           :: self
-    integer(kind=writeIntKind), intent(in) :: arg(:)
     integer, intent(in)                    :: flag
+    integer(kind=writeIntKind), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -297,8 +297,8 @@ contains
     implicit none
 
     class(Writer), intent(inout)         :: self
-    real(kind=writeRealKind), intent(in) :: arg(:)
     integer, intent(in)                  :: flag
+    real(kind=writeRealKind), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
