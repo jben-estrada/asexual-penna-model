@@ -113,6 +113,7 @@ contains
 
   ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   function constructWriter_array(flags, initialize) result(new)
+    implicit none
     integer, intent(in) :: flags(:)
     logical, optional   :: initialize
 
@@ -141,6 +142,7 @@ contains
 
 
   function constructWriter_scalar(flag, initialize) result(new)
+    implicit none
     integer, intent(in) :: flag
     logical, optional   :: initialize
 

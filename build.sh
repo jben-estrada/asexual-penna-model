@@ -1,6 +1,6 @@
 #!/bin/bash
 GF=gfortran-8
-out="penna.exe"
+out="penna.out"
 
 # Compile .f08 files
 j=1
@@ -19,5 +19,5 @@ do
 done
 assemblestr+=" -o $out -O3"
 
-echo "Linking together the object files..."
+echo "Linking the object files together..."
 eval $assemblestr && echo "Building done.."
