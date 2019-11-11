@@ -12,11 +12,12 @@ def read_file(filename):
 
 def main():
     data = read_file('pop_size_f08.csv')
-    steps = linspace(1, len(data), len(data)//5 + 1, dtype=int)
     plt.plot(data, '.')
-    plt.xticks(steps, rotation=45)
+    # steps = linspace(1, len(data), len(data)//5 + 1, dtype=int)
+    # plt.xticks(steps, rotation=45)
     plt.grid('minor')
     plt.xlim(1, len(data))
+    plt.ylim(0, max(data)*1.1)
     plt.savefig('./results/pop_size.png', dpi=100, bbox_inches='tight')
 
 if __name__ == '__main__':
