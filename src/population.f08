@@ -59,7 +59,7 @@ contains
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
 
     ! ***Death check: Old age
-    if (nextAge > MODEL_L) then
+    if (nextAge >= MODEL_L) then
       indiv%deathIndex = DEAD_OLD_AGE
       indexOffset = indexOffset - 1
       return

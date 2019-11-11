@@ -7,7 +7,7 @@ j=1
 for i in src/*.f08
 do
   echo "Compiling '$i'..."
-  $GF -c $i -J obj/ -Ofast -o obj/a$j.o
+  $GF -c $i -J obj/ -O3 -o obj/a$j.o
   j=$(($j + 1))
 done
 
@@ -17,7 +17,7 @@ for i in obj/*.o
 do
   assemblestr+=" $i"
 done
-assemblestr+=" -Ofast -o $out"
+assemblestr+=" -O3 -o $out"
 
 echo "Linking object files together..."
 eval $assemblestr && echo "Building done.."
