@@ -89,7 +89,7 @@ contains
     integer(kind=personIntKind), intent(in) :: k
     integer(kind=personIntKind)             :: bit
 
-    bit = iand(shiftr(number, k - 1), 1)
+    bit = iand(shiftr(number, k - 1), 1_personIntKind)
   end function getBinDigit
 
 

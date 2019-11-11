@@ -100,7 +100,7 @@ contains
     integer(kind=personIntKind), intent(in) :: k
     integer(kind=personIntKind)             :: bit
 
-    bit = iand(shiftr(number, k - 1), 1)
+    bit = iand(shiftr(number, k - 1), 1_personIntKind)
   end function getBinDigit
 
 
@@ -198,7 +198,8 @@ contains
     indiv%genome = genome
     do i = 1, size(mutations)
       if (getBinDigit(indiv%genome, mutations(i)) == GENE_HEALTHY) then
-        indiv%genome = ior(indiv%genome, shiftl(1, mutations(i) - 1))
+        indiv%genome = ior(indiv%genome, int(shiftl(1, mutations(i) - 1), &
+            kind=personIntKind))
       end if
     end do
 
