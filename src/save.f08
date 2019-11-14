@@ -168,9 +168,9 @@ contains
 
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]initialize
-  !>  Initialize the files specified to be written on. The files are
-  !!  specified by the integer `flag`. Optionally, multiple `flag`s
-  !!  can be passed as an automatic array of integers.
+  !>  Initialize the files specified to be written in. The files are
+  !!  specified by the integer `flag`. Multiple `flag`s can also be
+  !!  as an automatic array of integers.
   !----------------------------------------------------------------------------!
   ! === INITIALIZE `Writer` SPECIFIC PROCEDURES === 
   subroutine initializeWriter(filename, unit, position)
@@ -256,7 +256,7 @@ contains
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]write
   !>  Write `arg` into the file specified by `flag`. The procedure
-  !!  accepts real or integer arguments of rank 0 or 1.
+  !!  accepts real or integer arguments of either rank 0 or 1.
   !----------------------------------------------------------------------------!
   ! === WRITER WRITE ===
   subroutine writer_write_int(self, flag, arg)
