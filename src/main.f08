@@ -1,5 +1,5 @@
 program Main
-  use Model, only: readIni, readVerhulstWeights, deallocVerhulstWeights
+  use Model, only: readModelParam, deallocVerhulstWeights
   use StdKind, only: timingRealKind
   use Penna
   implicit none
@@ -18,8 +18,7 @@ program Main
   ! -------------------------------------------------------------------------- !
 
   ! Initialize model parameters.
-  call readIni
-  call readVerhulstWeights
+  call readModelParam
 
   ! Get command line arguments and pop array size.
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
@@ -28,7 +27,7 @@ program Main
   ! Pretty print cmd arguments.
   call printArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
 
-  ! Simulate the Penna model.
+  ! Run the Penna model multiple times.
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
 

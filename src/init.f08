@@ -51,9 +51,9 @@ module Model
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  integer, parameter            :: MAXLEN = 32
-  character(len=MAXLEN), public :: modelFilename = "model.ini"
-  character(len=MAXLEN), public :: vWeightsFilename = "verhulst_weights.ini"
+  integer, parameter              :: MAXLEN = 32
+  character(len=MAXLEN), protected :: modelFilename = "model.ini"
+  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
   ! -------------------------------------------------------------------------- !
   integer, parameter :: modelParamCount = 7
   integer, parameter :: nullValue = -1
@@ -66,16 +66,29 @@ module Model
   integer, parameter :: modelUnit = 99
   integer, parameter :: vWeightUnit = 98
 
-  public :: readIni
+  public :: readModelParam
   public :: readVerhulstWeights
   public :: deallocVerhulstWeights
 contains
 
+
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readIni
-  !>  Read the model parameters from a .ini file.
+  ! SUBROUTINE: readModelParam
+  !>  Wrapper procedure for `readScalarParam
   ! -------------------------------------------------------------------------- !
-  subroutine readIni
+  subroutine readModelParam
+    implicit none
+
+    call readScalarParam
+    call readVerhulstWeights
+  end subroutine readModelParam
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: readScalarParams
+  !>  Read the scalar model parameters from an external file.
+  ! -------------------------------------------------------------------------- !
+  subroutine readScalarParam
     implicit none
 
     integer :: status
@@ -119,7 +132,7 @@ contains
 
     call assignParameters(values)
     close(modelUnit)
-  end subroutine readIni
+  end subroutine readScalarParam
 
   
   ! -------------------------------------------------------------------------- !

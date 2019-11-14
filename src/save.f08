@@ -165,6 +165,7 @@ contains
     end if
   end function constructWriter_scalar
 
+
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]initialize
   !>  Initialize the files specified to be written on. The files are
@@ -251,6 +252,7 @@ contains
     end do
   end subroutine writer_listInitialize
 
+
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]write
   !>  Write `arg` into the file specified by `flag`. The procedure
@@ -306,6 +308,7 @@ contains
 
     write(units(flag), formats(flag)) arg
   end subroutine writer_write_realArray
+
 
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]close
@@ -366,6 +369,7 @@ contains
       end if
     end do
   end subroutine writer_listclose
+
 
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer%]destructor
