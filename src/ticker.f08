@@ -75,6 +75,7 @@ contains
     end if
   end subroutine incrementTick
 
+
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Ticker%]showTicker
   !>  Show the ticker progres.
@@ -87,7 +88,6 @@ contains
     integer                :: tickerLength
     integer                :: i
 
-    
     tickerLength = int(self%index*self%partition/self%totalTicks)
 
     allocate(tickArr(tickerLength))

@@ -3,7 +3,7 @@ module Penna
   private
 
   ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: nullFlag = 0      ! Population
+  integer, parameter, public :: nullFlag = 0      ! Null
   integer, parameter, public :: pop_recFlag = 1   ! Population
   integer, parameter, public :: demog_recFlag = 2 ! Age and genome demographics
   integer, parameter, public :: death_recFlag = 3 ! Death count
@@ -63,7 +63,7 @@ contains
     popSize = startPopSize
     indexOffset = 0
     call resetDstrbs  ! Initialize demographics.
-    call initializeRunWriter(runWriter, recordFlag) ! Initialize writer.
+    call initializeRunWriter(runWriter, recordFlag)
 
     ! === MAIN LOOP ===
     do step = 1, maxTimestep

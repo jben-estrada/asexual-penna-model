@@ -136,6 +136,7 @@ contains
     end do
   end subroutine checkBirth
 
+
   !----------------------------------------------------------------------------!
   ! SUBROUTINE: changePopArraySize
   !>  Extend the size of `popArray` by some integer `sizeChange` to
@@ -165,12 +166,16 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv)
     use PersonType
+    use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
+    use StdKind, only: personIntKind
     implicit none
     type(Person), intent(inout) :: indiv
 
     indiv%genome = GENE_HEALTHY
-    call initializeScalarAttrs(indiv)
+    indiv%age = 0_personIntKind
+    indiv%mutationCount = 0
+    indiv%deathIndex = ALIVE
   end subroutine initializeHealthyIndiv
 
 
@@ -181,6 +186,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv, genome)
     use PersonType
+    use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
     use Model, only: MODEL_M, MODEL_L
     use RandInd, only: generateIndices
@@ -203,25 +209,10 @@ contains
       end if
     end do
 
-    call initializeScalarAttrs(indiv)
-  end subroutine initializeIndiv
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializeScalarAttrs
-  !>  Initialize scalar attributes of `indiv`.
-  ! -------------------------------------------------------------------------- !
-  subroutine initializeScalarAttrs(indiv)
-    use PersonType
-    use StdKind, only: personIntKind
-    use Flag, only: ALIVE
-    implicit none
-    type(Person), intent(inout) :: indiv
-
     indiv%age = 0_personIntKind
     indiv%mutationCount = 0
     indiv%deathIndex = ALIVE
-  end subroutine initializeScalarAttrs
+  end subroutine initializeIndiv
 
 
   ! -------------------------------------------------------------------------- !
