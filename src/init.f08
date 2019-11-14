@@ -106,7 +106,7 @@ contains
 
       ! Case handling
       if (readStatus /= 0) then
-        print "(a, i2)", "***Cannot read line. Ending at line ", i
+        print "(a, i0)", "***Cannot read line. Ending at line ", i
         exit
       else if(key == endOfList) then
         print *, "***Reading ended prematurely"

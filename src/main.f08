@@ -37,7 +37,7 @@ program Main
   real(kind=timingRealKind) :: meanTime
   ! Separator character array for pretty printing.
   integer              :: k  ! Index variable for `separator`
-  character, parameter :: separator(27) = [("=", k = 1, 27)]
+  character, parameter :: separator(29) = [("=", k = 1, 29)]
   ! -------------------------------------------------------------------------- !
 
   ! Initialize model parameters.
@@ -128,10 +128,11 @@ contains
     print "(*(a))", separator 
     print "(a)", "Asexual Penna model"
     print "(*(a))", separator 
-    print "(2(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
+    print "(2(a20, i9/), a20, i9)", &
+        "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize
-    print "(a20, L7)", "Record result", toRecord
+    print "(a20, L9)", "Record result", toRecord
     print "(*(a))", separator
   end subroutine printArgs
 

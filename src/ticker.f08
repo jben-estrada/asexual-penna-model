@@ -94,9 +94,8 @@ contains
     tickArr = [(self%charBit, i = 1, tickerLength), &
         (" ", i = self%partition - 1, tickerLength, -1)]
 
-    write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition + 7)
+    write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
-    write(*, "(i4, a)", advance="no") tickerLength*100/self%partition, "%"
 
     deallocate(tickArr)
   end subroutine showTicker

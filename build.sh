@@ -20,4 +20,4 @@ done
 assemblestr+=" -Wall -Ofast -march=native -o $out"
 
 echo "Linking object files together..."
-eval $assemblestr && echo "Building done.."
+eval $assemblestr && echo "Building done."

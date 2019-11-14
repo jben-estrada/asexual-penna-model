@@ -147,6 +147,7 @@ contains
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
     type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
     integer :: i
+    integer :: j
 
     ! Initialize `runTicker`.
     runTicker = constructTicker(20, sampleSize)
@@ -167,12 +168,16 @@ contains
 
       sum = sum + (endTimeReal - startTimeReal)*1e3
       call runTicker%incrementTick
+      
+      ! Print progress bar
+      write(*, "(*(a))", advance="no") (char(8), j = 1, 10)
       call runTicker%showTicker
+      write(*, "(f6.1, a)", advance="no") 100*real(i)/real(sampleSize), "%"
     end do
 
     ! Get average wall time.
     wallTime = sum/real(sampleSize, kind=timingRealKind)
-    print "(/a, f10.3, a)", "Average time: ", wallTime, " ms"
+    print "(/a, f12.3, a)", "Average time: ", wallTime, " ms"
 
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
