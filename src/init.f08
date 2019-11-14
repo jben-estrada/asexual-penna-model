@@ -49,6 +49,7 @@ module Model
   integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
 
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
+  real, parameter                 :: VERHULST_W_DEFAULT = 0. ! Default weight
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
   integer, parameter              :: MAXLEN = 32
@@ -91,7 +92,7 @@ contains
   subroutine readScalarParam
     implicit none
 
-    integer :: status
+    integer :: filestatus
     integer :: readStatus
     integer :: i
     integer :: values(modelParamCount)
@@ -103,8 +104,8 @@ contains
     values(:) = nullValue
 
     ! Check whether the file exists or not.
-    inquire(file=modelFilename, iostat=status)
-    if (status /= 0) then
+    inquire(file=modelFilename, iostat=filestatus)
+    if (filestatus /= 0) then
       print "(3a)", "***Cannot read '", modelFilename, &
           "'. Using the default values."
       return
@@ -141,10 +142,33 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine readVerhulstWeights
     implicit none
-    ! TODO
-  
+
+    integer :: filestatus
+    integer :: readstatus
+    integer :: i
+    real    :: verhulstWeight
+
+    ! Initialize Verhulst weight array.
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
-    MODEL_VERHULST_W(:) = 0.
+    MODEL_VERHULST_W(:) = VERHULST_W_DEFAULT
+    
+    ! Inquire file existence.
+    inquire(file=vWeightsFilename, iostat=filestatus)
+    if (filestatus /= 0) then
+      print "(3a)", "***Cannot read '", vWeightsFilename, &
+          "'. Using the default values."
+      return
+    end if
+
+    ! Read file
+    open(unit=vWeightUnit, file=vWeightsFilename)
+    do i = 1, MODEL_L
+      read(modelUnit, "(f10.5)", iostat=readStatus) verhulstWeight
+
+      if (readStatus == 0) then
+        MODEL_VERHULST_W(i) = verhulstWeight
+      end if
+    end do
   end subroutine readVerhulstWeights
 
 
