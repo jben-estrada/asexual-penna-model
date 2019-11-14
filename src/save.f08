@@ -15,7 +15,7 @@ module SaveFormat
   type, public :: Writer
     private
     integer, public, allocatable :: enabledFlags(:)
-    integer, allocatable         :: liveFlags(:)
+    integer,         allocatable :: liveFlags(:)
   contains
     private
     generic, public :: initialize => writer_initialize, writer_initializeAll, &

@@ -67,22 +67,10 @@ module Model
   integer, parameter :: modelUnit = 99
   integer, parameter :: vWeightUnit = 98
 
-  public :: readModelParam
+  public :: readScalarParam
   public :: readVerhulstWeights
   public :: deallocVerhulstWeights
 contains
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readModelParam
-  !>  Wrapper procedure for `readScalarParam
-  ! -------------------------------------------------------------------------- !
-  subroutine readModelParam
-    implicit none
-
-    call readScalarParam
-    call readVerhulstWeights
-  end subroutine readModelParam
 
 
   ! -------------------------------------------------------------------------- !

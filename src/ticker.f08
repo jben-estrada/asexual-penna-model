@@ -87,7 +87,10 @@ contains
     integer                :: tickerLength
     integer                :: i
 
+    
     tickerLength = int(self%index*self%partition/self%totalTicks)
+
+    allocate(tickArr(tickerLength))
     tickArr = [(self%charBit, i = 1, tickerLength), &
         (" ", i = self%partition - 1, tickerLength, -1)]
 

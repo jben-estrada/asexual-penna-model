@@ -1,7 +1,6 @@
 program Main
-  use Model, only: readModelParam, deallocVerhulstWeights
   use StdKind, only: timingRealKind
-  use Penna
+  use Penna, only: readModelParam, multipleRun, wrapUp
   implicit none
 
   ! -------------------------------------------------------------------------- !
@@ -31,8 +30,8 @@ program Main
   call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
       recordFlag_, meanTime)
 
-  ! Wrap up.
-  call deallocVerhulstWeights
+  ! Wrap up. Deallocate allocatable arrays.
+  call wrapUp
   print "(*(a))", separator
 contains
 
@@ -103,7 +102,7 @@ contains
     end if
 
     print "(*(a))", separator 
-    print "(a)", "Penna model simulation"
+    print "(a)", "Asexual Penna model"
     print "(*(a))", separator 
     print "(2(a20, i7/), a20, i7)", "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &

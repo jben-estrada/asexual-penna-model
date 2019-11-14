@@ -15,10 +15,6 @@ module Demographics
   
   integer, public, parameter :: DEMOG_LAST_STEPS = 300
 
-  interface writeDemog
-    procedure :: writeDemogReal, writeDemogInt
-  end interface writeDemog
-
   public :: resetDstrbs
   public :: updateAgeDstrb
   public :: updateGenomeDstrb
@@ -94,35 +90,9 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writeDemogReal
-  !>  Write `dstrb` array of type real(8) to an external file.
-  !!  NOTE: DEPRECATED
+  ! SUBROUTINE: deallocDstrb
+  !>  Deallocate demographic arrays
   ! -------------------------------------------------------------------------- !
-  subroutine writeDemogReal(dstrb, unit, format)
-    implicit none
-    real(kind=personRealKind), intent(in) :: dstrb
-    character(len=*),          intent(in) :: format
-    integer,                   intent(in) :: unit
-
-    write(unit, format) dstrb
-  end subroutine writeDemogReal
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writeDemogInt
-  !>  Write `dstrb` array of type integer(4) to an external file.
-  !!  NOTE: DEPRECATED
-  ! -------------------------------------------------------------------------- !
-  subroutine writeDemogInt(dstrb, unit, format)
-    implicit none
-    integer,          intent(in) :: dstrb
-    integer,          intent(in) :: unit
-    character(len=*), intent(in) :: format
-
-    write(unit, format) dstrb
-  end subroutine writeDemogInt
-
-  
   subroutine deallocDstrb
     implicit none
     if (allocated(demog_ageDstrb)) deallocate(demog_ageDstrb)

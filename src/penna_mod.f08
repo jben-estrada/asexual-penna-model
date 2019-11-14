@@ -8,7 +8,21 @@ module Penna
   integer, parameter, public :: death_recFlag = 3 ! Death count
 
   public :: multipleRun
+  public :: readModelParam
+  public :: wrapUp
 contains
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: readModelParam
+  !>  Wrapper procedure for `readScalarParam
+  ! -------------------------------------------------------------------------- !
+  subroutine readModelParam
+    use Model, only: readScalarParam, readVerhulstWeights
+    implicit none
+
+    call readScalarParam
+    call readVerhulstWeights
+  end subroutine readModelParam
 
 
   ! -------------------------------------------------------------------------- !
@@ -194,4 +208,15 @@ contains
       call runWriter%initialize(deathFlag)
     end select
   end subroutine initializeRunWriter
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: wrapUp
+  !>  Wrap up the simulation. This deallocates allocatable arrays.
+  ! -------------------------------------------------------------------------- !
+  subroutine wrapUp
+    use Model, only: deallocVerhulstWeights
+    implicit none
+    
+    call deallocVerhulstWeights
+  end subroutine wrapUp
 end module Penna

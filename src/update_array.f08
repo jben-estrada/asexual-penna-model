@@ -354,31 +354,4 @@ contains
       stop
     end if
   end subroutine alloc_check
-
-
-  ! NOTE: DEPRECATED
-  subroutine extend_logical_array(array, elem, n)
-    implicit none
-    logical, allocatable, intent(inout) :: array(:)
-    logical, intent(in) :: elem
-    integer, intent(in) :: n
-
-    logical :: newElems(n)
-    logical, allocatable :: temp(:)
-    integer :: i, old_size
-
-    if (n < 1) then
-        return
-    end if
-
-    newElems = [(elem, i = 1, n)]
-
-    old_size = size(array)
-    call move_alloc(array, temp)
-    allocate(array(old_size + n))
-    array(1:old_size) = temp(:)
-    array(old_size+1:n) = newElems(:)
-
-    deallocate(temp)
-  end subroutine extend_logical_array
 end module UpdateArray
