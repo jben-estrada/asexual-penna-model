@@ -92,7 +92,6 @@ module SaveFormat
   ! -------------------------------------------------------------------------- !
   
   ! File flags
-  integer, public, parameter :: nullFlag = 0
   integer, public, parameter :: popFlag = 1
   integer, public, parameter :: timeFlag = 2
   integer, public, parameter :: ageDstrbFlag = 3

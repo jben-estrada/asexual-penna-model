@@ -66,7 +66,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag)
     use Model, only: MODEL_TIME_STEPS, MODEL_N0
-    use SaveFormat, only: nullFlag
+    use Penna, only: nullFlag
     implicit none
 
     integer, intent(out) :: maxTimestep
@@ -109,7 +109,7 @@ contains
   !>  Print various parameters.
   ! -------------------------------------------------------------------------- !
   subroutine printArgs(maxTimestep, sampleSize, startPopSize, recordFlag)
-    use SaveFormat, only: nullFlag
+    use Penna, only: nullFlag
     implicit none
 
     integer, intent(in) :: maxTimestep

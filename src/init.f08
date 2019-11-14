@@ -38,34 +38,46 @@ module Model
   implicit none
   private
 
-  integer, public, save :: MODEL_L = 32        ! Genome length (unmodifiable)
-  integer, public, save :: MODEL_T = 3         ! Mutation threshold
-  integer, public, save :: MODEL_B = 1         ! Birth rate
-  integer, public, save :: MODEL_M = 1         ! Mutation rate
-  integer, public, save :: MODEL_R = 9         ! Reproduction age
-  integer, public, save :: MODEL_R_MAX = 9     ! Maximum reproduction age
-  integer, public, save :: MODEL_K = 20000     ! Carrying capacity
-  integer, public, save :: MODEL_N0 = 100      ! Starting pop size
-  integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
+  ! Parameters whose values are from `model.ini`.
+  integer, public, save :: MODEL_L     ! Genome length (unmodifiable)
+  integer, public, save :: MODEL_T     ! Mutation threshold
+  integer, public, save :: MODEL_B     ! Birth rate
+  integer, public, save :: MODEL_M     ! Mutation rate
+  integer, public, save :: MODEL_R     ! Reproduction age
+  integer, public, save :: MODEL_R_MAX ! Maximum reproduction age
+  integer, public, save :: MODEL_K     ! Carrying capacity
 
+  ! Parameters whose values are from `verhulst_weights.ini`.
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   real, parameter                 :: VERHULST_W_DEFAULT = 0. ! Default weight
+
+  ! Parameters whose values are from command line arguments.
+  integer, public, save :: MODEL_N0 = 100          ! Starting pop size
+  integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
+
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  integer, parameter              :: MAXLEN = 32
+  integer, parameter               :: MAXLEN = 32
   character(len=MAXLEN), protected :: modelFilename = "model.ini"
   character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
-  ! -------------------------------------------------------------------------- !
-  integer, parameter :: modelParamCount = 7
-  integer, parameter :: nullValue = -1
 
+  ! -------------------------------------------------------------------------- !
+  ! Parameter fields and default values.
+  integer, parameter :: modelParamCount = 7
   character(len=MAXLEN), parameter :: extParamName(modelParamCount) = &
       ["L", "T", "B", "M", "R", "S", "K"]
-  character(len=MAXLEN), parameter :: endOfList = "//"
+  integer, parameter :: modelParamDefault(modelParamCount) = &
+      [32,   3,   1,   1,   9,   9,   20000]
 
+  ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: modelUnit = 99
   integer, parameter :: vWeightUnit = 98
+
+  ! Stop character for reading files.
+  character(len=MAXLEN), parameter :: endOfList = "//"
+  ! Default null value. This could be anything.
+  integer, parameter :: NULLVALUE = -1
 
   public :: readScalarParam
   public :: readVerhulstWeights
@@ -89,7 +101,7 @@ contains
     character(len=MAXLEN) :: key
 
     ! Initialize `value`
-    values(:) = nullValue
+    values(:) = modelParamDefault
 
     ! Check whether the file exists or not.
     inquire(file=modelFilename, iostat=filestatus)
@@ -151,12 +163,14 @@ contains
     ! Read file
     open(unit=vWeightUnit, file=vWeightsFilename)
     do i = 1, MODEL_L
-      read(modelUnit, "(f10.5)", iostat=readStatus) verhulstWeight
+      read(vWeightUnit, "(f10.5)", iostat=readStatus) verhulstWeight
 
       if (readStatus == 0) then
         MODEL_VERHULST_W(i) = verhulstWeight
       end if
     end do
+
+    close(vWeightUnit)
   end subroutine readVerhulstWeights
 
 
@@ -221,7 +235,7 @@ contains
       if (array(i) == elem) return
     end do
  
-    i = nullValue  ! Default value
+    i = NULLVALUE  ! Default value
   end function getCharArrayIndex
 end module Model
 
