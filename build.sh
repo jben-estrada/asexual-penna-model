@@ -1,13 +1,14 @@
 #!/bin/bash
 GF=gfortran-8
-out="penna.out"
+OUT="penna.out"
+ARGS="-g -Wall -Ofast -march=native -fcheck=all"
 
 # Compile .f08 files
 j=1
 for i in src/*.f08
 do
   echo "Compiling '$i'..."
-  $GF -c $i -J obj/ -Wall -Ofast -march=native -o obj/a$j.o
+  $GF -c $i -J obj/ $ARGS -o obj/a$j.o
   j=$(($j + 1))
 done
 
@@ -17,7 +18,7 @@ for i in obj/*.o
 do
   assemblestr+=" $i"
 done
-assemblestr+=" -Wall -Ofast -march=native -o $out"
+assemblestr+=" $ARGS -o $OUT"
 
 echo "Linking object files together..."
 eval $assemblestr && echo "Building done."
