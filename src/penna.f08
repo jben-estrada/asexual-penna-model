@@ -100,11 +100,16 @@ contains
       popSize = popSize + indexOffset
 
       ! Record population size and age demographics.
-      if (recordFlag /= nullFlag) then
-        call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
-        call runWriter%write(ageDstrbFlag, demog_ageDstrb)
-        call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
-      end if
+      ! NOTE: I used select case here to make this faster than the older
+      ! implementation.
+      select case (recordFlag)
+        case (popFlag)
+          call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
+        case (ageDstrbFlag)
+          call runWriter%write(ageDstrbFlag, demog_ageDstrb)
+        case (genomeDstrbFlag)
+          call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
+      end select
 
       ! Reset variables.
       currPop = nextPop
