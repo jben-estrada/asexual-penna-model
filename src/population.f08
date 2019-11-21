@@ -78,7 +78,7 @@ contains
     else if (verhulstWeight > 0.0) then
       ! Get Verhulst factor per age.
       call random_number(random)
-      verhulstFactor = 1 - (popSize/MODEL_K)*verhulstWeight
+      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
 
       if (random > verhulstFactor) then
         indiv%deathIndex = DEAD_VERHULST
@@ -123,10 +123,10 @@ contains
     ! Check for valid reproduction age.
     if (MODEL_R > indiv%age .or. indiv%age > MODEL_R_MAX) return
 
-    if (popSize + MODEL_B > size(popArray)) then
+    if (popSize + indexOffset + MODEL_B > size(popArray)) then
       print "(2(a), i10)", "***Population size will exceed the initially", &
           " allotted size. Initial max size: ", size(popArray)
-      call changePopArraySize(popArray, MODEL_B) 
+      call changePopArraySize(popArray, popSize*2) 
     end if
 
     ! Add new born indivs to the next generation.

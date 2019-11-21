@@ -148,6 +148,9 @@ contains
     integer :: i
     real    :: verhulstWeight
 
+    integer, parameter        :: charBuffer = 256
+    character(len=charBuffer) :: vWeight_str
+
     ! Initialize Verhulst weight array.
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
     MODEL_VERHULST_W(:) = VERHULST_W_DEFAULT
@@ -163,9 +166,10 @@ contains
     ! Read file
     open(unit=vWeightUnit, file=vWeightsFilename)
     do i = 1, MODEL_L
-      read(vWeightUnit, "(f10.5)", iostat=readStatus) verhulstWeight
+      read(vWeightUnit, *, iostat=readStatus) vWeight_str
 
       if (readStatus == 0) then
+        read(vWeight_str, *) verhulstWeight
         MODEL_VERHULST_W(i) = verhulstWeight
       end if
     end do

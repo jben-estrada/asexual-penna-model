@@ -131,7 +131,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, arraySize, &
       recordFlag, wallTime)
-      use StdKind, only: timingIntKind, timingRealKind, writeIntKind
+    use StdKind, only: timingIntKind, timingRealKind, writeIntKind
     use SaveFormat
     use TickerType
     implicit none
