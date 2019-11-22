@@ -30,7 +30,7 @@ contains
   ! SUBROUTINE: run
   !>  Simulate the Penna model.
   ! -------------------------------------------------------------------------- !
-  subroutine run(maxTimestep, startPopSize, arraySize, recordFlag)
+  subroutine run(maxTimestep, startPopSize, recordFlag)
     use Pop
     use SaveFormat
     use PersonType
@@ -42,22 +42,26 @@ contains
 
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: startPopSize
-    integer, intent(in) :: arraySize
     integer, intent(in) :: recordFlag
 
-    type(Person), allocatable :: currPop(:) ! Current population array
-    type(Person), allocatable :: nextPop(:) ! Next population array
+    type(Person), pointer :: popHead_ptr       ! Pointer to head of linked list.
+    type(Person), pointer :: popTail_ptr       ! Pointer to tail of linked list.
+    type(Person), pointer :: popFutureTail_ptr ! Pointer to tail of next gen.
+
+    type(Person), pointer :: oldIndiv_ptr
+    type(Person), pointer :: currIndiv_ptr
 
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
     integer      :: popSize       ! Current population size
-    integer      :: step          ! Time step 
-    integer      :: idx           ! Index of individual
+    integer      :: step          ! Time step
     integer      :: indexOffset   ! Offset due to deaths and births
     integer      :: demogStep     ! Index for demographics
 
     ! Initialize the current population.
-    allocate(currPop(arraySize), nextPop(arraySize))
-    call generatePopulation(currPop, startPopSize)
+    call generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
+    popFutureTail_ptr => popTail_ptr
+    oldIndiv_ptr => null()
+    currIndiv_ptr => popHead_ptr
 
     ! Initialize variables.
     popSize = startPopSize
@@ -74,25 +78,36 @@ contains
       end if
 
       ! === EVALUATE EACH INDIVIDUALS ===
-      do idx = 1, popSize
-        call checkDeath(currPop(idx), popSize, indexOffset)
+      do
+        call checkDeath(currIndiv_ptr, popSize, indexOffset)
 
-        ! Evaluate the alive ones.
-        if (currPop(idx)%deathIndex == ALIVE) then
-          currPop(idx)%age = currPop(idx)%age + 1
-          call checkBirth(currPop(idx), idx, popSize, nextPop, indexOffset)
-
-          ! Record demographics.
-          if (step <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
-            demogStep = DEMOG_LAST_STEPS - step + 1
-            call updateAgeDstrb(currPop(idx)%age, demog_ageDstrb)
-            call updateGenomeDstrb(currPop(idx)%genome, demog_genomeDstrb)
+        if (currIndiv_ptr%deathIndex == ALIVE) then
+          call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
+        else
+          ! Edge cases
+          if (associated(currIndiv_ptr, popHead_ptr)) then
+            popHead_ptr => popHead_ptr%next
+          else if (associated(currIndiv_ptr, popTail_ptr)) then
+            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
+            exit
           end if
 
-          ! Push the alive ones into the next generation.
-          if (step < maxTimestep) then
-            nextPop(idx + indexOffset) = currPop(idx)
-          end if
+          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
+        end if
+
+        !Record demographics.
+        if (step <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
+          demogStep = DEMOG_LAST_STEPS - step + 1
+          call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
+          call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
+        end if
+
+        ! Exit condition
+        if (associated(currIndiv_ptr, popTail_ptr)) then
+          exit
+        else
+          oldIndiv_ptr => currIndiv_ptr
+          currIndiv_ptr => currIndiv_ptr%next
         end if
       end do
       ! === EVAL END ===
@@ -111,8 +126,12 @@ contains
           call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
       end select
 
+      ! Reset pointers.
+      currIndiv_ptr => popHead_ptr
+      oldIndiv_ptr => null()
+      popTail_ptr => popFutureTail_ptr
+
       ! Reset variables.
-      currPop = nextPop
       indexOffset = 0
       call resetDstrbs
     end do
@@ -120,7 +139,6 @@ contains
 
     ! Wrap up.
     call runWriter%close
-    deallocate(currPop, nextPop)
     call deallocDstrb
   end subroutine run
 
@@ -129,8 +147,8 @@ contains
   ! SUBROUTINE: multipleRun
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
-  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, arraySize, &
-      recordFlag, wallTime)
+  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
+        wallTime)
     use StdKind, only: timingIntKind, timingRealKind, writeIntKind
     use SaveFormat
     use TickerType
@@ -139,7 +157,6 @@ contains
     integer, intent(in) :: maxTimeStep
     integer, intent(in) :: sampleSize   
     integer, intent(in) :: startingPopSize
-    integer, intent(in) :: arraySize
     integer, intent(in) :: recordFlag
     real(kind=timingRealKind), intent(out) :: wallTime
 
@@ -166,7 +183,7 @@ contains
       startTimeReal = real(startTimeInt, kind=timingRealKind)/clockRate
 
       ! Run the actual simulation.
-      call run(maxTimeStep, startingPopSize, arraySize, recordFlag)
+      call run(maxTimeStep, startingPopSize, recordFlag)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)

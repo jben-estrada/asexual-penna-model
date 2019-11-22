@@ -31,8 +31,7 @@ program Main
   ! Arguments to run the simulation.
   integer :: timeSteps
   integer :: sampleSize_ 
-  integer :: startPopSize_ 
-  integer :: popArrSize
+  integer :: startPopSize_
   integer :: recordFlag_
   real(kind=timingRealKind) :: meanTime
   ! Separator character array for pretty printing.
@@ -45,14 +44,12 @@ program Main
 
   ! Get command line arguments and pop array size.
   call getCmdArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
-  popArrSize = getPopArrSize(startPopSize_)
 
   ! Pretty print cmd arguments.
   call printArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
 
   ! Run the Penna model multiple times.
-  call multipleRun(timeSteps, startPopSize_, sampleSize_, popArrSize, &
-      recordFlag_, meanTime)
+  call multipleRun(timeSteps, startPopSize_, sampleSize_, recordFlag_, meanTime)
 
   ! Wrap up. Deallocate allocatable arrays.
   call wrapUp
@@ -135,20 +132,4 @@ contains
     print "(a20, L9)", "Record result", toRecord
     print "(*(a))", separator
   end subroutine printArgs
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getPopArrSize
-  !>  Get the size of the population arrays.
-  ! TODO: 
-  !  Make a procedure that predicts array size base on the model params
-  ! -------------------------------------------------------------------------- !
-  function getPopArrSize(startPopSize) result(arrSize)
-    use Model, only: MODEL_L, MODEL_R
-    implicit none
-
-    integer, intent(in) :: startPopSize
-    integer             :: arrSize
-    arrSize = startPopSize*(MODEL_L/MODEL_R + 1) + 1  ! Added an extra space
-  end function getPopArrSize
 end program Main
