@@ -84,6 +84,7 @@ contains
         
         call checkDeath(currIndiv_ptr, popSize, indexOffset)
 
+        ! Evaluate alive individual.
         if (currIndiv_ptr%deathIndex == ALIVE) then
           currIndiv_ptr%age = currIndiv_ptr%age + 1
           call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
@@ -98,9 +99,10 @@ contains
 
         ! Exit condition
         if (associated(currIndiv_ptr, popTail_ptr)) then
+          ! Remove dead individual from the list.
           if (currIndiv_ptr%deathIndex /= ALIVE) then
             call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
-            
+
             ! Check edge case.
             if (associated(currIndiv_ptr)) then
               popTail_ptr => currIndiv_ptr
@@ -110,23 +112,26 @@ contains
               popFutureTail_ptr => currIndiv_ptr
             end if
 
-            ! Free dead individuals.
+            ! Free dead individual.
             deallocate(deadIndiv_ptr)
           end if
           exit
+
+        ! Proceed to the next element of the list.
         else
+          ! Move to the next individual.
           if (currIndiv_ptr%deathIndex == ALIVE) then
-            ! Move to the next individual.
             oldIndiv_ptr => currIndiv_ptr
             currIndiv_ptr => currIndiv_ptr%next
+
+          ! Remove dead individual and move to the next individual.
           else
             call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
-
             ! Check edge case.
             if (associated(deadIndiv_ptr, popHead_ptr)) popHead_ptr => &
                 currIndiv_ptr
 
-            ! Free dead individuals.
+            ! Free dead individual.
             deallocate(deadIndiv_ptr)
           end if
         end if

@@ -1,7 +1,7 @@
 #!/bin/bash
 GF=gfortran-8
 OUT="penna.out"
-ARGS="-Wall -Ofast -fcheck=all"
+ARGS="-g -Wall -Ofast -fcheck=all"
 
 # Compile .f08 files
 j=1

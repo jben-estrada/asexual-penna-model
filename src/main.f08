@@ -19,7 +19,7 @@
 !
 ! REVISION:
 !   11-Nov-2019 - First complete version of the program.
-!   23-Nov-2019 - Major change to population change.
+!   23-Nov-2019 - Major change to population handling.
 !------------------------------------------------------------------------------
 
 
