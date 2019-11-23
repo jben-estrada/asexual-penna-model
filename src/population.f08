@@ -53,12 +53,12 @@ contains
     integer,               intent(inout) :: indexOffset
     integer,               intent(inout) :: popSize
 
-    integer(kind=personIntKind) :: nextAge
+    integer(kind=personIntKind) :: nextAge = 0
     real(kind=personRealKind)   :: verhulstWeight
     real(kind=personRealKind)   :: verhulstFactor
     real(kind=personRealKind)   :: random
 
-    nextAge = indiv_ptr%age + 1                     ! Hypothetical age
+    nextAge = indiv_ptr%age + 1                 ! Hypothetical age
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
 
     ! ***Death check: Old age
@@ -95,15 +95,17 @@ contains
   ! SUBROUTINE: killIndiv
   !>  Remove object `indiv_ptr` is pointing at from the population list.
   !----------------------------------------------------------------------------!
-  subroutine killIndiv(indiv_ptr, oldIndiv_ptr)
+  subroutine killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
     use PersonType
     implicit none
 
-    type(Person), pointer, intent(inout) :: indiv_ptr
+    type(Person), pointer, intent(inout) :: currIndiv_ptr
     type(Person), pointer, intent(inout) :: oldIndiv_ptr
+    type(Person), pointer, intent(out)   :: deadIndiv_ptr
 
-    oldIndiv_ptr%next => indiv_ptr%next
-    deallocate(indiv_ptr)
+    deadIndiv_ptr => currIndiv_ptr
+    currIndiv_ptr => currIndiv_ptr%next
+    if (associated(oldIndiv_ptr)) oldIndiv_ptr%next => currIndiv_ptr
   end subroutine killIndiv
 
 
@@ -119,6 +121,7 @@ contains
     integer(kind=personIntKind), intent(in) :: k
     integer(kind=personIntKind)             :: bit
 
+    bit = 0
     bit = iand(shiftr(number, k - 1), 1_personIntKind)
   end function getBinDigit
 
@@ -132,9 +135,9 @@ contains
     use PersonType
     implicit none
 
-    type(Person), pointer,     intent(in)    :: indiv_ptr
-    type(Person), pointer,     intent(inout) :: popFutureTail_ptr
-    integer,                   intent(inout) :: indexOffset
+    type(Person), pointer, intent(in)    :: indiv_ptr
+    type(Person), pointer, intent(inout) :: popFutureTail_ptr
+    integer,               intent(inout) :: indexOffset
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
@@ -197,6 +200,7 @@ contains
     integer(kind=personIntKind)                :: mutations(MODEL_M)
     integer :: i    ! Counters have default kind.
 
+    mutations(:) = 0  ! Initialize `mutations`
     call generateIndices(1_personIntKind, int(MODEL_L, kind=personIntKind), &
         mutations)
 
@@ -229,11 +233,17 @@ contains
     type(Person), pointer :: oldIndiv_ptr
     integer               :: i
 
+    allocate(popHead_ptr)
     oldIndiv_ptr => popHead_ptr
     newIndiv_ptr => null()
     call initializeHealthyIndiv(popHead_ptr)
 
-    do i = 1, startPopSize
+    if (startPopSize == 1) then
+      popTail_ptr => popHead_ptr
+      return
+    end if
+
+    do i = 1, startPopSize - 1
       allocate(newIndiv_ptr)
       oldIndiv_ptr%next => newIndiv_ptr
       oldIndiv_ptr => newIndiv_ptr

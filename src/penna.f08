@@ -32,11 +32,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Pop
+    use Model
     use SaveFormat
     use PersonType
     use Demographics
     use Flag, only: ALIVE
-    use Model, only: MODEL_K
     use StdKind, only: writeIntKind
     implicit none
 
@@ -44,12 +44,13 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(Person), pointer :: popHead_ptr       ! Pointer to head of linked list.
-    type(Person), pointer :: popTail_ptr       ! Pointer to tail of linked list.
-    type(Person), pointer :: popFutureTail_ptr ! Pointer to tail of next gen.
+    type(Person), pointer :: popHead_ptr => null()
+    type(Person), pointer :: popTail_ptr => null()       
+    type(Person), pointer :: popFutureTail_ptr => null()
 
-    type(Person), pointer :: oldIndiv_ptr
-    type(Person), pointer :: currIndiv_ptr
+    type(Person), pointer :: oldIndiv_ptr => null()
+    type(Person), pointer :: currIndiv_ptr => null()
+    type(Person), pointer :: deadIndiv_ptr => null()
 
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
     integer      :: popSize       ! Current population size
@@ -60,7 +61,6 @@ contains
     ! Initialize the current population.
     call generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
     popFutureTail_ptr => popTail_ptr
-    oldIndiv_ptr => null()
     currIndiv_ptr => popHead_ptr
 
     ! Initialize variables.
@@ -76,26 +76,20 @@ contains
         print "(a)", "The population has exceeded the carrying capacity!"
         exit
       end if
-
+      
       ! === EVALUATE EACH INDIVIDUALS ===
       do
+        ! Catch case where the population is extinct.
+        if (popSize == 0) exit
+        
         call checkDeath(currIndiv_ptr, popSize, indexOffset)
 
         if (currIndiv_ptr%deathIndex == ALIVE) then
+          currIndiv_ptr%age = currIndiv_ptr%age + 1
           call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
-        else
-          ! Edge cases
-          if (associated(currIndiv_ptr, popHead_ptr)) then
-            popHead_ptr => popHead_ptr%next
-          else if (associated(currIndiv_ptr, popTail_ptr)) then
-            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
-            exit
-          end if
-
-          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
         end if
 
-        !Record demographics.
+        ! Record demographics.
         if (step <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
           demogStep = DEMOG_LAST_STEPS - step + 1
           call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
@@ -104,10 +98,37 @@ contains
 
         ! Exit condition
         if (associated(currIndiv_ptr, popTail_ptr)) then
+          if (currIndiv_ptr%deathIndex /= ALIVE) then
+            call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
+            
+            ! Check edge case.
+            if (associated(currIndiv_ptr)) then
+              popTail_ptr => currIndiv_ptr
+            else
+              currIndiv_ptr => oldIndiv_ptr
+              popTail_ptr => currIndiv_ptr
+              popFutureTail_ptr => currIndiv_ptr
+            end if
+
+            ! Free dead individuals.
+            deallocate(deadIndiv_ptr)
+          end if
           exit
         else
-          oldIndiv_ptr => currIndiv_ptr
-          currIndiv_ptr => currIndiv_ptr%next
+          if (currIndiv_ptr%deathIndex == ALIVE) then
+            ! Move to the next individual.
+            oldIndiv_ptr => currIndiv_ptr
+            currIndiv_ptr => currIndiv_ptr%next
+          else
+            call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
+
+            ! Check edge case.
+            if (associated(deadIndiv_ptr, popHead_ptr)) popHead_ptr => &
+                currIndiv_ptr
+
+            ! Free dead individuals.
+            deallocate(deadIndiv_ptr)
+          end if
         end if
       end do
       ! === EVAL END ===
