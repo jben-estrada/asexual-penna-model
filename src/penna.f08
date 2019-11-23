@@ -32,10 +32,10 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Pop
-    use Model
     use SaveFormat
     use PersonType
     use Demographics
+    use Model, only: MODEL_K
     use Flag, only: ALIVE
     use StdKind, only: writeIntKind
     implicit none
