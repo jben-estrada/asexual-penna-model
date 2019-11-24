@@ -35,7 +35,6 @@ module Pop
   public :: checkBirth
   public :: killIndiv
   public :: generatePopulation
-  public :: initializeHealthyIndiv
 contains
 
   ! -------------------------------------------------------------------------- !

@@ -48,20 +48,15 @@ contains
     type(Person), pointer :: popTail_ptr  => null()
     type(Person), pointer :: popFutureTail_ptr  => null()
 
-    type(Person), pointer :: oldIndiv_ptr => null()
-    type(Person), pointer :: currIndiv_ptr => null()
-
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
     integer      :: popSize       ! Current population size
     integer      :: step          ! Time step
     integer      :: indexOffset   ! Offset due to deaths and births
-    integer      :: demogStep     ! Index for demographics
 
     ! Initialize the current population.
     allocate(popHead_ptr)
     call generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
     popFutureTail_ptr => popTail_ptr
-    currIndiv_ptr => popHead_ptr
 
     ! Initialize variables.
     popSize = startPopSize
@@ -77,61 +72,10 @@ contains
         exit
       end if
       
-      ! === EVALUATE EACH INDIVIDUALS ===
-      do
-        ! Catch case where the population is extinct.
-        if (popSize == 0) exit
-        
-        call checkDeath(currIndiv_ptr, popSize, indexOffset)
+      ! Evaluate each individuals.
+      call evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, popSize,&
+          indexOffset, step, recordFlag)
 
-        ! Evaluate alive individual.
-        if (currIndiv_ptr%deathIndex == ALIVE) then
-          currIndiv_ptr%age = currIndiv_ptr%age + 1
-          call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
-        end if
-
-        ! Record demographics.
-        if (step <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
-          demogStep = DEMOG_LAST_STEPS - step + 1
-          call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
-          call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
-        end if
-
-        ! Exit condition
-        if (associated(currIndiv_ptr, popTail_ptr)) then
-          ! Remove dead individual from the list.
-          if (currIndiv_ptr%deathIndex /= ALIVE) then
-            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
-
-            ! Check edge case.
-            if (associated(currIndiv_ptr)) then
-              popTail_ptr => currIndiv_ptr
-            else
-              currIndiv_ptr => oldIndiv_ptr
-              popTail_ptr => currIndiv_ptr
-              popFutureTail_ptr => currIndiv_ptr
-            end if
-          end if
-          exit
-
-        ! Proceed to the next element of the list.
-        else
-          ! Move to the next individual.
-          if (currIndiv_ptr%deathIndex == ALIVE) then
-            oldIndiv_ptr => currIndiv_ptr
-            currIndiv_ptr => currIndiv_ptr%next
-
-          ! Remove dead individual and move to the next individual.
-          else
-            ! Check edge case.
-            if (associated(currIndiv_ptr, popHead_ptr)) popHead_ptr => &
-                currIndiv_ptr%next
-
-            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
-          end if
-        end if
-      end do
-      ! === EVAL END ===
       ! Update population size.
       popSize = popSize + indexOffset
 
@@ -147,17 +91,6 @@ contains
           call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
       end select
 
-      ! Reset pointers.
-      if (popSize > 0) then
-        currIndiv_ptr => popHead_ptr
-        oldIndiv_ptr => null()
-        popTail_ptr => popFutureTail_ptr
-      else
-        if (associated(currIndiv_ptr)) currIndiv_ptr => null()
-        if (associated(popTail_ptr)) popTail_ptr => null()
-        if (associated(popHead_ptr)) popHead_ptr => null()
-      end if
-
       ! Reset variables.
       indexOffset = 0
       call resetDstrbs
@@ -169,6 +102,98 @@ contains
     call runWriter%close
     call deallocDstrb
   end subroutine run
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: evalPopulation
+  !>  Evaluate death and birth of individuals.
+  ! -------------------------------------------------------------------------- !
+  subroutine evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, &
+        popSize, indexOffset, timeStep, recordFlag)
+    use Pop
+    use PersonType
+    use Demographics
+    use Flag, only: ALIVE
+    implicit none
+
+    type(Person), pointer, intent(inout) :: popHead_ptr
+    type(Person), pointer, intent(inout) :: popTail_ptr
+    type(Person), pointer, intent(inout) :: popFutureTail_ptr
+    
+    integer, intent(inout) :: popSize
+    integer, intent(inout) :: indexOffset
+    integer, intent(in)    :: timeStep
+    integer, intent(in)    :: recordFlag
+    
+    type(Person), pointer :: oldIndiv_ptr => null()
+    type(Person), pointer :: currIndiv_ptr => null()
+    integer,      save    :: demogStep = 0
+
+    currIndiv_ptr => popHead_ptr
+    oldIndiv_ptr => null()
+    do
+      ! Catch case where the population is extinct.
+      if (popSize == 0) exit
+      
+      call checkDeath(currIndiv_ptr, popSize, indexOffset)
+
+      ! Evaluate alive individual.
+      if (currIndiv_ptr%deathIndex == ALIVE) then
+        currIndiv_ptr%age = currIndiv_ptr%age + 1
+        call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
+      end if
+
+      ! Record demographics.
+      if (timeStep <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
+        demogStep = DEMOG_LAST_STEPS - timeStep + 1
+        call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
+        call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
+      end if
+
+      ! Exit condition
+      if (associated(currIndiv_ptr, popTail_ptr)) then
+        ! Remove dead individual from the list.
+        if (currIndiv_ptr%deathIndex /= ALIVE) then
+          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
+
+          ! Check edge case.
+          if (associated(currIndiv_ptr)) then
+            popTail_ptr => currIndiv_ptr
+          else
+            currIndiv_ptr => oldIndiv_ptr
+            popTail_ptr => currIndiv_ptr
+            popFutureTail_ptr => currIndiv_ptr
+          end if
+        end if
+        exit
+
+      ! Proceed to the next element of the list.
+      else
+        ! Move to the next individual.
+        if (currIndiv_ptr%deathIndex == ALIVE) then
+          oldIndiv_ptr => currIndiv_ptr
+          currIndiv_ptr => currIndiv_ptr%next
+
+        ! Remove dead individual and move to the next individual.
+        else
+          ! Check edge case.
+          if (associated(currIndiv_ptr, popHead_ptr)) popHead_ptr => &
+              currIndiv_ptr%next
+
+          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
+        end if
+      end if
+    end do
+
+    ! Reset pointers.
+    if (popSize > 0) then
+      popTail_ptr => popFutureTail_ptr
+    else
+      if (associated(popTail_ptr)) popTail_ptr => null()
+      if (associated(popHead_ptr)) popHead_ptr => null()
+    end if
+  end subroutine evalPopulation
+
 
 
   ! -------------------------------------------------------------------------- !
