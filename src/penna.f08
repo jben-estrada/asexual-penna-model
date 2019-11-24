@@ -36,7 +36,6 @@ contains
     use PersonType
     use Demographics
     use Model, only: MODEL_K
-    use Flag, only: ALIVE
     use StdKind, only: writeIntKind
     implicit none
 
