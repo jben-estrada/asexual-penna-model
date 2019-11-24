@@ -35,6 +35,7 @@ module Pop
   public :: checkBirth
   public :: killIndiv
   public :: generatePopulation
+  public :: initializeHealthyIndiv
 contains
 
   ! -------------------------------------------------------------------------- !
@@ -95,17 +96,19 @@ contains
   ! SUBROUTINE: killIndiv
   !>  Remove object `indiv_ptr` is pointing at from the population list.
   !----------------------------------------------------------------------------!
-  subroutine killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
+  subroutine killIndiv(currIndiv_ptr, oldIndiv_ptr)
     use PersonType
     implicit none
 
     type(Person), pointer, intent(inout) :: currIndiv_ptr
     type(Person), pointer, intent(inout) :: oldIndiv_ptr
-    type(Person), pointer, intent(out)   :: deadIndiv_ptr
+    type(Person), pointer                :: deadIndiv_ptr
 
     deadIndiv_ptr => currIndiv_ptr
     currIndiv_ptr => currIndiv_ptr%next
     if (associated(oldIndiv_ptr)) oldIndiv_ptr%next => currIndiv_ptr
+
+    deallocate(deadIndiv_ptr)
   end subroutine killIndiv
 
 
@@ -233,24 +236,22 @@ contains
     type(Person), pointer :: oldIndiv_ptr
     integer               :: i
 
-    allocate(popHead_ptr)
     oldIndiv_ptr => popHead_ptr
     newIndiv_ptr => null()
     call initializeHealthyIndiv(popHead_ptr)
 
     if (startPopSize == 1) then
       popTail_ptr => popHead_ptr
-      return
+    else
+      do i = 1, startPopSize - 1
+        allocate(newIndiv_ptr)
+        oldIndiv_ptr%next => newIndiv_ptr
+        oldIndiv_ptr => newIndiv_ptr
+        
+        call initializeHealthyIndiv(newIndiv_ptr)
+      end do
+      
+      popTail_ptr => newIndiv_ptr
     end if
-
-    do i = 1, startPopSize - 1
-      allocate(newIndiv_ptr)
-      oldIndiv_ptr%next => newIndiv_ptr
-      oldIndiv_ptr => newIndiv_ptr
-
-      call initializeHealthyIndiv(newIndiv_ptr)
-    end do
-
-    popTail_ptr => newIndiv_ptr
   end subroutine generatePopulation
 end module Pop

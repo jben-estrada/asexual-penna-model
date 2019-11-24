@@ -45,12 +45,11 @@ contains
     integer, intent(in) :: recordFlag
 
     type(Person), pointer :: popHead_ptr => null()
-    type(Person), pointer :: popTail_ptr => null()       
-    type(Person), pointer :: popFutureTail_ptr => null()
+    type(Person), pointer :: popTail_ptr  => null()
+    type(Person), pointer :: popFutureTail_ptr  => null()
 
     type(Person), pointer :: oldIndiv_ptr => null()
     type(Person), pointer :: currIndiv_ptr => null()
-    type(Person), pointer :: deadIndiv_ptr => null()
 
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
     integer      :: popSize       ! Current population size
@@ -59,6 +58,7 @@ contains
     integer      :: demogStep     ! Index for demographics
 
     ! Initialize the current population.
+    allocate(popHead_ptr)
     call generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
     popFutureTail_ptr => popTail_ptr
     currIndiv_ptr => popHead_ptr
@@ -101,7 +101,7 @@ contains
         if (associated(currIndiv_ptr, popTail_ptr)) then
           ! Remove dead individual from the list.
           if (currIndiv_ptr%deathIndex /= ALIVE) then
-            call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
+            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
 
             ! Check edge case.
             if (associated(currIndiv_ptr)) then
@@ -111,9 +111,6 @@ contains
               popTail_ptr => currIndiv_ptr
               popFutureTail_ptr => currIndiv_ptr
             end if
-
-            ! Free dead individual.
-            deallocate(deadIndiv_ptr)
           end if
           exit
 
@@ -126,13 +123,11 @@ contains
 
           ! Remove dead individual and move to the next individual.
           else
-            call killIndiv(currIndiv_ptr, oldIndiv_ptr, deadIndiv_ptr)
             ! Check edge case.
-            if (associated(deadIndiv_ptr, popHead_ptr)) popHead_ptr => &
-                currIndiv_ptr
+            if (associated(currIndiv_ptr, popHead_ptr)) popHead_ptr => &
+                currIndiv_ptr%next
 
-            ! Free dead individual.
-            deallocate(deadIndiv_ptr)
+            call killIndiv(currIndiv_ptr, oldIndiv_ptr)
           end if
         end if
       end do
@@ -153,9 +148,15 @@ contains
       end select
 
       ! Reset pointers.
-      currIndiv_ptr => popHead_ptr
-      oldIndiv_ptr => null()
-      popTail_ptr => popFutureTail_ptr
+      if (popSize > 0) then
+        currIndiv_ptr => popHead_ptr
+        oldIndiv_ptr => null()
+        popTail_ptr => popFutureTail_ptr
+      else
+        if (associated(currIndiv_ptr)) currIndiv_ptr => null()
+        if (associated(popTail_ptr)) popTail_ptr => null()
+        if (associated(popHead_ptr)) popHead_ptr => null()
+      end if
 
       ! Reset variables.
       indexOffset = 0
@@ -164,9 +165,35 @@ contains
     ! === MAIN LOOP END ===
 
     ! Wrap up.
+    call freeAll(popHead_ptr)
     call runWriter%close
     call deallocDstrb
   end subroutine run
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: freeAll
+  !>  Free remaining allocated memory to prevent memory leak.
+  ! -------------------------------------------------------------------------- !
+  subroutine freeAll(head_ptr)
+    use PersonType
+    implicit none
+    type(Person), pointer, intent(inout) :: head_ptr
+    type(Person), pointer                :: curr_ptr => null()
+    type(Person), pointer                :: next_ptr => null()
+
+    curr_ptr => head_ptr
+    next_ptr => null()
+    do
+      if (associated(curr_ptr)) then
+        next_ptr => curr_ptr%next
+        deallocate(curr_ptr)
+        curr_ptr => next_ptr
+      else
+        exit
+      end if
+    end do
+  end subroutine freeAll
 
 
   ! -------------------------------------------------------------------------- !
