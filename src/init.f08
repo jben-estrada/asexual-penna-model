@@ -57,7 +57,7 @@ module Model
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  integer, parameter               :: MAXLEN = 80
+  integer, parameter               :: MAXLEN = 256
   character(len=MAXLEN), protected :: modelFilename = "model.ini"
   character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
 
@@ -74,8 +74,12 @@ module Model
 
   ! Stop character for reading files.
   character(len=MAXLEN), parameter :: endOfList = "//"
-  ! Key-value seperator.
-  character(len=1), parameter :: keyValSep = "="
+  ! Key-value separator.
+  character, parameter :: keyValSep = "="
+  ! Verhulst weight separator.
+  character, parameter :: vWeightSep = ","
+  ! End of line character.
+  character, parameter :: endOfLine = "/"
   ! Default null value. This could be anything.
   integer, parameter :: NULLVALUE = -1
 
@@ -240,21 +244,25 @@ contains
   subroutine readVerhulstWeights
     implicit none
 
-    integer :: filestatus
-    integer :: readstatus
-    integer :: i
-    real    :: verhulstWeight
+    integer :: fileStatus
+    integer :: readStatus
+    integer :: charNum
+    integer :: vWeightIdx
+    real    :: vWeight
 
-    integer, parameter        :: charBuffer = 256
-    character(len=charBuffer) :: vWeight_str
+    character(len=MAXLEN)         :: rawLine
+    character(len=:), allocatable :: line
+    character(len=:), allocatable :: strippedFile
+    character(len=:), allocatable :: vWeightStr
+    character                     :: currChar
 
     ! Initialize Verhulst weight array.
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
     MODEL_VERHULST_W(:) = VERHULST_W_DEFAULT
     
     ! Inquire file existence.
-    inquire(file=vWeightsFilename, iostat=filestatus)
-    if (filestatus /= 0) then
+    inquire(file=vWeightsFilename, iostat=fileStatus)
+    if (fileStatus /= 0) then
       print "(3a)", "***Cannot read '", vWeightsFilename, &
           "'. Using the default values."
       return
@@ -262,17 +270,92 @@ contains
 
     ! Read file
     open(unit=vWeightUnit, file=vWeightsFilename)
-    do i = 1, MODEL_L
-      read(vWeightUnit, *, iostat=readStatus) vWeight_str
+    ! Initialize variables for reading file.
+    line = ""
+    strippedFile = ""
+    do
+      read(vWeightUnit, "(a)", iostat=readStatus) rawLine
+      
+      ! Exit condition of the outer do loop.
+      if (readStatus /= 0) exit
+      
+      ! Read line
+      line = trim(rawLine) // endOfLine
+      do charNum = 1, len(line)
+        currChar = line(charNum:charNum)
+        if (isNumeric(currChar) .or. currChar == "." .or. &
+        currChar == vWeightSep) strippedFile = strippedFile // currChar
+      end do
+    end do
 
-      if (readStatus == 0) then
-        read(vWeight_str, *) verhulstWeight
-        MODEL_VERHULST_W(i) = verhulstWeight
+    ! Evaluate stripped input.
+    vWeightStr = ""
+    vWeightIdx = 1
+    strippedFile = strippedFile // endOfLine
+    do charNum = 1, len(strippedFile)
+      currChar = strippedFile(charNum:charNum)
+
+      ! Check read state.
+      if (currChar == vWeightSep .or. currChar == endOfLine) then
+        read(vWeightStr, *, iostat=readStatus) vWeight
+
+        ! Check if the char-to-real casting succeeds.
+        if (readStatus == 0) then
+          ! Check all possible errors before assigning.
+          if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
+            MODEL_VERHULST_W(vWeightIdx) = vWeight
+
+          else if (vWeightIdx > MODEL_L) then
+            print "(a)", "***Warning. Given Verhulst weights exceeded the " // &
+                "maximum number of allowed number of weights."
+
+          else if (vWeight > 1) then
+            print "(a, f5.3, a)", "***Warning. Given Verhulst weight" // &
+                "is outside the allowed range [0, 1]. Using the " // &
+                "default value (", VERHULST_W_DEFAULT, ")."
+
+          else
+            stop "***Error. Unknown error when reading Verhulst weights."
+          end if
+        else
+          print "(3(a), f5.3, a)", "***Warning. '", vWeightStr , &
+              "' is not a valid value for a Verhulst factor. " // &
+              "Using the default value (", VERHULST_W_DEFAULT, ")."
+        end if
+
+        vWeightIdx = vWeightIdx + 1
+        vWeightStr = ""
+      ! Continue reading values for Verhulst weights.
+      else
+        if (isNumeric(currChar) .or. currChar == ".") &
+            vWeightStr = vWeightStr // currChar
       end if
     end do
 
+    ! Wrap up.
     close(vWeightUnit)
+    deallocate(line)
+    deallocate(vWeightStr)
   end subroutine readVerhulstWeights
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: isNumeric
+  !>  Check whether the character `char` is a number or not.
+  ! -------------------------------------------------------------------------- !
+  logical function isNumeric(str)
+    implicit none
+    character, intent(in) :: str
+    integer               :: asciiNum
+  
+    asciiNum = iachar(str)
+    ! NOTE: ASCII characters within 49 and 57 are the numbers 0 to 9.
+    if (48 <= asciiNum .and. asciiNum <= 57) then
+      isNumeric = .true.
+    else
+      isNumeric = .false.
+    end if
+  end function isNumeric
 
 
   ! -------------------------------------------------------------------------- !
