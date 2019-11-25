@@ -1,11 +1,12 @@
-*.code-workspace
-time_f08.csv
-pop_size_f08.csv
-__sandbox.f08
 /results
 /.vscode
 /__deprecated
 /obj
+__sandbox.f08
+plot.sh
+plot.py
+__build.bat
+*.csv
 *.mod
 *.smod
-test.exe
+*.code-workspace
