@@ -19,7 +19,7 @@ for i in obj/*.o
 do
   assemblestr+=" $i"
 done
-assemblestr+=" $ARGS -o $OUT"
+assemblestr+=" $ARGS -o $OUT -J obj/"
 
 echo "Linking object files together..."
 eval $assemblestr && echo "Building done."

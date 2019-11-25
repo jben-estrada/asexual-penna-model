@@ -198,6 +198,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: freeAll
   !>  Free remaining allocated memory to prevent memory leak.
+  !   TODO: Fix rare error where double free occurs.
   ! -------------------------------------------------------------------------- !
   subroutine freeAll(head_ptr)
     use PersonType
