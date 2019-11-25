@@ -27,13 +27,13 @@ contains
     integer(kind=personIntKind), intent(in) :: lower
     integer(kind=personIntKind), intent(out) :: indices(:)
     
-    integer(kind=personIntKind) :: index
-    real(kind=personRealKind)   :: random
-    integer :: i
+    integer(kind=personIntKind) :: index = 0
+    real(kind=personRealKind)   :: random = 0
     integer :: L
+    integer :: i
 
+    indices(:) = 0
     L = size(indices)
-
     do i = 1, L
       do
         call random_number(random)
