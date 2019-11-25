@@ -89,14 +89,14 @@ contains
 
       read(cmdArg, *) cmdInt
       select case (i)
-      case (1)
-        maxTimestep = cmdInt
-      case (2)
-        sampleSize = cmdInt
-      case (3)
-        startPopSize = cmdInt
-      case (4)
-        recordFlag = cmdInt
+        case (1)
+          maxTimestep = cmdInt
+        case (2)
+          sampleSize = cmdInt
+        case (3)
+          startPopSize = cmdInt
+        case (4)
+          recordFlag = cmdInt
       end select
     end do
   end subroutine getCmdArgs

@@ -51,23 +51,21 @@ module Model
   real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
   real, parameter                 :: VERHULST_W_DEFAULT = 0. ! Default weight
 
-  ! Parameters whose values are from command line arguments.
+  ! Parameters whose values can be changed by command line arguments.
   integer, public, save :: MODEL_N0 = 100          ! Starting pop size
   integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  integer, parameter               :: MAXLEN = 32
+  integer, parameter               :: MAXLEN = 80
   character(len=MAXLEN), protected :: modelFilename = "model.ini"
   character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
 
   ! -------------------------------------------------------------------------- !
-  ! Parameter fields and default values.
-  integer, parameter :: modelParamCount = 7
-  character(len=MAXLEN), parameter :: extParamName(modelParamCount) = &
-      ["L", "T", "B", "M", "R", "S", "K"]
+  ! Parameters and their default values.
+  integer, parameter :: modelParamCount = 9
   integer, parameter :: modelParamDefault(modelParamCount) = &
-      [32,   3,   1,   1,   9,   9,   20000]
+      [32,   3,   1,   1,   9,   9,   20000, 100, 100]
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
@@ -76,6 +74,8 @@ module Model
 
   ! Stop character for reading files.
   character(len=MAXLEN), parameter :: endOfList = "//"
+  ! Key-value seperator.
+  character(len=1), parameter :: keyValSep = "="
   ! Default null value. This could be anything.
   integer, parameter :: NULLVALUE = -1
 
@@ -86,22 +86,81 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+    ! FUNCTION: getCharArrayIndex
+    !>  Get the corresponding index of `elem` in a rank-1 array of 
+    !!  characters `elem`. If `elem` is not found in `array`, it
+    !!  returns `nullValue` which is set to 0.
+    ! -------------------------------------------------------------------------- !
+  function getCharArrayIndex(elem) result(i)
+    implicit none
+    character(len=:), allocatable, intent(in) :: elem
+    integer :: i
+
+    ! NOTE: Inelegant solution. It seems character arrays with differing
+    ! character lengths are not allowed.
+    i = NULLVALUE
+    if (elem == "L")     i = 1
+    if (elem == "T")     i = 2
+    if (elem == "B")     i = 3
+    if (elem == "M")     i = 4
+    if (elem == "R")     i = 5
+    if (elem == "R_max") i = 6
+    if (elem == "K")     i = 7
+    if (elem == "N0")    i = 8
+    if (elem == "t_max") i = 9
+  end function getCharArrayIndex
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignParameters
+  !>  Assign model parameters from an array of integer `values`.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignParameters(values)
+    implicit none
+
+    integer, intent(in) :: values(:)
+    integer             :: i
+
+    do i = 1, modelParamCount
+      if (i == 1) MODEL_L = values(i)
+      if (i == 2) MODEL_T = values(i)
+      if (i == 3) MODEL_B = values(i)
+      if (i == 4) MODEL_M = values(i)
+      if (i == 5) MODEL_R = values(i)
+      if (i == 6) MODEL_R_MAX = values(i)
+      if (i == 7) MODEL_K = values(i)
+      if (i == 8) MODEL_N0 = values(i)
+      if (i == 9) MODEL_TIME_STEPS = values(i)
+    end do
+  end subroutine assignParameters
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: readScalarParams
   !>  Read the scalar model parameters from an external file.
   ! -------------------------------------------------------------------------- !
   subroutine readScalarParam
     implicit none
-
+    
+    integer :: values(modelParamCount)
     integer :: filestatus
     integer :: readStatus
-    integer :: i
-    integer :: values(modelParamCount)
-    integer :: tempValue
+    integer :: lineNum
+    integer :: charNum
 
-    character(len=MAXLEN) :: key
+    ! Input variables
+    character(len=MAXLEN)         :: rawLine
+    character(len=:), allocatable :: line
+    character(len=:), allocatable :: key
+    character(len=:), allocatable :: strVal
+    integer                       :: val
+    logical                       :: isReadingKey
+    integer                       :: keyIdx
 
     ! Initialize `value`
     values(:) = modelParamDefault
+    allocate(character(len=0) :: line)
+    allocate(character(len=0) :: key)
 
     ! Check whether the file exists or not.
     inquire(file=modelFilename, iostat=filestatus)
@@ -111,31 +170,69 @@ contains
       return
     end if
 
-    ! Read file
+    ! Read file.
     open(unit=modelUnit, file=modelFilename)
-    do i = 1, modelParamCount
-      read(modelUnit, "(a2, i6)", iostat=readStatus) key, tempValue
 
-      ! Case handling
-      if (readStatus /= 0) then
-        print "(a, i0)", "***Cannot read line. Ending at line ", i
+    ! Read line.
+    lineNum = 1
+    do
+      read(modelUnit, "(a)", iostat=readStatus) rawLine
+      if (readStatus == 0) then
+        line = trim(rawLine)
+      else
+        print "(a, i0)", "***Error. Cannot read line ", lineNum
         exit
-      else if(key == endOfList) then
-        print *, "***Reading ended prematurely"
-        return
-      else if(.not.any(extParamName == key)) then
-        print "(a, a1, a)", "***Warning. '", key, &
-            "' is not a valid parameter."
-        cycle
       end if
-      values(getCharArrayIndex(extParamName, key)) = tempValue
+
+      ! Exit condition.
+      if (line == endOfList) exit
+
+      ! Initialize variables for reading chars in line.
+      key = ""
+      strVal = ""
+      isReadingKey = .true.
+      do charNum = 1, len(line)
+        ! Check non-literal characters.
+        if (line(charNum:charNum) == keyValSep) then
+          isReadingKey = .false.
+          cycle
+        else if (line(charNum:charNum) == " ") then
+          cycle
+        end if
+
+        ! Check literal characters.
+        if (isReadingKey) then
+          key = key // line(charNum:charNum)
+        else
+          strVal = strVal // line(charNum:charNum)
+        end if
+      end do
+
+      ! Check whether `key` is valid or not.
+      keyIdx = getCharArrayIndex(key)
+      if (keyIdx == NULLVALUE) then
+        print "(3(a))", "***Warning. '", key, "' is not a valid parameter."
+      else
+        ! Get the corresponding value.
+        read(strVal, *, iostat=readStatus) val
+        if (readStatus == 0) then
+          values(keyIdx) = val
+        else
+          print "(3(a))", "***Warning. '", strVal, "' is not a valid value."
+        end if
+      end if
+
+      lineNum = lineNum + 1
     end do
 
     call assignParameters(values)
     close(modelUnit)
+    deallocate(line)
+    deallocate(key)
+    deallocate(strVal)
   end subroutine readScalarParam
 
-  
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: readVerhulstWeights
   !>  Read the Verhulst weights values from a .ini file.
@@ -187,60 +284,6 @@ contains
   
     if (allocated(MODEL_VERHULST_W)) deallocate(MODEL_VERHULST_W)
   end subroutine deallocVerhulstWeights
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignParameters
-  !>  Assign model parameters from an array of integer `values`.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignParameters(values)
-    implicit none
-
-    integer, intent(in) :: values(:)
-    integer             :: i
-
-    ! NOTE: I can't think of a more elegant solution to this.
-    do i = 1, modelParamCount
-      select case(i)
-      case(1)
-        MODEL_L = values(i)
-      case(2)
-        MODEL_T = values(i)
-      case(3)
-        MODEL_B = values(i)
-      case(4)
-        MODEL_M = values(i)
-      case(5)
-        MODEL_R = values(i)
-      case(6)
-        MODEL_R_MAX = values(i)
-      case(7)
-        MODEL_K = values(i)
-      end select
-    end do
-  end subroutine assignParameters
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCharArrayIndex
-  !>  Get the corresponding index of `elem` in a rank-1 array of 
-  !!  characters `elem`. If `elem` is not found in `array`, it
-  !!  returns `nullValue` which is set to 0.
-  ! -------------------------------------------------------------------------- !
-  function getCharArrayIndex(array, elem) result(i)
-    implicit none
-
-    character(len=MAXLEN), intent(in) :: array(:)
-    character(len=MAXLEN), intent(in) :: elem
-
-    integer :: i
-
-    do i = 1, size(array)
-      if (array(i) == elem) return
-    end do
- 
-    i = NULLVALUE  ! Default value
-  end function getCharArrayIndex
 end module Model
 
 
