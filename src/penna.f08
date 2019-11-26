@@ -67,7 +67,7 @@ contains
     do step = 1, maxTimestep
 
       if (popSize > MODEL_K) then
-        print "(a)", "The population has exceeded the carrying capacity!"
+        print "(/a)", "The population has exceeded the carrying capacity!"
         exit
       end if
       
@@ -97,7 +97,14 @@ contains
     ! === MAIN LOOP END ===
 
     ! Wrap up.
-    call freeAll(popHead_ptr)
+    if (associated(popHead_ptr)) then
+      if (popSize > 0) then
+        call freeAll(popHead_ptr)
+      else
+        ! NOTE: Temporary solution to double free/corruption error.
+        popHead_ptr => null()
+      end if
+    end if
     call runWriter%close
     call deallocDstrb
   end subroutine run
@@ -198,7 +205,9 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: freeAll
   !>  Free remaining allocated memory to prevent memory leak.
-  !   TODO: Fix rare error where double free occurs.
+  !   TODO: Fix rare error where double free occurs. The error seems
+  !         to be brought be an associated pointer with a
+  !         corrupted target.
   ! -------------------------------------------------------------------------- !
   subroutine freeAll(head_ptr)
     use PersonType

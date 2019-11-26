@@ -235,9 +235,9 @@ contains
     type(Person), pointer :: oldIndiv_ptr
     integer               :: i
 
+    call initializeHealthyIndiv(popHead_ptr)
     oldIndiv_ptr => popHead_ptr
     newIndiv_ptr => null()
-    call initializeHealthyIndiv(popHead_ptr)
 
     if (startPopSize == 1) then
       popTail_ptr => popHead_ptr
