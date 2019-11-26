@@ -24,7 +24,6 @@
 
 
 program Main
-  use StdKind, only: timingRealKind
   use Penna, only: readModelParam, multipleRun, wrapUp
   implicit none
 
@@ -34,7 +33,6 @@ program Main
   integer :: sampleSize_ 
   integer :: startPopSize_
   integer :: recordFlag_
-  real(kind=timingRealKind) :: meanTime
   ! Separator character array for pretty printing.
   integer              :: k  ! Index variable for `separator`
   character, parameter :: separator(29) = [("=", k = 1, 29)]
@@ -50,7 +48,7 @@ program Main
   call printArgs(timeSteps, sampleSize_, startPopSize_, recordFlag_)
 
   ! Run the Penna model multiple times.
-  call multipleRun(timeSteps, startPopSize_, sampleSize_, recordFlag_, meanTime)
+  call multipleRun(timeSteps, startPopSize_, sampleSize_, recordFlag_)
 
   ! Wrap up. Deallocate allocatable arrays.
   call wrapUp
