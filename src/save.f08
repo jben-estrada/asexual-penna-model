@@ -52,7 +52,7 @@ module SaveFormat
   ! Timing record. fileCount => 2
   ! Format: <no. of time step> <no. of population> <wall time>
   character(len=MAXLEN), parameter :: timeFilename = "time_f08.csv"
-  character(len=MAXLEN), parameter :: timeFormat = "(f10.5,',',f10.5,',',f10.5)"
+  character(len=MAXLEN), parameter :: timeFormat = "(*(f10.5, ','))"
   character(len=MAXLEN), parameter :: timePosition = "append"
   integer, parameter :: timeUnit = 101
 

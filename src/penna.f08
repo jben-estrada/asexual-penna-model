@@ -234,8 +234,7 @@ contains
   ! SUBROUTINE: multipleRun
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
-  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
-        wallTime)
+  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag)
     use StdKind, only: timingIntKind, timingRealKind, writeIntKind
     use SaveFormat
     use TickerType
@@ -245,7 +244,9 @@ contains
     integer, intent(in) :: sampleSize   
     integer, intent(in) :: startingPopSize
     integer, intent(in) :: recordFlag
-    real(kind=timingRealKind), intent(out) :: wallTime
+
+    real(kind=timingRealKind) :: meanTime
+    real(kind=timingRealKind) :: stdDevTime
 
     integer(kind=timingIntKind) :: startTimeInt
     integer(kind=timingIntKind) :: endTimeInt
@@ -253,6 +254,7 @@ contains
     real(kind=timingRealKind)   :: endTimeReal
     real(kind=timingRealKind)   :: clockRate
     real(kind=timingRealKind)   :: sum
+    real(kind=timingRealKind)   :: sumSqrd
 
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
     type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
@@ -264,6 +266,7 @@ contains
 
     ! Call and time the `run` subroutine.
     sum = 0.
+    sumSqrd = 0.
     do i = 1, sampleSize
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
@@ -276,24 +279,32 @@ contains
       call system_clock(count=endTimeInt, count_rate=clockRate)
       endTimeReal = real(endTimeInt, kind=timingRealKind)/clockRate
 
+      ! Calculate necessary values for average and std deviation.
       sum = sum + (endTimeReal - startTimeReal)*1e3
-      call runTicker%incrementTick
+      sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
       
       ! Print progress bar
+      call runTicker%incrementTick
       write(*, "(*(a))", advance="no") (char(8), j = 1, 10)
       call runTicker%showTicker
       write(*, "(f6.1, a)", advance="no") 100*real(i)/real(sampleSize), "%"
     end do
 
-    ! Get average wall time.
-    wallTime = sum/real(sampleSize, kind=timingRealKind)
-    print "(/a, f12.3, a)", "Average time: ", wallTime, " ms"
+    ! Get average elapsed time and its std deviation.
+    meanTime = sum/real(sampleSize, kind=timingRealKind)
+    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2)/real(sampleSize, &
+        kind=timingRealKind)
+    ! Print time statistics.
+    print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+    if (sampleSize > 1) then
+      print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
+    end if
 
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
     call timeWriter%initialize
     call timeWriter%write(timeFlag, [real(maxTimeStep, kind=timingRealKind), &
-        real(startingPopSize, kind=timingRealKind), wallTime])
+        real(startingPopSize, kind=timingRealKind), meanTime, stdDevTime])
     call timeWriter%close
   end subroutine multipleRun
 
