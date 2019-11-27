@@ -73,7 +73,7 @@ module Model
   integer, parameter :: vWeightUnit = 98
 
   ! Stop character for reading files.
-  character(len=MAXLEN), parameter :: endOfList = "//"
+  character, parameter :: commentStart = ";"
   ! Key-value separator.
   character, parameter :: keyValSep = "="
   ! Verhulst weight separator.
@@ -82,6 +82,8 @@ module Model
   character, parameter :: endOfLine = "/"
   ! Default null value. This could be anything.
   integer, parameter :: NULLVALUE = -1
+  ! Ignore value.
+  integer, parameter :: IGNOREVALUE = 0 
 
   public :: readScalarParam
   public :: readVerhulstWeights
@@ -112,6 +114,8 @@ contains
     if (elem == "K")     i = 7
     if (elem == "N0")    i = 8
     if (elem == "t_max") i = 9
+
+    if (elem == "")      i = IGNOREVALUE
   end function getCharArrayIndex
 
 
@@ -157,6 +161,7 @@ contains
     character(len=:), allocatable :: line
     character(len=:), allocatable :: key
     character(len=:), allocatable :: strVal
+    character                     :: currChar
     integer                       :: val
     logical                       :: isReadingKey
     integer                       :: keyIdx
@@ -178,51 +183,61 @@ contains
     open(unit=modelUnit, file=modelFilename)
 
     ! Read line.
+    ! NOTE: This could be put inside another procedure.
     lineNum = 1
     do
       read(modelUnit, "(a)", iostat=readStatus) rawLine
       if (readStatus == 0) then
         line = trim(rawLine)
       else
-        print "(a, i0)", "***Error. Cannot read line ", lineNum
+        if (readStatus /= -1) print "(a, i0)", "***Error. Cannot read line ", &
+            lineNum
         exit
       end if
-
-      ! Exit condition.
-      if (line == endOfList) exit
 
       ! Initialize variables for reading chars in line.
       key = ""
       strVal = ""
+      currChar = ""
       isReadingKey = .true.
+      ! Read line.
       do charNum = 1, len(line)
+        currChar = line(charNum:charNum)
+
         ! Check non-literal characters.
-        if (line(charNum:charNum) == keyValSep) then
+        if (currChar == keyValSep) then
           isReadingKey = .false.
           cycle
-        else if (line(charNum:charNum) == " ") then
+        else if (currChar == commentStart) then
+          exit
+        else if (currChar == " ") then
           cycle
         end if
 
         ! Check literal characters.
         if (isReadingKey) then
-          key = key // line(charNum:charNum)
+          key = key // currChar
         else
-          strVal = strVal // line(charNum:charNum)
+          strVal = strVal // currChar
         end if
       end do
 
       ! Check whether `key` is valid or not.
+      ! NOTE: This could be put inside another procedure.
       keyIdx = getCharArrayIndex(key)
-      if (keyIdx == NULLVALUE) then
-        print "(3(a))", "***Warning. '", key, "' is not a valid parameter."
-      else
-        ! Get the corresponding value.
-        read(strVal, *, iostat=readStatus) val
-        if (readStatus == 0) then
-          values(keyIdx) = val
+      if (keyIdx /= IGNOREVALUE) then
+        if (keyIdx == NULLVALUE) then
+          print "(3(a), i0, a)", "***Warning. '", key, "' at line ", lineNum, &
+              " is not a valid parameter."
         else
-          print "(3(a))", "***Warning. '", strVal, "' is not a valid value."
+          ! Get the corresponding value.
+          read(strVal, *, iostat=readStatus) val
+          if (readStatus == 0) then
+            values(keyIdx) = val
+          else
+            print "(3(a), i0, a)", "***Warning. '", strVal, "' at line ", &
+                lineNum, " is not a valid value."
+          end if
         end if
       end if
 
