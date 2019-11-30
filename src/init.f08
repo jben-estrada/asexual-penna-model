@@ -52,8 +52,9 @@ module Model
   real, parameter                 :: VERHULST_W_DEFAULT = 0. ! Default weight
 
   ! Parameters whose values can be changed by command line arguments.
-  integer, public, save :: MODEL_N0 = 100          ! Starting pop size
-  integer, public, save :: MODEL_TIME_STEPS = 100  ! Total time steps
+  integer, public, save :: MODEL_N0            ! Starting pop size
+  integer, public, save :: MODEL_TIME_STEPS    ! Total time steps
+  integer, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
@@ -63,23 +64,25 @@ module Model
 
   ! -------------------------------------------------------------------------- !
   ! Parameters and their default values.
-  integer, parameter :: modelParamCount = 9
+  integer, parameter :: modelParamCount = 10
+  ! NOTE: The order of the model parameters:
+  !       [L, T, B, M, R, R_max, K, N0, t_max, sample_size]
   integer, parameter :: modelParamDefault(modelParamCount) = &
-      [32,   3,   1,   1,   9,   9,   20000, 100, 100]
+      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1]
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: modelUnit = 99
   integer, parameter :: vWeightUnit = 98
 
-  ! Stop character for reading files.
-  character, parameter :: commentStart = ";"
+  ! Comment character.
+  character, parameter :: COMMENT = ";"
   ! Key-value separator.
-  character, parameter :: keyValSep = "="
+  character, parameter :: KEYVAL_SEP = "="
   ! Verhulst weight separator.
-  character, parameter :: vWeightSep = ","
+  character, parameter :: VWEIGHT_SEP = ","
   ! End of line character.
-  character, parameter :: endOfLine = "/"
+  character, parameter :: EOL = "/"
   ! Default null value. This could be anything.
   integer, parameter :: NULLVALUE = -1
   ! Ignore value.
@@ -114,7 +117,7 @@ contains
     if (elem == "K")     i = 7
     if (elem == "N0")    i = 8
     if (elem == "t_max") i = 9
-
+    if (elem == "sample_size") i =10 
     if (elem == "")      i = IGNOREVALUE
   end function getCharArrayIndex
 
@@ -139,6 +142,7 @@ contains
       if (i == 7) MODEL_K = values(i)
       if (i == 8) MODEL_N0 = values(i)
       if (i == 9) MODEL_TIME_STEPS = values(i)
+      if (i == 10) MODEL_SAMPLE_SIZE = values(i)
     end do
   end subroutine assignParameters
 
@@ -152,24 +156,19 @@ contains
     
     integer :: values(modelParamCount)
     integer :: filestatus
-    integer :: readStatus
-    integer :: lineNum
-    integer :: charNum
+    integer :: keyIdx
+    integer :: val
 
-    ! Input variables
-    character(len=MAXLEN)         :: rawLine
-    character(len=:), allocatable :: line
+    character(len=:), allocatable :: strippedFile
     character(len=:), allocatable :: key
     character(len=:), allocatable :: strVal
-    character                     :: currChar
-    integer                       :: val
-    logical                       :: isReadingKey
-    integer                       :: keyIdx
+    character :: currChar
+    integer   :: charNum
+    integer   :: castStatus
+    logical   :: isReadingKey
 
-    ! Initialize `value`
-    values(:) = modelParamDefault
-    allocate(character(len=0) :: line)
-    allocate(character(len=0) :: key)
+    ! Assign default values.
+    values = modelParamDefault
 
     ! Check whether the file exists or not.
     inquire(file=modelFilename, iostat=filestatus)
@@ -180,73 +179,66 @@ contains
     end if
 
     ! Read file.
+    strippedFile = ""
     open(unit=modelUnit, file=modelFilename)
+    call stripFile(strippedFile, modelUnit)
+    close(modelUnit)
 
-    ! Read line.
-    ! NOTE: This could be put inside another procedure.
-    lineNum = 1
-    do
-      read(modelUnit, "(a)", iostat=readStatus) rawLine
-      if (readStatus == 0) then
-        line = trim(rawLine)
-      else
-        if (readStatus /= -1) print "(a, i0)", "***Error. Cannot read line ", &
-            lineNum
-        exit
-      end if
+    ! Evaluate file.
+    isReadingKey = .true.
+    key = ""
+    strVal = ""
+    do charNum = 1, len(strippedFile)
+      currChar = strippedFile(charNum:charNum)
 
-      ! Initialize variables for reading chars in line.
-      key = ""
-      strVal = ""
-      currChar = ""
-      isReadingKey = .true.
-      ! Read line.
-      do charNum = 1, len(line)
-        currChar = line(charNum:charNum)
-
-        ! Check non-literal characters.
-        if (currChar == keyValSep) then
+      ! Check change in read state.
+      select case (currChar)
+        ! ***KEYVAL_SEP: Shift from reading LHS to RHS.
+        case (KEYVAL_SEP)
           isReadingKey = .false.
+          strVal = ""
           cycle
-        else if (currChar == commentStart) then
-          exit
-        else if (currChar == " ") then
-          cycle
-        end if
 
-        ! Check literal characters.
-        if (isReadingKey) then
-          key = key // currChar
-        else
-          strVal = strVal // currChar
-        end if
-      end do
+        ! ***EOL: Shift from reading RHS to LHS.
+        case (EOL)
+          isReadingKey = .true.
 
-      ! Check whether `key` is valid or not.
-      ! NOTE: This could be put inside another procedure.
-      keyIdx = getCharArrayIndex(key)
-      if (keyIdx /= IGNOREVALUE) then
-        if (keyIdx == NULLVALUE) then
-          print "(3(a), i0, a)", "***Warning. '", key, "' at line ", lineNum, &
-              " is not a valid parameter."
-        else
-          ! Get the corresponding value.
-          read(strVal, *, iostat=readStatus) val
-          if (readStatus == 0) then
-            values(keyIdx) = val
+          ! Read previous key and value.
+          keyIdx = getCharArrayIndex(key)
+          select case (keyIdx)
+            case (IGNOREVALUE)
+              key = ""
+              cycle
+            case (NULLVALUE)
+              print "(3(a))", "***Warning. '", key, &
+                  "'is not a valid parameter. Ignoring this key."
+              key = ""
+              cycle
+            case default
+              ! Cast the value string to integer.
+              read(strVal, *, iostat=castStatus) val
+              if (castStatus == 0) then
+                values(keyIdx) = val
+              else
+                print "(3(a))", "***Warning. '", strVal, "' is not a valid" // &
+                    " value."
+              end if
+              key = ""
+          end select
+        
+        ! ***Neither case.
+        case default
+          ! 'Eat' input.
+          if (isReadingKey) then
+            key = key // currChar
           else
-            print "(3(a), i0, a)", "***Warning. '", strVal, "' at line ", &
-                lineNum, " is not a valid value."
+            strVal = strVal // currChar
           end if
-        end if
-      end if
-
-      lineNum = lineNum + 1
+      end select
     end do
 
     call assignParameters(values)
-    close(modelUnit)
-    deallocate(line)
+    deallocate(strippedFile)
     deallocate(key)
     deallocate(strVal)
   end subroutine readScalarParam
@@ -265,8 +257,6 @@ contains
     integer :: vWeightIdx
     real    :: vWeight
 
-    character(len=MAXLEN)         :: rawLine
-    character(len=:), allocatable :: line
     character(len=:), allocatable :: strippedFile
     character(len=:), allocatable :: vWeightStr
     character                     :: currChar
@@ -283,35 +273,21 @@ contains
       return
     end if
 
-    ! Read file
-    open(unit=vWeightUnit, file=vWeightsFilename)
-    ! Initialize variables for reading file.
-    line = ""
+    ! Read file.
     strippedFile = ""
-    do
-      read(vWeightUnit, "(a)", iostat=readStatus) rawLine
-      
-      ! Exit condition of the outer do loop.
-      if (readStatus /= 0) exit
-      
-      ! Read line
-      line = trim(rawLine) // endOfLine
-      do charNum = 1, len(line)
-        currChar = line(charNum:charNum)
-        if (isNumeric(currChar) .or. currChar == "." .or. &
-        currChar == vWeightSep) strippedFile = strippedFile // currChar
-      end do
-    end do
+    open(unit=vWeightUnit, file=vWeightsFilename)
+    call stripFile(strippedFile, vWeightUnit)
+    close(vWeightUnit)
 
     ! Evaluate stripped input.
     vWeightStr = ""
     vWeightIdx = 1
-    strippedFile = strippedFile // endOfLine
+    strippedFile = strippedFile // EOL
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
 
       ! Check read state.
-      if (currChar == vWeightSep .or. currChar == endOfLine) then
+      if (currChar == VWEIGHT_SEP .or. charNum == len(strippedFile)) then
         read(vWeightStr, *, iostat=readStatus) vWeight
 
         ! Check if the char-to-real casting succeeds.
@@ -319,19 +295,20 @@ contains
           ! Check all possible errors before assigning.
           if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
             MODEL_VERHULST_W(vWeightIdx) = vWeight
-
+          ! ***Error. Invalid number of weights.
           else if (vWeightIdx > MODEL_L) then
             print "(a)", "***Warning. Given Verhulst weights exceeded the " // &
                 "maximum number of allowed number of weights."
-
+          ! ***Error. Invalid range.
           else if (vWeight > 1) then
             print "(a, f5.3, a)", "***Warning. Given Verhulst weight" // &
                 "is outside the allowed range [0, 1]. Using the " // &
                 "default value (", VERHULST_W_DEFAULT, ")."
-
+          ! ***Unknown error.
           else
             stop "***Error. Unknown error when reading Verhulst weights."
           end if
+        ! ***Error. Invalid input.
         else
           print "(3(a), f5.3, a)", "***Warning. '", vWeightStr , &
               "' is not a valid value for a Verhulst factor. " // &
@@ -347,24 +324,69 @@ contains
       end if
     end do
 
-    ! Wrap up.
-    close(vWeightUnit)
-    deallocate(line)
     deallocate(vWeightStr)
   end subroutine readVerhulstWeights
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: stripFile
+  !>  Read the specified file and strip whitespaces and
+  !!  comments (lines starting with ';').
+  ! -------------------------------------------------------------------------- !
+  subroutine stripFile(strippedFile, unit)
+    implicit none
+    character(len=:), allocatable, intent(out) :: strippedFile
+    integer,                       intent(in)  :: unit
+
+    character(len=:), allocatable :: line
+    character(len=MAXLEN)         :: rawLine
+    character                     :: currChar
+    integer                       :: readStatus
+    integer                       :: charNum
+
+    strippedFile = ""
+    line = ""
+    rawLine = ""
+    do
+      ! Read line.
+      read(unit, "(a)", iostat=readStatus) rawLine
+      if (readStatus == 0) then
+        line = trim(rawLine)
+      else
+        exit
+      end if
+
+      ! Strip whitespaces.
+      do charNum = 1, len(line)
+        currChar = line(charNum:charNum)
+        
+        if (currChar == " ") then
+          cycle
+        else if (currChar == COMMENT) then
+          strippedFile = strippedFile // EOL
+          exit
+        end if
+
+        strippedFile = strippedFile // currChar
+        if (charNum == len(line)) strippedFile = strippedFile // EOL
+      end do
+    end do
+
+    deallocate(line)
+  end subroutine
 
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: isNumeric
   !>  Check whether the character `char` is a number or not.
   ! -------------------------------------------------------------------------- !
-  logical function isNumeric(str)
+  logical function isNumeric(char)
     implicit none
-    character, intent(in) :: str
+    character, intent(in) :: char
     integer               :: asciiNum
   
-    asciiNum = iachar(str)
-    ! NOTE: ASCII characters within 48 and 57 are the numbers 0 to 9.
+    asciiNum = iachar(char)
+    ! NOTE: ASCII characters from 48 to 57 are the numbers 0 to 9.
     if (48 <= asciiNum .and. asciiNum <= 57) then
       isNumeric = .true.
     else

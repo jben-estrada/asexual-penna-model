@@ -66,7 +66,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
         isVerbosePrint)
-    use Model, only: MODEL_TIME_STEPS, MODEL_N0
+    use Model, only: MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE
     use Penna, only: nullFlag, wrapUp
     implicit none
 
@@ -84,7 +84,7 @@ contains
 
     ! Default values for cmd arguments.
     maxTimestep = MODEL_TIME_STEPS
-    sampleSize = 1
+    sampleSize = MODEL_SAMPLE_SIZE
     startPopSize = MODEL_N0
     recordFlag = nullFlag
     isVerbosePrint = .false.
@@ -153,11 +153,13 @@ contains
       write(flagStr(i), "(i2)") flagArr(i)
     end do
 
-    ! NOTE: STILL INCOMPLETE
-    ! TODO: Add description for postional arguments.
+    ! TODO: Better help message.
+    ! ***Usage message.
     print "(a, /a)", "usage: penna.out [-v | --verbose] [<max-time-step>] " // &
         "[<sample-size>] [<start-pop-size>] [<record-flag>]", &
         "       penna.out [-h | --help]"
+    
+    ! ***Options message.
     print "(/a, 2(/7(' '), 2(a)))", "options:", &
         adjustl("-h --help      "), adjustl("Show this message."), &
         adjustl("-v --verbose   "), adjustl("Show all the model parameters.")
@@ -169,10 +171,10 @@ contains
         adjustl("record-flag    "), adjustl("Record specified data. " // &
             "[default: "), 0, "]"
     print "(22(' '), a/ *(24(' '), 2(a)/))", adjustl("Flags:"), &
-        flagStr(1), adjustl("Do not record."), &
-        flagStr(2), adjustl("Record population size per time."), &
-        flagStr(3), adjustl("Record demographics in the last 300 steps."),&
-        flagStr(4), adjustl("Record death count.")
+        flagStr(1), adjustl("- Do not record."), &
+        flagStr(2), adjustl("- Record population size per time."), &
+        flagStr(3), adjustl("- Record demographics in the last 300 steps."), &
+        flagStr(4), adjustl("- Record death count.")
   end subroutine printHelp
 
 
