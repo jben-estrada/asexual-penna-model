@@ -10,3 +10,4 @@ __build.bat
 *.mod
 *.smod
 *.code-workspace
+*.out
