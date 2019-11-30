@@ -91,6 +91,7 @@ contains
     end if
   end subroutine checkDeath
 
+
   !----------------------------------------------------------------------------!
   ! SUBROUTINE: killIndiv
   !>  Remove object `indiv_ptr` is pointing at from the population list.

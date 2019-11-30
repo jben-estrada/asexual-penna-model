@@ -1,0 +1,7 @@
+FCOMPILER=gfortran-8
+TARGET=penna.out
+FFLAGS=
+
+all: $(TARGET)
+
+$(TARGET): 

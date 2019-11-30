@@ -203,7 +203,6 @@ contains
   end subroutine evalPopulation
 
 
-
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: freeAll
   !>  Free remaining allocated memory to prevent memory leak.
