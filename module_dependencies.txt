@@ -1,0 +1,117 @@
+DEP -> SRC
+
+[Main]
+  Penna
+  Model
+
+[Penna]
+  Pop
+  SaveFormat
+  PersonType
+  Demographics
+  Model
+  StdKind
+  Flag
+  TickerType
+
+[Pop]
+  Model
+  Flag
+  PersonType
+  Gene
+  StdKind
+  RandInd
+
+[PersonType]
+  Model
+  StdKind
+
+[Demographics]
+  Gene
+  StdKind
+  Model
+
+[SaveFormat]
+  UpdateArray
+  StdKind
+
+[UpdateArray]
+  StdKind
+
+[Gene]
+  StdKind
+
+[RandInd]
+  StdKind
+
+[Model]
+
+[Flag]
+
+[StdKind]
+
+[TickerType]
+----------------------------------------------------
+SRC -> DEP
+
+TickerType -> {
+  Penna
+}
+
+StdKind -> {
+  RandInd,
+  Gene,
+  UpdateArray,
+  SaveFormat,
+  PersonType,
+  Demographics,
+  Pop,
+  Penna
+}
+
+Flag -> {
+  Pop,
+  Flag
+}
+
+Model -> {
+  PersonType,
+  Demographics,
+  Pop,
+  Penna,
+  main
+}
+
+RandInd -> {
+  Pop
+}
+
+Gene -> {
+  Demographics,
+  Pop
+}
+
+UpdateArray -> {
+  SaveFormat
+}
+
+SaveFormat -> {
+  Penna
+}
+
+PersonType -> {
+  Pop,
+  Penna
+}
+
+Demographics -> {
+  Penna
+}
+
+Pop -> {
+  Penna
+}
+
+Penna -> {
+  main
+}
