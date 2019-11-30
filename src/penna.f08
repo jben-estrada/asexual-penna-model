@@ -327,13 +327,18 @@ contains
     runWriter = constructWriter([popFlag, ageDstrbFlag, genomeDstrbFlag, &
         deathFlag])
 
-    select case(recordFlag)
-    case(pop_recFlag)
-      call runWriter%initialize(popFlag)
-    case(demog_recFlag)
-      call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
-    case(death_recFlag)
-      call runWriter%initialize(deathFlag)
+    select case (recordFlag)
+      case (pop_recFlag)
+        call runWriter%initialize(popFlag)
+      case (demog_recFlag)
+        call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
+      case (death_recFlag)
+        call runWriter%initialize(deathFlag)
+      case (nullFlag)
+        ! Placeholder. Does nothing.
+      case default
+        print "(a, i0, a)", "***Warning. '", recordFlag, &
+            "' is an invalid record flag. Defaulting to 0 (record nothing)."
     end select
   end subroutine initializeRunWriter
 

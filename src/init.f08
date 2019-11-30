@@ -55,6 +55,7 @@ module Model
   integer, public, save :: MODEL_N0            ! Starting pop size
   integer, public, save :: MODEL_TIME_STEPS    ! Total time steps
   integer, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
+  integer, public, save :: MODEL_REC_FLAG      ! Record flag
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
@@ -63,13 +64,15 @@ module Model
   character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
 
   ! -------------------------------------------------------------------------- !
-  ! Parameters and their default values.
-  integer, parameter :: modelParamCount = 10
-  ! NOTE: The order of the model parameters:
-  !       [L, T, B, M, R, R_max, K, N0, t_max, sample_size]
+  ! Parameter count.
+  integer, parameter :: modelParamCount = 11
+  ! Default parameter values. NOTE: The order of the model parameters:
+  !       [L, T, B, M, R, R_max, K, N0, t_max, sample_size, rec_flag]
   integer, parameter :: modelParamDefault(modelParamCount) = &
-      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1]
-
+      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0]
+  ! Parameter keys. NOTE: Must first be initialized before using to be able
+  ! to contain keys with different lengths (not counting spaces).
+  character(len=MAXLEN) :: modelParamKeys(modelParamCount)
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: modelUnit = 99
@@ -95,6 +98,45 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initParamKeys
+  !>  Initialize `modelParamKeys` to allow it to contain keys with
+  !!  different lengths (not counting spaces). It is not standard
+  !!  to initialize character arrays with characters of differing
+  !!  lengths.
+  ! -------------------------------------------------------------------------- !
+  subroutine initParamKeys
+    implicit none
+    integer :: i
+    do i = 1, size(modelParamKeys)
+      select case (i)
+        case (1)
+          modelParamKeys(i) = "L"
+        case (2)
+          modelParamKeys(i) = "T"
+        case (3)
+          modelParamKeys(i) = "B"
+        case (4)
+          modelParamKeys(i) = "M"
+        case (5)
+          modelParamKeys(i) = "R"
+        case (6)
+          modelParamKeys(i) = "R_max"
+        case (7)
+          modelParamKeys(i) = "K"
+        case (8)
+          modelParamKeys(i) = "N0"
+        case (9)
+          modelParamKeys(i) = "t_max"
+        case (10)
+          modelParamKeys(i) = "sample_size"
+        case (11)
+          modelParamKeys(i) = "rec_flag"
+      end select
+    end do
+  end subroutine initParamKeys
+
+
+  ! -------------------------------------------------------------------------- !
   ! FUNCTION: getCharArrayIndex
   !>  Get the corresponding index of `elem` in a rank-1 array of 
   !!  characters `elem`. If `elem` is not found in `array`, it
@@ -105,20 +147,15 @@ contains
     character(len=:), allocatable, intent(in) :: elem
     integer :: i
 
-    ! NOTE: Inelegant solution. It seems character arrays with differing
-    ! character lengths are not allowed.
-    i = NULLVALUE
-    if (elem == "L")     i = 1
-    if (elem == "T")     i = 2
-    if (elem == "B")     i = 3
-    if (elem == "M")     i = 4
-    if (elem == "R")     i = 5
-    if (elem == "R_max") i = 6
-    if (elem == "K")     i = 7
-    if (elem == "N0")    i = 8
-    if (elem == "t_max") i = 9
-    if (elem == "sample_size") i =10 
-    if (elem == "")      i = IGNOREVALUE
+    do i = 1, size(modelParamKeys)
+      if (trim(modelParamKeys(i)) == elem) return
+    end do
+
+    if (elem == "") then
+      i = IGNOREVALUE
+    else
+      i = NULLVALUE
+    end if
   end function getCharArrayIndex
 
 
@@ -133,16 +170,30 @@ contains
     integer             :: i
 
     do i = 1, modelParamCount
-      if (i == 1) MODEL_L = values(i)
-      if (i == 2) MODEL_T = values(i)
-      if (i == 3) MODEL_B = values(i)
-      if (i == 4) MODEL_M = values(i)
-      if (i == 5) MODEL_R = values(i)
-      if (i == 6) MODEL_R_MAX = values(i)
-      if (i == 7) MODEL_K = values(i)
-      if (i == 8) MODEL_N0 = values(i)
-      if (i == 9) MODEL_TIME_STEPS = values(i)
-      if (i == 10) MODEL_SAMPLE_SIZE = values(i)
+      select case (i)
+        case (1)
+          MODEL_L = values(i)
+        case (2)
+          MODEL_T = values(i)
+        case (3)
+          MODEL_B = values(i)
+        case (4)
+          MODEL_M = values(i)
+        case (5)
+          MODEL_R = values(i)
+        case (6)
+          MODEL_R_MAX = values(i)
+        case (7)
+          MODEL_K = values(i)
+        case (8)
+          MODEL_N0 = values(i)
+        case (9)
+          MODEL_TIME_STEPS = values(i)
+        case (10)
+          MODEL_SAMPLE_SIZE = values(i)
+        case (11)
+          MODEL_REC_FLAG = values(i)
+      end select
     end do
   end subroutine assignParameters
 
@@ -166,9 +217,13 @@ contains
     integer   :: charNum
     integer   :: castStatus
     logical   :: isReadingKey
-
+    integer   :: i
+    
     ! Assign default values.
     values = modelParamDefault
+
+    ! Initialize parameter keys.
+    call initParamKeys
 
     ! Check whether the file exists or not.
     inquire(file=modelFilename, iostat=filestatus)
@@ -211,7 +266,9 @@ contains
               cycle
             case (NULLVALUE)
               print "(3(a))", "***Warning. '", key, &
-                  "'is not a valid parameter. Ignoring this key."
+                  "' is not a valid parameter. Ignoring this key."
+              print "(a/, 10(' '), *(a, ', '))", "Valid parameters:", &
+                  (trim(modelParamKeys(i)), i = 1, size(modelParamKeys))
               key = ""
               cycle
             case default
