@@ -73,7 +73,7 @@ contains
       
       ! Evaluate each individuals.
       call evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, popSize,&
-          indexOffset, step, recordFlag)
+          indexOffset, recordFlag, step, maxTimestep)
 
       ! Update population size.
       popSize = popSize + indexOffset
@@ -115,7 +115,7 @@ contains
   !>  Evaluate death and birth of individuals.
   ! -------------------------------------------------------------------------- !
   subroutine evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, &
-        popSize, indexOffset, timeStep, recordFlag)
+        popSize, indexOffset, recordFlag, timeStep, maxTimeStep)
     use Pop
     use PersonType
     use Demographics
@@ -129,6 +129,7 @@ contains
     integer, intent(inout) :: popSize
     integer, intent(inout) :: indexOffset
     integer, intent(in)    :: timeStep
+    integer, intent(in)    :: maxTimeStep
     integer, intent(in)    :: recordFlag
     
     type(Person), pointer :: oldIndiv_ptr => null()
@@ -150,7 +151,8 @@ contains
       end if
 
       ! Record demographics.
-      if (timeStep <= DEMOG_LAST_STEPS .and. recordFlag == demog_recFlag) then
+      if (maxTimeStep - timeStep <= DEMOG_LAST_STEPS &
+          .and. recordFlag == demog_recFlag) then
         demogStep = DEMOG_LAST_STEPS - timeStep + 1
         call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
         call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
