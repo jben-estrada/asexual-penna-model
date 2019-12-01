@@ -39,29 +39,33 @@ module Model
   private
 
   ! Parameters whose values are from `model.ini`.
-  integer, public, save :: MODEL_L     ! Genome length (unmodifiable)
-  integer, public, save :: MODEL_T     ! Mutation threshold
-  integer, public, save :: MODEL_B     ! Birth rate
-  integer, public, save :: MODEL_M     ! Mutation rate
-  integer, public, save :: MODEL_R     ! Reproduction age
-  integer, public, save :: MODEL_R_MAX ! Maximum reproduction age
-  integer, public, save :: MODEL_K     ! Carrying capacity
+  integer, protected, public, save :: MODEL_L     ! Genome length (unmodifiable)
+  integer, protected, public, save :: MODEL_T     ! Mutation threshold
+  integer, protected, public, save :: MODEL_B     ! Birth rate
+  integer, protected, public, save :: MODEL_M     ! Mutation rate
+  integer, protected, public, save :: MODEL_R     ! Reproduction age
+  integer, protected, public, save :: MODEL_R_MAX ! Maximum reproduction age
+  integer, protected, public, save :: MODEL_K     ! Carrying capacity
 
   ! Parameters whose values are from `verhulst_weights.ini`.
-  real, allocatable, public, save :: MODEL_VERHULST_W(:)  ! Verhulst weights
-  real, parameter                 :: VERHULST_W_DEFAULT = 0. ! Default weight
+  ! Verhulst weights
+  real, allocatable, protected, public, save :: MODEL_VERHULST_W(:)
+  ! Default weight
+  real, parameter :: VERHULST_W_DEFAULT = 0. 
 
   ! Parameters whose values can be changed by command line arguments.
-  integer, public, save :: MODEL_N0            ! Starting pop size
-  integer, public, save :: MODEL_TIME_STEPS    ! Total time steps
-  integer, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
-  integer, public, save :: MODEL_REC_FLAG      ! Record flag
+  integer, protected, public, save :: MODEL_N0            ! Starting pop size
+  integer, protected, public, save :: MODEL_TIME_STEPS    ! Total time steps
+  integer, protected, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
+  integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
   integer, parameter               :: MAXLEN = 256
-  character(len=MAXLEN), protected :: modelFilename = "model.ini"
-  character(len=MAXLEN), protected :: vWeightsFilename = "verhulst_weights.ini"
+  character(len=MAXLEN), protected, public :: modelFilename = &
+      "model.ini"
+  character(len=MAXLEN), protected, public :: vWeightsFilename = &
+      "verhulst_weights.ini"
 
   ! -------------------------------------------------------------------------- !
   ! Parameter count.
