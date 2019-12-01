@@ -28,6 +28,7 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
+  use StdKind, only: personIntKind, personRealKind
   implicit none
   private
 
@@ -46,7 +47,6 @@ contains
     use Flag
     use PersonType
     use Gene, only: GENE_UNHEALTHY
-    use StdKind, only: personIntKind, personRealKind
     implicit none
 
     type(Person), pointer, intent(inout) :: indiv_ptr
@@ -117,7 +117,6 @@ contains
   !>  Get the `k`th binary digit of the integer `number`.
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
-    use StdKind, only: personIntKind, personRealKind
     implicit none
 
     integer(kind=personIntKind), intent(in) :: number
@@ -173,7 +172,6 @@ contains
     use PersonType
     use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
-    use StdKind, only: personIntKind
     implicit none
 
     type(Person), pointer, intent(inout) :: indiv_ptr
@@ -195,7 +193,6 @@ contains
     use Gene, only: GENE_HEALTHY
     use Model, only: MODEL_M, MODEL_L
     use RandInd, only: generateIndices
-    use StdKind, only: personIntKind, personRealKind
     implicit none
 
     type(Person), pointer,       intent(inout) :: indiv_ptr

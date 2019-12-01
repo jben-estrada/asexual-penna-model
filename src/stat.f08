@@ -6,12 +6,12 @@ module Demographics
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
   use Gene
-  use StdKind, only: personRealKind, personIntKind
+  use StdKind, only: personIntKind
   implicit none
   private
 
-  real(kind=personRealKind), public, allocatable, save :: demog_ageDstrb(:) 
-  real(kind=personRealKind), public, allocatable, save :: demog_genomeDstrb(:)
+  integer(kind=personIntKind), public, allocatable, save :: demog_ageDstrb(:) 
+  integer(kind=personIntKind), public, allocatable, save :: demog_genomeDstrb(:)
   
   integer, public, parameter :: DEMOG_LAST_STEPS = 300
 
@@ -37,8 +37,8 @@ contains
       allocate(demog_genomeDstrb(MODEL_L))
     end if
 
-    demog_ageDstrb(:) = 0._personRealKind
-    demog_genomeDstrb(:) = 0._personRealKind
+    demog_ageDstrb(:) = 0_personIntKind
+    demog_genomeDstrb(:) = 0_personIntKind
   end subroutine resetDstrbs
 
   ! -------------------------------------------------------------------------- !
@@ -49,7 +49,7 @@ contains
     implicit none
   
     integer(kind=personIntKind), intent(in)    :: age
-    real(kind=personRealKind),   intent(inout) :: dstrb(:)
+    integer(kind=personIntKind), intent(inout) :: dstrb(:)
 
     dstrb(age) = dstrb(age) + 1
   end subroutine updateAgeDstrb
@@ -63,7 +63,7 @@ contains
     use Model, only: MODEL_L
     implicit none
 
-    real(kind=personIntKind),    intent(inout) :: genomeDstrb(:)
+    integer(kind=personIntKind), intent(inout) :: genomeDstrb(:)
     integer(kind=personIntKind), intent(in)    :: genome
     integer(kind=personIntKind)                :: i
 

@@ -71,14 +71,14 @@ module SaveFormat
 
   ! Age demographics record. fileCount => 3
   character(len=MAXLEN), parameter :: ageDstrbFilename = "ageDstrb_f08.csv"
-  character(len=MAXLEN), parameter :: ageDstrbFormat = "(*(f10.5, ','))"
+  character(len=MAXLEN), parameter :: ageDstrbFormat = "(*(i6, ','))"
   character(len=MAXLEN), parameter :: ageDstrbPosition = "asis"
   integer, parameter :: ageDstrbUnit = 102
 
   ! Genome demographics record. fileCount => 4
   character(len=MAXLEN), parameter :: genomeDstrbFilename = &
       "genomeDstrb_f08.csv"
-  character(len=MAXLEN), parameter :: genomeDstrbFormat = "(*(f10.5, ','))"
+  character(len=MAXLEN), parameter :: genomeDstrbFormat = "(*(i6, ','))"
   character(len=MAXLEN), private, parameter :: genomeDstrbPosition = "asis"
   integer, parameter :: genomeDstrbUnit = 103
 
@@ -126,27 +126,27 @@ module SaveFormat
   !----------------------------------------------------------------------------!
   interface
     module subroutine writer_write_int(self, flag, arg)
-      class(Writer), intent(inout)            :: self
-      integer(kind=intKind), intent(in)  :: arg
-      integer, intent(in)                     :: flag
+      class(Writer),         intent(inout) :: self
+      integer(kind=intKind), intent(in)    :: arg
+      integer,               intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_real(self, flag, arg)
-      class(Writer), intent(inout)          :: self
-      real(kind=realKind), intent(in)  :: arg
-      integer, intent(in)                   :: flag
+      class(Writer),       intent(inout) :: self
+      real(kind=realKind), intent(in)    :: arg
+      integer,             intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_intArray(self, flag, arg)
-      class(Writer), intent(inout)            :: self
-      integer(kind=intKind), intent(in)  :: arg(:)
-      integer, intent(in)                     :: flag
+      class(Writer),         intent(inout) :: self
+      integer(kind=intKind), intent(in)    :: arg(:)
+      integer,               intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_realArray(self, flag, arg)
-      class(Writer), intent(inout)          :: self
-      real(kind=realKind), intent(in)  :: arg(:)
-      integer, intent(in)                   :: flag
+      class(Writer),       intent(inout) :: self
+      real(kind=realKind), intent(in)    :: arg(:)
+      integer,             intent(in)    :: flag
     end subroutine
   end interface
 

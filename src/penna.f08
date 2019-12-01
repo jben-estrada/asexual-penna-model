@@ -82,12 +82,13 @@ contains
       ! NOTE: I used select case here to make this faster than the older
       ! implementation.
       select case (recordFlag)
-        case (popFlag)
+        case (pop_recFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
-        case (ageDstrbFlag)
+        case (demog_recFlag)
           call runWriter%write(ageDstrbFlag, demog_ageDstrb)
-        case (genomeDstrbFlag)
           call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
+        case (death_recFlag)
+          ! TODO: Add a way to record death count.
       end select
 
       ! Reset variables.
@@ -200,6 +201,9 @@ contains
       if (associated(popTail_ptr)) popTail_ptr => null()
       if (associated(popHead_ptr)) popHead_ptr => null()
     end if
+
+    ! Reset demogStep for the next run.
+    if (timeStep == maxTimeStep) demogStep = 0
   end subroutine evalPopulation
 
 
