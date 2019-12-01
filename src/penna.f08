@@ -64,8 +64,8 @@ contains
     ! Disable demographics recording if it is not to be recorded.
     if (recordFlag /= demog_recFlag) DEMOG_LAST_STEPS = -1
 
-    ! === MAIN LOOP ===
-    do step = 1, maxTimestep
+    ! Run the simulation.
+    mainLoop: do step = 1, maxTimestep
 
       if (popSize > MODEL_K) then
         print "(/a)", "The population has exceeded the carrying capacity!"
@@ -75,7 +75,7 @@ contains
       ! Evaluate each individuals.
       call evalPopulation(popList, popSize, deathCount, maxTimestep - step)
 
-      ! Record population size and age demographics.
+      ! Record result.
       select case (recordFlag)
         case (pop_recFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
@@ -89,8 +89,7 @@ contains
       ! Reset variables.
       deathCount(:) = 0
       call resetDstrbs
-    end do
-    ! === MAIN LOOP END ===
+    end do mainLoop
 
     ! Wrap up.
     if (associated(popList%head_ptr)) then
