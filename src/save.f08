@@ -10,6 +10,11 @@ module SaveFormat
   implicit none
   private
 
+  ! Module integer and real kinds
+  ! Note: Can be changed when this model is to be reused in other projects. 
+  integer, parameter :: intKind = writeIntKind
+  integer, parameter :: realKind = writeRealKind
+
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
   type, public :: Writer
@@ -18,11 +23,19 @@ module SaveFormat
     integer,         allocatable :: liveFlags(:)
   contains
     private
-    generic, public :: initialize => writer_initialize, writer_initializeAll, &
+    generic, public :: initialize => &
+        writer_initialize, &
+        writer_initializeAll, &
         writer_listInitialize
-    generic, public :: close => writer_close, writer_closeAll, writer_listclose
-    generic, public :: write => writer_write_int, writer_write_real, &
-        writer_write_intArray, writer_write_realArray
+    generic, public :: close => &
+        writer_close, &
+        writer_closeAll, &
+        writer_listclose
+    generic, public :: write => &
+        writer_write_int, &
+        writer_write_real, &
+        writer_write_intArray, &
+        writer_write_realArray
     final :: destructor
 
     procedure :: writer_initialize
@@ -75,20 +88,19 @@ module SaveFormat
   character(len=MAXLEN), parameter :: deathPosition = "asis"
   integer, parameter :: deathUnit = 104
   ! -------------------------------------------------------------------------- !
+  ! Unit array
+  integer, public, parameter :: units(FILECOUNT) = &
+      [popUnit, timeUnit, ageDstrbUnit, genomeDstrbUnit, deathUnit]
+  
   ! Filename array
-  character(len=MAXLEN), parameter :: filenames(FILECOUNT) = &
+  character(len=MAXLEN), public, parameter :: filenames(FILECOUNT) = &
       [popFilename, timeFilename, ageDstrbFilename, genomeDstrbFilename, &
        deathFilename]
-  ! Format array
-  character(len=MAXLEN), parameter :: formats(FILECOUNT) = &
-    [popFormat, timeFormat, ageDstrbFormat, genomeDstrbFormat, deathFormat]
+  
   ! Position array
-  character(len=MAXLEN), parameter :: positions(FILECOUNT) = &
+  character(len=MAXLEN), public, parameter :: positions(FILECOUNT) = &
     [popPosition, timePosition, ageDstrbPosition, genomeDstrbPosition, &
      deathPosition]
-  ! Unit array
-  integer, parameter :: units(FILECOUNT) = &
-      [popUnit, timeUnit, ageDstrbUnit, genomeDstrbUnit, deathUnit]
   ! -------------------------------------------------------------------------- !
   
   ! File flags
@@ -106,6 +118,88 @@ module SaveFormat
     procedure :: constructWriter_array
     procedure :: constructWriter_scalar
   end interface constructWriter
+
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]write
+  !>  Write `arg` into the file specified by `flag`. The procedure
+  !!  accepts real or integer arguments of either rank 0 or 1.
+  !----------------------------------------------------------------------------!
+  interface
+    module subroutine writer_write_int(self, flag, arg)
+      class(Writer), intent(inout)            :: self
+      integer(kind=intKind), intent(in)  :: arg
+      integer, intent(in)                     :: flag
+    end subroutine
+
+    module subroutine writer_write_real(self, flag, arg)
+      class(Writer), intent(inout)          :: self
+      real(kind=realKind), intent(in)  :: arg
+      integer, intent(in)                   :: flag
+    end subroutine
+
+    module subroutine writer_write_intArray(self, flag, arg)
+      class(Writer), intent(inout)            :: self
+      integer(kind=intKind), intent(in)  :: arg(:)
+      integer, intent(in)                     :: flag
+    end subroutine
+
+    module subroutine writer_write_realArray(self, flag, arg)
+      class(Writer), intent(inout)          :: self
+      real(kind=realKind), intent(in)  :: arg(:)
+      integer, intent(in)                   :: flag
+    end subroutine
+  end interface
+
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]initialize
+  !>  Initialize the files specified to be written in. The files are
+  !!  specified by the integer `flag`. Multiple `flag`s can also be
+  !!  as an automatic array of integers.
+  !----------------------------------------------------------------------------!
+  interface
+    module subroutine initializeWriter(filename, unit, position)
+      character(len=*), intent(in) :: filename
+      character(len=*), intent(in) :: position
+      integer,          intent(in) :: unit
+    end subroutine
+
+    module subroutine writer_initializeAll(self)
+      class(Writer), intent(inout) :: self
+    end subroutine
+
+    module subroutine writer_initialize(self, flag)
+      class(Writer), intent(inout) :: self
+      integer,       intent(in)    :: flag
+    end subroutine
+
+
+    module subroutine writer_listInitialize(self, flags)
+      class(Writer), intent(inout) :: self
+      integer,       intent(in)    :: flags(:)
+    end subroutine
+  end interface
+
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]close
+  !>  Close a unit for writing files specified by the integer `flag`. 
+  !!  To close multiple units, a rank-1 array of integers `flags` can
+  !!  be passed. To close all units, pass nothing. 
+  !----------------------------------------------------------------------------!
+  interface
+    module subroutine writer_closeAll(self)
+      class(Writer), intent(inout) :: self
+    end subroutine
+
+    module subroutine writer_close(self, flag)
+      class(Writer), intent(inout) :: self
+      integer,       intent(in)    :: flag
+    end subroutine
+
+    module subroutine writer_listclose(self, flags)
+      class(Writer), intent(inout) :: self
+      integer,       intent(in)    :: flags(:)
+    end subroutine
+  end interface
 
   public :: constructWriter
 contains
@@ -166,18 +260,35 @@ contains
 
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]initialize
-  !>  Initialize the files specified to be written in. The files are
-  !!  specified by the integer `flag`. Multiple `flag`s can also be
-  !!  as an automatic array of integers.
+  ! BOUND SUBROUTINE: [Writer%]destructor
+  !>  Deallocate the allocatable attributes `enabledFlags`
+  !!  and `liveFlags`.
   !----------------------------------------------------------------------------!
-  ! === INITIALIZE `Writer` SPECIFIC PROCEDURES === 
-  subroutine initializeWriter(filename, unit, position)
+  subroutine destructor(self)
+    implicit none
+    type(Writer), intent(inout) :: self
+
+    if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)
+    if (allocated(self%liveFlags)) deallocate(self%liveFlags)
+  end subroutine destructor
+end module SaveFormat
+
+
+
+submodule (SaveFormat) writer_initialize_procedures
+  !----------------------------------------------------------------------------!
+  ! SUBMODULE: writer_initialize_procedures
+  !>  Submodule containing the specific procedures for the generic
+  !!  type-bound procedure `[Writer]%initialize`.
+  !----------------------------------------------------------------------------!
+  implicit none
+contains
+  module subroutine initializeWriter(filename, unit, position)
     implicit none
 
     character(len=*), intent(in) :: filename
     character(len=*), intent(in) :: position
-    integer, intent(in)          :: unit
+    integer,          intent(in) :: unit
   
     logical :: exists
 
@@ -191,7 +302,7 @@ contains
   end subroutine initializeWriter
 
 
-  subroutine writer_initializeAll(self)
+  module subroutine writer_initializeAll(self)
     implicit none
     class(Writer), intent(inout) :: self
 
@@ -213,7 +324,7 @@ contains
   end subroutine writer_initializeAll
 
 
-  subroutine writer_initialize(self, flag)
+  module subroutine writer_initialize(self, flag)
     implicit none
 
     class(Writer), intent(inout) :: self
@@ -231,7 +342,7 @@ contains
   end subroutine writer_initialize
 
 
-  subroutine writer_listInitialize(self, flags)
+  module subroutine writer_listInitialize(self, flags)
     implicit none
 
     class(Writer), intent(inout) :: self
@@ -250,19 +361,28 @@ contains
       call initializeWriter(filenames(flag), units(flag), positions(flag))
     end do
   end subroutine writer_listInitialize
+end submodule writer_initialize_procedures
 
 
+
+submodule (SaveFormat) writer_write_procedures
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]write
-  !>  Write `arg` into the file specified by `flag`. The procedure
-  !!  accepts real or integer arguments of either rank 0 or 1.
+  ! SUBMODULE: writer_write_procedures
+  !>  Submodule containing the specific procedures for the generic
+  !!  type-bound procedure `[Writer]%write`.
   !----------------------------------------------------------------------------!
-  ! === WRITER WRITE ===
-  subroutine writer_write_int(self, flag, arg)
+  implicit none
+  ! Format array
+  character(len=MAXLEN), parameter :: formats(FILECOUNT) = &
+      [popFormat, timeFormat, ageDstrbFormat, genomeDstrbFormat, deathFormat]
+  
+contains
+  module subroutine writer_write_int(self, flag, arg)
     implicit none
+    
 
     class(Writer), intent(inout)            :: self
-    integer(kind=writeIntKind), intent(in)  :: arg
+    integer(kind=intKind), intent(in)  :: arg
     integer, intent(in)                     :: flag
 
     if (.not.any(self%liveFlags == flag)) return
@@ -270,12 +390,12 @@ contains
   end subroutine writer_write_int
 
 
-  subroutine writer_write_real(self, flag, arg)
+  module subroutine writer_write_real(self, flag, arg)
     implicit none
 
     class(Writer), intent(inout)         :: self
     integer, intent(in)                  :: flag
-    real(kind=writeRealKind), intent(in) :: arg
+    real(kind=realKind), intent(in) :: arg
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -283,12 +403,12 @@ contains
   end subroutine writer_write_real
 
 
-  subroutine writer_write_intArray(self, flag, arg)
+  module subroutine writer_write_intArray(self, flag, arg)
     implicit none
 
     class(Writer), intent(inout)           :: self
     integer, intent(in)                    :: flag
-    integer(kind=writeIntKind), intent(in) :: arg(:)
+    integer(kind=intKind), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -296,27 +416,30 @@ contains
   end subroutine writer_write_intArray
 
 
-  subroutine writer_write_realArray(self, flag, arg)
+  module subroutine writer_write_realArray(self, flag, arg)
     implicit none
 
     class(Writer), intent(inout)         :: self
     integer, intent(in)                  :: flag
-    real(kind=writeRealKind), intent(in) :: arg(:)
+    real(kind=realKind), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
     write(units(flag), formats(flag)) arg
   end subroutine writer_write_realArray
+end submodule writer_write_procedures
 
 
+
+submodule (SaveFormat) writer_close_procedures
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]close
-  !>  Close a unit for writing files specified by the integer `flag`. 
-  !!  To close multiple units, a rank-1 array of integers `flags` can
-  !!  be passed. To close all units, pass nothing. 
+  ! SUBMODULE: writer_close_procedures
+  !>  Submodule containing the specific procedures for the generic
+  !!  type-bound procedure `[Writer]%close`.
   !----------------------------------------------------------------------------!
-  ! === WRITER CLOSE SPECIFIC PROCEDURES=== 
-  subroutine writer_closeAll(self)
+  implicit none
+contains
+  module subroutine writer_closeAll(self)
     implicit none
     class(Writer), intent(inout) :: self
 
@@ -335,7 +458,7 @@ contains
   end subroutine writer_closeAll
 
 
-  subroutine writer_close(self, flag)
+  module subroutine writer_close(self, flag)
     implicit none
 
     class(Writer), intent(inout) :: self
@@ -351,7 +474,7 @@ contains
   end subroutine writer_close
 
 
-  subroutine writer_listclose(self, flags)
+  module subroutine writer_listclose(self, flags)
     implicit none
 
     class(Writer), intent(inout) :: self
@@ -368,18 +491,4 @@ contains
       end if
     end do
   end subroutine writer_listclose
-
-
-  !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]destructor
-  !>  Deallocate the allocatable attributes `enabledFlags`
-  !!  and `liveFlags`.
-  !----------------------------------------------------------------------------!
-  subroutine destructor(self)
-    implicit none
-    type(Writer), intent(inout) :: self
-
-    if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)
-    if (allocated(self%liveFlags)) deallocate(self%liveFlags)
-  end subroutine destructor
-end module SaveFormat
+end submodule

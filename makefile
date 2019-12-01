@@ -4,7 +4,7 @@ FCOMPILER=gfortran-8
 # Compiler options.
 # 	For debugging.
 # FLAGS=-g -Wall -Ofast -march=native -fcheck=all
-#	Standard flags.
+#   Standard flags.
 FLAGS=-Ofast -march=native
 
 # File extension. *.f08 - Fortran 2008 specific
@@ -27,28 +27,28 @@ NAME_DEP0:=init ticker
 COMPILE_DEP0:=$(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
-# Source code with 1 ext dep.
+# Source code with 1 ext dep from dep0.
 NAME_DEP1:=gene update_array rand_int
 COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
-# Source code with 2 ext dep.
+# Source code with at most 2 ext dep from dep0 and dep1.
 NAME_DEP2:=stat save
 COMPILE_DEP2:=$(foreach name, $(NAME_DEP2), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
-# Source code with 3 or more ext dep.
+# Source code with 3 or more ext dep from dep0, dep1 and dep2.
 NAME_DEP3:=population penna
 COMPILE_DEP3:=$(foreach name, $(NAME_DEP3), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
-# Final source code to compile.
+# Final source code to compile depending on all other codes.
 NAME_MAIN:=main
 COMPILE_MAIN:=$(COMPILE_COMM) -c $(SRC_DIR)/$(NAME_MAIN).$(FILEEXT) \
 	-o $(OBJ_DIR)/$(NAME_MAIN).o
 
 
-# Build and then link.
+# Compile and then link.
 default: build
 	@echo Linking together the object files.
 	@$(COMPILE_COMM) $(OBJECT) -o $(OUT)
