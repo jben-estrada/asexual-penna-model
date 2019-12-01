@@ -11,7 +11,7 @@ module SaveFormat
   private
 
   ! Module integer and real kinds
-  ! Note: Can be changed when this model is to be reused in other projects. 
+  ! Note: Can be changed when this module is to be reused in other projects. 
   integer, parameter :: intKind = writeIntKind
   integer, parameter :: realKind = writeRealKind
 

@@ -10,6 +10,11 @@ module UpdateArray
   implicit none
   private
 
+  ! Module integer and real kinds
+  ! Note: Can be changed when this module is to be reused in other projects. 
+  integer, parameter :: intKind = arrayIntKind
+  integer, parameter :: realKind = arrayRealKind
+
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: arrayInsert
   !>  Insert a number (either integer4 (int32) or real8 (int64)) of either rank
@@ -60,11 +65,11 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURES===
   subroutine arrayInsert_int(array, k, newElem)
     implicit none
-    integer(kind=arrayIntKind), allocatable, intent(inout):: array(:)
-    integer(kind=arrayIntKind), intent(in) :: newElem
+    integer(kind=intKind), allocatable, intent(inout):: array(:)
+    integer(kind=intKind), intent(in) :: newElem
     integer, intent(in) :: k
 
-    integer(kind=arrayIntKind), allocatable  :: temp(:)
+    integer(kind=intKind), allocatable  :: temp(:)
     integer :: old_size
     integer :: error
 
@@ -88,11 +93,11 @@ contains
 
   subroutine arrayInsert_intRange(array, k, newElems)
     implicit none
-    integer(kind=arrayIntKind), allocatable, intent(inout) :: array(:)
-    integer(kind=arrayIntKind), intent(in) :: newElems(:)
+    integer(kind=intKind), allocatable, intent(inout) :: array(:)
+    integer(kind=intKind), intent(in) :: newElems(:)
     integer, intent(in) :: k
 
-    integer(kind=arrayIntKind), allocatable :: temp(:)
+    integer(kind=intKind), allocatable :: temp(:)
     integer :: old_size
     integer :: added
     integer :: error
@@ -120,11 +125,11 @@ contains
 
   subroutine arrayInsert_real(array, k, newElem)
     implicit none
-    real(kind=arrayRealKind), allocatable, intent(inout):: array(:)
-    real(kind=arrayRealKind), intent(in) :: newElem
+    real(kind=realKind), allocatable, intent(inout):: array(:)
+    real(kind=realKind), intent(in) :: newElem
     integer, intent(in) :: k
 
-    real(kind=arrayRealKind), allocatable  :: temp(:)
+    real(kind=realKind), allocatable  :: temp(:)
     integer :: old_size
     integer :: error
 
@@ -148,11 +153,11 @@ contains
 
   subroutine arrayInsert_realRange(array, k, newElems)
     implicit none
-    real(kind=arrayRealKind), allocatable, intent(inout) :: array(:)
-    real(kind=arrayRealKind), intent(in) :: newElems(:)
+    real(kind=realKind), allocatable, intent(inout) :: array(:)
+    real(kind=realKind), intent(in) :: newElems(:)
     integer, intent(in) :: k
 
-    real(kind=arrayRealKind), allocatable :: temp(:)
+    real(kind=realKind), allocatable :: temp(:)
     integer :: old_size
     integer :: added
     integer :: error
@@ -180,10 +185,10 @@ contains
   ! === ARRAY REMOVE ===
   subroutine arrayRemove_int(array,  k)
     implicit none
-    integer(kind=arrayIntKind), allocatable, intent(inout) :: array(:)
+    integer(kind=intKind), allocatable, intent(inout) :: array(:)
     integer, intent(in) :: k
 
-    integer(kind=arrayIntKind), allocatable :: temp(:)
+    integer(kind=intKind), allocatable :: temp(:)
     integer :: old_size
     integer :: error
 
@@ -208,10 +213,10 @@ contains
 
   subroutine arrayRemove_real(array,  k)
     implicit none
-    real(kind=arrayRealKind), allocatable, intent(inout) :: array(:)
+    real(kind=realKind), allocatable, intent(inout) :: array(:)
     integer, intent(in) :: k
 
-    real(kind=arrayRealKind), allocatable :: temp(:)
+    real(kind=realKind), allocatable :: temp(:)
     integer :: old_size
     integer :: error
 
@@ -236,11 +241,11 @@ contains
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_int(array, a, b)
     implicit none
-    integer(kind=arrayIntKind), allocatable, intent(inout) :: array(:)
-    integer(kind=arrayIntKind), intent(in) :: a
+    integer(kind=intKind), allocatable, intent(inout) :: array(:)
+    integer(kind=intKind), intent(in) :: a
     integer, intent(in) :: b
 
-    integer(kind=arrayIntKind), allocatable :: temp(:)
+    integer(kind=intKind), allocatable :: temp(:)
     integer :: old_size
     integer :: new_size
     integer :: error
@@ -272,11 +277,11 @@ contains
 
   subroutine arrayRemoveRange_real(array, a, b)
     implicit none
-    real(kind=arrayRealKind), allocatable, intent(inout) :: array(:)
+    real(kind=realKind), allocatable, intent(inout) :: array(:)
     integer, intent(in) :: a
     integer, intent(in) :: b
 
-    real(kind=arrayRealKind), allocatable :: temp(:)
+    real(kind=realKind), allocatable :: temp(:)
     integer :: old_size
     integer :: new_size
     integer :: error
@@ -308,8 +313,8 @@ contains
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_int(array, elem)
     implicit none
-    integer(kind=arrayIntKind), allocatable, intent(inout) :: array(:)
-    integer(kind=arrayIntKind), intent(in) :: elem
+    integer(kind=intKind), allocatable, intent(inout) :: array(:)
+    integer(kind=intKind), intent(in) :: elem
     integer :: i
 
     ! Do linear search. NOTE: Apparently `findloc` is not supported by
@@ -325,8 +330,8 @@ contains
 
   subroutine arrayRemoveElem_real(array, elem)
     implicit none
-    real(kind=arrayRealKind), allocatable, intent(inout) :: array(:)
-    real(kind=arrayRealKind), intent(in) :: elem
+    real(kind=realKind), allocatable, intent(inout) :: array(:)
+    real(kind=realKind), intent(in) :: elem
     integer :: i
 
     ! Do linear search. NOTE: Apparently `findloc` is not supported by
