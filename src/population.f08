@@ -18,6 +18,14 @@ module PersonType
 
     type(Person), pointer       :: next => null() ! Next node in linked list
   end type Person
+
+
+  ! Linked-list derived type. Structure containing pointers to the actual list.
+  type, public :: LinkedList
+    type(Person), pointer :: head_ptr => null()
+    type(Person), pointer :: tail_ptr  => null()
+    type(Person), pointer :: newTail_ptr  => null()
+  end type LinkedList
 end module PersonType
 
 
@@ -222,23 +230,22 @@ contains
   ! SUBROUTINE: generatePopulation
   !>  Generate population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
-  subroutine generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
+  subroutine generatePopulation(popList, startPopSize)
     use PersonType
     implicit none
-    type(Person), pointer, intent(inout) :: popHead_ptr
-    type(Person), pointer, intent(out)   :: popTail_ptr
-    integer,               intent(in)    :: startPopSize
+    type(LinkedList), intent(inout) :: popList
+    integer,          intent(in)    :: startPopSize
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
     integer               :: i
 
-    call initializeHealthyIndiv(popHead_ptr)
-    oldIndiv_ptr => popHead_ptr
+    call initializeHealthyIndiv(popList%head_ptr)
+    oldIndiv_ptr => popList%head_ptr
     newIndiv_ptr => null()
 
     if (startPopSize == 1) then
-      popTail_ptr => popHead_ptr
+      popList%tail_ptr => popList%head_ptr
     else
       do i = 1, startPopSize - 1
         allocate(newIndiv_ptr)
@@ -248,7 +255,7 @@ contains
         call initializeHealthyIndiv(newIndiv_ptr)
       end do
       
-      popTail_ptr => newIndiv_ptr
+      popList%tail_ptr => newIndiv_ptr
     end if
   end subroutine generatePopulation
 end module Pop

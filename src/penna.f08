@@ -1,4 +1,5 @@
 module Penna
+  use PersonType
   implicit none
   private
 
@@ -33,7 +34,6 @@ contains
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Pop
     use SaveFormat
-    use PersonType
     use Demographics
     use Model, only: MODEL_K
     use StdKind, only: writeIntKind
@@ -43,9 +43,7 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(Person), pointer :: popHead_ptr => null()
-    type(Person), pointer :: popTail_ptr  => null()
-    type(Person), pointer :: popFutureTail_ptr  => null()
+    type(LinkedList) :: popList = LinkedList()
 
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
     integer      :: popSize       ! Current population size
@@ -53,9 +51,9 @@ contains
     integer      :: indexOffset   ! Offset due to deaths and births
 
     ! Initialize the current population.
-    allocate(popHead_ptr)
-    call generatePopulation(popHead_ptr, popTail_ptr, startPopSize)
-    popFutureTail_ptr => popTail_ptr
+    allocate(popList%head_ptr)
+    call generatePopulation(popList, startPopSize)
+    popList%newTail_ptr => popList%tail_ptr
 
     ! Initialize variables.
     popSize = startPopSize
@@ -72,8 +70,8 @@ contains
       end if
       
       ! Evaluate each individuals.
-      call evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, popSize,&
-          indexOffset, recordFlag, step, maxTimestep)
+      call evalPopulation(popList, popSize, indexOffset, recordFlag, &
+          step, maxTimestep)
 
       ! Update population size.
       popSize = popSize + indexOffset
@@ -98,12 +96,12 @@ contains
     ! === MAIN LOOP END ===
 
     ! Wrap up.
-    if (associated(popHead_ptr)) then
+    if (associated(popList%head_ptr)) then
       if (popSize > 0) then
-        call freeAll(popHead_ptr)
+        call freeAll(popList%head_ptr)
       else
         ! NOTE: Temporary solution to double free/corruption error.
-        popHead_ptr => null()
+        popList%head_ptr => null()
       end if
     end if
     call runWriter%close
@@ -115,18 +113,15 @@ contains
   ! SUBROUTINE: evalPopulation
   !>  Evaluate death and birth of individuals.
   ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(popHead_ptr, popTail_ptr, popFutureTail_ptr, &
-        popSize, indexOffset, recordFlag, timeStep, maxTimeStep)
+  subroutine evalPopulation(popList, popSize, indexOffset, recordFlag, &
+        timeStep, maxTimeStep)
     use Pop
-    use PersonType
     use Demographics
     use Flag, only: ALIVE
     implicit none
 
-    type(Person), pointer, intent(inout) :: popHead_ptr
-    type(Person), pointer, intent(inout) :: popTail_ptr
-    type(Person), pointer, intent(inout) :: popFutureTail_ptr
-    
+    type(LinkedList), intent(inout) :: popList
+
     integer, intent(inout) :: popSize
     integer, intent(inout) :: indexOffset
     integer, intent(in)    :: timeStep
@@ -137,7 +132,7 @@ contains
     type(Person), pointer :: currIndiv_ptr => null()
     integer,      save    :: demogStep = 0
 
-    currIndiv_ptr => popHead_ptr
+    currIndiv_ptr => popList%head_ptr
     oldIndiv_ptr => null()
     do
       ! Catch case where the population is extinct.
@@ -148,7 +143,7 @@ contains
       ! Evaluate alive individual.
       if (currIndiv_ptr%deathIndex == ALIVE) then
         currIndiv_ptr%age = currIndiv_ptr%age + 1
-        call checkBirth(currIndiv_ptr, popFutureTail_ptr, indexOffset)
+        call checkBirth(currIndiv_ptr, popList%newTail_ptr, indexOffset)
       end if
 
       ! Record demographics.
@@ -160,18 +155,18 @@ contains
       end if
 
       ! Exit condition
-      if (associated(currIndiv_ptr, popTail_ptr)) then
+      if (associated(currIndiv_ptr, popList%tail_ptr)) then
         ! Remove dead individual from the list.
         if (currIndiv_ptr%deathIndex /= ALIVE) then
           call killIndiv(currIndiv_ptr, oldIndiv_ptr)
 
           ! Check edge case.
           if (associated(currIndiv_ptr)) then
-            popTail_ptr => currIndiv_ptr
+            popList%tail_ptr => currIndiv_ptr
           else
             currIndiv_ptr => oldIndiv_ptr
-            popTail_ptr => currIndiv_ptr
-            popFutureTail_ptr => currIndiv_ptr
+            popList%tail_ptr => currIndiv_ptr
+            popList%newTail_ptr => currIndiv_ptr
           end if
         end if
         exit
@@ -186,8 +181,8 @@ contains
         ! Remove dead individual and move to the next individual.
         else
           ! Check edge case.
-          if (associated(currIndiv_ptr, popHead_ptr)) popHead_ptr => &
-              currIndiv_ptr%next
+          if (associated(currIndiv_ptr, popList%head_ptr)) &
+              popList%head_ptr => currIndiv_ptr%next
 
           call killIndiv(currIndiv_ptr, oldIndiv_ptr)
         end if
@@ -196,10 +191,10 @@ contains
 
     ! Reset pointers.
     if (popSize > 0) then
-      popTail_ptr => popFutureTail_ptr
+      popList%tail_ptr => popList%newTail_ptr
     else
-      if (associated(popTail_ptr)) popTail_ptr => null()
-      if (associated(popHead_ptr)) popHead_ptr => null()
+      if (associated(popList%tail_ptr)) popList%tail_ptr => null()
+      if (associated(popList%head_ptr)) popList%head_ptr => null()
     end if
 
     ! Reset demogStep for the next run.
@@ -215,7 +210,6 @@ contains
   !         corrupted target.
   ! -------------------------------------------------------------------------- !
   subroutine freeAll(head_ptr)
-    use PersonType
     implicit none
     type(Person), pointer, intent(inout) :: head_ptr
     type(Person), pointer                :: curr_ptr => null()
