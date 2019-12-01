@@ -50,7 +50,7 @@ contains
   ! SUBROUTINE: checkDeath
   !>  Check whether `indiv` will die in the current time step or not.
   ! -------------------------------------------------------------------------- !
-  subroutine checkDeath(indiv_ptr, popSize, indexOffset)
+  subroutine checkDeath(indiv_ptr, popSize, popSizeOffset)
     use Model
     use Flag
     use PersonType
@@ -58,7 +58,7 @@ contains
     implicit none
 
     type(Person), pointer, intent(inout) :: indiv_ptr
-    integer,               intent(inout) :: indexOffset
+    integer,               intent(inout) :: popSizeOffset
     integer,               intent(inout) :: popSize
 
     integer(kind=personIntKind) :: nextAge = 0
@@ -72,7 +72,7 @@ contains
     ! ***Death check: Old age
     if (nextAge >= MODEL_L) then
       indiv_ptr%deathIndex = DEAD_OLD_AGE
-      indexOffset = indexOffset - 1
+      popSizeOffset = popSizeOffset - 1
       return
     end if
 
@@ -83,7 +83,7 @@ contains
     ! ***Death check: Mutation accumulation
     if (indiv_ptr%mutationCount >= MODEL_T) then
       indiv_ptr%deathIndex = DEAD_MUTATION
-      indexOffset = indexOffset - 1
+      popSizeOffset = popSizeOffset - 1
       return
     ! ***Death check: Verhulst factor
     else if (verhulstWeight > 0.0) then
@@ -93,7 +93,7 @@ contains
 
       if (random > verhulstFactor) then
         indiv_ptr%deathIndex = DEAD_VERHULST
-        indexOffset = indexOffset - 1
+        popSizeOffset = popSizeOffset - 1
         return
       end if
     end if
@@ -140,14 +140,14 @@ contains
   ! SUBROUTINE: checkBirth
   !>  Check whether `indiv` will reproduce at the current time step.
   ! -------------------------------------------------------------------------- !
-  subroutine checkBirth(indiv_ptr, popFutureTail_ptr, indexOffset)
+  subroutine checkBirth(indiv_ptr, popFutureTail_ptr, popSizeOffset)
     use Model
     use PersonType
     implicit none
 
     type(Person), pointer, intent(in)    :: indiv_ptr
     type(Person), pointer, intent(inout) :: popFutureTail_ptr
-    integer,               intent(inout) :: indexOffset
+    integer,               intent(inout) :: popSizeOffset
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
@@ -164,7 +164,7 @@ contains
       call initializeIndiv(newIndiv_ptr, indiv_ptr%genome)
 
       oldIndiv_ptr%next => newIndiv_ptr
-      indexOffset = indexOffset + 1
+      popSizeOffset = popSizeOffset + 1
     end do
 
     ! Update future tail of linked-list.

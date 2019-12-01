@@ -224,7 +224,7 @@ contains
     integer   :: i
     
     ! Assign default values.
-    values = modelParamDefault
+    values(:) = modelParamDefault
 
     ! Initialize parameter keys.
     call initParamKeys

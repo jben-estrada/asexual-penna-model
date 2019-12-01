@@ -13,7 +13,7 @@ module Demographics
   integer(kind=personIntKind), public, allocatable, save :: demog_ageDstrb(:) 
   integer(kind=personIntKind), public, allocatable, save :: demog_genomeDstrb(:)
   
-  integer, public, parameter :: DEMOG_LAST_STEPS = 300
+  integer, public :: DEMOG_LAST_STEPS = 300
 
   public :: resetDstrbs
   public :: updateAgeDstrb

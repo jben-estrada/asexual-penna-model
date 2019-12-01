@@ -83,8 +83,9 @@ module SaveFormat
   integer, parameter :: genomeDstrbUnit = 103
 
   ! Death record. fileCount => 5
+  ! Format: <death by old age> <death by mutation> <death by Verhulst factor>
   character(len=MAXLEN), parameter :: deathFilename = "death_f08.csv"
-  character(len=MAXLEN), parameter :: deathFormat = "(i6)"
+  character(len=MAXLEN), parameter :: deathFormat = "(*(i6, ','))"
   character(len=MAXLEN), parameter :: deathPosition = "asis"
   integer, parameter :: deathUnit = 104
   ! -------------------------------------------------------------------------- !

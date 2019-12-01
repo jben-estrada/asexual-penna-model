@@ -43,12 +43,12 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(LinkedList) :: popList = LinkedList()
+    type(LinkedList) :: popList = LinkedList() ! Struct containing LL pointers.
 
     type(Writer) :: runWriter     ! A `Writer` object for recording the run.
-    integer      :: popSize       ! Current population size
     integer      :: step          ! Time step
-    integer      :: indexOffset   ! Offset due to deaths and births
+    integer      :: popSize       ! Current population size
+    integer      :: deathCount(3) ! Death count.
 
     ! Initialize the current population.
     allocate(popList%head_ptr)
@@ -57,9 +57,12 @@ contains
 
     ! Initialize variables.
     popSize = startPopSize
-    indexOffset = 0
+    deathCount(:) = 0
     call resetDstrbs  ! Initialize demographics.
     call initializeRunWriter(runWriter, recordFlag)
+
+    ! Disable demographics recording if it is not to be recorded.
+    if (recordFlag /= demog_recFlag) DEMOG_LAST_STEPS = -1
 
     ! === MAIN LOOP ===
     do step = 1, maxTimestep
@@ -70,15 +73,9 @@ contains
       end if
       
       ! Evaluate each individuals.
-      call evalPopulation(popList, popSize, indexOffset, recordFlag, &
-          step, maxTimestep)
-
-      ! Update population size.
-      popSize = popSize + indexOffset
+      call evalPopulation(popList, popSize, deathCount, maxTimestep - step)
 
       ! Record population size and age demographics.
-      ! NOTE: I used select case here to make this faster than the older
-      ! implementation.
       select case (recordFlag)
         case (pop_recFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
@@ -86,11 +83,11 @@ contains
           call runWriter%write(ageDstrbFlag, demog_ageDstrb)
           call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
         case (death_recFlag)
-          ! TODO: Add a way to record death count.
+          call runWriter%write(deathFlag, int(deathCount, kind=writeIntKind))
       end select
 
       ! Reset variables.
-      indexOffset = 0
+      deathCount(:) = 0
       call resetDstrbs
     end do
     ! === MAIN LOOP END ===
@@ -100,11 +97,12 @@ contains
       if (popSize > 0) then
         call freeAll(popList%head_ptr)
       else
-        ! NOTE: Temporary solution to double free/corruption error.
+        ! NOTE: A solution to the double free/corruption error.
         popList%head_ptr => null()
       end if
     end if
-    call runWriter%close
+
+    call runWriter%close()
     call deallocDstrb
   end subroutine run
 
@@ -113,48 +111,55 @@ contains
   ! SUBROUTINE: evalPopulation
   !>  Evaluate death and birth of individuals.
   ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(popList, popSize, indexOffset, recordFlag, &
-        timeStep, maxTimeStep)
+  subroutine evalPopulation(popList, popSize, deathCount, timeCountDown)
     use Pop
     use Demographics
-    use Flag, only: ALIVE
+    use Flag
     implicit none
 
+    ! A container for LL node pointers.
     type(LinkedList), intent(inout) :: popList
 
     integer, intent(inout) :: popSize
-    integer, intent(inout) :: indexOffset
-    integer, intent(in)    :: timeStep
-    integer, intent(in)    :: maxTimeStep
-    integer, intent(in)    :: recordFlag
+    integer, intent(inout) :: deathCount(3)
+    integer, intent(in)    :: timeCountDown
     
     type(Person), pointer :: oldIndiv_ptr => null()
     type(Person), pointer :: currIndiv_ptr => null()
-    integer,      save    :: demogStep = 0
+    integer               :: popSizeOffset = 0
 
+    ! Initialize variables.
+    popSizeOffset = 0
     currIndiv_ptr => popList%head_ptr
     oldIndiv_ptr => null()
+
     do
       ! Catch case where the population is extinct.
       if (popSize == 0) exit
       
-      call checkDeath(currIndiv_ptr, popSize, indexOffset)
+      call checkDeath(currIndiv_ptr, popSize, popSizeOffset)
 
-      ! Evaluate alive individual.
-      if (currIndiv_ptr%deathIndex == ALIVE) then
-        currIndiv_ptr%age = currIndiv_ptr%age + 1
-        call checkBirth(currIndiv_ptr, popList%newTail_ptr, indexOffset)
-      end if
+      ! Evaluate alive individual. Count dead ones.
+      select case (currIndiv_ptr%deathIndex)
+        case (ALIVE)
+          currIndiv_ptr%age = currIndiv_ptr%age + 1
+          call checkBirth(currIndiv_ptr, popList%newTail_ptr, popSizeOffset)
+        case (DEAD_OLD_AGE)
+          deathCount(1) = deathCount(1) + 1
+        case (DEAD_MUTATION)
+          deathCount(2) = deathCount(2) + 1
+        case (DEAD_VERHULST)
+          deathCount(3) = deathCount(3) + 1
+      end select
 
       ! Record demographics.
-      if (maxTimeStep - timeStep <= DEMOG_LAST_STEPS &
-          .and. recordFlag == demog_recFlag) then
-        demogStep = DEMOG_LAST_STEPS - timeStep + 1
+      if (timeCountDown <= DEMOG_LAST_STEPS) then
         call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
         call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
       end if
 
-      ! Exit condition
+      ! Exit condition.
+      ! ***Terminal case: end of the population linked-list.
       if (associated(currIndiv_ptr, popList%tail_ptr)) then
         ! Remove dead individual from the list.
         if (currIndiv_ptr%deathIndex /= ALIVE) then
@@ -171,7 +176,7 @@ contains
         end if
         exit
 
-      ! Proceed to the next element of the list.
+      ! ***Non-terminal case.
       else
         ! Move to the next individual.
         if (currIndiv_ptr%deathIndex == ALIVE) then
@@ -189,6 +194,9 @@ contains
       end if
     end do
 
+    ! Update population size.
+    popSize = popSize + popSizeOffset
+
     ! Reset pointers.
     if (popSize > 0) then
       popList%tail_ptr => popList%newTail_ptr
@@ -196,18 +204,12 @@ contains
       if (associated(popList%tail_ptr)) popList%tail_ptr => null()
       if (associated(popList%head_ptr)) popList%head_ptr => null()
     end if
-
-    ! Reset demogStep for the next run.
-    if (timeStep == maxTimeStep) demogStep = 0
   end subroutine evalPopulation
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: freeAll
   !>  Free remaining allocated memory to prevent memory leak.
-  !   TODO: Fix rare error where double free occurs. The error seems
-  !         to be brought be an associated pointer with a
-  !         corrupted target.
   ! -------------------------------------------------------------------------- !
   subroutine freeAll(head_ptr)
     implicit none
