@@ -28,7 +28,7 @@ COMPILE_DEP0:=$(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 1 ext dep from dep0.
-NAME_DEP1:=gene update_array rand_int
+NAME_DEP1:=gene update_array rand_int persontype
 COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
