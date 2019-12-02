@@ -1,6 +1,6 @@
-module Model
+module ModelParam
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  Model
+  ! MODULE:  ModelParam
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing the Penna model parameters.
@@ -465,7 +465,8 @@ contains
   
     if (allocated(MODEL_VERHULST_W)) deallocate(MODEL_VERHULST_W)
   end subroutine deallocVerhulstWeights
-end module Model
+end module ModelParam
+
 
 
 module Flag
@@ -487,6 +488,7 @@ module Flag
       DEAD_MUTATION, &
       DEAD_VERHULST]
 end module Flag
+
 
 
 module StdKind

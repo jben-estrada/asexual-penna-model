@@ -19,9 +19,9 @@ contains
   !>  Check whether `indiv` will die in the current time step or not.
   ! -------------------------------------------------------------------------- !
   subroutine checkDeath(indiv_ptr, popSize, popSizeOffset)
-    use Model
     use Flag
     use PersonType
+    use ModelParam
     use Gene, only: GENE_UNHEALTHY
     implicit none
 
@@ -110,7 +110,7 @@ contains
   !>  Check whether `indiv` will reproduce at the current time step.
   ! -------------------------------------------------------------------------- !
   subroutine checkBirth(indiv_ptr, popFutureTail_ptr, popSizeOffset)
-    use Model
+    use ModelParam
     use PersonType
     implicit none
 
@@ -168,8 +168,8 @@ contains
     use PersonType
     use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
-    use Model, only: MODEL_M, MODEL_L
     use RandInd, only: generateIndices
+    use ModelParam, only: MODEL_M, MODEL_L
     implicit none
 
     type(Person), pointer,       intent(inout) :: indiv_ptr

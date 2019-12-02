@@ -66,8 +66,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
         isVerbosePrint)
-    use Model, only: MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE
     use Penna, only: nullFlag, wrapUp
+    use ModelParam, only: MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE
     implicit none
 
     integer, intent(out) :: maxTimestep
@@ -141,8 +141,8 @@ contains
   !>  Print help or usage message before stopping the program.
   ! -------------------------------------------------------------------------- !
   subroutine printHelp
-    use Model
     use Penna
+    use ModelParam
     implicit none
     character(len=3) :: flagStr(4)    
     integer          :: flagArr(4) = &
@@ -220,7 +220,7 @@ contains
 
 
   subroutine printModelParams
-    use Model
+    use ModelParam
     implicit none
 
     print "(6(a20, i9/), a20, i9)", &

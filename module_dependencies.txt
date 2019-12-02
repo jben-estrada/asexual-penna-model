@@ -2,31 +2,31 @@ DEP -> SRC
 
 [Main]
   Penna
-  Model
+  ModelParam
 
 [Penna]
   Pop
   SaveFormat
   PersonType
   Demographics
-  Model
+  ModelParam
   Flag
   TickerType
 
 [Pop]
-  Model
+  ModelParam
   Flag
   PersonType
   Gene
   RandInd
 
 [PersonType]
-  Model
+  ModelParam
   StdKind
 
 [Demographics]
   Gene
-  Model
+  ModelParam
 
 [SaveFormat]
   UpdateArray
@@ -40,7 +40,7 @@ DEP -> SRC
 
 [Gene]
 
-[Model]
+[ModelParam]
 
 [Flag]
 
@@ -62,10 +62,10 @@ StdKind -> {
 
 Flag -> {
   Pop,
-  Flag
+  Penna
 }
 
-Model -> {
+ModelParam -> {
   PersonType,
   Demographics,
   Pop,

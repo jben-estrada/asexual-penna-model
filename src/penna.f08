@@ -19,7 +19,7 @@ contains
   !>  Wrapper procedure for `readScalarParam
   ! -------------------------------------------------------------------------- !
   subroutine readModelParam
-    use Model, only: readScalarParam, readVerhulstWeights
+    use ModelParam, only: readScalarParam, readVerhulstWeights
     implicit none
 
     call readScalarParam
@@ -35,7 +35,7 @@ contains
     use Pop
     use SaveFormat
     use Demographics
-    use Model, only: MODEL_K
+    use ModelParam, only: MODEL_K
     use StdKind, only: writeIntKind
     implicit none
 
@@ -343,7 +343,7 @@ contains
   !>  Wrap up the simulation. This deallocates allocatable arrays.
   ! -------------------------------------------------------------------------- !
   subroutine wrapUp
-    use Model, only: deallocVerhulstWeights
+    use ModelParam, only: deallocVerhulstWeights
     implicit none
     
     call deallocVerhulstWeights

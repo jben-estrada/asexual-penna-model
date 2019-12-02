@@ -26,7 +26,7 @@ contains
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
   subroutine resetDstrbs
-    use Model, only: MODEL_L
+    use ModelParam, only: MODEL_L
     implicit none
 
     if (.not.allocated(demog_ageDstrb)) then
@@ -60,7 +60,7 @@ contains
   !>  Update the genome demographics.
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome, genomeDstrb)
-    use Model, only: MODEL_L
+    use ModelParam, only: MODEL_L
     implicit none
 
     integer(kind=personIK), intent(inout) :: genomeDstrb(:)

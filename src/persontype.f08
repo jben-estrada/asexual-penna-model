@@ -5,7 +5,7 @@ module PersonType
   ! DESCRIPTION: 
   !>  Module containing the `Person` derived type.
   ! -------------------------------------------------------------------------- !
-  use Model, only: MODEL_L
+  use ModelParam, only: MODEL_L
   use StdKind, only: personIntKind, personRealKind
   implicit none
   private

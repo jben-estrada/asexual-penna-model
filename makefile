@@ -33,7 +33,7 @@ COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with at most 2 ext dep from dep0 and dep1.
-NAME_DEP2:=stat save
+NAME_DEP2:=demographics save
 COMPILE_DEP2:=$(foreach name, $(NAME_DEP2), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
