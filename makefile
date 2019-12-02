@@ -23,12 +23,12 @@ OBJECT=$(wildcard $(OBJ_DIR)/*.o)
 COMPILE_COMM=$(FCOMPILER) $(FLAGS) -J $(OBJ_DIR)/ -I $(OBJ_DIR)/
 
 # Source code with no external dependencies.
-NAME_DEP0:=init ticker
+NAME_DEP0:=init ticker persontype
 COMPILE_DEP0:=$(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 1 ext dep from dep0.
-NAME_DEP1:=gene update_array rand_int persontype
+NAME_DEP1:=gene update_array rand_int
 COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
