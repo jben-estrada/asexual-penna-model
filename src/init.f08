@@ -503,9 +503,6 @@ module StdKind
   integer, public, parameter :: personRealKind = real64
   integer, public, parameter :: personIntKind = int64
 
-  integer, public, parameter :: timingRealKind = real64
-  integer, public, parameter :: timingIntKind = int64
-
   integer, public, parameter :: writeRealKind = real64
   integer, public, parameter :: writeIntKind = int64
 

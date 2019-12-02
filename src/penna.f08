@@ -235,7 +235,6 @@ contains
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
   subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag)
-    use StdKind, only: timingIntKind, timingRealKind, writeIntKind
     use SaveFormat
     use TickerType
     implicit none
@@ -245,16 +244,15 @@ contains
     integer, intent(in) :: startingPopSize
     integer, intent(in) :: recordFlag
 
-    real(kind=timingRealKind) :: meanTime
-    real(kind=timingRealKind) :: stdDevTime
-
-    integer(kind=timingIntKind) :: startTimeInt
-    integer(kind=timingIntKind) :: endTimeInt
-    real(kind=timingRealKind)   :: startTimeReal
-    real(kind=timingRealKind)   :: endTimeReal
-    real(kind=timingRealKind)   :: clockRate
-    real(kind=timingRealKind)   :: sum
-    real(kind=timingRealKind)   :: sumSqrd
+    real(kind=writeRK)    :: meanTime
+    real(kind=writeRK)    :: stdDevTime
+    integer(kind=writeIK) :: startTimeInt
+    integer(kind=writeIK) :: endTimeInt
+    real(kind=writeRK)    :: startTimeReal
+    real(kind=writeRK)    :: endTimeReal
+    real(kind=writeRK)    :: clockRate
+    real(kind=writeRK)    :: sum
+    real(kind=writeRK)    :: sumSqrd
 
     type(Writer) :: timeWriter    ! `Writer` object to write timings stats
     type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
@@ -270,14 +268,14 @@ contains
     do i = 1, sampleSize
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
-      startTimeReal = real(startTimeInt, kind=timingRealKind)/clockRate
+      startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
 
       ! Run the actual simulation.
       call run(maxTimeStep, startingPopSize, recordFlag)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
-      endTimeReal = real(endTimeInt, kind=timingRealKind)/clockRate
+      endTimeReal = real(endTimeInt, kind=writeRK)/clockRate
 
       ! Calculate necessary values for average and std deviation.
       sum = sum + (endTimeReal - startTimeReal)*1e3
@@ -291,9 +289,9 @@ contains
     end do
 
     ! Get average elapsed time and its std deviation.
-    meanTime = sum/real(sampleSize, kind=timingRealKind)
+    meanTime = sum/real(sampleSize, kind=writeRK)
     stdDevTime = sqrt(sampleSize*sumSqrd - sum**2)/real(sampleSize, &
-        kind=timingRealKind)
+        kind=writeRK)
     ! Print time statistics.
     print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
     if (sampleSize > 1) then
@@ -303,8 +301,8 @@ contains
     ! Record mean time.
     timeWriter = constructWriter([timeFlag])
     call timeWriter%initialize
-    call timeWriter%write(timeFlag, [real(maxTimeStep, kind=timingRealKind), &
-        real(startingPopSize, kind=timingRealKind), meanTime, stdDevTime])
+    call timeWriter%write(timeFlag, [real(maxTimeStep, kind=writeRK), &
+        real(startingPopSize, kind=writeRK), meanTime, stdDevTime])
     call timeWriter%close
   end subroutine multipleRun
 

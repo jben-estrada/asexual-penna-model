@@ -10,7 +10,6 @@ DEP -> SRC
   PersonType
   Demographics
   Model
-  StdKind
   Flag
   TickerType
 
@@ -19,7 +18,6 @@ DEP -> SRC
   Flag
   PersonType
   Gene
-  StdKind
   RandInd
 
 [PersonType]
@@ -28,7 +26,6 @@ DEP -> SRC
 
 [Demographics]
   Gene
-  StdKind
   Model
 
 [SaveFormat]
@@ -38,11 +35,10 @@ DEP -> SRC
 [UpdateArray]
   StdKind
 
-[Gene]
-  StdKind
-
 [RandInd]
-  StdKind
+  PersonType
+
+[Gene]
 
 [Model]
 
@@ -59,14 +55,9 @@ TickerType -> {
 }
 
 StdKind -> {
-  RandInd,
-  Gene,
   UpdateArray,
   SaveFormat,
-  PersonType,
-  Demographics,
-  Pop,
-  Penna
+  PersonType
 }
 
 Flag -> {

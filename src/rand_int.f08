@@ -6,14 +6,9 @@ module RandInd
   !>  Module containing procedures for generating array of random
   !!  integers.
   !----------------------------------------------------------------------------!
-  use StdKind, only: personIntKind, personRealKind
+  use PersonType, only: personIK, personRK
   implicit none
   private
-
-  ! Module integer and real kinds.
-  ! Note: Can be changed when this model is to be reused in other projects. 
-  integer, parameter :: realKind = personRealKind
-  integer, parameter :: intKind = personIntKind
 
   public :: generateIndices
   public :: generateRandInt
@@ -28,12 +23,12 @@ contains
   subroutine generateIndices(lower, upper, indices)
     implicit none
 
-    integer(kind=intKind), intent(in) :: upper
-    integer(kind=intKind), intent(in) :: lower
-    integer(kind=intKind), intent(out) :: indices(:)
+    integer(kind=personIK), intent(in) :: upper
+    integer(kind=personIK), intent(in) :: lower
+    integer(kind=personIK), intent(out) :: indices(:)
     
-    integer(kind=intKind) :: index = 0
-    real(kind=realKind)   :: random = 0
+    integer(kind=personIK) :: index = 0
+    real(kind=personRK)    :: random = 0
     integer :: L
     integer :: i
 
@@ -61,11 +56,11 @@ contains
   function generateRandInt(a, b) result(out)
     implicit none
 
-    integer(kind=intKind), intent(in) :: a
-    integer(kind=intKind), intent(in) :: b
+    integer(kind=personIK), intent(in) :: a
+    integer(kind=personIK), intent(in) :: b
 
-    integer(kind=intKind) :: out
-    real(kind=realKind)   :: random
+    integer(kind=personIK) :: out
+    real(kind=personRK)    :: random
   
     call random_number(random)
     out = floor(random*(b - a + 1)) + a

@@ -10,13 +10,18 @@ module PersonType
   implicit none
   private
 
-  type, public :: Person
-    integer(kind=personIntKind) :: age
-    integer(kind=personIntKind) :: genome
-    integer                     :: deathIndex     ! Only counters
-    integer                     :: mutationCount  ! Only counters
+  ! Module integer and real kinds
+  ! Note: Can be changed when this module is to be reused in other projects.
+  integer, public, parameter :: personIK = personIntKind
+  integer, public, parameter :: personRK = personRealKind
 
-    type(Person), pointer       :: next => null() ! Next node in linked list
+  type, public :: Person
+    integer(kind=personIK) :: age
+    integer(kind=personIK) :: genome
+    integer                :: deathIndex     ! Only counters
+    integer                :: mutationCount  ! Only counters
+
+    type(Person), pointer  :: next => null() ! Next node in linked list
   end type Person
 
 
@@ -36,7 +41,6 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
-  use StdKind, only: personIntKind, personRealKind
   implicit none
   private
 
@@ -61,10 +65,10 @@ contains
     integer,               intent(inout) :: popSizeOffset
     integer,               intent(inout) :: popSize
 
-    integer(kind=personIntKind) :: nextAge = 0
-    real(kind=personRealKind)   :: verhulstWeight
-    real(kind=personRealKind)   :: verhulstFactor
-    real(kind=personRealKind)   :: random
+    integer(kind=personIK) :: nextAge = 0
+    real(kind=personRK)    :: verhulstWeight
+    real(kind=personRK)    :: verhulstFactor
+    real(kind=personRK)    :: random
 
     nextAge = indiv_ptr%age + 1                 ! Hypothetical age
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
@@ -125,14 +129,15 @@ contains
   !>  Get the `k`th binary digit of the integer `number`.
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
+    use PersonType, only: personIK
     implicit none
 
-    integer(kind=personIntKind), intent(in) :: number
-    integer(kind=personIntKind), intent(in) :: k
-    integer(kind=personIntKind)             :: bit
+    integer(kind=personIK), intent(in) :: number
+    integer(kind=personIK), intent(in) :: k
+    integer(kind=personIK)             :: bit
 
     bit = 0
-    bit = iand(shiftr(number, k - 1), 1_personIntKind)
+    bit = iand(shiftr(number, k - 1), 1_personIK)
   end function getBinDigit
 
 
@@ -184,7 +189,7 @@ contains
 
     type(Person), pointer, intent(inout) :: indiv_ptr
     indiv_ptr%genome = GENE_HEALTHY
-    indiv_ptr%age = 0_personIntKind
+    indiv_ptr%age = 0_personIK
     indiv_ptr%mutationCount = 0
     indiv_ptr%deathIndex = ALIVE
   end subroutine initializeHealthyIndiv
@@ -204,23 +209,23 @@ contains
     implicit none
 
     type(Person), pointer,       intent(inout) :: indiv_ptr
-    integer(kind=personIntKind), intent(in)    :: genome
-    integer(kind=personIntKind)                :: mutations(MODEL_M)
+    integer(kind=personIK), intent(in)    :: genome
+    integer(kind=personIK)                :: mutations(MODEL_M)
     integer :: i    ! Counters have default kind.
 
     mutations(:) = 0  ! Initialize `mutations`
-    call generateIndices(1_personIntKind, int(MODEL_L, kind=personIntKind), &
+    call generateIndices(1_personIK, int(MODEL_L, kind=personIK), &
         mutations)
 
     indiv_ptr%genome = genome
     do i = 1, size(mutations)
       if (getBinDigit(indiv_ptr%genome, mutations(i)) == GENE_HEALTHY) then
         indiv_ptr%genome = ior(indiv_ptr%genome, &
-            int(shiftl(1, mutations(i) - 1), kind=personIntKind))
+            int(shiftl(1, mutations(i) - 1), kind=personIK))
       end if
     end do
 
-    indiv_ptr%age = 0_personIntKind
+    indiv_ptr%age = 0_personIK
     indiv_ptr%mutationCount = 0
     indiv_ptr%deathIndex = ALIVE
   end subroutine initializeIndiv

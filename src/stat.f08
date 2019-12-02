@@ -6,12 +6,12 @@ module Demographics
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
   use Gene
-  use StdKind, only: personIntKind
+  use PersonType, only: personIK
   implicit none
   private
 
-  integer(kind=personIntKind), public, allocatable, save :: demog_ageDstrb(:) 
-  integer(kind=personIntKind), public, allocatable, save :: demog_genomeDstrb(:)
+  integer(kind=personIK), public, allocatable, save :: demog_ageDstrb(:) 
+  integer(kind=personIK), public, allocatable, save :: demog_genomeDstrb(:)
   
   integer, public :: DEMOG_LAST_STEPS = 300
 
@@ -37,8 +37,8 @@ contains
       allocate(demog_genomeDstrb(MODEL_L))
     end if
 
-    demog_ageDstrb(:) = 0_personIntKind
-    demog_genomeDstrb(:) = 0_personIntKind
+    demog_ageDstrb(:) = 0_personIK
+    demog_genomeDstrb(:) = 0_personIK
   end subroutine resetDstrbs
 
   ! -------------------------------------------------------------------------- !
@@ -48,8 +48,8 @@ contains
   subroutine updateAgeDstrb(age, dstrb)
     implicit none
   
-    integer(kind=personIntKind), intent(in)    :: age
-    integer(kind=personIntKind), intent(inout) :: dstrb(:)
+    integer(kind=personIK), intent(in)    :: age
+    integer(kind=personIK), intent(inout) :: dstrb(:)
 
     dstrb(age) = dstrb(age) + 1
   end subroutine updateAgeDstrb
@@ -63,9 +63,9 @@ contains
     use Model, only: MODEL_L
     implicit none
 
-    integer(kind=personIntKind), intent(inout) :: genomeDstrb(:)
-    integer(kind=personIntKind), intent(in)    :: genome
-    integer(kind=personIntKind)                :: i
+    integer(kind=personIK), intent(inout) :: genomeDstrb(:)
+    integer(kind=personIK), intent(in)    :: genome
+    integer(kind=personIK)                :: i
 
     do i = 1, MODEL_L
       if (getBinDigit(genome, i) == GENE_UNHEALTHY) then
@@ -81,11 +81,11 @@ contains
   ! -------------------------------------------------------------------------- !
   function getBinDigit(number, k) result(bit)
     implicit none
-    integer(kind=personIntKind), intent(in) :: number
-    integer(kind=personIntKind), intent(in) :: k
-    integer(kind=personIntKind)             :: bit
+    integer(kind=personIK), intent(in) :: number
+    integer(kind=personIK), intent(in) :: k
+    integer(kind=personIK)             :: bit
 
-    bit = iand(shiftr(number, k - 1), 1_personIntKind)
+    bit = iand(shiftr(number, k - 1), 1_personIK)
   end function getBinDigit
 
 

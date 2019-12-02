@@ -5,15 +5,15 @@ module SaveFormat
   ! DESCRIPTION:
   !>  Module containing procedures for saving data
   ! -------------------------------------------------------------------------- !
-  use UpdateArray, only: arrayInsert, arrayRemoveElem
+  use UpdateArray
   use StdKind, only: writeIntKind, writeRealKind
   implicit none
   private
 
   ! Module integer and real kinds
   ! Note: Can be changed when this module is to be reused in other projects. 
-  integer, parameter :: intKind = writeIntKind
-  integer, parameter :: realKind = writeRealKind
+  integer, public, parameter :: writeIK = writeIntKind
+  integer, public, parameter :: writeRK = writeRealKind
 
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
@@ -128,25 +128,25 @@ module SaveFormat
   interface
     module subroutine writer_write_int(self, flag, arg)
       class(Writer),         intent(inout) :: self
-      integer(kind=intKind), intent(in)    :: arg
+      integer(kind=writeIK), intent(in)    :: arg
       integer,               intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_real(self, flag, arg)
       class(Writer),       intent(inout) :: self
-      real(kind=realKind), intent(in)    :: arg
+      real(kind=writeRK), intent(in)    :: arg
       integer,             intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_intArray(self, flag, arg)
       class(Writer),         intent(inout) :: self
-      integer(kind=intKind), intent(in)    :: arg(:)
+      integer(kind=writeIK), intent(in)    :: arg(:)
       integer,               intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_realArray(self, flag, arg)
       class(Writer),       intent(inout) :: self
-      real(kind=realKind), intent(in)    :: arg(:)
+      real(kind=writeRK), intent(in)    :: arg(:)
       integer,             intent(in)    :: flag
     end subroutine
   end interface
@@ -383,7 +383,7 @@ contains
     
 
     class(Writer), intent(inout)            :: self
-    integer(kind=intKind), intent(in)  :: arg
+    integer(kind=writeIK), intent(in)  :: arg
     integer, intent(in)                     :: flag
 
     if (.not.any(self%liveFlags == flag)) return
@@ -396,7 +396,7 @@ contains
 
     class(Writer), intent(inout)         :: self
     integer, intent(in)                  :: flag
-    real(kind=realKind), intent(in) :: arg
+    real(kind=writeRK), intent(in) :: arg
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -409,7 +409,7 @@ contains
 
     class(Writer), intent(inout)           :: self
     integer, intent(in)                    :: flag
-    integer(kind=intKind), intent(in) :: arg(:)
+    integer(kind=writeIK), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -422,7 +422,7 @@ contains
 
     class(Writer), intent(inout)         :: self
     integer, intent(in)                  :: flag
-    real(kind=realKind), intent(in) :: arg(:)
+    real(kind=writeRK), intent(in) :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
