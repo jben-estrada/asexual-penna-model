@@ -5,7 +5,8 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Gene ! `personIK` of StdKind comes from here as well.
+  use Gene
+  use StdKind, only: personIK => personIntKind
   implicit none
   private
 

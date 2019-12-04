@@ -5,16 +5,12 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
+  use Flag
   use ModelParam
-  use StdKind, only: personIntKind, personRealKind
+  use Gene, only: GENE_HEALTHY, GENE_UNHEALTHY
+  use StdKind, only: personIK => personIntKind, personRK => personRealKind
   implicit none
   private
-
-  ! Module integer and real kinds
-  ! Note: Can be changed when this module is to be reused in other projects.
-  integer, public, parameter :: personIK = personIntKind
-  integer, public, parameter :: personRK = personRealKind
-
 
   ! `Person` derived type. A node to the population linked-list.
   type :: Person
@@ -97,8 +93,6 @@ contains
   !>  Initialize `indiv` with a healthy genome.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr)
-    use Flag, only: ALIVE
-    use Gene, only: GENE_HEALTHY
     implicit none
 
     type(Person), pointer, intent(inout) :: indiv_ptr
@@ -115,8 +109,6 @@ contains
   !!  type.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
-    use Flag, only: ALIVE
-    use Gene, only: GENE_HEALTHY
     use RandInd, only: generateIndices
     implicit none
 
@@ -275,8 +267,6 @@ contains
   !>  Update `current_ptr` and then check its life.
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivDead(self, popSize)
-    use Flag
-    use Gene, only: GENE_UNHEALTHY
     implicit none
     class(LinkedList), intent(inout) :: self
     integer,           intent(in)    :: popSize
@@ -362,7 +352,6 @@ contains
   !>  Proceed to the next element to be evaluated.
   ! -------------------------------------------------------------------------- !
   subroutine nextElem(self, status)
-    use Flag, only: ALIVE
     implicit none
     class(LinkedList), intent(inout) :: self
     integer,           intent(out)   :: status

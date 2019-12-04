@@ -1,5 +1,7 @@
 module Penna
   use Pop
+  use SaveFormat
+  use ModelParam
   implicit none
   private
 
@@ -19,7 +21,6 @@ contains
   !>  Wrapper procedure for `readScalarParam
   ! -------------------------------------------------------------------------- !
   subroutine readModelParam
-    use ModelParam, only: readScalarParam, readVerhulstWeights
     implicit none
 
     call readScalarParam
@@ -33,10 +34,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Flag
-    use SaveFormat
     use Demographics
-    use ModelParam
-    use StdKind, only: writeIntKind
     implicit none
 
     integer, intent(in) :: maxTimestep
@@ -117,14 +115,14 @@ contains
       ! Record result.
       select case (recordFlag)
         case (pop_recFlag)
-          call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
+          call runWriter%write(popFlag, int(popSize, kind=writeIK))
         case (demog_recFlag)
           call runWriter%write((ageDstrbFlag), &
               int(demog_ageDstrb, kind=writeIK))
           call runWriter%write(genomeDstrbFlag, &
               int(demog_genomeDstrb, kind=writeIK))
         case (death_recFlag)
-          call runWriter%write(deathFlag, int(deathCount, kind=writeIntKind))
+          call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
       end select
 
       ! Reset variables.
@@ -146,7 +144,6 @@ contains
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
   subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag)
-    use SaveFormat
     use TickerType
     implicit none
 
@@ -225,7 +222,6 @@ contains
   !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
-    use SaveFormat
     implicit none
 
     type(Writer), intent(inout) :: runWriter
@@ -254,7 +250,6 @@ contains
   !>  Wrap up the simulation. This deallocates allocatable arrays.
   ! -------------------------------------------------------------------------- !
   subroutine wrapUp
-    use ModelParam, only: deallocVerhulstWeights
     implicit none
     
     call deallocVerhulstWeights

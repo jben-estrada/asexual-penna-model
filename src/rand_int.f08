@@ -6,7 +6,6 @@ module RandInd
   !>  Module containing procedures for generating array of random
   !!  integers.
   !----------------------------------------------------------------------------!
-  use StdKind, only: personIK => personIntKind, personRK => personRealKind
   implicit none
   private
 

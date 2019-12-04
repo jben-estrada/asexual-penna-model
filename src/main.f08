@@ -24,7 +24,8 @@
 
 
 program Main
-  use Penna, only: readModelParam, multipleRun, wrapUp
+  use Penna
+  use ModelParam
   implicit none
 
   ! -------------------------------------------------------------------------- !
@@ -66,8 +67,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
         isVerbosePrint)
-    use Penna, only: nullFlag, wrapUp
-    use ModelParam, only: MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE
     implicit none
 
     integer, intent(out) :: maxTimestep
@@ -141,8 +140,6 @@ contains
   !>  Print help or usage message before stopping the program.
   ! -------------------------------------------------------------------------- !
   subroutine printHelp
-    use Penna
-    use ModelParam
     implicit none
     character(len=3) :: flagStr(4)    
     integer          :: flagArr(4) = &
@@ -184,7 +181,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printArgs(maxTimestep, sampleSize, startPopSize, recordFlag, & 
         isVerbosePrint)
-    use Penna, only: nullFlag
     implicit none
 
     integer, intent(in) :: maxTimestep
@@ -220,9 +216,7 @@ contains
 
 
   subroutine printModelParams
-    use ModelParam
     implicit none
-
     print "(6(a20, i9/), a20, i9)", &
         "Genome length",        MODEL_L, &
         "Mutation threshold",   MODEL_T, &

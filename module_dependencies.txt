@@ -13,6 +13,7 @@ DEP -> SRC
   TickerType
 
 [Pop]
+  StdKind
   ModelParam
   Flag
   Gene
@@ -20,6 +21,7 @@ DEP -> SRC
 
 [Demographics]
   Gene
+  StdKind
   ModelParam
 
 [SaveFormat]
@@ -50,10 +52,12 @@ TickerType -> {
 }
 
 StdKind -> {
+  Demographics
   UpdateArray,
   SaveFormat,
   RandInd,
-  Gene
+  Gene,
+  StdKind
 }
 
 Flag -> {

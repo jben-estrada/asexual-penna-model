@@ -9,6 +9,9 @@ module Gene
   use StdKind, only: personIK => personIntKind
   implicit none
 
+  ! Made private so as it would not be visible in other modules/subprograms.
+  private :: personIK
+
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0
   integer(kind=personIK), parameter :: GENE_UNHEALTHY = 1
   integer(kind=personIK), parameter :: GENE_GENES(2) = &
