@@ -5,87 +5,75 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
+  use ModelParam
+  use StdKind, only: personIntKind, personRealKind
   implicit none
   private
 
-  public :: checkDeath
-  public :: checkBirth
-  public :: killIndiv
-  public :: generatePopulation
+  ! Module integer and real kinds
+  ! Note: Can be changed when this module is to be reused in other projects.
+  integer, public, parameter :: personIK = personIntKind
+  integer, public, parameter :: personRK = personRealKind
+
+
+  ! `Person` derived type. A node to the population linked-list.
+  type :: Person
+    integer(kind=personIK) :: genome
+    integer :: age
+    integer :: deathIndex
+    integer :: mutationCount
+
+    type(Person), pointer  :: next => null() ! Next node in linked list
+  end type Person
+
+
+  ! Linked-list derived type.
+  type, public :: LinkedList
+    private
+    type(Person), pointer :: head_ptr => null()
+    type(Person), pointer :: tail_ptr => null()
+    type(Person), pointer :: newTail_ptr => null()
+
+    type(Person), pointer :: old_ptr => null()
+    type(Person), pointer :: current_ptr => null()
+  contains
+    ! Inquiry functions.
+    procedure :: isCurrIndivDead  ! NOTE: Has side-effects.
+    procedure :: isCurrIndivMature
+    procedure :: getCurrIndivDeathIdx
+    procedure :: getCurrIndivAge
+    procedure :: getCurrIndivGenome
+
+    ! Transformational procedures.
+    procedure :: killCurrentIndiv
+    procedure :: updateCurrIndivAge
+    procedure :: reproduceCurrIndiv
+    procedure :: nextElem
+
+    ! Subroutines for memory management.
+    procedure :: resetReadPtrs
+    procedure :: freePtr
+  end type LinkedList
+
+  public :: constructLinkedList
 contains
 
+
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: checkDeath
-  !>  Check whether `indiv` will die in the current time step or not.
+  ! FUNCTION: constructLinkedList
+  !>  Initialize a `LinkedList` object.
   ! -------------------------------------------------------------------------- !
-  subroutine checkDeath(indiv_ptr, popSize, popSizeOffset)
-    use Flag
-    use PersonType
-    use ModelParam
-    use Gene, only: GENE_UNHEALTHY
+  function constructLinkedList(startPopSize) result(newLL)
     implicit none
+    integer, intent(in) :: startPopSize
+    type(LinkedList)    :: newLL
+    
+    allocate(newLL%head_ptr)
+    call generatePopulation(newLL, startPopSize)
+    newLL%newTail_ptr => newLL%tail_ptr
 
-    type(Person), pointer, intent(inout) :: indiv_ptr
-    integer,               intent(inout) :: popSizeOffset
-    integer,               intent(inout) :: popSize
-
-    integer(kind=personIK) :: nextAge = 0
-    real(kind=personRK)    :: verhulstWeight
-    real(kind=personRK)    :: verhulstFactor
-    real(kind=personRK)    :: random
-
-    nextAge = indiv_ptr%age + 1                 ! Hypothetical age
-    verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
-
-    ! ***Death check: Old age
-    if (nextAge >= MODEL_L) then
-      indiv_ptr%deathIndex = DEAD_OLD_AGE
-      popSizeOffset = popSizeOffset - 1
-      return
-    end if
-
-    if (getBinDigit(indiv_ptr%genome, nextAge) == GENE_UNHEALTHY) then
-      indiv_ptr%mutationCount = indiv_ptr%mutationCount + 1
-    end if
-
-    ! ***Death check: Mutation accumulation
-    if (indiv_ptr%mutationCount >= MODEL_T) then
-      indiv_ptr%deathIndex = DEAD_MUTATION
-      popSizeOffset = popSizeOffset - 1
-      return
-    ! ***Death check: Verhulst factor
-    else if (verhulstWeight > 0.0) then
-      ! Get Verhulst factor per age.
-      call random_number(random)
-      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
-
-      if (random > verhulstFactor) then
-        indiv_ptr%deathIndex = DEAD_VERHULST
-        popSizeOffset = popSizeOffset - 1
-        return
-      end if
-    end if
-  end subroutine checkDeath
-
-
-  !----------------------------------------------------------------------------!
-  ! SUBROUTINE: killIndiv
-  !>  Remove object `indiv_ptr` is pointing at from the population list.
-  !----------------------------------------------------------------------------!
-  subroutine killIndiv(currIndiv_ptr, oldIndiv_ptr)
-    use PersonType
-    implicit none
-
-    type(Person), pointer, intent(inout) :: currIndiv_ptr
-    type(Person), pointer, intent(inout) :: oldIndiv_ptr
-    type(Person), pointer                :: deadIndiv_ptr
-
-    deadIndiv_ptr => currIndiv_ptr
-    currIndiv_ptr => currIndiv_ptr%next
-    if (associated(oldIndiv_ptr)) oldIndiv_ptr%next => currIndiv_ptr
-
-    deallocate(deadIndiv_ptr)
-  end subroutine killIndiv
+    newLL%current_ptr => newLL%head_ptr
+  end function constructLinkedList
 
 
   !----------------------------------------------------------------------------!
@@ -93,12 +81,11 @@ contains
   !>  Get the `k`th binary digit of the integer `number`.
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
-    use PersonType, only: personIK
     implicit none
 
     integer(kind=personIK), intent(in) :: number
-    integer(kind=personIK), intent(in) :: k
     integer(kind=personIK)             :: bit
+    integer, intent(in) :: k
 
     bit = 0
     bit = iand(shiftr(number, k - 1), 1_personIK)
@@ -106,47 +93,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: checkBirth
-  !>  Check whether `indiv` will reproduce at the current time step.
-  ! -------------------------------------------------------------------------- !
-  subroutine checkBirth(indiv_ptr, popFutureTail_ptr, popSizeOffset)
-    use ModelParam
-    use PersonType
-    implicit none
-
-    type(Person), pointer, intent(in)    :: indiv_ptr
-    type(Person), pointer, intent(inout) :: popFutureTail_ptr
-    integer,               intent(inout) :: popSizeOffset
-
-    type(Person), pointer :: newIndiv_ptr
-    type(Person), pointer :: oldIndiv_ptr
-    integer               :: i
-
-    ! Check for valid reproduction age.
-    if (MODEL_R > indiv_ptr%age .or. indiv_ptr%age > MODEL_R_MAX) return
-
-    ! Add new born indivs to the next generation.
-    oldIndiv_ptr => popFutureTail_ptr
-    newIndiv_ptr => null()
-    do i = 1, MODEL_B
-      allocate(newIndiv_ptr)
-      call initializeIndiv(newIndiv_ptr, indiv_ptr%genome)
-
-      oldIndiv_ptr%next => newIndiv_ptr
-      popSizeOffset = popSizeOffset + 1
-    end do
-
-    ! Update future tail of linked-list.
-    popFutureTail_ptr => newIndiv_ptr
-  end subroutine checkBirth
-
-  
-  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
   !>  Initialize `indiv` with a healthy genome.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr)
-    use PersonType
     use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
     implicit none
@@ -165,21 +115,18 @@ contains
   !!  type.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
-    use PersonType
     use Flag, only: ALIVE
     use Gene, only: GENE_HEALTHY
     use RandInd, only: generateIndices
-    use ModelParam, only: MODEL_M, MODEL_L
     implicit none
 
-    type(Person), pointer,       intent(inout) :: indiv_ptr
+    type(Person), pointer,  intent(inout) :: indiv_ptr
     integer(kind=personIK), intent(in)    :: genome
-    integer(kind=personIK)                :: mutations(MODEL_M)
-    integer :: i    ! Counters have default kind.
+    integer :: mutations(MODEL_M)
+    integer :: i
 
     mutations(:) = 0  ! Initialize `mutations`
-    call generateIndices(1_personIK, int(MODEL_L, kind=personIK), &
-        mutations)
+    call generateIndices(1, MODEL_L, mutations)
 
     indiv_ptr%genome = genome
     do i = 1, size(mutations)
@@ -200,7 +147,6 @@ contains
   !>  Generate population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(popList, startPopSize)
-    use PersonType
     implicit none
     type(LinkedList), intent(inout) :: popList
     integer,          intent(in)    :: startPopSize
@@ -227,4 +173,275 @@ contains
       popList%tail_ptr => newIndiv_ptr
     end if
   end subroutine generatePopulation
+
+  
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [LinkedList%]freePtr
+  !>  Free the elements of the linked-list the procedure is bound with.
+  ! -------------------------------------------------------------------------- !
+  subroutine freePtr(self, popSize)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+    integer,           intent(in)    :: popSize
+
+    type(Person), pointer :: curr_ptr => null()
+    type(Person), pointer :: next_ptr => null()
+
+    if (popSize == 0 .and. associated(self%head_ptr)) then
+      self%head_ptr => null()
+    end if
+
+    curr_ptr => self%head_ptr
+    next_ptr => null()
+    do
+      if (associated(curr_ptr)) then
+        next_ptr => curr_ptr%next
+        deallocate(curr_ptr)
+        curr_ptr => next_ptr
+      else
+        exit
+      end if
+    end do
+  end subroutine freePtr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [LinkedList%]killCurrentIndiv
+  !>  Kill the `Person` attribute `[LinkedList%]current_ptr`
+  !!  and remove it from the list.
+  ! -------------------------------------------------------------------------- !
+  subroutine killCurrentIndiv(self)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+    type(Person), pointer            :: deadIndiv_ptr
+
+    deadIndiv_ptr => self%current_ptr
+    self%current_ptr => self%current_ptr%next
+    if (associated(self%old_ptr)) self%old_ptr%next => self%current_ptr
+
+    deallocate(deadIndiv_ptr)
+  end subroutine killCurrentIndiv
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: incrementPtr
+  !>  Have the `current_ptr` attribute of the passed `LinkedList`
+  !!   object to point at the next element of the linked list.
+  ! -------------------------------------------------------------------------- !
+  subroutine incrementPtr(list)
+    implicit none
+    class(LinkedList), intent(inout) :: list
+
+    ! NOTE: We demand that `LL_nextElem` will never encounter a
+    ! disassociated pointer.
+    list%old_ptr => list%current_ptr
+    list%current_ptr => list%current_ptr%next
+  end subroutine incrementPtr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [LinkedList%]reproduceCurrIndiv
+  !>  Have the attribute `[LinkedList%]current_ptr` point at the next
+  !!  element of the list.
+  ! -------------------------------------------------------------------------- !
+  subroutine reproduceCurrIndiv(self)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+
+    type(Person), pointer :: newIndiv_ptr
+    type(Person), pointer :: oldIndiv_ptr
+    integer               :: i
+
+    if (MODEL_R > self%current_ptr%age &
+        .or. self%current_ptr%age > MODEL_R_MAX) return
+
+    ! Add new born indivs to the next generation.
+    oldIndiv_ptr => self%newTail_ptr
+    newIndiv_ptr => null()
+    do i = 1, MODEL_B
+      allocate(newIndiv_ptr)
+      call initializeIndiv(newIndiv_ptr, self%current_ptr%genome)
+
+      oldIndiv_ptr%next => newIndiv_ptr
+    end do
+
+    ! Update the new tail.
+    self%newTail_ptr => newIndiv_ptr
+  end subroutine reproduceCurrIndiv
+
+
+  !-------------------------------------------------------------------------- !
+  ! BOUND FUNCTION: [LinkedList%]isCurrIndivDead
+  !>  Update `current_ptr` and then check its life.
+  ! -------------------------------------------------------------------------- !
+  logical function isCurrIndivDead(self, popSize)
+    use Flag
+    use Gene, only: GENE_UNHEALTHY
+    implicit none
+    class(LinkedList), intent(inout) :: self
+    integer,           intent(in)    :: popSize
+
+    real(kind=personRK) :: verhulstWeight
+    real(kind=personRK) :: verhulstFactor
+    real(kind=personRK) :: random
+    integer             :: nextAge
+
+    isCurrIndivDead = .false.
+    nextAge = self%current_ptr%age + 1          ! Hypothetical age
+    verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
+
+    ! ***Death check: Old age
+    if (nextAge >= MODEL_L) then
+      self%current_ptr%deathIndex = DEAD_OLD_AGE
+      isCurrIndivDead = .true.
+      return
+    end if
+
+    ! Count mutation.
+    if (getBinDigit(self%current_ptr%genome, nextAge) == GENE_UNHEALTHY) then
+      self%current_ptr%mutationCount = self%current_ptr%mutationCount + 1
+    end if
+
+    ! ***Death check: Mutation accumulation
+    if (self%current_ptr%mutationCount >= MODEL_T) then
+      self%current_ptr%deathIndex = DEAD_MUTATION
+      isCurrIndivDead = .true.
+
+    ! ***Death check: Verhulst factor
+    else if (verhulstWeight > 0.0) then
+      ! Get Verhulst factor per age.
+      call random_number(random)
+      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
+
+      if (random > verhulstFactor) then
+        self%current_ptr%deathIndex = DEAD_VERHULST
+        isCurrIndivDead = .true.
+      end if
+    end if
+  end function isCurrIndivDead
+
+
+  integer function getCurrIndivDeathIdx(self)
+    implicit none
+    class(LinkedList), intent(in) :: self
+
+    if (associated(self%current_ptr)) then
+      getCurrIndivDeathIdx = self%current_ptr%deathIndex
+    else
+      getCurrIndivDeathIdx = -1  ! An invalid value.
+    end if
+  end function getCurrIndivDeathIdx
+
+
+  integer function getCurrIndivAge(self)
+    implicit none
+    class(LinkedList), intent(in) :: self
+
+    if (associated(self%current_ptr)) then
+      getCurrIndivAge = self%current_ptr%age
+    else
+      error stop "The current pointer of a linked list is disassociated."
+    end if
+  end function getCurrIndivAge
+
+
+  function getCurrIndivGenome(self) result(genome)
+    implicit none
+    class(LinkedList), intent(in) :: self
+    integer(kind=personIK) :: genome
+
+    if (associated(self%current_ptr)) then
+      genome = self%current_ptr%genome
+    else
+      error stop "The current pointer of a linked list is disassociated."
+    end if
+  end function getCurrIndivGenome
+
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [LinkedList%]nextElem
+  !>  Proceed to the next element to be evaluated.
+  ! -------------------------------------------------------------------------- !
+  subroutine nextElem(self, status)
+    use Flag, only: ALIVE
+    implicit none
+    class(LinkedList), intent(inout) :: self
+    integer,           intent(out)   :: status
+
+    ! ***Terminal case: end of the linked-list.
+    !    This corresponds to `status` = -1.
+    if (associated(self%current_ptr, self%tail_ptr)) then
+      ! Check the tail's life.
+      if (self%current_ptr%deathIndex /= ALIVE) then
+        call self%killCurrentIndiv()
+
+        ! Check edge case.
+        if (associated(self%current_ptr)) then
+          self%tail_ptr => self%current_ptr
+        else
+          self%current_ptr => self%old_ptr
+          self%tail_ptr => self%current_ptr
+          self%newTail_ptr => self%current_ptr
+
+          ! NOTE: We will not bother decrementing his pointer since most likely
+          ! `self%old_ptr` will be reset anyways.
+          self%old_ptr => null()
+        end if
+      end if
+
+      ! Update the tail of the linked list.
+      status = -1
+      self%tail_ptr => self%newTail_ptr
+
+    ! ***Non-terminal case. Move to the next element of the list.
+    ! This corresponds to `status` = 0.
+    else
+      ! Check life of the current individual.
+      if (self%current_ptr%deathIndex == ALIVE) then
+        call incrementPtr(self)
+      else
+        ! Check edge case.
+        if (associated(self%current_ptr, self%head_ptr)) &
+            self%head_ptr => self%current_ptr%next
+
+        call self%killCurrentIndiv()
+      end if
+      
+      status = 0
+    end if
+  end subroutine nextElem
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: [LinkedList%]resetReadPtrs
+  !>  Reset reader pointers, i.e. `current_ptr` and `old_ptr` attributes,
+  !!  of the linked list.
+  ! -------------------------------------------------------------------------- !
+  subroutine resetReadPtrs(self)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+  
+    self%current_ptr => self%head_ptr
+    self%old_ptr => null()
+  end subroutine resetReadPtrs
+
+
+  subroutine updateCurrIndivAge(self)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+  
+    self%current_ptr%age = self%current_ptr%age + 1
+  end subroutine updateCurrIndivAge
+
+
+  logical function isCurrIndivMature(self)
+    implicit none
+    class(LinkedList), intent(inout) :: self
+    logical :: lowerBound
+    logical :: upperBound
+
+    lowerBound = MODEL_R <= self%current_ptr%age
+    upperBound = self%current_ptr%age <= MODEL_R_MAX
+  
+    isCurrIndivMature = (lowerBound .and. upperBound)
+  end function isCurrIndivMature
 end module Pop

@@ -6,7 +6,7 @@ module Gene
   !>  Module containing gene parameters and procedures for generating
   !!  genomes.
   ! -------------------------------------------------------------------------- !
-  use PersonType, only: personIK
+  use StdKind, only: personIK => personIntKind
   implicit none
 
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0

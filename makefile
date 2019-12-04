@@ -1,5 +1,5 @@
 # Compiler choice.
-FCOMPILER=gfortran-8
+FCOMPILER=gfortran-9
 
 # Compiler options.
 # 	For debugging.
@@ -23,22 +23,22 @@ OBJECT=$(wildcard $(OBJ_DIR)/*.o)
 COMPILE_COMM=$(FCOMPILER) $(FLAGS) -J $(OBJ_DIR)/ -I $(OBJ_DIR)/
 
 # Source code with no external dependencies.
-NAME_DEP0:=init ticker persontype
+NAME_DEP0:=init ticker
 COMPILE_DEP0:=$(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 1 ext dep from dep0.
-NAME_DEP1:=gene update_array rand_int
+NAME_DEP1:=gene update_array rand_int population
 COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with at most 2 ext dep from dep0 and dep1.
-NAME_DEP2:=demographics save
+NAME_DEP2:=save demographics
 COMPILE_DEP2:=$(foreach name, $(NAME_DEP2), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 3 or more ext dep from dep0, dep1 and dep2.
-NAME_DEP3:=population penna
+NAME_DEP3:= penna
 COMPILE_DEP3:=$(foreach name, $(NAME_DEP3), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
@@ -70,10 +70,10 @@ dep1: dep0
 	@echo Compiling second set.
 	@$(COMPILE_DEP1)
 
-dep0:
+dep0: clean
 	@echo Compiling first set.
 	@$(COMPILE_DEP0)
 
 # Remove *.mod and *.o files in obj/.
 clean:
-	rm $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.o
+	@rm -f $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.o

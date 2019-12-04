@@ -1,5 +1,5 @@
 module Penna
-  use PersonType
+  use Pop
   implicit none
   private
 
@@ -29,13 +29,13 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
-  !>  Simulate the Penna model.
+  !>  Run the Penna model.
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
-    use Pop
+    use Flag
     use SaveFormat
     use Demographics
-    use ModelParam, only: MODEL_K
+    use ModelParam
     use StdKind, only: writeIntKind
     implicit none
 
@@ -43,191 +43,102 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(LinkedList) :: popList = LinkedList() ! Struct containing LL pointers.
+    type(LinkedList) :: population
+    type(Writer)     :: runWriter
+    integer          :: step
+    integer          :: popSize
+    integer          :: popSizeChange
+    integer          :: listStatus
+    integer          :: deathCount(3)
 
-    type(Writer) :: runWriter     ! A `Writer` object for recording the run.
-    integer      :: step          ! Time step
-    integer      :: popSize       ! Current population size
-    integer      :: deathCount(3) ! Death count.
-
-    ! Initialize the current population.
-    allocate(popList%head_ptr)
-    call generatePopulation(popList, startPopSize)
-    popList%newTail_ptr => popList%tail_ptr
-
-    ! Initialize variables.
+    ! Initialize variables
+    population = constructLinkedList(startPopSize)
     popSize = startPopSize
+    popSizeChange = 0
     deathCount(:) = 0
-    call resetDstrbs  ! Initialize demographics.
+    listStatus = 0
+    call resetDstrbs()
     call initializeRunWriter(runWriter, recordFlag)
 
-    ! Disable demographics recording if it is not to be recorded.
+    ! Disable demographics recording.
     if (recordFlag /= demog_recFlag) DEMOG_LAST_STEPS = -1
 
-    ! Run the simulation.
-    mainLoop: do step = 1, maxTimestep
-
+    ! Run the model.
+    mainloop: do step = 1, maxTimestep
       if (popSize > MODEL_K) then
         print "(/a)", "The population has exceeded the carrying capacity!"
         exit
       end if
-      
-      ! Evaluate each individuals.
-      call evalPopulation(popList, popSize, deathCount, maxTimestep - step)
+
+      ! Evaluate population.
+      evalPop: do
+        ! Catch extinction case.
+        if (popSize == 0) exit
+
+        ! Evaluate the current individual.
+        if (population%isCurrIndivDead(popSize)) then
+          ! Count dead ones.
+          select case (population%getCurrIndivDeathIdx())
+            case (DEAD_OLD_AGE)
+              deathCount(1) = deathCount(1) + 1
+            case (DEAD_MUTATION)
+              deathCount(2) = deathCount(2) + 1
+            case (DEAD_VERHULST)
+              deathCount(3) = deathCount(3) + 1
+            case default
+              error stop "Dead `Person` object has an invalid death index."
+          end select
+          popSizeChange = popSizeChange - 1
+        else
+          call population%updateCurrIndivAge()
+
+          ! Check for birth events.
+          if (population%isCurrIndivMature()) then
+            call population%reproduceCurrIndiv()
+            popSizeChange = popSizeChange + MODEL_B
+          end if
+        end if
+
+        ! Record demographics.
+        if (maxTimestep - step <= DEMOG_LAST_STEPS) then
+          call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
+          call updateGenomeDstrb(population%getCurrIndivGenome(), &
+              demog_genomeDstrb)
+        end if
+
+        ! Proceed to the next element of the linked list.
+        call population%nextElem(listStatus)
+        ! Exit condition.
+        if (listStatus /= 0) exit
+      end do evalPop
+      ! Update the population size.
+      popSize = popSize + popSizeChange
 
       ! Record result.
       select case (recordFlag)
         case (pop_recFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIntKind))
         case (demog_recFlag)
-          call runWriter%write(ageDstrbFlag, demog_ageDstrb)
-          call runWriter%write(genomeDstrbFlag, demog_genomeDstrb)
+          call runWriter%write((ageDstrbFlag), &
+              int(demog_ageDstrb, kind=writeIK))
+          call runWriter%write(genomeDstrbFlag, &
+              int(demog_genomeDstrb, kind=writeIK))
         case (death_recFlag)
           call runWriter%write(deathFlag, int(deathCount, kind=writeIntKind))
       end select
 
       ! Reset variables.
       deathCount(:) = 0
-      call resetDstrbs
-    end do mainLoop
+      popSizeChange = 0
+      call population%resetReadPtrs()
+      if (recordFlag == demog_recFlag) call resetDstrbs()
+    end do mainloop
 
     ! Wrap up.
-    if (associated(popList%head_ptr)) then
-      if (popSize > 0) then
-        call freeAll(popList%head_ptr)
-      else
-        ! NOTE: A solution to the double free/corruption error.
-        popList%head_ptr => null()
-      end if
-    end if
-
+    call population%freePtr(popSize)
     call runWriter%close()
-    call deallocDstrb
+    call deallocDstrb()
   end subroutine run
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: evalPopulation
-  !>  Evaluate death and birth of individuals.
-  ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(popList, popSize, deathCount, timeCountDown)
-    use Pop
-    use Demographics
-    use Flag
-    implicit none
-
-    ! A container for LL node pointers.
-    type(LinkedList), intent(inout) :: popList
-
-    integer, intent(inout) :: popSize
-    integer, intent(inout) :: deathCount(3)
-    integer, intent(in)    :: timeCountDown
-    
-    type(Person), pointer :: oldIndiv_ptr => null()
-    type(Person), pointer :: currIndiv_ptr => null()
-    integer               :: popSizeOffset = 0
-
-    ! Initialize variables.
-    popSizeOffset = 0
-    currIndiv_ptr => popList%head_ptr
-    oldIndiv_ptr => null()
-
-    do
-      ! Catch case where the population is extinct.
-      if (popSize == 0) exit
-      
-      call checkDeath(currIndiv_ptr, popSize, popSizeOffset)
-
-      ! Evaluate alive individual. Count dead ones.
-      select case (currIndiv_ptr%deathIndex)
-        case (ALIVE)
-          currIndiv_ptr%age = currIndiv_ptr%age + 1
-          call checkBirth(currIndiv_ptr, popList%newTail_ptr, popSizeOffset)
-        case (DEAD_OLD_AGE)
-          deathCount(1) = deathCount(1) + 1
-        case (DEAD_MUTATION)
-          deathCount(2) = deathCount(2) + 1
-        case (DEAD_VERHULST)
-          deathCount(3) = deathCount(3) + 1
-      end select
-
-      ! Record demographics.
-      if (timeCountDown <= DEMOG_LAST_STEPS) then
-        call updateAgeDstrb(currIndiv_ptr%age, demog_ageDstrb)
-        call updateGenomeDstrb(currIndiv_ptr%genome, demog_genomeDstrb)
-      end if
-
-      ! Exit condition.
-      ! ***Terminal case: end of the population linked-list.
-      if (associated(currIndiv_ptr, popList%tail_ptr)) then
-        ! Remove dead individual from the list.
-        if (currIndiv_ptr%deathIndex /= ALIVE) then
-          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
-
-          ! Check edge case.
-          if (associated(currIndiv_ptr)) then
-            popList%tail_ptr => currIndiv_ptr
-          else
-            currIndiv_ptr => oldIndiv_ptr
-            popList%tail_ptr => currIndiv_ptr
-            popList%newTail_ptr => currIndiv_ptr
-          end if
-        end if
-        exit
-
-      ! ***Non-terminal case.
-      else
-        ! Move to the next individual.
-        if (currIndiv_ptr%deathIndex == ALIVE) then
-          oldIndiv_ptr => currIndiv_ptr
-          currIndiv_ptr => currIndiv_ptr%next
-
-        ! Remove dead individual and move to the next individual.
-        else
-          ! Check edge case.
-          if (associated(currIndiv_ptr, popList%head_ptr)) &
-              popList%head_ptr => currIndiv_ptr%next
-
-          call killIndiv(currIndiv_ptr, oldIndiv_ptr)
-        end if
-      end if
-    end do
-
-    ! Update population size.
-    popSize = popSize + popSizeOffset
-
-    ! Reset pointers.
-    if (popSize > 0) then
-      popList%tail_ptr => popList%newTail_ptr
-    else
-      if (associated(popList%tail_ptr)) popList%tail_ptr => null()
-      if (associated(popList%head_ptr)) popList%head_ptr => null()
-    end if
-  end subroutine evalPopulation
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: freeAll
-  !>  Free remaining allocated memory to prevent memory leak.
-  ! -------------------------------------------------------------------------- !
-  subroutine freeAll(head_ptr)
-    implicit none
-    type(Person), pointer, intent(inout) :: head_ptr
-    type(Person), pointer                :: curr_ptr => null()
-    type(Person), pointer                :: next_ptr => null()
-
-    curr_ptr => head_ptr
-    next_ptr => null()
-    do
-      if (associated(curr_ptr)) then
-        next_ptr => curr_ptr%next
-        deallocate(curr_ptr)
-        curr_ptr => next_ptr
-      else
-        exit
-      end if
-    end do
-  end subroutine freeAll
 
 
   ! -------------------------------------------------------------------------- !
