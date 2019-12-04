@@ -7,7 +7,6 @@ DEP -> SRC
 [Penna]
   Pop
   SaveFormat
-  PersonType
   Demographics
   ModelParam
   Flag
@@ -16,13 +15,8 @@ DEP -> SRC
 [Pop]
   ModelParam
   Flag
-  PersonType
   Gene
   RandInd
-
-[PersonType]
-  ModelParam
-  StdKind
 
 [Demographics]
   Gene
@@ -36,9 +30,10 @@ DEP -> SRC
   StdKind
 
 [RandInd]
-  PersonType
+  StdKind
 
 [Gene]
+  StdKind
 
 [ModelParam]
 
@@ -57,7 +52,8 @@ TickerType -> {
 StdKind -> {
   UpdateArray,
   SaveFormat,
-  PersonType
+  RandInd,
+  Gene
 }
 
 Flag -> {
@@ -66,7 +62,6 @@ Flag -> {
 }
 
 ModelParam -> {
-  PersonType,
   Demographics,
   Pop,
   Penna,
@@ -87,11 +82,6 @@ UpdateArray -> {
 }
 
 SaveFormat -> {
-  Penna
-}
-
-PersonType -> {
-  Pop,
   Penna
 }
 

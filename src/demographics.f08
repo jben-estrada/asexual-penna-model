@@ -5,13 +5,12 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Gene
-  use PersonType, only: personIK
+  use Gene ! `personIK` of StdKind comes from here as well.
   implicit none
   private
 
-  integer(kind=personIK), public, allocatable, save :: demog_ageDstrb(:) 
   integer(kind=personIK), public, allocatable, save :: demog_genomeDstrb(:)
+  integer,                public, allocatable, save :: demog_ageDstrb(:) 
   
   integer, public :: DEMOG_LAST_STEPS = 300
 
@@ -37,7 +36,7 @@ contains
       allocate(demog_genomeDstrb(MODEL_L))
     end if
 
-    demog_ageDstrb(:) = 0_personIK
+    demog_ageDstrb(:) = 0
     demog_genomeDstrb(:) = 0_personIK
   end subroutine resetDstrbs
 
@@ -48,8 +47,8 @@ contains
   subroutine updateAgeDstrb(age, dstrb)
     implicit none
   
-    integer(kind=personIK), intent(in)    :: age
-    integer(kind=personIK), intent(inout) :: dstrb(:)
+    integer, intent(in)    :: age
+    integer, intent(inout) :: dstrb(:)
 
     dstrb(age) = dstrb(age) + 1
   end subroutine updateAgeDstrb
