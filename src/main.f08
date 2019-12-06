@@ -56,7 +56,7 @@ program Main
   ! Run the Penna model multiple times.
   call multipleRun(timeSteps, startPopSize_, sampleSize_, recordFlag_)
 
-  ! Wrap up. Deallocate allocatable arrays.
+  ! Wrap up. Deallocate any global allocatable variables.
   call wrapUp
   print "(*(a))", separator
 contains
@@ -89,6 +89,7 @@ contains
     recordFlag = nullFlag
     isVerbosePrint = .false.
 
+    ! Evaluate each passed cmd args.
     posArgCount = 1
     do argCount = 1, command_argument_count()
       call get_command_argument(argCount, cmdArg, status=readStatus)
@@ -109,6 +110,8 @@ contains
       ! ii.) Positional arguments. NOTE: All pos args must be integers.
       else
         read(cmdArg, *, iostat=readStatus) cmdInt
+
+        ! Assign casted value if type casting succeeds
         if (readStatus == 0) then
           select case (posArgCount)
             ! ***Max time step.
@@ -130,6 +133,7 @@ contains
           call wrapUp
           stop
         end if
+
         posArgCount = posArgCount + 1
       end if
     end do
@@ -147,6 +151,7 @@ contains
         [nullFlag, pop_recFlag, demog_recFlag, death_recFlag]
     integer          :: i
 
+    ! Cast record flag integers to strings.
     do i = 1, size(flagStr)
       write(flagStr(i), "(i2)") flagArr(i)
     end do
@@ -197,12 +202,7 @@ contains
     logical, intent(in) :: isVerbosePrint
 
     logical :: toRecord
-
-    if (recordFlag /= nullFlag) then
-      toRecord = .true.
-    else
-      toRecord = .false.
-    end if
+    toRecord = recordFlag /= nullFlag
 
     ! ***Header
     print "(*(a))", separator 
@@ -218,11 +218,16 @@ contains
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize
     print "(a20, L9)", "Record result", toRecord
+
     ! ***End
     print "(*(a))", separator
   end subroutine printArgs
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: printModelParams
+  !>  Print extended model parameters.
+  ! -------------------------------------------------------------------------- !
   subroutine printModelParams
     implicit none
     print "(6(a20, i9/), a20, i9)", &

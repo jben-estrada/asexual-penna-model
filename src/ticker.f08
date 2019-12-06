@@ -23,6 +23,7 @@ module TickerType
   public :: constructTicker
 contains
 
+
   !----------------------------------------------------------------------------!
   ! SUBROUTINE: constructTicker
   !>  A constructor procedure for the `Ticker` type.
@@ -35,12 +36,14 @@ contains
     character, optional :: charBit
     type(Ticker)        :: new
 
+    ! Get character bit for progress bar.
     if (present(charBit)) then
       new%charBit = charBit
     else
       new%charBit = defaultCharBit
     end if
 
+    ! Initialize `Ticker` object.
     new%index = 0
     new%partition = partition
     new%totalTicks = totalTicks
@@ -60,14 +63,17 @@ contains
     logical, optional            :: show
     integer, optional            :: increment
 
+    ! End of progress bar case.
     if (self%index == self%totalTicks) return
 
+    ! Increment internal index for progress bar.
     if (present(increment)) then
       self%index = self%index + increment
     else
       self%index = self%index + 1
     end if
 
+    ! Optionally show the progress bar.
     if (present(show)) then
       if (show) then
         call self%showTicker
@@ -90,10 +96,12 @@ contains
 
     tickerLength = int(self%index*self%partition/self%totalTicks)
 
+    ! Get progress bar as a character array.
     allocate(tickArr(tickerLength))
     tickArr = [(self%charBit, i = 1, tickerLength), &
         (" ", i = self%partition - 1, tickerLength, -1)]
 
+    ! Print character array.
     write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
 

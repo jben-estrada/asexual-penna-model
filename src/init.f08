@@ -48,9 +48,9 @@ module ModelParam
   integer, protected, public, save :: MODEL_K     ! Carrying capacity
 
   ! Parameters whose values are from `verhulst_weights.ini`.
-  ! Verhulst weights
+  ! Verhulst weights.
   real, allocatable, protected, public, save :: MODEL_VERHULST_W(:)
-  ! Default weight
+  ! Default Verhulst weight.
   real, parameter :: VERHULST_W_DEFAULT = 0. 
 
   ! Parameters whose values can be changed by command line arguments.
@@ -61,7 +61,7 @@ module ModelParam
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  integer, parameter               :: MAXLEN = 256
+  integer, parameter  :: MAXLEN = 256
   character(len=MAXLEN), protected, public :: modelFilename = &
       "model.ini"
   character(len=MAXLEN), protected, public :: vWeightsFilename = &
@@ -77,6 +77,7 @@ module ModelParam
   ! Parameter keys. NOTE: Must first be initialized before using to be able
   ! to contain keys with different lengths (not counting spaces).
   character(len=MAXLEN) :: modelParamKeys(modelParamCount)
+
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: modelUnit = 99
@@ -90,9 +91,9 @@ module ModelParam
   character, parameter :: VWEIGHT_SEP = ","
   ! End of line character.
   character, parameter :: EOL = "/"
-  ! Default null value. This could be anything.
+  ! Default null value. This could be any non-positive integers.
   integer, parameter :: NULLVALUE = -1
-  ! Ignore value.
+  ! Ignore value. This could also be any non-positive integers.
   integer, parameter :: IGNOREVALUE = 0 
 
   public :: readScalarParam
@@ -347,34 +348,48 @@ contains
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
 
-      ! Check read state.
-      if (currChar == VWEIGHT_SEP .or. charNum == len(strippedFile)) then
+      ! > Check read state. (NOTE: `>` are visual hints for nasty nested if's)
+      ! ======================================
+      ReadCheck: if (currChar == VWEIGHT_SEP &
+                     .or. charNum == len(strippedFile)) then
+        ! Cast string to real.
         read(vWeightStr, *, iostat=readStatus) vWeight
 
-        ! Check if the char-to-real casting succeeds.
-        if (readStatus == 0) then
-          ! Check all possible errors before assigning.
-          if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
+        ! >> Check if the char-to-real casting succeeds.
+        ! ===========================================
+        CastCheck: if (readStatus == 0) then
+
+          ! >>> Check all possible errors.
+          ! ==============================================================
+          AssignWeight: if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
             MODEL_VERHULST_W(vWeightIdx) = vWeight
+
           ! ***Error. Invalid number of weights.
           else if (vWeightIdx > MODEL_L) then
             print "(a)", "***Warning. Given Verhulst weights exceeded the " // &
                 "maximum number of allowed number of weights."
+
           ! ***Error. Invalid range.
           else if (vWeight > 1) then
             print "(a, f5.3, a)", "***Warning. Given Verhulst weight" // &
                 "is outside the allowed range [0, 1]. Using the " // &
                 "default value (", VERHULST_W_DEFAULT, ")."
+
           ! ***Unknown error.
           else
             stop "***Error. Unknown error when reading Verhulst weights."
-          end if
+          end if AssignWeight
+          ! <<<
+          ! ==============================================================
+
         ! ***Error. Invalid input.
         else
           print "(3(a), f5.3, a)", "***Warning. '", vWeightStr , &
               "' is not a valid value for a Verhulst factor. " // &
               "Using the default value (", VERHULST_W_DEFAULT, ")."
-        end if
+        end if CastCheck
+        ! <<
+        ! ===========================================
 
         vWeightIdx = vWeightIdx + 1
         vWeightStr = ""
@@ -382,7 +397,9 @@ contains
       else
         if (isNumeric(currChar) .or. currChar == ".") &
             vWeightStr = vWeightStr // currChar
-      end if
+      end if ReadCheck
+      ! <
+      ! ======================================
     end do
 
     deallocate(vWeightStr)
@@ -446,13 +463,9 @@ contains
     character, intent(in) :: char
     integer               :: asciiNum
   
-    asciiNum = iachar(char)
     ! NOTE: ASCII characters from 48 to 57 are the numbers 0 to 9.
-    if (48 <= asciiNum .and. asciiNum <= 57) then
-      isNumeric = .true.
-    else
-      isNumeric = .false.
-    end if
+    asciiNum = iachar(char)
+    isNumeric = (48 <= asciiNum .and. asciiNum <= 57)
   end function isNumeric
 
 

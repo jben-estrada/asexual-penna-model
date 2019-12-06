@@ -62,12 +62,13 @@ module UpdateArray
   public :: alloc_check
 contains
 
-  ! === ARRAY INSERT SPECIFIC PROCEDURES===
+
+  ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_int(array, k, newElem)
     implicit none
     integer(kind=arrIK), allocatable, intent(inout):: array(:)
-    integer(kind=arrIK), intent(in) :: newElem
-    integer, intent(in) :: k
+    integer(kind=arrIK),              intent(in)   :: newElem
+    integer,                          intent(in)   :: k
 
     integer(kind=arrIK), allocatable  :: temp(:)
     integer :: old_size
@@ -77,8 +78,8 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print *, "STOP", k
-      return
+      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      error stop
     end if
 
     allocate(array(old_size + 1), stat=error)
@@ -91,11 +92,12 @@ contains
   end subroutine arrayInsert_int
 
 
+  ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_intRange(array, k, newElems)
     implicit none
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
-    integer(kind=arrIK), intent(in) :: newElems(:)
-    integer, intent(in) :: k
+    integer(kind=arrIK),              intent(in)    :: newElems(:)
+    integer,                          intent(in)    :: k
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -108,8 +110,8 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print *, "STOP", k
-      return
+      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      error stop
     end if
 
     ! Add newElems to array
@@ -123,11 +125,12 @@ contains
   end subroutine arrayInsert_intRange
 
 
+  ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_real(array, k, newElem)
     implicit none
     real(kind=arrRK), allocatable, intent(inout):: array(:)
-    real(kind=arrRK), intent(in) :: newElem
-    integer, intent(in) :: k
+    real(kind=arrRK),              intent(in)   :: newElem
+    integer,                       intent(in)   :: k
 
     real(kind=arrRK), allocatable  :: temp(:)
     integer :: old_size
@@ -137,8 +140,8 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print *, "STOP", k
-      return
+      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      error stop
     end if
 
     allocate(array(old_size + 1), stat=error)
@@ -151,11 +154,12 @@ contains
   end subroutine arrayInsert_real
 
 
+  ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_realRange(array, k, newElems)
     implicit none
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
-    real(kind=arrRK), intent(in) :: newElems(:)
-    integer, intent(in) :: k
+    real(kind=arrRK),              intent(in)    :: newElems(:)
+    integer,                       intent(in)    :: k
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size
@@ -168,8 +172,8 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print *, "STOP", k
-      return
+      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      error stop
     end if
 
     ! Add newElems to array
@@ -182,11 +186,12 @@ contains
     deallocate(temp)
   end subroutine arrayInsert_realRange
 
-  ! === ARRAY REMOVE ===
+
+  ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_int(array,  k)
     implicit none
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
-    integer, intent(in) :: k
+    integer,                          intent(in)    :: k
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -197,8 +202,8 @@ contains
     call move_alloc(array, temp)
 
     if (k > old_size .or. k < 1) then
-      print "(a, i4, a, i4)", "STOP", k, ">", old_size
-      return
+      print "(2(a, i0))", "***Error. ", k, " > ", old_size
+      error stop
     end if
 
     ! Reassign elements of `array` w/o the kth element.
@@ -211,6 +216,7 @@ contains
   end subroutine arrayRemove_int
 
 
+  ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_real(array,  k)
     implicit none
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
@@ -225,8 +231,8 @@ contains
     call move_alloc(array, temp)
 
     if (k > old_size .or. k < 1) then
-      print "(a, i4, a, i4)", "STOP", k, ">", old_size
-      return
+      print "(2(a, i0))", "***Error. ", k, " > ", old_size
+      error stop
     end if
 
     ! Reassign elements of `array` w/o the kth element.
@@ -238,12 +244,13 @@ contains
     deallocate(temp)
   end subroutine arrayRemove_real
 
+
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_int(array, a, b)
     implicit none
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
-    integer(kind=arrIK), intent(in) :: a
-    integer, intent(in) :: b
+    integer(kind=arrIK),              intent(in)    :: a
+    integer,                          intent(in)    :: b
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -251,15 +258,18 @@ contains
     integer :: error
 
     if (a > b .or. a < 1) then
-      print "(a, i3, i3)", "Improbable range: ", a, b 
-      return
+      print "(2(a, i0), a)", "***Error. Improbable range: [", a, " ,", b, "]" 
+      error stop
     end if
 
-    if (a > size(array) .or. b > size(array)) then
-      print *, "STOP", a, b
-      return
+    if (a > size(array)) then
+      print "(a, i0)", "***Error. Index out of range: ",  a
+      error stop
+    else if (b > size(array)) then
+      print "(a, i0)", "***Error. Index out of range: ",  b
+      error stop
     end if
-
+  
     ! Move contents of `array` into a temporary array.
     old_size = size(array)
     new_size = old_size - (b - a) - 1
@@ -275,11 +285,12 @@ contains
   end subroutine arrayRemoveRange_int
 
 
+  ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_real(array, a, b)
     implicit none
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
-    integer, intent(in) :: a
-    integer, intent(in) :: b
+    integer,                       intent(in)    :: a
+    integer,                       intent(in)    :: b
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size
@@ -287,13 +298,16 @@ contains
     integer :: error
 
     if (a > b .or. a < 1) then
-      print "(a, i3, i3)", "Improbable range: ", a, b 
-      return
+      print "(2(a, i0), a)", "***Error. Improbable range: [", a, " ,", b, "]" 
+      error stop
     end if
 
-    if (a > size(array) .or. b > size(array)) then
-      print *, "STOP", a, b
-      return
+    if (a > size(array)) then
+      print "(a, i0)", "***Error. Index out of range: ",  a
+      error stop
+    else if (b > size(array)) then
+      print "(a, i0)", "***Error. Index out of range: ",  b
+      error stop
     end if
 
     ! Move contents of `array` into a temporary array.
@@ -310,11 +324,12 @@ contains
     deallocate(temp)
   end subroutine arrayRemoveRange_real
 
+
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_int(array, elem)
     implicit none
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
-    integer(kind=arrIK), intent(in) :: elem
+    integer(kind=arrIK),              intent(in)    :: elem
     integer :: i
 
     ! Do linear search. NOTE: Apparently `findloc` is not supported by
@@ -328,10 +343,11 @@ contains
   end subroutine arrayRemoveElem_int
 
 
+  ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_real(array, elem)
     implicit none
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
-    real(kind=arrRK), intent(in) :: elem
+    real(kind=arrRK),              intent(in)    :: elem
     integer :: i
 
     ! Do linear search. NOTE: Apparently `findloc` is not supported by
@@ -355,8 +371,8 @@ contains
     implicit none
     integer, intent(in) :: x
     if (x /= 0) then
-      print "(a, i2)", "ERROR: Space cannot be allocated. status value: ", x
-      stop
+      print "(a, i0)", "***Error: Space cannot be allocated. status value: ", x
+      error stop
     end if
   end subroutine alloc_check
 end module UpdateArray

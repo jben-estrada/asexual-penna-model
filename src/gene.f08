@@ -9,7 +9,7 @@ module Gene
   use StdKind, only: personIK => personIntKind
   implicit none
 
-  ! Made private so as it would not be visible in other modules/subprograms.
+  ! Made private so that it would not be visible in other modules/subprograms.
   private :: personIK
 
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0
@@ -27,9 +27,10 @@ contains
     implicit none
 
     integer(kind=personIK) :: gene
-    integer                     :: randIndex
-    real                        :: rand
+    integer                :: randIndex
+    real                   :: rand
     
+    ! NOTE: Other PRNG could be used in instrinsic PRNG's stead.
     call random_number(rand)
 
     randIndex = floor(rand*2) + 1
@@ -57,9 +58,9 @@ contains
   function gene_generateGenome(L)
     implicit none
 
-    integer, intent(in)         :: L
+    integer, intent(in)    :: L
     integer(kind=personIK) :: gene_generateGenome(L)
-    integer                     :: i
+    integer                :: i
 
     gene_generateGenome = [(GENE_HEALTHY, i = 1, L)]
   end function gene_generateGenome

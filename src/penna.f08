@@ -32,6 +32,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
   !>  Run the Penna model.
+  !   TODO: Seems to be too long. Could be separated into different procedures. 
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Flag
@@ -62,11 +63,15 @@ contains
     call resetDstrbs()
     call initializeRunWriter(runWriter, recordFlag)
 
-    ! Disable demographics recording.
-    if (recordFlag /= demog_recFlag) DEMOG_LAST_STEPS = -1
+    ! Enable/disable demographics recording.
+    if (recordFlag == demog_recFlag) then
+      DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
+    else
+      DEMOG_LAST_STEPS = -1
+    end if
 
     ! Run the model.
-    mainloop: do timeStep = 1, maxTimestep
+    MainLoop: do timeStep = 1, maxTimestep
       ! Catch case when pop size exceeds the carrying capacity.
       ! For this given set of model parameters, pop size might explode.
       ! As such, we halt the run once this case is reached.
@@ -75,14 +80,14 @@ contains
         exit
       end if
 
-      ! Evaluate population.
-      evalPop: do
+      ! Evaluate population. NOTE: This could moved into its own subroutine.
+      EvalPop: do
         ! Catch extinction case.
         if (popSize == 0) exit
 
         ! Evaluate the current individual. 
-        ! NOTE: Once `isCurrIndivDead` is called, the death index of the current
-        ! individual is updated. So, `isCurrIndivDead` has side-effects!
+        ! NOTE: Once `isCurrIndivDead` is called, the death index of the
+        ! current individual is updated; `isCurrIndivDead` has side-effects!
         if (population%isCurrIndivDead(popSize)) then
           ! Count dead ones.
           select case (population%getCurrIndivDeathIdx())
@@ -95,6 +100,7 @@ contains
             case default
               error stop "Dead `Person` object has an invalid death index."
           end select
+
           popSizeChange = popSizeChange - 1
         else
           ! Update age of the alive individuals.
@@ -118,7 +124,8 @@ contains
         call population%nextElem(listStatus)
         ! Exit condition.
         if (listStatus /= 0) exit
-      end do evalPop
+      end do EvalPop
+
       ! Update the population size.
       popSize = popSize + popSizeChange
 
@@ -140,7 +147,7 @@ contains
       popSizeChange = 0
       call population%resetReadPtrs()
       if (recordFlag == demog_recFlag) call resetDstrbs()
-    end do mainloop
+    end do MainLoop
 
     ! Wrap up.
     call population%freePtr(popSize)
@@ -241,14 +248,14 @@ contains
         deathFlag])
 
     select case (recordFlag)
+      case (nullFlag)
+        ! Placeholder. Does nothing.
       case (pop_recFlag)
         call runWriter%initialize(popFlag)
       case (demog_recFlag)
         call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
       case (death_recFlag)
         call runWriter%initialize(deathFlag)
-      case (nullFlag)
-        ! Placeholder. Does nothing.
       case default
         print "(a, i0, a)", "***Warning. '", recordFlag, &
             "' is an invalid record flag. Defaulting to 0 (record nothing)."
