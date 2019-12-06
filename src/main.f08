@@ -125,7 +125,7 @@ contains
           end select
         else
           print "(3(a))", "***Error. '", trim(cmdArg) ,"' is not a valid " // &
-              "positional parameter."
+              " parameter. Try 'penna.out -h' for more information."
           call wrapUp
           stop
         end if
@@ -150,28 +150,34 @@ contains
       write(flagStr(i), "(i2)") flagArr(i)
     end do
 
-    ! TODO: Better help message.
+    ! TODO: Better help message. Could be made such that it is not hard-coded.
     ! ***Usage message.
-    print "(a, /a)", "usage: penna.out [-v | --verbose] [<max-time-step>] " // &
-        "[<sample-size>] [<start-pop-size>] [<record-flag>]", &
+    print "(a, /a)", "usage: penna.out [-v | --verbose] [max-time-step] " // &
+        "[sample-size] [start-pop-size] [record-flag]", &
         "       penna.out [-h | --help]"
     
     ! ***Options message.
     print "(/a, 2(/7(' '), 2(a)))", "options:", &
-        adjustl("-h --help      "), adjustl("Show this message."), &
-        adjustl("-v --verbose   "), adjustl("Show all the model parameters.")
-    print "(2(7(' '), 2(a), i0, a/), 7(' '), 2(a), i0, a)", &
-        adjustl("max-time-step  "), adjustl("Maximum time step. [default: "), &
+        adjustl("-h, --help      "), adjustl("Show this message."), &
+        adjustl("-v, --verbose   "), adjustl("Show all the model parameters.")
+    
+    ! ***Optional parameters.
+    print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &
+        adjustl("max-time-step   "), adjustl("Maximum time step. [default: "), &
             MODEL_TIME_STEPS, "]", &
-        adjustl("start-pop-size "), adjustl("Starting population size. " // &
+        adjustl("start-pop-size  "), adjustl("Starting population size. " // &
             "[default: "), MODEL_N0, "]", &
-        adjustl("record-flag    "), adjustl("Record specified data. " // &
+        adjustl("record-flag     "), adjustl("Record specified data. " // &
             "[default: "), 0, "]"
-    print "(22(' '), a/ *(24(' '), 2(a)/))", adjustl("Flags:"), &
+            
+    ! ***Notes.
+    write (*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/), a)", advance="no") "notes:", &
+        adjustl("- Record flags are as follows:"), &
         flagStr(1), adjustl("- Do not record."), &
-        flagStr(2), adjustl("- Record population size per time."), &
-        flagStr(3), adjustl("- Record demographics in the last 300 steps."), &
-        flagStr(4), adjustl("- Record death count.")
+        flagStr(2), adjustl("- Record the population size per unit time."), &
+        flagStr(3), adjustl("- Record the average demographics of the " // &
+            "last 300 steps."), &
+        flagStr(4), adjustl("- Record death count."), ""
   end subroutine printHelp
 
 
