@@ -106,7 +106,7 @@ contains
         call wrapUp
         stop
 
-      ! ii.) Position arguments. NOTE: All pos args are numerical.
+      ! ii.) Positional arguments. NOTE: All pos args must be integers.
       else
         read(cmdArg, *, iostat=readStatus) cmdInt
         if (readStatus == 0) then
@@ -126,7 +126,7 @@ contains
           end select
         else
           print "(3(a))", "***Error. '", trim(cmdArg) ,"' is not a valid " // &
-              " parameter. Try 'penna.out -h' for more information."
+              " option. Try 'penna.out -h' for more information."
           call wrapUp
           stop
         end if
@@ -204,20 +204,21 @@ contains
       toRecord = .false.
     end if
 
-    ! Header
+    ! ***Header
     print "(*(a))", separator 
     print "(a)", "Asexual Penna model"
     print "(*(a))", separator
 
-    ! Body (Extended model parameters)
+    ! ***Body (Extended model parameters)
     if (isVerbosePrint) call printModelParams
 
-    ! Body
+    ! ***Body
     print "(2(a20, i9/), a20, i9)", &
         "Number of time steps", maxTimestep, &
         "Sample size", sampleSize, &
         "Starting pop size", startPopSize
     print "(a20, L9)", "Record result", toRecord
+    ! ***End
     print "(*(a))", separator
   end subroutine printArgs
 

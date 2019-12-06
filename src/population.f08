@@ -106,7 +106,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeIndiv
   !>  Initialize `indiv` with genes inherited from another `Person`
-  !!  type.
+  !!  object.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
     use RandInd, only: generateIndices
@@ -136,7 +136,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: generatePopulation
-  !>  Generate population of `startPopSize` size.
+  !>  Generate a list of population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(popList, startPopSize)
     implicit none
@@ -169,7 +169,7 @@ contains
   
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [LinkedList%]freePtr
-  !>  Free the elements of the linked-list the procedure is bound with.
+  !>  Free the allocatable elements of the linked list.
   ! -------------------------------------------------------------------------- !
   subroutine freePtr(self, popSize)
     implicit none
@@ -199,7 +199,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [LinkedList%]killCurrentIndiv
-  !>  Kill the `Person` attribute `[LinkedList%]current_ptr`
+  !>  Kill the `Person` attribute the current pointer is pointing at
   !!  and remove it from the list.
   ! -------------------------------------------------------------------------- !
   subroutine killCurrentIndiv(self)
@@ -218,7 +218,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: incrementPtr
   !>  Have the `current_ptr` attribute of the passed `LinkedList`
-  !!   object to point at the next element of the linked list.
+  !!  object to point at the next element of the linked list.
   ! -------------------------------------------------------------------------- !
   subroutine incrementPtr(list)
     implicit none
@@ -233,8 +233,8 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [LinkedList%]reproduceCurrIndiv
-  !>  Have the attribute `[LinkedList%]current_ptr` point at the next
-  !!  element of the list.
+  !>  Have the `Person` object the current pointer is pointing at
+  !!  to reproduce.
   ! -------------------------------------------------------------------------- !
   subroutine reproduceCurrIndiv(self)
     implicit none
@@ -264,7 +264,8 @@ contains
 
   !-------------------------------------------------------------------------- !
   ! BOUND FUNCTION: [LinkedList%]isCurrIndivDead
-  !>  Update `current_ptr` and then check its life.
+  !>  Update the life of the `Person` object the current pointer is
+  !!  pointing at. Returns a logical value of whether it is dead or not.
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivDead(self, popSize)
     implicit none
@@ -311,6 +312,11 @@ contains
   end function isCurrIndivDead
 
 
+  ! -------------------------------------------------------------------------- !
+  ! BOUND FUNCTION: [LinkedList%]getCurrIndivDeathIdx
+  !>  Get the death index of the `Person` object the current pointer is
+  !!  pointing at.
+  ! -------------------------------------------------------------------------- !
   integer function getCurrIndivDeathIdx(self)
     implicit none
     class(LinkedList), intent(in) :: self
@@ -323,6 +329,11 @@ contains
   end function getCurrIndivDeathIdx
 
 
+  ! -------------------------------------------------------------------------- !
+  ! BOUND FUNCTION: [LinkedList%]getCurrIndivAge
+  !>  Get the age of the `Person` object the current pointer is
+  !!  pointing at.
+  ! -------------------------------------------------------------------------- !
   integer function getCurrIndivAge(self)
     implicit none
     class(LinkedList), intent(in) :: self
@@ -335,10 +346,15 @@ contains
   end function getCurrIndivAge
 
 
+  ! -------------------------------------------------------------------------- !
+  ! BOUND FUNCTION: [LinkedList%]getCurrIndivGenome
+  !>  Get the genome of the `Person` object the current pointer is
+  !!  pointing at.
+  ! -------------------------------------------------------------------------- !
   function getCurrIndivGenome(self) result(genome)
     implicit none
     class(LinkedList), intent(in) :: self
-    integer(kind=personIK) :: genome
+    integer(kind=personIK)        :: genome
 
     if (associated(self%current_ptr)) then
       genome = self%current_ptr%genome
@@ -347,9 +363,13 @@ contains
     end if
   end function getCurrIndivGenome
 
+
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [LinkedList%]nextElem
-  !>  Proceed to the next element to be evaluated.
+  !>  Proceed to the next element of the list. This also handles removal
+  !!  of dead `Person` objects as removing the them will have the 
+  !!  reader pointers points at the element next to the dead one
+  !!  automatically.
   ! -------------------------------------------------------------------------- !
   subroutine nextElem(self, status)
     implicit none
@@ -403,7 +423,8 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: [LinkedList%]resetReadPtrs
   !>  Reset reader pointers, i.e. `current_ptr` and `old_ptr` attributes,
-  !!  of the linked list.
+  !!  of the linked list. The current pointer goes back to the head of
+  !!  the list and the "previous" pointer is nullified.
   ! -------------------------------------------------------------------------- !
   subroutine resetReadPtrs(self)
     implicit none
@@ -414,6 +435,10 @@ contains
   end subroutine resetReadPtrs
 
 
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [LinkedList%]updateCurrIndivAge
+  !>  Update the age of the `Person` object `current_ptr` is pointing at.
+  ! -------------------------------------------------------------------------- !
   subroutine updateCurrIndivAge(self)
     implicit none
     class(LinkedList), intent(inout) :: self
@@ -422,6 +447,11 @@ contains
   end subroutine updateCurrIndivAge
 
 
+  ! -------------------------------------------------------------------------- !
+  ! BOUND FUNCTION: [LinkedList%]isCurrIndivMature
+  !>  Inquire whether the `Person` object the current pointer is pointing
+  !!  at is able to reproduce.
+  ! -------------------------------------------------------------------------- !
   logical function isCurrIndivMature(self)
     implicit none
     class(LinkedList), intent(inout) :: self

@@ -16,9 +16,10 @@ module Penna
   public :: wrapUp
 contains
 
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: readModelParam
-  !>  Wrapper procedure for `readScalarParam
+  !>  Wrapper procedure for `readScalarParam`
   ! -------------------------------------------------------------------------- !
   subroutine readModelParam
     implicit none
@@ -41,13 +42,16 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(LinkedList) :: population
-    type(Writer)     :: runWriter
-    integer          :: step
-    integer          :: popSize
-    integer          :: popSizeChange
-    integer          :: listStatus
-    integer          :: deathCount(3)
+    type(LinkedList) :: population    ! Population list
+    type(Writer)     :: runWriter     ! `Writer` object for recording data 
+    integer          :: timeStep      ! Time step
+    integer          :: popSize       ! Population size
+    integer          :: popSizeChange ! Change in pop size per time step
+    integer          :: deathCount(3) ! Death count 
+    integer          :: listStatus    ! Read status for `LinkedList`
+    
+    ! NOTE: The elements of `deathCount` correspond to the following deaths:
+    !       1.) Death by old age, 2.) Death by mutation, 3.) Verhulst death
 
     ! Initialize variables
     population = constructLinkedList(startPopSize)
@@ -62,7 +66,10 @@ contains
     if (recordFlag /= demog_recFlag) DEMOG_LAST_STEPS = -1
 
     ! Run the model.
-    mainloop: do step = 1, maxTimestep
+    mainloop: do timeStep = 1, maxTimestep
+      ! Catch case when pop size exceeds the carrying capacity.
+      ! For this given set of model parameters, pop size might explode.
+      ! As such, we halt the run once this case is reached.
       if (popSize > MODEL_K) then
         print "(/a)", "The population has exceeded the carrying capacity!"
         exit
@@ -73,7 +80,9 @@ contains
         ! Catch extinction case.
         if (popSize == 0) exit
 
-        ! Evaluate the current individual.
+        ! Evaluate the current individual. 
+        ! NOTE: Once `isCurrIndivDead` is called, the death index of the current
+        ! individual is updated. So, `isCurrIndivDead` has side-effects!
         if (population%isCurrIndivDead(popSize)) then
           ! Count dead ones.
           select case (population%getCurrIndivDeathIdx())
@@ -88,6 +97,7 @@ contains
           end select
           popSizeChange = popSizeChange - 1
         else
+          ! Update age of the alive individuals.
           call population%updateCurrIndivAge()
 
           ! Check for birth events.
@@ -98,7 +108,7 @@ contains
         end if
 
         ! Record demographics.
-        if (maxTimestep - step <= DEMOG_LAST_STEPS) then
+        if (maxTimestep - timeStep <= DEMOG_LAST_STEPS) then
           call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
           call updateGenomeDstrb(population%getCurrIndivGenome(), &
               demog_genomeDstrb)
@@ -125,7 +135,7 @@ contains
           call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
       end select
 
-      ! Reset variables.
+      ! Reset variables for the next time step.
       deathCount(:) = 0
       popSizeChange = 0
       call population%resetReadPtrs()
@@ -244,6 +254,7 @@ contains
             "' is an invalid record flag. Defaulting to 0 (record nothing)."
     end select
   end subroutine initializeRunWriter
+
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: wrapUp
