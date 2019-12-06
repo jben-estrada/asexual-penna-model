@@ -12,14 +12,17 @@ module Demographics
 
   integer(kind=personIK), public, allocatable, save :: demog_genomeDstrb(:)
   integer,                public, allocatable, save :: demog_ageDstrb(:) 
-  
-  integer, public :: DEMOG_LAST_STEPS = 300
+
+  ! Time step range for recording demographics.
+  integer, public, parameter :: DEF_DEMOG_LAST_STEP = 300
+  integer, public, save      :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
 
   public :: resetDstrbs
   public :: updateAgeDstrb
   public :: updateGenomeDstrb
   public :: deallocDstrb
 contains
+
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: reset_dstrbs
@@ -29,17 +32,13 @@ contains
     use ModelParam, only: MODEL_L
     implicit none
 
-    if (.not.allocated(demog_ageDstrb)) then
-      allocate(demog_ageDstrb(0:MODEL_L))
-    end if
-
-    if (.not.allocated(demog_genomeDstrb)) then
-      allocate(demog_genomeDstrb(MODEL_L))
-    end if
+    if (.not.allocated(demog_ageDstrb)) allocate(demog_ageDstrb(0:MODEL_L))
+    if (.not.allocated(demog_genomeDstrb)) allocate(demog_genomeDstrb(MODEL_L))
 
     demog_ageDstrb(:) = 0
     demog_genomeDstrb(:) = 0_personIK
   end subroutine resetDstrbs
+
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: updateAgeDstrb
@@ -95,6 +94,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine deallocDstrb
     implicit none
+
     if (allocated(demog_ageDstrb)) deallocate(demog_ageDstrb)
     if (allocated(demog_genomeDstrb)) deallocate(demog_genomeDstrb)
   end subroutine deallocDstrb

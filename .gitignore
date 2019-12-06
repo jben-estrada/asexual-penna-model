@@ -2,11 +2,8 @@
 /.vscode
 /__deprecated
 /obj
-__sandbox.f08
-build.sh
 plot.sh
 plot.py
-__build.bat
 *.csv
 *.mod
 *.smod
