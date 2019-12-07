@@ -35,7 +35,6 @@ contains
   !   TODO: Seems to be too long. Could be separated into different procedures. 
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
-    use Flag
     use Demographics
     implicit none
 
@@ -43,23 +42,18 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(PersonList) :: population    ! Population list
-    type(Writer)     :: runWriter     ! `Writer` object for recording data 
-    integer          :: timeStep      ! Time step
-    integer          :: popSize       ! Population size
-    integer          :: popSizeChange ! Change in pop size per time step
-    integer          :: deathCount(3) ! Death count 
-    integer          :: listStatus    ! Read status for `LinkedList`
-    
+    type(PersonList) :: population  ! Population list
+    type(Writer)     :: runWriter   ! `Writer` object for recording data 
+    integer :: timeStep             ! Time step
+    integer :: popSize              ! Population size
+    integer :: deathCount(3)        ! Death count 
     ! NOTE: The elements of `deathCount` correspond to the following deaths:
     !       1.) Death by old age, 2.) Death by mutation, 3.) Verhulst death
 
     ! Initialize variables
     population = constructPersonList(startPopSize)
     popSize = startPopSize
-    popSizeChange = 0
     deathCount(:) = 0
-    listStatus = 0
     call resetDstrbs()
     call initializeRunWriter(runWriter, recordFlag)
 
@@ -71,7 +65,7 @@ contains
     end if
 
     ! Run the model.
-    MainLoop: do timeStep = 1, maxTimestep
+    mainLoop: do timeStep = 1, maxTimestep
       ! Catch case when pop size exceeds the carrying capacity.
       ! For this given set of model parameters, pop size might explode.
       ! As such, we halt the run once this case is reached.
@@ -80,54 +74,9 @@ contains
         exit
       end if
 
-      ! Evaluate population. NOTE: This could moved into its own subroutine.
-      EvalPop: do
-        ! Catch extinction case.
-        if (popSize == 0) exit
-
-        ! Evaluate the current individual. 
-        ! NOTE: Once `isCurrIndivDead` is called, the death index of the
-        ! current individual is updated; `isCurrIndivDead` has side-effects!
-        if (population%isCurrIndivDead(popSize)) then
-          ! Count dead ones.
-          select case (population%getCurrIndivDeathIdx())
-            case (DEAD_OLD_AGE)
-              deathCount(1) = deathCount(1) + 1
-            case (DEAD_MUTATION)
-              deathCount(2) = deathCount(2) + 1
-            case (DEAD_VERHULST)
-              deathCount(3) = deathCount(3) + 1
-            case default
-              error stop "Dead `Person` object has an invalid death index."
-          end select
-
-          popSizeChange = popSizeChange - 1
-        else
-          ! Update age of the alive individuals.
-          call population%updateCurrIndivAge()
-
-          ! Check for birth events.
-          if (population%isCurrIndivMature()) then
-            call population%reproduceCurrIndiv()
-            popSizeChange = popSizeChange + MODEL_B
-          end if
-        end if
-
-        ! Record demographics.
-        if (maxTimestep - timeStep <= DEMOG_LAST_STEPS) then
-          call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
-          call updateGenomeDstrb(population%getCurrIndivGenome(), &
-              demog_genomeDstrb)
-        end if
-
-        ! Proceed to the next element of the linked list.
-        call population%nextElem(listStatus)
-        ! Exit condition.
-        if (listStatus /= 0) exit
-      end do EvalPop
-
-      ! Update the population size.
-      popSize = popSize + popSizeChange
+      ! Evaluate population
+      call evalPopulation(population, deathCount, popSize, &
+          maxTimestep - timeStep)
 
       ! Record result.
       select case (recordFlag)
@@ -144,16 +93,86 @@ contains
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
-      popSizeChange = 0
       call population%resetReadPtrs()
       if (recordFlag == demog_recFlag) call resetDstrbs()
-    end do MainLoop
+    end do mainLoop
 
     ! Wrap up.
     call population%freePtr(popSize)
     call runWriter%close()
     call deallocDstrb()
   end subroutine run
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: evalPopulation
+  !>  Evaluate the population, i.e. 
+  ! -------------------------------------------------------------------------- !
+  subroutine evalPopulation(population, deathCount, popSize, countdown)
+    use Flag
+    use Demographics
+    implicit none
+
+    type(PersonList), intent(inout) :: population
+    integer,          intent(inout) :: deathCount(3)
+    integer,          intent(inout) :: popSize
+    integer,          intent(in)    :: countdown
+
+    integer :: popSizeChange
+    integer :: listStatus
+
+    ! Initialize variables
+    popSizeChange = 0
+    evalPop: do
+      ! Catch extinction case.
+      if (popSize == 0) exit
+
+      ! Evaluate the current individual. 
+      call population%checkCurrIndivDeath(popSize)
+
+      ! NOTE: Once `isCurrIndivDead` is called, the death index of the
+      ! current individual is updated; `isCurrIndivDead` has side-effects!
+      if (population%isCurrIndivDead()) then
+        ! Count dead ones.
+        select case (population%getCurrIndivDeathIdx())
+          case (DEAD_OLD_AGE)
+            deathCount(1) = deathCount(1) + 1
+          case (DEAD_MUTATION)
+            deathCount(2) = deathCount(2) + 1
+          case (DEAD_VERHULST)
+            deathCount(3) = deathCount(3) + 1
+          case default
+            error stop "Dead `Person` object has an invalid death index."
+        end select
+
+        popSizeChange = popSizeChange - 1
+      else
+        ! Update age of the alive individuals.
+        call population%updateCurrIndivAge()
+
+        ! Check for birth events.
+        if (population%isCurrIndivMature()) then
+          call population%reproduceCurrIndiv()
+          popSizeChange = popSizeChange + MODEL_B
+        end if
+      end if
+
+      ! Record demographics.
+      if (countdown <= DEMOG_LAST_STEPS) then
+        call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
+        call updateGenomeDstrb(population%getCurrIndivGenome(), &
+            demog_genomeDstrb)
+      end if
+
+      ! Proceed to the next element of the linked list.
+      call population%nextElem(listStatus)
+      ! Exit condition.
+      if (listStatus /= 0) exit
+    end do evalPop
+  
+    ! Update population size
+    popSize = popSize + popSizeChange
+  end subroutine evalPopulation
 
 
   ! -------------------------------------------------------------------------- !

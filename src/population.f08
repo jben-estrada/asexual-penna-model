@@ -34,7 +34,7 @@ module Pop
     type(Person), pointer :: current_ptr => null()
   contains
     ! Inquiry functions.
-    procedure :: isCurrIndivDead  ! NOTE: Has side-effects.
+    procedure :: isCurrIndivDead
     procedure :: isCurrIndivMature
     procedure :: getCurrIndivDeathIdx
     procedure :: getCurrIndivAge
@@ -42,6 +42,7 @@ module Pop
 
     ! Transformational procedures.
     procedure :: killCurrentIndiv
+    procedure :: checkCurrIndivDeath
     procedure :: updateCurrIndivAge
     procedure :: reproduceCurrIndiv
     procedure :: nextElem
@@ -62,6 +63,7 @@ contains
   function constructPersonList(startPopSize) result(newLL)
     implicit none
     integer, intent(in) :: startPopSize
+
     type(PersonList)    :: newLL
     
     allocate(newLL%head_ptr)
@@ -80,8 +82,8 @@ contains
     implicit none
 
     integer(kind=personIK), intent(in) :: number
-    integer(kind=personIK)             :: bit
-    integer, intent(in) :: k
+    integer,                intent(in) :: k
+    integer(kind=personIK) :: bit
 
     bit = 0
     bit = iand(shiftr(number, k - 1), 1_personIK)
@@ -94,8 +96,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr)
     implicit none
-
     type(Person), pointer, intent(inout) :: indiv_ptr
+
     indiv_ptr%genome = GENE_HEALTHY
     indiv_ptr%age = 0_personIK
     indiv_ptr%mutationCount = 0
@@ -140,6 +142,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(popList, startPopSize)
     implicit none
+
     type(PersonList), intent(inout) :: popList
     integer,          intent(in)    :: startPopSize
 
@@ -173,6 +176,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine freePtr(self, popSize)
     implicit none
+
     class(PersonList), intent(inout) :: self
     integer,           intent(in)    :: popSize
 
@@ -204,6 +208,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine killCurrentIndiv(self)
     implicit none
+
     class(PersonList), intent(inout) :: self
     type(Person), pointer            :: deadIndiv_ptr
 
@@ -264,51 +269,14 @@ contains
 
   !-------------------------------------------------------------------------- !
   ! BOUND FUNCTION: [PersonList%]isCurrIndivDead
-  !>  Update the life of the `Person` object the current pointer is
-  !!  pointing at. Returns a logical value of whether it is dead or not.
+  !>  Check whether the `Person` object the current pointer is
+  !!  pointing at is dead.
   ! -------------------------------------------------------------------------- !
-  logical function isCurrIndivDead(self, popSize)
+  logical function isCurrIndivDead(self)
     implicit none
+
     class(PersonList), intent(inout) :: self
-    integer,           intent(in)    :: popSize
-
-    real(kind=personRK) :: verhulstWeight
-    real(kind=personRK) :: verhulstFactor
-    real(kind=personRK) :: random
-    integer             :: nextAge
-
-    isCurrIndivDead = .false.
-    nextAge = self%current_ptr%age + 1          ! Hypothetical age
-    verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
-
-    ! ***Death check: Old age
-    if (nextAge >= MODEL_L) then
-      self%current_ptr%deathIndex = DEAD_OLD_AGE
-      isCurrIndivDead = .true.
-      return
-    end if
-
-    ! Count mutation.
-    if (getBinDigit(self%current_ptr%genome, nextAge) == GENE_UNHEALTHY) then
-      self%current_ptr%mutationCount = self%current_ptr%mutationCount + 1
-    end if
-
-    ! ***Death check: Mutation accumulation
-    if (self%current_ptr%mutationCount >= MODEL_T) then
-      self%current_ptr%deathIndex = DEAD_MUTATION
-      isCurrIndivDead = .true.
-
-    ! ***Death check: Verhulst factor
-    else if (verhulstWeight > 0.0) then
-      ! Get Verhulst factor per age.
-      call random_number(random)
-      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
-
-      if (random > verhulstFactor) then
-        self%current_ptr%deathIndex = DEAD_VERHULST
-        isCurrIndivDead = .true.
-      end if
-    end if
+    isCurrIndivDead = self%current_ptr%deathIndex /= ALIVE
   end function isCurrIndivDead
 
 
@@ -353,6 +321,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function getCurrIndivGenome(self) result(genome)
     implicit none
+
     class(PersonList), intent(in) :: self
     integer(kind=personIK)        :: genome
 
@@ -373,6 +342,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine nextElem(self, status)
     implicit none
+
     class(PersonList), intent(inout) :: self
     integer,           intent(out)   :: status
 
@@ -463,4 +433,51 @@ contains
   
     isCurrIndivMature = (lowerBound .and. upperBound)
   end function isCurrIndivMature
+
+
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [PersonList%]checkCurrIndivDeath
+  !>  Update the death status of the  `Person` object the current
+  !!  pointer is pointing at. 
+  ! -------------------------------------------------------------------------- !
+  subroutine checkCurrIndivDeath(self, popSize)
+    implicit none
+
+    class(PersonList), intent(inout) :: self
+    integer,           intent(in)    :: popSize
+  
+    real(kind=personRK) :: verhulstWeight
+    real(kind=personRK) :: verhulstFactor
+    real(kind=personRK) :: random
+    integer             :: nextAge
+
+    nextAge = self%current_ptr%age + 1          ! Hypothetical age
+    verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
+
+    ! ***Death check: Old age
+    if (nextAge >= MODEL_L) then
+      self%current_ptr%deathIndex = DEAD_OLD_AGE
+      return
+    end if
+
+    ! Count mutation.
+    if (getBinDigit(self%current_ptr%genome, nextAge) == GENE_UNHEALTHY) then
+      self%current_ptr%mutationCount = self%current_ptr%mutationCount + 1
+    end if
+
+    ! ***Death check: Mutation accumulation
+    if (self%current_ptr%mutationCount >= MODEL_T) then
+      self%current_ptr%deathIndex = DEAD_MUTATION
+
+    ! ***Death check: Verhulst factor
+    else if (verhulstWeight > 0.0) then
+      ! Get Verhulst factor per age.
+      call random_number(random)
+      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
+
+      if (random > verhulstFactor) then
+        self%current_ptr%deathIndex = DEAD_VERHULST
+      end if
+    end if
+  end subroutine checkCurrIndivDeath
 end module Pop
