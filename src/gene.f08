@@ -6,11 +6,8 @@ module Gene
   !>  Module containing gene parameters and procedures for generating
   !!  genomes.
   ! -------------------------------------------------------------------------- !
-  use StdKind, only: personIK => personIntKind
+  use iso_fortran_env, only: personIK => int64, personRK => real64
   implicit none
-
-  ! Made private so that it would not be visible in other modules/subprograms.
-  private :: personIK
 
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0
   integer(kind=personIK), parameter :: GENE_UNHEALTHY = 1
@@ -27,8 +24,8 @@ contains
     implicit none
 
     integer(kind=personIK) :: gene
-    integer                :: randIndex
-    real                   :: rand
+    integer :: randIndex
+    real    :: rand
     
     ! NOTE: Other PRNG could be used in instrinsic PRNG's stead.
     call random_number(rand)
@@ -57,10 +54,10 @@ contains
   ! -------------------------------------------------------------------------- !
   function gene_generateGenome(L)
     implicit none
+    integer, intent(in) :: L
 
-    integer, intent(in)    :: L
     integer(kind=personIK) :: gene_generateGenome(L)
-    integer                :: i
+    integer :: i
 
     gene_generateGenome = [(GENE_HEALTHY, i = 1, L)]
   end function gene_generateGenome

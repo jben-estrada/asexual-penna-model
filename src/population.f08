@@ -5,10 +5,9 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
+  use Gene
   use Flag
   use ModelParam
-  use Gene, only: GENE_HEALTHY, GENE_UNHEALTHY
-  use StdKind, only: personIK => personIntKind, personRK => personRealKind
   implicit none
   private
 

@@ -13,7 +13,6 @@ DEP -> SRC
   TickerType
 
 [Pop]
-  StdKind
   ModelParam
   Flag
   Gene
@@ -21,27 +20,20 @@ DEP -> SRC
 
 [Demographics]
   Gene
-  StdKind
   ModelParam
 
 [SaveFormat]
   UpdateArray
-  StdKind
-
-[UpdateArray]
-  StdKind
-
-[RandInd]
-  StdKind
 
 [Gene]
-  StdKind
+
+[UpdateArray]
+
+[RandInd]
 
 [ModelParam]
 
 [Flag]
-
-[StdKind]
 
 [TickerType]
 ----------------------------------------------------
@@ -49,15 +41,6 @@ SRC -> DEP
 
 TickerType -> {
   Penna
-}
-
-StdKind -> {
-  Demographics
-  UpdateArray,
-  SaveFormat,
-  RandInd,
-  Gene,
-  StdKind
 }
 
 Flag -> {

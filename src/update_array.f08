@@ -6,14 +6,14 @@ module UpdateArray
   !>  Module containing procedures for array manipulations which involve
   !   allocations and deallocations.
   ! -------------------------------------------------------------------------- !
-  use StdKind, only: arrayIntKind, arrayRealKind
+  use iso_fortran_env, only: int32, real32
   implicit none
   private
 
   ! Module integer and real kinds
   ! Note: Can be changed when this module is to be reused in other projects.
-  integer, public, parameter :: arrIK = arrayIntKind
-  integer, public, parameter :: arrRK = arrayRealKind
+  integer, public, parameter :: arrIK = int32
+  integer, public, parameter :: arrRK = real32
 
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: arrayInsert

@@ -58,6 +58,8 @@ module ModelParam
   integer, protected, public, save :: MODEL_TIME_STEPS    ! Total time steps
   integer, protected, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
   integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
+  ! -------------------------------------------------------------------------- !
+  ! Real and integer kinds
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
@@ -501,26 +503,3 @@ module Flag
       DEAD_MUTATION, &
       DEAD_VERHULST]
 end module Flag
-
-
-
-module StdKind
-  ! -------------------------------------------------------------------------- !
-  ! MODULE:  StdKind
-  ! -------------------------------------------------------------------------- !
-  ! DESCRIPTION: 
-  !>  Module containing standard kinds for variables in related parts.
-  ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: int64, int32, real64
-  implicit none
-  private
-
-  integer, public, parameter :: personRealKind = real64
-  integer, public, parameter :: personIntKind = int64
-
-  integer, public, parameter :: writeRealKind = real64
-  integer, public, parameter :: writeIntKind = int64
-
-  integer, public, parameter :: arrayRealKind = real64
-  integer, public, parameter :: arrayIntKind = int32
-end module StdKind

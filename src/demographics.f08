@@ -6,7 +6,6 @@ module Demographics
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
   use Gene
-  use StdKind, only: personIK => personIntKind
   implicit none
   private
 
@@ -64,7 +63,8 @@ contains
 
     integer(kind=personIK), intent(inout) :: genomeDstrb(:)
     integer(kind=personIK), intent(in)    :: genome
-    integer(kind=personIK)                :: i
+
+    integer(kind=personIK) :: i
 
     do i = 1, MODEL_L
       if (getBinDigit(genome, i) == GENE_UNHEALTHY) then
@@ -80,9 +80,11 @@ contains
   ! -------------------------------------------------------------------------- !
   function getBinDigit(number, k) result(bit)
     implicit none
+
     integer(kind=personIK), intent(in) :: number
     integer(kind=personIK), intent(in) :: k
-    integer(kind=personIK)             :: bit
+
+    integer(kind=personIK) :: bit
 
     bit = iand(shiftr(number, k - 1), 1_personIK)
   end function getBinDigit

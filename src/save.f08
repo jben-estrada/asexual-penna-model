@@ -6,14 +6,14 @@ module SaveFormat
   !>  Module containing procedures for saving data
   ! -------------------------------------------------------------------------- !
   use UpdateArray
-  use StdKind, only: writeIntKind, writeRealKind
+  use iso_fortran_env, only: int64, real64
   implicit none
   private
 
   ! Module integer and real kinds
   ! Note: Can be changed when this module is to be reused in other projects. 
-  integer, public, parameter :: writeIK = writeIntKind
-  integer, public, parameter :: writeRK = writeRealKind
+  integer, public, parameter :: writeIK = int64
+  integer, public, parameter :: writeRK = real64
 
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
