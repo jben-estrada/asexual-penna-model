@@ -1,8 +1,9 @@
-/results
 /.vscode
 /__deprecated
 /obj
+/results
 /test
+/bin
 plot.sh
 plot.py
 *.csv

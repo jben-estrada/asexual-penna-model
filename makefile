@@ -14,9 +14,10 @@ FILEEXT=f08
 # Directories.
 SRC_DIR=src
 OBJ_DIR=obj
+BIN_DIR=bin
 
 # Files.
-OUT:=penna.out
+OUT:=$(BIN_DIR)/penna.out
 OBJECT=$(wildcard $(OBJ_DIR)/*.o)
 
 # Generic compile command.

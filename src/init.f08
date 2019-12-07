@@ -58,16 +58,14 @@ module ModelParam
   integer, protected, public, save :: MODEL_TIME_STEPS    ! Total time steps
   integer, protected, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
   integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
-  ! -------------------------------------------------------------------------- !
-  ! Real and integer kinds
 
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
   integer, parameter  :: MAXLEN = 256
   character(len=MAXLEN), protected, public :: modelFilename = &
-      "model.cfg"
+      "config/model.cfg"
   character(len=MAXLEN), protected, public :: vWeightsFilename = &
-      "v_weight.cfg"
+      "config/v_weight.cfg"
 
   ! -------------------------------------------------------------------------- !
   ! Parameter count.
