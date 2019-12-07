@@ -63,9 +63,9 @@ module ModelParam
   ! Filenames from which model parameters are obtained.
   integer, parameter  :: MAXLEN = 256
   character(len=MAXLEN), protected, public :: modelFilename = &
-      "model.ini"
+      "model.cfg"
   character(len=MAXLEN), protected, public :: vWeightsFilename = &
-      "verhulst_weights.ini"
+      "v_weight.cfg"
 
   ! -------------------------------------------------------------------------- !
   ! Parameter count.
