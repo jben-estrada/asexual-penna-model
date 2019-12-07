@@ -43,7 +43,7 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(LinkedList) :: population    ! Population list
+    type(PersonList) :: population    ! Population list
     type(Writer)     :: runWriter     ! `Writer` object for recording data 
     integer          :: timeStep      ! Time step
     integer          :: popSize       ! Population size
@@ -55,7 +55,7 @@ contains
     !       1.) Death by old age, 2.) Death by mutation, 3.) Verhulst death
 
     ! Initialize variables
-    population = constructLinkedList(startPopSize)
+    population = constructPersonList(startPopSize)
     popSize = startPopSize
     popSizeChange = 0
     deathCount(:) = 0
