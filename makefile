@@ -77,3 +77,7 @@ dep0: clean
 # Remove *.mod and *.o files in obj/.
 clean:
 	@rm -f $(OBJ_DIR)/*.mod $(OBJ_DIR)/*.o
+
+.PHONY: test
+test: 
+	@test/test.sh

@@ -2,6 +2,7 @@
 /.vscode
 /__deprecated
 /obj
+/test
 plot.sh
 plot.py
 *.csv
