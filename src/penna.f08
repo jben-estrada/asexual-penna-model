@@ -1,6 +1,6 @@
 module Penna
   use Pop
-  use SaveFormat
+  use WriterType
   use ModelParam
   implicit none
   private

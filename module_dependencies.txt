@@ -6,7 +6,7 @@ DEP -> SRC
 
 [Penna]
   Pop
-  SaveFormat
+  WriterType
   Demographics
   ModelParam
   Flag
@@ -22,8 +22,11 @@ DEP -> SRC
   Gene
   ModelParam
 
-[SaveFormat]
+[WriterType]
   UpdateArray
+  SaveFormat
+
+[SaveFormat]
 
 [Gene]
 
@@ -64,11 +67,15 @@ Gene -> {
   Pop
 }
 
-UpdateArray -> {
-  SaveFormat
+SaveFormat -> {
+  WriterType
 }
 
-SaveFormat -> {
+UpdateArray -> {
+  WriterType
+}
+
+WriterType -> {
   Penna
 }
 

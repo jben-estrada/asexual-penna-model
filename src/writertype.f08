@@ -1,11 +1,13 @@
-module SaveFormat
+module WriterType
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  SaveFormat
+  ! MODULE:  WriterType
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing procedures for saving data
+  !>  Module containing the `Writer` type, a type (class) for creating
+  !!  unified interface for writing files.
   ! -------------------------------------------------------------------------- !
   use UpdateArray
+  use SaveFormat
   use iso_fortran_env, only: int64, real64
   implicit none
   private
@@ -49,67 +51,13 @@ module SaveFormat
     procedure :: writer_write_intArray
     procedure :: writer_write_realArray
   end type
-  ! -------------------------------------------------------------------------- !
-  ! Number of Files to save
-  integer, public, parameter :: FILECOUNT = 5
-  
-  ! Max character length
-  integer, parameter :: MAXLEN = 32
 
-  ! Population size record. fileCount => 1
-  character(len=MAXLEN), parameter :: popFilename = "pop_size_f08.csv"
-  character(len=MAXLEN), parameter :: popFormat = "(i6)"
-  character(len=MAXLEN), parameter :: popPosition = "asis"
-  integer, parameter :: popUnit = 100
-
-  ! Timing record. fileCount => 2
-  ! Format: <no. of time step> <no. of population> <wall time>
-  character(len=MAXLEN), parameter :: timeFilename = "time_f08.csv"
-  character(len=MAXLEN), parameter :: timeFormat = "(*(f10.5, ','))"
-  character(len=MAXLEN), parameter :: timePosition = "append"
-  integer, parameter :: timeUnit = 101
-
-  ! Age demographics record. fileCount => 3
-  character(len=MAXLEN), parameter :: ageDstrbFilename = "ageDstrb_f08.csv"
-  character(len=MAXLEN), parameter :: ageDstrbFormat = "(*(i6, ','))"
-  character(len=MAXLEN), parameter :: ageDstrbPosition = "asis"
-  integer, parameter :: ageDstrbUnit = 102
-
-  ! Genome demographics record. fileCount => 4
-  character(len=MAXLEN), parameter :: genomeDstrbFilename = &
-      "genomeDstrb_f08.csv"
-  character(len=MAXLEN), parameter :: genomeDstrbFormat = "(*(i6, ','))"
-  character(len=MAXLEN), private, parameter :: genomeDstrbPosition = "asis"
-  integer, parameter :: genomeDstrbUnit = 103
-
-  ! Death record. fileCount => 5
-  ! Format: <death by old age> <death by mutation> <death by Verhulst factor>
-  character(len=MAXLEN), parameter :: deathFilename = "death_f08.csv"
-  character(len=MAXLEN), parameter :: deathFormat = "(*(i6, ','))"
-  character(len=MAXLEN), parameter :: deathPosition = "asis"
-  integer, parameter :: deathUnit = 104
-  ! -------------------------------------------------------------------------- !
-  ! Unit array
-  integer, public, parameter :: units(FILECOUNT) = &
-      [popUnit, timeUnit, ageDstrbUnit, genomeDstrbUnit, deathUnit]
-  
-  ! Filename array
-  character(len=MAXLEN), public, parameter :: filenames(FILECOUNT) = &
-      [popFilename, timeFilename, ageDstrbFilename, genomeDstrbFilename, &
-       deathFilename]
-  
-  ! Position array
-  character(len=MAXLEN), public, parameter :: positions(FILECOUNT) = &
-    [popPosition, timePosition, ageDstrbPosition, genomeDstrbPosition, &
-     deathPosition]
-  ! -------------------------------------------------------------------------- !
-  
   ! File flags
-  integer, public, parameter :: popFlag = 1
-  integer, public, parameter :: timeFlag = 2
-  integer, public, parameter :: ageDstrbFlag = 3
-  integer, public, parameter :: genomeDstrbFlag = 4
-  integer, public, parameter :: deathFlag = 5
+  public :: popFlag
+  public :: timeFlag
+  public :: ageDstrbFlag
+  public :: genomeDstrbFlag
+  public :: deathFlag
 
   !----------------------------------------------------------------------------!
   ! GENERIC SUBROUTINE: constructWriter
@@ -272,11 +220,11 @@ contains
     if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)
     if (allocated(self%liveFlags)) deallocate(self%liveFlags)
   end subroutine destructor
-end module SaveFormat
+end module WriterType
 
 
 
-submodule (SaveFormat) writer_initialize_procedures
+submodule (WriterType) writer_initialize_procedures
   !----------------------------------------------------------------------------!
   ! SUBMODULE: writer_initialize_procedures
   !>  Submodule containing the specific procedures for the generic
@@ -366,7 +314,7 @@ end submodule writer_initialize_procedures
 
 
 
-submodule (SaveFormat) writer_write_procedures
+submodule (WriterType) writer_write_procedures
   !----------------------------------------------------------------------------!
   ! SUBMODULE: writer_write_procedures
   !>  Submodule containing the specific procedures for the generic
@@ -432,7 +380,7 @@ end submodule writer_write_procedures
 
 
 
-submodule (SaveFormat) writer_close_procedures
+submodule (WriterType) writer_close_procedures
   !----------------------------------------------------------------------------!
   ! SUBMODULE: writer_close_procedures
   !>  Submodule containing the specific procedures for the generic

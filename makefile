@@ -24,22 +24,22 @@ OBJECT=$(wildcard $(OBJ_DIR)/*.o)
 COMPILE_COMM=$(FCOMPILER) $(FLAGS) -J $(OBJ_DIR)/ -I $(OBJ_DIR)/
 
 # Source code with no external dependencies.
-NAME_DEP0:=init ticker
+NAME_DEP0:=init tickertype rand_int update_array gene saveformat
 COMPILE_DEP0:=$(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 1 ext dep from dep0.
-NAME_DEP1:=gene update_array rand_int population
+NAME_DEP1:=writertype demographics
 COMPILE_DEP1:=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with at most 2 ext dep from dep0 and dep1.
-NAME_DEP2:=save demographics
+NAME_DEP2:=population
 COMPILE_DEP2:=$(foreach name, $(NAME_DEP2), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 3 or more ext dep from dep0, dep1 and dep2.
-NAME_DEP3:= penna
+NAME_DEP3:=penna
 COMPILE_DEP3:=$(foreach name, $(NAME_DEP3), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).$(FILEEXT) -o $(OBJ_DIR)/$(name).o;)
 
