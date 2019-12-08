@@ -147,7 +147,7 @@ contains
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
-    integer               :: i
+    integer :: i
 
     call initializeHealthyIndiv(popList%head_ptr)
     oldIndiv_ptr => popList%head_ptr
@@ -207,9 +207,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine killCurrentIndiv(self)
     implicit none
-
     class(PersonList), intent(inout) :: self
-    type(Person), pointer            :: deadIndiv_ptr
+
+    type(Person), pointer :: deadIndiv_ptr
 
     deadIndiv_ptr => self%current_ptr
     self%current_ptr => self%current_ptr%next
@@ -246,7 +246,7 @@ contains
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
-    integer               :: i
+    integer :: i
 
     if (MODEL_R > self%current_ptr%age &
         .or. self%current_ptr%age > MODEL_R_MAX) return
@@ -320,9 +320,9 @@ contains
   ! -------------------------------------------------------------------------- !
   function getCurrIndivGenome(self) result(genome)
     implicit none
-
     class(PersonList), intent(in) :: self
-    integer(kind=personIK)        :: genome
+
+    integer(kind=personIK) :: genome
 
     if (associated(self%current_ptr)) then
       genome = self%current_ptr%genome
@@ -424,6 +424,7 @@ contains
   logical function isCurrIndivMature(self)
     implicit none
     class(PersonList), intent(inout) :: self
+
     logical :: lowerBound
     logical :: upperBound
 
@@ -448,7 +449,7 @@ contains
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
     real(kind=personRK) :: random
-    integer             :: nextAge
+    integer :: nextAge
 
     nextAge = self%current_ptr%age + 1          ! Hypothetical age
     verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age

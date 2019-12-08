@@ -22,8 +22,8 @@ contains
   subroutine generateIndices(lower, upper, indices)
     implicit none
 
-    integer, intent(in) :: upper
-    integer, intent(in) :: lower
+    integer, intent(in)  :: upper
+    integer, intent(in)  :: lower
     integer, intent(out) :: indices(:)
     
     integer :: index = 0

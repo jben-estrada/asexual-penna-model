@@ -66,6 +66,7 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_int(array, k, newElem)
     implicit none
+
     integer(kind=arrIK), allocatable, intent(inout):: array(:)
     integer(kind=arrIK),              intent(in)   :: newElem
     integer,                          intent(in)   :: k
@@ -95,6 +96,7 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_intRange(array, k, newElems)
     implicit none
+
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: newElems(:)
     integer,                          intent(in)    :: k
@@ -128,6 +130,7 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_real(array, k, newElem)
     implicit none
+
     real(kind=arrRK), allocatable, intent(inout):: array(:)
     real(kind=arrRK),              intent(in)   :: newElem
     integer,                       intent(in)   :: k
@@ -157,6 +160,7 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_realRange(array, k, newElems)
     implicit none
+
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     real(kind=arrRK),              intent(in)    :: newElems(:)
     integer,                       intent(in)    :: k
@@ -190,6 +194,7 @@ contains
   ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_int(array,  k)
     implicit none
+
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer,                          intent(in)    :: k
 
@@ -219,6 +224,7 @@ contains
   ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_real(array,  k)
     implicit none
+
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     integer, intent(in) :: k
 
@@ -248,6 +254,7 @@ contains
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_int(array, a, b)
     implicit none
+
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: a
     integer,                          intent(in)    :: b
@@ -288,6 +295,7 @@ contains
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_real(array, a, b)
     implicit none
+
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     integer,                       intent(in)    :: a
     integer,                       intent(in)    :: b
@@ -328,6 +336,7 @@ contains
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_int(array, elem)
     implicit none
+
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: elem
     integer :: i
@@ -346,6 +355,7 @@ contains
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_real(array, elem)
     implicit none
+
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     real(kind=arrRK),              intent(in)    :: elem
     integer :: i
@@ -369,6 +379,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine alloc_check(x)
     implicit none
+
     integer, intent(in) :: x
     if (x /= 0) then
       print "(a, i0)", "***Error: Space cannot be allocated. status value: ", x

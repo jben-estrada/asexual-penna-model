@@ -156,6 +156,7 @@ contains
   ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   function constructWriter_array(flags, initialize) result(new)
     implicit none
+
     integer, intent(in) :: flags(:)
     logical, optional   :: initialize
 
@@ -185,6 +186,7 @@ contains
 
   function constructWriter_scalar(flag, initialize) result(new)
     implicit none
+
     integer, intent(in) :: flag
     logical, optional   :: initialize
 
@@ -328,11 +330,10 @@ submodule (WriterType) writer_write_procedures
 contains
   module subroutine writer_write_int(self, flag, arg)
     implicit none
-    
 
-    class(Writer), intent(inout)            :: self
-    integer(kind=writeIK), intent(in)  :: arg
-    integer, intent(in)                     :: flag
+    class(Writer),         intent(inout) :: self
+    integer(kind=writeIK), intent(in)    :: arg
+    integer,               intent(in)    :: flag
 
     if (.not.any(self%liveFlags == flag)) return
     write(units(flag), formats(flag)) arg
@@ -342,9 +343,9 @@ contains
   module subroutine writer_write_real(self, flag, arg)
     implicit none
 
-    class(Writer), intent(inout)         :: self
-    integer, intent(in)                  :: flag
-    real(kind=writeRK), intent(in) :: arg
+    class(Writer),      intent(inout) :: self
+    integer,            intent(in)    :: flag
+    real(kind=writeRK), intent(in)    :: arg
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -355,9 +356,9 @@ contains
   module subroutine writer_write_intArray(self, flag, arg)
     implicit none
 
-    class(Writer), intent(inout)           :: self
-    integer, intent(in)                    :: flag
-    integer(kind=writeIK), intent(in) :: arg(:)
+    class(Writer),         intent(inout) :: self
+    integer,               intent(in)    :: flag
+    integer(kind=writeIK), intent(in)    :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -368,9 +369,9 @@ contains
   module subroutine writer_write_realArray(self, flag, arg)
     implicit none
 
-    class(Writer), intent(inout)         :: self
-    integer, intent(in)                  :: flag
-    real(kind=writeRK), intent(in) :: arg(:)
+    class(Writer),      intent(inout) :: self
+    integer,            intent(in)    :: flag
+    real(kind=writeRK), intent(in)    :: arg(:)
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -411,7 +412,7 @@ contains
     implicit none
 
     class(Writer), intent(inout) :: self
-    integer, intent(in)          :: flag
+    integer,       intent(in)    :: flag
 
     if (.not.any(self%liveFlags == flag)) then
       print "(a, i2)", "Chosen flag is not initialized! flag: ", flag
@@ -427,7 +428,7 @@ contains
     implicit none
 
     class(Writer), intent(inout) :: self
-    integer, intent(in)          :: flags(:)
+    integer,       intent(in)    :: flags(:)
 
     integer :: i
 

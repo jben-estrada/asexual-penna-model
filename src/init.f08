@@ -418,9 +418,9 @@ contains
 
     character(len=:), allocatable :: line
     character(len=MAXLEN)         :: rawLine
-    character                     :: currChar
-    integer                       :: readStatus
-    integer                       :: charNum
+    character :: currChar
+    integer   :: readStatus
+    integer   :: charNum
 
     strippedFile = ""
     line = ""
@@ -461,7 +461,8 @@ contains
   logical function isNumeric(char)
     implicit none
     character, intent(in) :: char
-    integer               :: asciiNum
+
+    integer :: asciiNum
   
     ! NOTE: ASCII characters from 48 to 57 are the numbers 0 to 9.
     asciiNum = iachar(char)

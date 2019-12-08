@@ -37,9 +37,9 @@ program Main
   integer :: recordFlag_
 
   ! Separator character array for pretty printing.
-  integer              :: k  ! Index variable for `separator`
+  integer :: k  ! Index variable for `separator`
+  logical :: isVerbosePrint_
   character, parameter :: separator(29) = [("=", k = 1, 29)]
-  logical              :: isVerbosePrint_
   ! -------------------------------------------------------------------------- !
 
   ! Initialize model parameters.
@@ -77,10 +77,10 @@ contains
     logical, intent(out) :: isVerbosePrint
     
     character(len=32) :: cmdArg
-    integer           :: cmdInt
-    integer           :: readStatus
-    integer           :: argCount
-    integer           :: posArgCount
+    integer :: cmdInt
+    integer :: readStatus
+    integer :: argCount
+    integer :: posArgCount
 
     ! Default values for cmd arguments.
     maxTimestep = MODEL_TIME_STEPS
@@ -146,10 +146,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printHelp
     implicit none
+
     character(len=3) :: flagStr(4)    
-    integer          :: flagArr(4) = &
+    integer :: flagArr(4) = &
         [nullFlag, pop_recFlag, demog_recFlag, death_recFlag]
-    integer          :: i
+    integer :: i
 
     ! Cast record flag integers to strings.
     do i = 1, size(flagStr)

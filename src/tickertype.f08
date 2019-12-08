@@ -58,10 +58,10 @@ contains
   !----------------------------------------------------------------------------!
   subroutine incrementTick(self, show, increment)
     implicit none
-  
     class(Ticker), intent(inout) :: self
-    logical, optional            :: show
-    integer, optional            :: increment
+
+    logical, optional :: show
+    integer, optional :: increment
 
     ! End of progress bar case.
     if (self%index == self%totalTicks) return
@@ -91,8 +91,8 @@ contains
     class(Ticker), intent(inout) :: self
 
     character, allocatable :: tickArr(:)
-    integer                :: tickerLength
-    integer                :: i
+    integer :: tickerLength
+    integer :: i
 
     tickerLength = int(self%index*self%partition/self%totalTicks)
 
