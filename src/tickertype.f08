@@ -98,8 +98,12 @@ contains
 
     ! Get progress bar as a character array.
     allocate(tickArr(tickerLength))
-    tickArr = [(self%charBit, i = 1, tickerLength), &
-        (" ", i = self%partition - 1, tickerLength, -1)]
+    if (tickerLength > 0) then
+      tickArr = [(self%charBit, i = 1, tickerLength), &
+          (" ", i = self%partition - 1, tickerLength, -1)]
+    else
+      tickArr = [(" ", i = self%partition - 1, tickerLength, -1)]
+    end if
 
     ! Print character array.
     write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition)
