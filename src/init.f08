@@ -245,9 +245,9 @@ contains
     close(modelUnit)
 
     ! Evaluate file.
+    allocate(character(len=0) :: strVal)
     isReadingKey = .true.
     key = ""
-    strVal = ""
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
 
@@ -336,15 +336,15 @@ contains
     end if
 
     ! Read file.
-    strippedFile = ""
+    allocate(character(len=0) :: strippedFile)
     open(unit=vWeightUnit, file=vWeightsFilename)
     call stripFile(strippedFile, vWeightUnit)
     close(vWeightUnit)
 
     ! Evaluate stripped input.
-    vWeightStr = ""
     vWeightIdx = 1
     strippedFile = strippedFile // EOL
+    allocate(character(len=0) :: vWeightStr)
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
 
@@ -422,8 +422,8 @@ contains
     integer   :: readStatus
     integer   :: charNum
 
-    strippedFile = ""
-    line = ""
+    allocate(character(len=0) :: strippedFile)
+    allocate(character(len=0) :: line)
     rawLine = ""
     do
       ! Read line.
