@@ -3,9 +3,9 @@ FCOMPILER=gfortran-9
 
 # Compiler options.
 # 	For debugging.
-# FLAGS=-g -Wall -Ofast -march=native -fcheck=all
+# FLAGS=-g -Wall -O0 -march=native -fcheck=all -std=f2008 
 #   Standard flags.
-FLAGS=-Ofast -march=native
+FLAGS= -Ofast -march=native -std=f2008 
 
 # File extension. *.f08 - Fortran 2008 specific
 # This could be changed to .f95 or .f03 if need be.
