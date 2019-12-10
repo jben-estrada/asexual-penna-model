@@ -106,8 +106,10 @@ contains
     end if
 
     ! Print character array.
-    write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition)
+    write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition + 10)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
+    write(*, "(f6.1, a)", advance="no") 100*real(self%index) / &
+        real(self%totalTicks), "%"
 
     deallocate(tickArr)
   end subroutine showTicker
