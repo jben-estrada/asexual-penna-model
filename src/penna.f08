@@ -179,7 +179,8 @@ contains
   ! SUBROUTINE: multipleRun
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
-  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag)
+  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
+        toRecordTime)
     use TickerType
     implicit none
 
@@ -187,6 +188,7 @@ contains
     integer, intent(in) :: sampleSize   
     integer, intent(in) :: startingPopSize
     integer, intent(in) :: recordFlag
+    logical, intent(in) :: toRecordTime
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -242,12 +244,14 @@ contains
       print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
     end if
 
-    ! Record mean time.
-    timeWriter = constructWriter([timeFlag])
-    call timeWriter%initialize
-    call timeWriter%write(timeFlag, [real(maxTimeStep, kind=writeRK), &
-        real(startingPopSize, kind=writeRK), meanTime, stdDevTime])
-    call timeWriter%close
+    ! Record mean time and std deviation.
+    if (toRecordTime) then
+      timeWriter = constructWriter([timeFlag])
+      call timeWriter%initialize
+      call timeWriter%write(timeFlag, [real(maxTimeStep, kind=writeRK), &
+          real(startingPopSize, kind=writeRK), meanTime, stdDevTime])
+      call timeWriter%close
+    end if
   end subroutine multipleRun
 
 

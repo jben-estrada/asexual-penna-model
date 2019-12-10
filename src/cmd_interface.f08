@@ -15,9 +15,10 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: getCmdArgs
   !>  Get command line arguments.
+  !   TODO: Would be great if the dummy args are reduced.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
-    isVerbosePrint)
+      isVerbosePrint, toRecordTime)
   implicit none
 
   integer, intent(out) :: maxTimestep
@@ -25,6 +26,7 @@ contains
   integer, intent(out) :: startPopSize
   integer, intent(out) :: recordFlag
   logical, intent(out) :: isVerbosePrint
+  logical, intent(out) :: toRecordTime
 
   character(len=32) :: cmdArg
   integer :: cmdInt
@@ -38,6 +40,7 @@ contains
   startPopSize = MODEL_N0
   recordFlag = nullFlag
   isVerbosePrint = .false.
+  toRecordTime = .false.
 
   ! Evaluate each passed cmd args.
   posArgCount = 1
@@ -56,7 +59,8 @@ contains
     call printHelp
     call wrapUp
     stop
-
+  else if (cmdArg == "--record-time") then
+    toRecordTime = .true.
   ! ii.) Positional arguments. NOTE: All pos args must be integers.
   else
     read(cmdArg, *, iostat=readStatus) cmdInt
@@ -114,9 +118,11 @@ contains
     "       penna.out [-h | --help]"
 
   ! ***Options message.
-  print "(/a, 2(/7(' '), 2(a)))", "options:", &
+  print "(/a, *(/7(' '), 2(a)))", "options:", &
     adjustl("-h, --help      "), adjustl("Show this message."), &
-    adjustl("-v, --verbose   "), adjustl("Show all the model parameters.")
+    adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
+    adjustl("--record-time   "), adjustl("Record the average elapsed time " // &
+        "and the standard deviation.")
 
   ! ***Optional parameters.
   print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &

@@ -36,6 +36,7 @@ program Main
   integer :: startPopSize
   integer :: recordFlag
   logical :: isVerbosePrint
+  logical :: toRecordTime
   ! -------------------------------------------------------------------------- !
 
   ! Initialize model parameters.
@@ -43,14 +44,15 @@ program Main
 
   ! Get command line arguments.
   call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-      isVerbosePrint)
+      isVerbosePrint, toRecordTime)
 
   ! Pretty print cmd arguments and model parameters.
   call printArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
       isVerbosePrint)
 
   ! Run the Penna model multiple times.
-  call multipleRun(timeSteps, startPopSize, sampleSize, recordFlag)
+  call multipleRun(timeSteps, startPopSize, sampleSize, recordFlag, &
+      toRecordTime)
 
   ! Wrap up. Deallocate any global allocatable variables.
   call wrapUp
