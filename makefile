@@ -27,12 +27,12 @@ COMPILE_DEP1=$(foreach name, $(NAME_DEP1), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).f08 -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with at most 2 ext dep from dep0 and dep1.
-NAME_DEP2:=population
+NAME_DEP2:=population penna
 COMPILE_DEP2=$(foreach name, $(NAME_DEP2), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).f08 -o $(OBJ_DIR)/$(name).o;)
 
 # Source code with 3 or more ext dep from dep0, dep1 and dep2.
-NAME_DEP3:=penna
+NAME_DEP3:=cmd_interface
 COMPILE_DEP3=$(foreach name, $(NAME_DEP3), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name).f08 -o $(OBJ_DIR)/$(name).o;)
 

@@ -4,6 +4,10 @@ DEP -> SRC
   Penna
   ModelParam
 
+[CmdInterface]
+  ModelParam
+  Penna
+
 [Penna]
   Pop
   WriterType
@@ -55,7 +59,7 @@ ModelParam -> {
   Demographics,
   Pop,
   Penna,
-  main
+  CmdInterface
 }
 
 RandInd -> {
@@ -65,6 +69,11 @@ RandInd -> {
 Gene -> {
   Demographics,
   Pop
+}
+
+Penna -> {
+  main,
+  CmdInterface
 }
 
 SaveFormat -> {
@@ -87,6 +96,6 @@ Pop -> {
   Penna
 }
 
-Penna -> {
+CmdInterface -> {
   main
 }
