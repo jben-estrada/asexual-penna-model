@@ -38,7 +38,8 @@ module WriterType
         writer_write_real, &
         writer_write_intArray, &
         writer_write_realArray
-    final :: destructor
+    procedure, public :: writeHeader => writer_writeHeader
+    final :: destroy
 
     procedure :: writer_initialize
     procedure :: writer_initializeAll
@@ -211,17 +212,39 @@ contains
 
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]destructor
+  ! BOUND SUBROUTINE: [Writer%]writeHeader
+  !>  Write the header of the .csv file to write on.
+  !----------------------------------------------------------------------------!
+  subroutine writer_writeHeader(self, flag, header)
+    implicit none
+    class(Writer),    intent(in) :: self
+    integer,          intent(in) :: flag
+    character(len=*), intent(in) :: header(:)
+
+    integer :: i
+
+    if (.not.any(self%liveFlags == flag)) return
+    do i = 1, size(header)
+      write(units(flag), "(a, ', ')", advance="no") trim(header(i))
+    end do
+    
+    ! Print new line.
+    write(units(flag), *) ""
+  end subroutine writer_writeHeader
+
+
+  !----------------------------------------------------------------------------!
+  ! BOUND SUBROUTINE: [Writer%]destroy
   !>  Deallocate the allocatable attributes `enabledFlags`
   !!  and `liveFlags`.
   !----------------------------------------------------------------------------!
-  subroutine destructor(self)
+  subroutine destroy(self)
     implicit none
     type(Writer), intent(inout) :: self
 
     if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)
     if (allocated(self%liveFlags)) deallocate(self%liveFlags)
-  end subroutine destructor
+  end subroutine destroy
 end module WriterType
 
 

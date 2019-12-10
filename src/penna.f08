@@ -6,7 +6,7 @@ module Penna
   private
 
   ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: nullFlag = 0      ! Null
+  integer, parameter, public :: null_recFlag = 0      ! Null
   integer, parameter, public :: pop_recFlag = 1   ! Population
   integer, parameter, public :: demog_recFlag = 2 ! Age and genome demographics
   integer, parameter, public :: death_recFlag = 3 ! Death count
@@ -226,11 +226,11 @@ contains
       ! Calculate necessary values for average and std deviation.
       sum = sum + (endTimeReal - startTimeReal)*1e3
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
-      
-      ! Print progress bar
-      call runTicker%incrementTick
+
+      ! Print progress bar TODO: Integrate in `TickerType` object. 
+      call runTicker%incrementTick()
       write(*, "(*(a))", advance="no") (char(8), j = 1, 10)
-      call runTicker%showTicker
+      call runTicker%showTicker()
       write(*, "(f6.1, a)", advance="no") 100*real(i)/real(sampleSize), "%"
     end do
 
@@ -238,19 +238,27 @@ contains
     meanTime = sum/real(sampleSize, kind=writeRK)
     stdDevTime = sqrt(sampleSize*sumSqrd - sum**2)/real(sampleSize, &
         kind=writeRK)
+
     ! Print time statistics.
     print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
-    if (sampleSize > 1) then
+    if (sampleSize > 1) &
       print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
-    end if
 
     ! Record mean time and std deviation.
     if (toRecordTime) then
       timeWriter = constructWriter([timeFlag])
-      call timeWriter%initialize
-      call timeWriter%write(timeFlag, [real(maxTimeStep, kind=writeRK), &
-          real(startingPopSize, kind=writeRK), meanTime, stdDevTime])
-      call timeWriter%close
+      call timeWriter%initialize()
+      call timeWriter%writeHeader(timeFlag, &
+          ["max time step       ", &
+           "initial pop size    ", &
+           "average elapsed time", &
+           "standard deviation  "])
+      call timeWriter%write(timeFlag, &
+          [real(maxTimeStep, kind=writeRK), &
+           real(startingPopSize, kind=writeRK), &
+           meanTime, &
+           stdDevTime])
+      call timeWriter%close()
     end if
   end subroutine multipleRun
 
@@ -271,17 +279,28 @@ contains
         deathFlag])
 
     select case (recordFlag)
-      case (nullFlag)
+      case (null_recFlag)
         ! Placeholder. Does nothing.
       case (pop_recFlag)
         call runWriter%initialize(popFlag)
+        call runWriter%writeHeader(popFlag, ["population size"])
+
       case (demog_recFlag)
         call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
+        call runWriter%writeHeader(ageDstrbFlag, ["age =>"])
+        call runWriter%writeHeader(genomeDstrbFlag, ["age =>"])
+
       case (death_recFlag)
         call runWriter%initialize(deathFlag)
+        call runWriter%writeHeader(deathFlag, &
+            ["death by old age        ", &
+             "death by mutation       ", &
+             "death by Verhulst factor"])
+
       case default
-        print "(a, i0, a)", "***Warning. '", recordFlag, &
-            "' is an invalid record flag. Defaulting to 0 (record nothing)."
+        print "(a, i0, a)", "***Error. '", recordFlag, &
+            "' is an invalid record flag"
+        error stop
     end select
   end subroutine initializeRunWriter
 

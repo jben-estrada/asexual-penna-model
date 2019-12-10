@@ -38,7 +38,7 @@ contains
   maxTimestep = MODEL_TIME_STEPS
   sampleSize = MODEL_SAMPLE_SIZE
   startPopSize = MODEL_N0
-  recordFlag = nullFlag
+  recordFlag = null_recFlag
   isVerbosePrint = .false.
   toRecordTime = .false.
 
@@ -103,7 +103,7 @@ contains
 
   character(len=3) :: flagStr(4)    
   integer :: flagArr(4) = &
-    [nullFlag, pop_recFlag, demog_recFlag, death_recFlag]
+    [null_recFlag, pop_recFlag, demog_recFlag, death_recFlag]
   integer :: i
 
   ! Cast record flag integers to strings.
@@ -159,7 +159,7 @@ contains
   logical, intent(in) :: isVerbosePrint
 
   logical :: toRecord
-  toRecord = recordFlag /= nullFlag
+  toRecord = recordFlag /= null_recFlag
 
   ! ***Header
   print "(*(a))", separator 
