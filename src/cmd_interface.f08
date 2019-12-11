@@ -196,5 +196,4 @@ contains
     "Max reproduction age", MODEL_R_MAX, &
     "Carrying capacity",    MODEL_K
   end subroutine printModelParams
-
 end module CmdInterface

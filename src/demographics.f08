@@ -67,9 +67,8 @@ contains
     integer(kind=personIK) :: i
 
     do i = 1, MODEL_L
-      if (getBinDigit(genome, i) == GENE_UNHEALTHY) then
+      if (getBinDigit(genome, i) == GENE_UNHEALTHY) &
         genomeDstrb(i) = genomeDstrb(i) + 1
-      end if
     end do
   end subroutine updateGenomeDstrb
 

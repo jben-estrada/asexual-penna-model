@@ -227,8 +227,7 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print progress bar
-      call runTicker%incrementTick()
-      call runTicker%showTicker()
+      call runTicker%incrementTick(show=.true.)
     end do
 
     ! Get average elapsed time and its std deviation.
@@ -309,6 +308,6 @@ contains
   subroutine wrapUp
     implicit none
     
-    call deallocVerhulstWeights
+    call deallocVerhulstWeights()
   end subroutine wrapUp
 end module Penna

@@ -68,7 +68,6 @@ contains
     allocate(newLL%head_ptr)
     call generatePopulation(newLL, startPopSize)
     newLL%newTail_ptr => newLL%tail_ptr
-
     newLL%current_ptr => newLL%head_ptr
   end function constructPersonList
 
@@ -115,6 +114,7 @@ contains
 
     type(Person), pointer,  intent(inout) :: indiv_ptr
     integer(kind=personIK), intent(in)    :: genome
+
     integer :: mutations(MODEL_M)
     integer :: i
 
@@ -273,8 +273,8 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivDead(self)
     implicit none
-
     class(PersonList), intent(inout) :: self
+
     isCurrIndivDead = self%current_ptr%deathIndex /= ALIVE
   end function isCurrIndivDead
 
@@ -461,9 +461,8 @@ contains
     end if
 
     ! Count mutation.
-    if (getBinDigit(self%current_ptr%genome, nextAge) == GENE_UNHEALTHY) then
+    if (getBinDigit(self%current_ptr%genome, nextAge) == GENE_UNHEALTHY) &
       self%current_ptr%mutationCount = self%current_ptr%mutationCount + 1
-    end if
 
     ! ***Death check: Mutation accumulation
     if (self%current_ptr%mutationCount >= MODEL_T) then
@@ -475,9 +474,7 @@ contains
       call random_number(random)
       verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
 
-      if (random > verhulstFactor) then
-        self%current_ptr%deathIndex = DEAD_VERHULST
-      end if
+      if (random > verhulstFactor) self%current_ptr%deathIndex = DEAD_VERHULST
     end if
   end subroutine checkCurrIndivDeath
 end module Pop

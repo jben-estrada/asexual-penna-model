@@ -40,7 +40,7 @@ program Main
   ! -------------------------------------------------------------------------- !
 
   ! Initialize model parameters.
-  call readModelParam
+  call readModelParam()
 
   ! Get command line arguments.
   call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
@@ -55,6 +55,6 @@ program Main
       toRecordTime)
 
   ! Wrap up. Deallocate any global allocatable variables.
-  call wrapUp
+  call wrapUp()
   print "(*(a))", separator
 end program Main
