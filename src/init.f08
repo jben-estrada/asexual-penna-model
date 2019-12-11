@@ -60,8 +60,9 @@ module ModelParam
   integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
 
   ! -------------------------------------------------------------------------- !
-  ! Filenames from which model parameters are obtained.
+  ! Buffer character length.
   integer, parameter  :: MAXLEN = 256
+  ! Filenames from which model parameters are obtained.
   character(len=MAXLEN), protected, public :: modelFilename = &
       "config/model.cfg"
   character(len=MAXLEN), protected, public :: vWeightsFilename = &
@@ -69,14 +70,23 @@ module ModelParam
 
   ! -------------------------------------------------------------------------- !
   ! Parameter count.
-  integer, parameter :: modelParamCount = 11
-  ! Default parameter values. NOTE: The order of the model parameters:
-  !       [L, T, B, M, R, R_max, K, N0, t_max, sample_size, rec_flag]
-  integer, parameter :: modelParamDefault(modelParamCount) = &
+  integer, parameter :: MODEL_PARAM_COUNT = 11
+  ! Parameter keys. NOTE: Padded with spaces to accept initializer.
+  character(len=MAXLEN), parameter :: modelParamKeys(MODEL_PARAM_COUNT) = &
+      ["L          ", &
+       "T          ", &
+       "B          ", &
+       "M          ", &
+       "R          ", &
+       "R_max      ", &
+       "K          ", &
+       "N0         ", &
+       "t_max      ", &
+       "sample_size", &
+       "rec_flag   "]
+  ! Default parameter values. NOTE: The order is the same with `modelParamKeys`.
+  integer, parameter :: modelParamDefault(MODEL_PARAM_COUNT) = &
       [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0]
-  ! Parameter keys. NOTE: Must first be initialized before using to be able
-  ! to contain keys with different lengths (not counting spaces).
-  character(len=MAXLEN) :: modelParamKeys(modelParamCount)
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
@@ -100,45 +110,6 @@ module ModelParam
   public :: readVerhulstWeights
   public :: deallocVerhulstWeights
 contains
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initParamKeys
-  !>  Initialize `modelParamKeys` to allow it to contain keys with
-  !!  different lengths (not counting spaces). It is not standard
-  !!  to initialize character arrays with characters of differing
-  !!  lengths.
-  ! -------------------------------------------------------------------------- !
-  subroutine initParamKeys
-    implicit none
-    integer :: i
-    do i = 1, size(modelParamKeys)
-      select case (i)
-        case (1)
-          modelParamKeys(i) = "L"
-        case (2)
-          modelParamKeys(i) = "T"
-        case (3)
-          modelParamKeys(i) = "B"
-        case (4)
-          modelParamKeys(i) = "M"
-        case (5)
-          modelParamKeys(i) = "R"
-        case (6)
-          modelParamKeys(i) = "R_max"
-        case (7)
-          modelParamKeys(i) = "K"
-        case (8)
-          modelParamKeys(i) = "N0"
-        case (9)
-          modelParamKeys(i) = "t_max"
-        case (10)
-          modelParamKeys(i) = "sample_size"
-        case (11)
-          modelParamKeys(i) = "rec_flag"
-      end select
-    end do
-  end subroutine initParamKeys
 
 
   ! -------------------------------------------------------------------------- !
@@ -170,11 +141,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignParameters(values)
     implicit none
-
     integer, intent(in) :: values(:)
-    integer             :: i
 
-    do i = 1, modelParamCount
+    integer :: i
+
+    do i = 1, MODEL_PARAM_COUNT
       select case (i)
         case (1)
           MODEL_L = values(i)
@@ -203,6 +174,20 @@ contains
   end subroutine assignParameters
 
 
+  subroutine printModelParam()
+    implicit none
+
+    integer :: i
+
+    do i = 1, MODEL_PARAM_COUNT
+      print "(4(' '), a12, ': ', i0)", modelParamKeys(i), modelParamDefault(i)
+    end do
+
+    ! Print separator.
+    print "(a)", "***"
+  end subroutine printModelParam
+
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: readScalarParams
   !>  Read the scalar model parameters from an external file.
@@ -210,8 +195,8 @@ contains
   subroutine readScalarParam
     implicit none
     
-    integer :: values(modelParamCount)
-    integer :: filestatus
+    integer :: values(MODEL_PARAM_COUNT)
+    integer :: fileStatus
     integer :: keyIdx
     integer :: val
 
@@ -227,21 +212,21 @@ contains
     ! Assign default values.
     values(:) = modelParamDefault
 
-    ! Initialize parameter keys.
-    call initParamKeys
+    ! Read file.
+    strippedFile = ""
+    open(unit=modelUnit, file=modelFilename, status='old', iostat=fileStatus)
 
-    ! Check whether the file exists or not.
-    inquire(file=modelFilename, iostat=filestatus)
-    if (filestatus /= 0) then
-      print "(3a)", "***Cannot read '", modelFilename, &
-          "'. Using the default values."
+    ! Warn missing file. TODO: Make better warning messages.
+    if (fileStatus /= 0) then
+      print "(a/, 3a)", "***", "WARNING. Cannot read '", trim(modelFilename), &
+          "'. Using the following default values:"
+      call printModelParam()
+      call assignParameters(modelParamDefault)
       return
     end if
 
-    ! Read file.
-    strippedFile = ""
-    open(unit=modelUnit, file=modelFilename)
-    call stripFile(strippedFile, modelUnit)
+    ! Clean model config file.
+    call stripFile(strippedFile, modelUnit)    
     close(modelUnit)
 
     ! Evaluate file.
@@ -326,18 +311,27 @@ contains
     ! Initialize Verhulst weight array.
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
     MODEL_VERHULST_W(:) = VERHULST_W_DEFAULT
-    
-    ! Inquire file existence.
-    inquire(file=vWeightsFilename, iostat=fileStatus)
-    if (fileStatus /= 0) then
-      print "(3a)", "***Cannot read '", vWeightsFilename, &
-          "'. Using the default values."
-      return
-    end if
 
     ! Read file.
     allocate(character(len=0) :: strippedFile)
-    open(unit=vWeightUnit, file=vWeightsFilename)
+    open(unit=vWeightUnit, file=vWeightsFilename, status='old', &
+        iostat=fileStatus)
+
+    ! Warn missing file. TODO: Make better warning messages.
+    if (fileStatus /= 0) then
+      print "(a/, 3(a))", "***", &
+          "WARNING. Cannot read '", & 
+          trim(vWeightsFilename), &
+          "'. Using the following default value:"
+      print "(/a, i0, /a, f4.2)", "age:    1-", MODEL_L, "weight: ", &
+          VERHULST_W_DEFAULT
+
+      ! Print separator.
+      print "(a)", "***"
+      return
+    end if
+    
+    ! Clean Verhulst weight config file. 
     call stripFile(strippedFile, vWeightUnit)
     close(vWeightUnit)
 
