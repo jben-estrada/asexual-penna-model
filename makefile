@@ -18,7 +18,7 @@ OBJECT=$(wildcard $(OBJ_DIR)/*.o)
 COMPILE_COMM=$(FCOMPILER) $(FLAGS) -J $(OBJ_DIR)/ -I $(OBJ_DIR)/
 
 # Compile external libraries
-NAME_LIB0:= mt19937.f90
+NAME_LIB0:= mtfort90.f90
 COMPILE_LIB=$(foreach name, $(NAME_LIB0), $(COMPILE_COMM) \
 	-c $(LIB_DIR)/$(name) -fno-range-check -o $(OBJ_DIR)/$(basename $(name)).o;)
 
