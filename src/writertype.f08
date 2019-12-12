@@ -457,7 +457,8 @@ contains
 
     do i = 1, size(flags)
       if (.not.any(self%liveFlags == flags(i))) then
-        print "(a, i2)", "Chosen flag is not initialized! flag: ", flags(i)
+        print "(a, i2)", "***WARNING. Chosen flag is not initialized! flag: ", &
+            flags(i)
       else
         close(units(flags(i)))
         call arrayRemoveElem(self%enabledFlags, flags(i))

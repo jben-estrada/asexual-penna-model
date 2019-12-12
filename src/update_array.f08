@@ -79,7 +79,7 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      print "(a, i0, a)", "***ERROR. ", k, " is not a valid index."
       error stop
     end if
 
@@ -112,7 +112,7 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      print "(a, i0, a)", "***ERROR. ", k, " is not a valid index."
       error stop
     end if
 
@@ -143,7 +143,7 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      print "(a, i0, a)", "***ERROR. ", k, " is not a valid index."
       error stop
     end if
 
@@ -176,7 +176,7 @@ contains
     call move_alloc(array, temp)
 
     if (k < 1) then
-      print "(a, i0, a)", "***Error. ", k, " is not a valid index."
+      print "(a, i0, a)", "***ERROR. ", k, " is not a valid index."
       error stop
     end if
 
@@ -207,7 +207,7 @@ contains
     call move_alloc(array, temp)
 
     if (k > old_size .or. k < 1) then
-      print "(2(a, i0))", "***Error. ", k, " > ", old_size
+      print "(2(a, i0))", "***ERROR. ", k, " > ", old_size
       error stop
     end if
 
@@ -237,7 +237,7 @@ contains
     call move_alloc(array, temp)
 
     if (k > old_size .or. k < 1) then
-      print "(2(a, i0))", "***Error. ", k, " > ", old_size
+      print "(2(a, i0))", "***ERROR. ", k, " > ", old_size
       error stop
     end if
 
@@ -265,15 +265,15 @@ contains
     integer :: error
 
     if (a > b .or. a < 1) then
-      print "(2(a, i0), a)", "***Error. Improbable range: [", a, " ,", b, "]" 
+      print "(2(a, i0), a)", "***ERROR. Improbable range: [", a, " ,", b, "]" 
       error stop
     end if
 
     if (a > size(array)) then
-      print "(a, i0)", "***Error. Index out of range: ",  a
+      print "(a, i0)", "***ERROR. Index out of range: ",  a
       error stop
     else if (b > size(array)) then
-      print "(a, i0)", "***Error. Index out of range: ",  b
+      print "(a, i0)", "***ERROR. Index out of range: ",  b
       error stop
     end if
   
@@ -306,15 +306,15 @@ contains
     integer :: error
 
     if (a > b .or. a < 1) then
-      print "(2(a, i0), a)", "***Error. Improbable range: [", a, " ,", b, "]" 
+      print "(2(a, i0), a)", "***ERROR. Improbable range: [", a, " ,", b, "]" 
       error stop
     end if
 
     if (a > size(array)) then
-      print "(a, i0)", "***Error. Index out of range: ",  a
+      print "(a, i0)", "***ERROR. Index out of range: ",  a
       error stop
     else if (b > size(array)) then
-      print "(a, i0)", "***Error. Index out of range: ",  b
+      print "(a, i0)", "***ERROR. Index out of range: ",  b
       error stop
     end if
 
@@ -382,7 +382,7 @@ contains
 
     integer, intent(in) :: x
     if (x /= 0) then
-      print "(a, i0)", "***Error: Space cannot be allocated. status value: ", x
+      print "(a, i0)", "***ERROR: Space cannot be allocated. status value: ", x
       error stop
     end if
   end subroutine alloc_check

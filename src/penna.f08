@@ -6,7 +6,7 @@ module Penna
   private
 
   ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: null_recFlag = 0      ! Null
+  integer, parameter, public :: null_recFlag = 0  ! Null
   integer, parameter, public :: pop_recFlag = 1   ! Population
   integer, parameter, public :: demog_recFlag = 2 ! Age and genome demographics
   integer, parameter, public :: death_recFlag = 3 ! Death count
@@ -70,7 +70,8 @@ contains
       ! For this given set of model parameters, pop size might explode.
       ! As such, we halt the run once this case is reached.
       if (popSize > MODEL_K) then
-        print "(/a)", "The population has exceeded the carrying capacity!"
+        print "(/a)", "The population has exceeded the carrying capacity!" // &
+            " Stopping the current run."
         exit
       end if
 
@@ -130,8 +131,6 @@ contains
       ! Evaluate the current individual. 
       call population%checkCurrIndivDeath(popSize)
 
-      ! NOTE: Once `isCurrIndivDead` is called, the death index of the
-      ! current individual is updated; `isCurrIndivDead` has side-effects!
       if (population%isCurrIndivDead()) then
         ! Count dead ones.
         select case (population%getCurrIndivDeathIdx())
@@ -294,7 +293,7 @@ contains
              "death by Verhulst factor"])
 
       case default
-        print "(a, i0, a)", "***Error. '", recordFlag, &
+        print "(a, i0, a)", "***ERROR. '", recordFlag, &
             "' is an invalid record flag"
         error stop
     end select

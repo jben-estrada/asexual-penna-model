@@ -46,9 +46,7 @@ contains
   posArgCount = 1
   do argCount = 1, command_argument_count()
   call get_command_argument(argCount, cmdArg, status=readStatus)
-  if (readStatus == -1) then
-    exit
-  end if
+  if (readStatus == -1) exit
 
   ! i.) Keyword arguments.
   ! ***Verbose parameter print.

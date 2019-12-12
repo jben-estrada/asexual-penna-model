@@ -121,6 +121,7 @@ contains
   function getCharArrayIndex(elem) result(i)
     implicit none
     character(len=:), allocatable, intent(in) :: elem
+
     integer :: i
 
     do i = 1, size(modelParamKeys)
@@ -174,6 +175,10 @@ contains
   end subroutine assignParameters
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: printModelParam
+  !>  Print the model parameters for error/warning messages.
+  ! -------------------------------------------------------------------------- !
   subroutine printModelParam()
     implicit none
 
@@ -255,7 +260,7 @@ contains
               key = ""
               cycle
             case (NULLVALUE)
-              print "(3(a))", "***Warning. '", key, &
+              print "(3(a))", "***WARNING. '", key, &
                   "' is not a valid parameter. Ignoring this key."
               print "(a/, 10(' '), *(a, ', '))", "Valid parameters:", &
                   (trim(modelParamKeys(i)), i = 1, size(modelParamKeys))
@@ -267,7 +272,7 @@ contains
               if (castStatus == 0) then
                 values(keyIdx) = val
               else
-                print "(3(a))", "***Warning. '", strVal, "' is not a valid" // &
+                print "(3(a))", "***WARNING. '", strVal, "' is not a valid" // &
                     " value."
               end if
               key = ""
@@ -358,27 +363,27 @@ contains
           AssignWeight: if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
             MODEL_VERHULST_W(vWeightIdx) = vWeight
 
-          ! ***Error. Invalid number of weights.
+          ! ***WARNING. Invalid number of weights.
           else if (vWeightIdx > MODEL_L) then
-            print "(a)", "***Warning. Given Verhulst weights exceeded the " // &
+            print "(a)", "***WARNING. Given Verhulst weights exceeded the " // &
                 "maximum number of allowed number of weights."
 
-          ! ***Error. Invalid range.
+          ! ***WARNING. Invalid range.
           else if (vWeight > 1) then
-            print "(a, f5.3, a)", "***Warning. Given Verhulst weight" // &
+            print "(a, f5.3, a)", "***WARNING. Given Verhulst weight" // &
                 "is outside the allowed range [0, 1]. Using the " // &
                 "default value (", VERHULST_W_DEFAULT, ")."
 
           ! ***Unknown error.
           else
-            stop "***Error. Unknown error when reading Verhulst weights."
+            stop "***ERROR. Unknown error when reading Verhulst weights."
           end if AssignWeight
           ! <<<
           ! ==============================================================
 
-        ! ***Error. Invalid input.
+        ! ***WARNING. Invalid input.
         else
-          print "(3(a), f5.3, a)", "***Warning. '", vWeightStr , &
+          print "(3(a), f5.3, a)", "***WARNING. '", vWeightStr , &
               "' is not a valid value for a Verhulst factor. " // &
               "Using the default value (", VERHULST_W_DEFAULT, ")."
         end if CastCheck
