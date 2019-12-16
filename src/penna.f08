@@ -6,10 +6,10 @@ module Penna
   private
 
   ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: null_recFlag = 0  ! Null
-  integer, parameter, public :: pop_recFlag = 1   ! Population
-  integer, parameter, public :: demog_recFlag = 2 ! Age and genome demographics
-  integer, parameter, public :: death_recFlag = 3 ! Death count
+  integer, parameter, public :: nullRecFlag = 0  ! Null
+  integer, parameter, public :: popRecFlag = 1   ! Population
+  integer, parameter, public :: demogRecFlag = 2 ! Age and genome demographics
+  integer, parameter, public :: deathRecFlag = 3 ! Death count
 
   public :: multipleRun
   public :: readModelParam
@@ -58,7 +58,7 @@ contains
     call initializeRunWriter(runWriter, recordFlag)
 
     ! Enable/disable demographics recording.
-    if (recordFlag == demog_recFlag) then
+    if (recordFlag == demogRecFlag) then
       DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     else
       DEMOG_LAST_STEPS = -1
@@ -81,21 +81,21 @@ contains
 
       ! Record result.
       select case (recordFlag)
-        case (pop_recFlag)
+        case (popRecFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIK))
-        case (demog_recFlag)
+        case (demogRecFlag)
           call runWriter%write((ageDstrbFlag), &
               int(demog_ageDstrb, kind=writeIK))
           call runWriter%write(genomeDstrbFlag, &
               int(demog_genomeDstrb, kind=writeIK))
-        case (death_recFlag)
+        case (deathRecFlag)
           call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
       end select
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call population%resetReadPtrs()
-      if (recordFlag == demog_recFlag) call resetDstrbs()
+      if (recordFlag == demogRecFlag) call resetDstrbs()
     end do mainLoop
 
     ! Wrap up.
@@ -261,7 +261,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeRunWriter
   !>  Initialize a `Writer` object based on the integer `recordFlag`
-  !!  passed.  There are three flags: `pop_recFlag`, `demog_recFlag`
+  !!  passed.  There are three flags: `popRecFlag`, `demogRecFlag`
   !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
@@ -274,18 +274,18 @@ contains
         deathFlag])
 
     select case (recordFlag)
-      case (null_recFlag)
+      case (nullRecFlag)
         ! Placeholder. Does nothing.
-      case (pop_recFlag)
+      case (popRecFlag)
         call runWriter%initialize(popFlag)
         call runWriter%writeHeader(popFlag, ["population size"])
 
-      case (demog_recFlag)
+      case (demogRecFlag)
         call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
         call runWriter%writeHeader(ageDstrbFlag, ["age =>"])
         call runWriter%writeHeader(genomeDstrbFlag, ["age =>"])
 
-      case (death_recFlag)
+      case (deathRecFlag)
         call runWriter%initialize(deathFlag)
         call runWriter%writeHeader(deathFlag, &
             ["death by old age        ", &
