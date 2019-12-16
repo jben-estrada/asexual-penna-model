@@ -44,16 +44,21 @@
 !***********************************************************************
 ! Fortran version rewritten as an F90 module and mt state saving and getting
 ! subroutines added by Richard Woloshyn. (rwww@triumf.ca). June 30, 1999
+!
+!***********************************************************************
+! This module is rewritten to conform with modern standards
+!
 
  module mtmod
+    private
 ! Default seed
     integer, parameter :: defaultsd = 4357
 ! Period parameters
     integer, parameter :: N = 624, N1 = N + 1
 
 ! the array for the state vector
-    integer, save, dimension(0:N-1) :: mt
-    integer, save                   :: mti = N1
+    integer, save :: mt(0: N-1)
+    integer, save :: mti = N1
     
 ! Overload procedures for saving and getting mt state
     interface mtsave
@@ -65,6 +70,10 @@
       module procedure mtgetu
     end interface
 
+    public :: mtsave
+    public :: mtget
+    public :: grnd
+    public :: sgrnd
  contains
 
 !Initialization subroutine
@@ -79,16 +88,16 @@
     integer, intent(in) :: seed
 
     mt(0) = iand(seed,-1)
-    do mti=1,N-1
+    do mti = 1, N-1
       mt(mti) = iand(69069 * mt(mti-1),-1)
-    enddo
+    end do
 !
     return
   end subroutine sgrnd
 
 !Random number generator
   real(8) function grnd()
-    implicit integer(a-z)
+    implicit none
 
 ! Period parameters
     integer, parameter :: M = 397, MATA  = -1727483681
@@ -100,49 +109,47 @@
 ! Tempering parameters
     integer, parameter :: TMASKB= -1658038656, TMASKC= -272236544
 
-    dimension mag01(0:1)
-    data mag01/0, MATA/
-    save mag01
+! Temporary variables
+    integer :: k, y
+!
+    integer, save :: mag01(0:1) = (/0, MATA/)
 !                        mag01(x) = x * MATA for x=0,1
 
-    TSHFTU(y)=ishft(y,-11)
-    TSHFTS(y)=ishft(y,7)
-    TSHFTT(y)=ishft(y,15)
-    TSHFTL(y)=ishft(y,-18)
-
-    if(mti.ge.N) then
+    if (mti >= N) then
 !                       generate N words at one time
-      if(mti.eq.N+1) then
+      if (mti == N+1) then
 !                            if sgrnd() has not been called,
         call sgrnd( defaultsd )
 !                              a default initial seed is used
-      endif
+      end if
 
-      do kk=0,N-M-1
-          y=ior(iand(mt(kk),UMASK),iand(mt(kk+1),LMASK))
-          mt(kk)=ieor(ieor(mt(kk+M),ishft(y,-1)),mag01(iand(y,1)))
-      enddo
-      do kk=N-M,N-2
-          y=ior(iand(mt(kk),UMASK),iand(mt(kk+1),LMASK))
-          mt(kk)=ieor(ieor(mt(kk+(M-N)),ishft(y,-1)),mag01(iand(y,1)))
-      enddo
-      y=ior(iand(mt(N-1),UMASK),iand(mt(0),LMASK))
-      mt(N-1)=ieor(ieor(mt(M-1),ishft(y,-1)),mag01(iand(y,1)))
+      do k = 0, N-M-1
+          y = ior(iand(mt(k), UMASK), iand(mt(k+1), LMASK))
+          mt(k) = ieor(ieor(mt(k+M), ishft(y,-1)), mag01(iand(y,1)))
+      end do
+
+      do k = N-M, N-2
+          y = ior(iand(mt(k), UMASK), iand(mt(k+1), LMASK))
+          mt(k) = ieor(ieor(mt(k + (M - N)), ishft(y, -1)), mag01(iand(y, 1)))
+      end do
+
+      y = ior(iand(mt(N-1), UMASK), iand(mt(0), LMASK))
+      mt(N-1) = ieor(ieor(mt(M-1), ishft(y, -1)), mag01(iand(y, 1)))
       mti = 0
-    endif
+    end if
 
     y=mt(mti)
-    mti = mti + 1 
-    y=ieor(y,TSHFTU(y))
-    y=ieor(y,iand(TSHFTS(y),TMASKB))
-    y=ieor(y,iand(TSHFTT(y),TMASKC))
-    y=ieor(y,TSHFTL(y))
+    mti = mti + 1
+    y = ieor(y, ishft(y, -11))
+    y = ieor(y, iand(ishft(y, 7), TMASKB))
+    y = ieor(y, iand(ishft(y, 15), TMASKC))
+    y = ieor(y, ishft(y, -18))
 
-    if(y .lt. 0) then
-      grnd=(dble(y)+2.0d0**32)/(2.0d0**32-1.0d0)
+    if (y  < 0) then
+      grnd=(dble(y) + 2.0d0**32)/(2.0d0**32-1.0d0)
     else
       grnd=dble(y)/(2.0d0**32-1.0d0)
-    endif
+    end if
 
     return
   end function grnd
@@ -153,7 +160,7 @@
 ! where   format_character = 'u' or 'U' will save in unformatted form, otherwise
 !         state information will be written in formatted form.
   subroutine mtsavef( fname, forma )
-
+    implicit none
 !NOTE: This subroutine APPENDS to the end of the file "fname".
 
     character(*), intent(in) :: fname
@@ -161,13 +168,13 @@
 
     select case (forma)
       case('u','U')
-       open(unit=10,file=trim(fname),status='UNKNOWN',form='UNFORMATTED', &
+       open(unit=10, file=trim(fname), status='UNKNOWN', form='UNFORMATTED', &
             position='APPEND')
        write(10)mti
        write(10)mt
 
       case default
-       open(unit=10,file=trim(fname),status='UNKNOWN',form='FORMATTED', &
+       open(unit=10, file=trim(fname), status='UNKNOWN', form='FORMATTED', &
             position='APPEND')
        write(10,*)mti
        write(10,*)mt
@@ -179,6 +186,7 @@
   end subroutine mtsavef
 
   subroutine mtsaveu( unum, forma )
+    implicit none
 
     integer, intent(in)    :: unum
     character, intent(in)  :: forma
@@ -203,6 +211,7 @@
 ! where   format_character = 'u' or 'U' will read in unformatted form, otherwise
 !         state information will be read in formatted form.
   subroutine mtgetf( fname, forma )
+    implicit none
 
     character(*), intent(in) :: fname
     character, intent(in)    :: forma
@@ -225,7 +234,8 @@
   end subroutine mtgetf
 
   subroutine mtgetu( unum, forma )
-
+    implicit none
+    
     integer, intent(in)    :: unum
     character, intent(in)  :: forma
 
@@ -244,28 +254,4 @@
   end subroutine mtgetu
 
  end module mtmod
-
-! TEST PROGRAM.
-!  program main
-! ! this main() outputs first 1000 generated numbers
-! !
-!     use mtmod
-!     implicit none
  
-!     integer, parameter      :: no=1000
-!     real(8), dimension(0:7) :: r
-!     integer j,k
-! !    real(8) grnd
-! !
-! !      call sgrnd(4357)
-! !                         any nonzero integer can be used as a seed
-!     do j=0,no-1
-!       r(mod(j,8))=grnd()
-!       if(mod(j,8).eq.7) then
-!         write(*,'(8(f9.6,'' ''))') (r(k),k=0,7)
-!       else if(j.eq.no-1) then
-!         write(*,'(8(f9.6,'' ''))') (r(k),k=0,mod(no-1,8))
-!       endif
-!     enddo
-
-!  end program main
