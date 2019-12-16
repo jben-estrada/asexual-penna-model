@@ -22,8 +22,10 @@ contains
   !>  Wrapper procedure for `readScalarParam`
   ! -------------------------------------------------------------------------- !
   subroutine readModelParam
+    use mtmod, only: sgrnd
     implicit none
 
+    call sgrnd(1) ! Set seed for the MT PRNG. Defaults to 1.
     call readScalarParam
     call readVerhulstWeights
   end subroutine readModelParam

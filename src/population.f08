@@ -441,6 +441,7 @@ contains
   !!  pointer is pointing at. 
   ! -------------------------------------------------------------------------- !
   subroutine checkCurrIndivDeath(self, popSize)
+    use mtmod, only: grnd
     implicit none
 
     class(PersonList), intent(inout) :: self
@@ -471,7 +472,7 @@ contains
     ! ***Death check: Verhulst factor
     else if (verhulstWeight > 0.0) then
       ! Get Verhulst factor per age.
-      call random_number(random)
+      random = real(grnd())  ! Mersenne Twsiter PRNG. Casting real(8)->real(4).
       verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
 
       if (random > verhulstFactor) self%current_ptr%deathIndex = DEAD_VERHULST

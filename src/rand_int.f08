@@ -6,6 +6,7 @@ module RandInd
   !>  Module containing procedures for generating array of random
   !!  integers.
   !----------------------------------------------------------------------------!
+  use mtmod, only: grnd
   implicit none
   private
 
@@ -35,7 +36,7 @@ contains
     L = size(indices)
     do i = 1, L
       do
-        call random_number(random)
+        random = real(grnd())  ! Mersenne Twister PRNG. Casting real(8)->real(4)
         index = floor(random*(upper - lower + 1)) + lower
 
         if (all(indices(1:i) /= index) .or. L > (upper - lower + 1)) then

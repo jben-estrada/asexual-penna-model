@@ -99,3 +99,9 @@ Pop -> {
 CmdInterface -> {
   main
 }
+
+mtmod -> {
+  Penna,
+  Pop,
+  RandInd
+}
