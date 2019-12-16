@@ -18,13 +18,15 @@ contains
   !   TODO: Would be great if the dummy args are reduced.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
-      rngSeed, isVerbosePrint, toRecordTime)
+      rngChoice, rngSeed, isVerbosePrint, toRecordTime)
+  use RNG
   implicit none
 
   integer, intent(out) :: maxTimestep
   integer, intent(out) :: sampleSize
   integer, intent(out) :: startPopSize
   integer, intent(out) :: recordFlag
+  integer, intent(out) :: rngChoice
   integer, intent(out) :: rngSeed
   logical, intent(out) :: isVerbosePrint
   logical, intent(out) :: toRecordTime
@@ -42,11 +44,18 @@ contains
   recordFlag = nullRecFlag
   isVerbosePrint = .false.
   toRecordTime = .false.
+  rngChoice = RNG_INTRINSIC
   rngSeed = 1
 
-  ! Evaluate each passed cmd args.
+  ! Initialize index variables
   posArgCount = 1
-  do argCount = 1, command_argument_count()
+  argCount = 1
+
+  ! Null case.
+  if (command_argument_count()  == 0) return
+
+  ! Read command-line arguments.
+  parseArg: do
     call get_command_argument(argCount, cmdArg, status=readStatus)
     if (readStatus == -1) exit
 
@@ -58,15 +67,46 @@ contains
       ! ***Print help message.
       case ("-h", "--help")
         call printHelp()
-        call wrapUp()
         stop
       
       ! *** Record mean elapsed time and its std deviation.
       case ("--record-time")
         toRecordTime = .true.
       
+      ! *** Get choice for RNG.
+      case ("-rng")
+        ! Get next cmd arg.
+        argCount  = argCount + 1
+        call get_command_argument(argCount, cmdArg, status=readStatus)
+
+        if (readStatus /= 0) then
+          print "(a)", "***ERROR. Invalid RNG flag. It must be an integer."
+          stop
+        end if
+
+        read(cmdArg, *, iostat=readStatus) cmdInt
+
+        ! Check for the validity of the RNG flag.
+        if (readStatus == 0 .and. any(RNG_FLAGS == cmdInt)) then
+            rngChoice = cmdInt
+        else
+          print "(a)", "***ERROR. Invalid RNG flag. Try 'penna.out -h' " // &
+              "to check for the available RNGs and their corresponding " // &
+              "integer flags."
+          stop
+        end if
+
       ! *** Get seed for the Mersenne Twister RNG.
       case ("-seed")
+        ! Get next cmd arg.
+        argCount  = argCount + 1
+        call get_command_argument(argCount, cmdArg, status=readStatus)
+
+        if (readStatus /= 0) then
+          print "(a)", "***ERROR. Invalid value for seed was provided."
+          stop
+        end if
+
         read(cmdArg, *, iostat=readStatus) cmdInt
 
         ! Check validity of `seed` input.
@@ -75,13 +115,11 @@ contains
             rngSeed = cmdInt
           else
             print "(a)", "***ERROR. RNG seed must be a positive integer."
-            call wrapUp()
             stop
           end if
         else
           print "(a)", "***ERROR. The provided RNG seed is not valid. It " // &
               "must be a positive integer."
-          call wrapUp()
           stop
         end if
       
@@ -108,13 +146,19 @@ contains
         else
           print "(3(a))", "***ERROR. '", trim(cmdArg) ,"' is not a valid " // &
               " option. Try 'penna.out -h' for more information."
-          call wrapUp
           stop
         end if
 
         posArgCount = posArgCount + 1
-    end select
-  end do
+      end select
+
+      ! Exit condition
+      if (argCount == command_argument_count()) then
+        exit
+      else
+        argCount = argCount + 1
+      end if
+    end do parseArg
   end subroutine getCmdArgs
 
 
@@ -123,16 +167,22 @@ contains
   !>  Print help or usage message before stopping the program.
   ! -------------------------------------------------------------------------- !
   subroutine printHelp
+    use RNG, only: RNG_FLAGS
     implicit none
 
-    character(len=3) :: flagStr(4)    
+    character(len=3) :: flagStr(4) 
+    character(len=3) :: rngStr(2) 
     integer :: flagArr(4) = &
       [nullRecFlag, popRecFlag, demogRecFlag, deathRecFlag]
     integer :: i
 
     ! Cast record flag integers to strings.
     do i = 1, size(flagStr)
-    write(flagStr(i), "(i2)") flagArr(i)
+      write(flagStr(i), "(i2)") flagArr(i)
+    end do
+
+    do i = 1, size(rngStr)
+      write(rngStr(i), "(i2)") RNG_FLAGS(i)
     end do
 
     ! TODO: Better help message. Could be made such that it is not hard-coded.
@@ -147,8 +197,10 @@ contains
       adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
       adjustl("--record-time   "), adjustl("Record the average elapsed " // &
           "time and the standard deviation."), &
-      adjustl("-seed [int]     "), adjustl("Put seed for the RNG to be" // &
-          " used. Must be a positive integer. [default: 1]")
+      adjustl("-seed [int]     "), adjustl("Set seed for the RNG to be " // &
+          "used. Must be a positive integer. [default: 1]"), &
+      adjustl("-rng [int]      "), adjustl("Choose RNG to be used. " // &
+          " [default: 0 (intrinsic RNG)]")
 
     ! ***Optional parameters.
     print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &
@@ -160,13 +212,18 @@ contains
           "[default: "), 0, "]"
           
     ! ***Notes.
-    write (*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/), a)", advance="no") "notes:", &
-      adjustl("- Record flags are as follows:"), &
-      flagStr(1), adjustl("- Do not record."), &
-      flagStr(2), adjustl("- Record the population size per unit time."), &
-      flagStr(3), adjustl("- Record the average demographics of the " // &
-          "last 300 steps."), &
-      flagStr(4), adjustl("- Record death count."), ""
+    write(*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/))", advance="no") "notes:", &
+        adjustl("- Record flags are as follows:"), &
+        flagStr(1), adjustl("- Do not record."), &
+        flagStr(2), adjustl("- Record the population size per unit time."), &
+        flagStr(3), adjustl("- Record the average demographics of the " // &
+            "last 300 steps."), &
+        flagStr(4), adjustl("- Record death count.")
+    write(*, "(7(' '), a/, 2(9(' '), 2(a)/))") "- RNG flags are as follows:", &
+        rngStr(1), adjustl("- a KISS pseudo-random number generator " // &
+            "(the intrinsic RNG)"), &
+        rngStr(2), adjustl("- MT19937, a Mersenne Twister pseudo-random " // &
+            "number generator.")
   end subroutine printHelp
 
 

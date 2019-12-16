@@ -25,7 +25,7 @@ COMPILE_LIB = $(foreach name, $(NAME_LIB0), $(COMPILE_COMM) \
 
 # Source code with no external dependencies.
 NAME_DEP0 := init.f08 tickertype.f08 rand_int.f08 \
-	update_array.f08 gene.f08 saveformat.f08
+	update_array.f08 gene.f08 saveformat.f08 rng.f08
 COMPILE_DEP0 = $(foreach name, $(NAME_DEP0), $(COMPILE_COMM) \
 	-c $(SRC_DIR)/$(name) -o $(OBJ_DIR)/$(basename $(name)).o;)
 

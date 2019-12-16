@@ -28,12 +28,9 @@ contains
   ! SUBROUTINE: readModelParam
   !>  Wrapper procedure for `readScalarParam`
   ! -------------------------------------------------------------------------- !
-  subroutine readModelParam(rngSeed)
-    use mtmod, only: sgrnd
+  subroutine readModelParam()
     implicit none
-    integer, intent(in) :: rngSeed
 
-    call sgrnd(rngSeed) ! Set seed for the MT PRNG. Defaults to 1.
     call readScalarParam
     call readVerhulstWeights
   end subroutine readModelParam

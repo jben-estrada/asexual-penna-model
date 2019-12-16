@@ -27,6 +27,7 @@
 program Main
   use Penna
   use CmdInterface
+  use RNG, only: setSeed, chooseRNG
   implicit none
 
  ! Arguments to run the simulation.
@@ -34,22 +35,32 @@ program Main
   integer :: sampleSize     ! Sample size
   integer :: startPopSize   ! Starting population size
   integer :: recordFlag     ! Record flag (see `Penna` module for values)
+  integer :: rngChoice      ! Seed for the RNG.
   integer :: rngSeed        ! Seed for the RNG.
   logical :: isVerbosePrint ! Print all scalar model parameters
   logical :: toRecordTime   ! Logical val, record mean elapsed time.
 
-  ! Get command line arguments.
-  call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-  rngSeed, isVerbosePrint, toRecordTime)
-
+  ! Get and then set model parameters
+  ! ---------------------------------
   ! Initialize model parameters.
-  call readModelParam(rngSeed)
-
+  call readModelParam()
+  ! Get command-line arguments.
+  call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
+      rngChoice, rngSeed, isVerbosePrint, toRecordTime)
   ! Pretty print cmd arguments and model parameters.
   call printArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
       isVerbosePrint)
+  ! ---------------------------------
 
-  ! Run the Penna model multiple times.
+  ! Initialize the random number generator.
+  ! ---------------------------------------
+  ! Choose RNG.
+  call chooseRNG(rngChoice)
+  ! Set the seed for the chosen RNG.
+  call setSeed(rngSeed)
+  ! ---------------------------------------
+
+  ! Run the Penna model `sampleSize` times.
   call multipleRun(timeSteps, startPopSize, sampleSize, recordFlag, &
       toRecordTime)
 
