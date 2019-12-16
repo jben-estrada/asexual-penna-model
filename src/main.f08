@@ -29,23 +29,21 @@ program Main
   use CmdInterface
   implicit none
 
-  ! -------------------------------------------------------------------------- !
-  ! Arguments to run the simulation.
-  integer :: timeSteps
-  integer :: sampleSize
-  integer :: startPopSize
-  integer :: recordFlag
-  integer :: rngSeed
-  logical :: isVerbosePrint
-  logical :: toRecordTime
-  ! -------------------------------------------------------------------------- !
-
-  ! Initialize model parameters.
-  call readModelParam()
+ ! Arguments to run the simulation.
+  integer :: timeSteps      ! Maximum time steps
+  integer :: sampleSize     ! Sample size
+  integer :: startPopSize   ! Starting population size
+  integer :: recordFlag     ! Record flag (see `Penna` module for values)
+  integer :: rngSeed        ! Seed for the RNG.
+  logical :: isVerbosePrint ! Print all scalar model parameters
+  logical :: toRecordTime   ! Logical val, record mean elapsed time.
 
   ! Get command line arguments.
   call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-      rngSeed, isVerbosePrint, toRecordTime)
+  rngSeed, isVerbosePrint, toRecordTime)
+
+  ! Initialize model parameters.
+  call readModelParam(rngSeed)
 
   ! Pretty print cmd arguments and model parameters.
   call printArgs(timeSteps, sampleSize, startPopSize, recordFlag, &

@@ -65,11 +65,31 @@ contains
       case ("--record-time")
         toRecordTime = .true.
       
+      ! *** Get seed for the Mersenne Twister RNG.
+      case ("-seed")
+        read(cmdArg, *, iostat=readStatus) cmdInt
+
+        ! Check validity of `seed` input.
+        if (readStatus == 0) then
+          if (cmdInt > 0) then
+            rngSeed = cmdInt
+          else
+            print "(a)", "***ERROR. RNG seed must be a positive integer."
+            call wrapUp()
+            stop
+          end if
+        else
+          print "(a)", "***ERROR. The provided RNG seed is not valid. It " // &
+              "must be a positive integer."
+          call wrapUp()
+          stop
+        end if
+      
       ! ***Accept positional parameters.
       case default
         read(cmdArg, *, iostat=readStatus) cmdInt
 
-        ! Assign casted value if type casting succeeds
+        ! Assign casted value if type casting succeeds.
         if (readStatus == 0) then
           select case (posArgCount)
             ! ***Max time step.
@@ -86,7 +106,7 @@ contains
               recordFlag = cmdInt
           end select
         else
-          print "(3(a))", "***Error. '", trim(cmdArg) ,"' is not a valid " // &
+          print "(3(a))", "***ERROR. '", trim(cmdArg) ,"' is not a valid " // &
               " option. Try 'penna.out -h' for more information."
           call wrapUp
           stop
@@ -103,48 +123,50 @@ contains
   !>  Print help or usage message before stopping the program.
   ! -------------------------------------------------------------------------- !
   subroutine printHelp
-  implicit none
+    implicit none
 
-  character(len=3) :: flagStr(4)    
-  integer :: flagArr(4) = &
-    [nullRecFlag, popRecFlag, demogRecFlag, deathRecFlag]
-  integer :: i
+    character(len=3) :: flagStr(4)    
+    integer :: flagArr(4) = &
+      [nullRecFlag, popRecFlag, demogRecFlag, deathRecFlag]
+    integer :: i
 
-  ! Cast record flag integers to strings.
-  do i = 1, size(flagStr)
-  write(flagStr(i), "(i2)") flagArr(i)
-  end do
+    ! Cast record flag integers to strings.
+    do i = 1, size(flagStr)
+    write(flagStr(i), "(i2)") flagArr(i)
+    end do
 
-  ! TODO: Better help message. Could be made such that it is not hard-coded.
-  ! ***Usage message.
-  print "(a, /a)", "usage: penna.out [-v | --verbose] [max-time-step] " // &
-    "[sample-size] [start-pop-size] [record-flag]", &
-    "       penna.out [-h | --help]"
+    ! TODO: Better help message. Could be made such that it is not hard-coded.
+    ! ***Usage message.
+    print "(a, /a)", "usage: penna.out [-v | --verbose] [max-time-step] " // &
+      "[sample-size] [start-pop-size] [record-flag]", &
+      "       penna.out [-h | --help]"
 
-  ! ***Options message.
-  print "(/a, *(/7(' '), 2(a)))", "options:", &
-    adjustl("-h, --help      "), adjustl("Show this message."), &
-    adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
-    adjustl("--record-time   "), adjustl("Record the average elapsed time " // &
-        "and the standard deviation.")
+    ! ***Options message.
+    print "(/a, *(/7(' '), 2(a)))", "options:", &
+      adjustl("-h, --help      "), adjustl("Show this message."), &
+      adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
+      adjustl("--record-time   "), adjustl("Record the average elapsed " // &
+          "time and the standard deviation."), &
+      adjustl("-seed [int]     "), adjustl("Put seed for the RNG to be" // &
+          " used. Must be a positive integer. [default: 1]")
 
-  ! ***Optional parameters.
-  print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &
-    adjustl("max-time-step   "), adjustl("Maximum time step. [default: "), &
-        MODEL_TIME_STEPS, "]", &
-    adjustl("start-pop-size  "), adjustl("Starting population size. " // &
-        "[default: "), MODEL_N0, "]", &
-    adjustl("record-flag     "), adjustl("Record specified data. " // &
-        "[default: "), 0, "]"
-        
-  ! ***Notes.
-  write (*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/), a)", advance="no") "notes:", &
-    adjustl("- Record flags are as follows:"), &
-    flagStr(1), adjustl("- Do not record."), &
-    flagStr(2), adjustl("- Record the population size per unit time."), &
-    flagStr(3), adjustl("- Record the average demographics of the " // &
-        "last 300 steps."), &
-    flagStr(4), adjustl("- Record death count."), ""
+    ! ***Optional parameters.
+    print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &
+      adjustl("max-time-step   "), adjustl("Maximum time step. [default: "), &
+          MODEL_TIME_STEPS, "]", &
+      adjustl("start-pop-size  "), adjustl("Starting population size. " // &
+          "[default: "), MODEL_N0, "]", &
+      adjustl("record-flag     "), adjustl("Record specified data. " // &
+          "[default: "), 0, "]"
+          
+    ! ***Notes.
+    write (*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/), a)", advance="no") "notes:", &
+      adjustl("- Record flags are as follows:"), &
+      flagStr(1), adjustl("- Do not record."), &
+      flagStr(2), adjustl("- Record the population size per unit time."), &
+      flagStr(3), adjustl("- Record the average demographics of the " // &
+          "last 300 steps."), &
+      flagStr(4), adjustl("- Record death count."), ""
   end subroutine printHelp
 
 
