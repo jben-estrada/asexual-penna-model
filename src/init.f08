@@ -218,7 +218,6 @@ contains
     values(:) = modelParamDefault
 
     ! Read file.
-    strippedFile = ""
     open(unit=modelUnit, file=modelFilename, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
@@ -342,7 +341,6 @@ contains
 
     ! Evaluate stripped input.
     vWeightIdx = 1
-    strippedFile = strippedFile // EOL
     allocate(character(len=0) :: vWeightStr)
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
