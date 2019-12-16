@@ -18,13 +18,14 @@ contains
   !   TODO: Would be great if the dummy args are reduced.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
-      isVerbosePrint, toRecordTime)
+      rngSeed, isVerbosePrint, toRecordTime)
   implicit none
 
   integer, intent(out) :: maxTimestep
   integer, intent(out) :: sampleSize
   integer, intent(out) :: startPopSize
   integer, intent(out) :: recordFlag
+  integer, intent(out) :: rngSeed
   logical, intent(out) :: isVerbosePrint
   logical, intent(out) :: toRecordTime
 
@@ -41,53 +42,58 @@ contains
   recordFlag = nullRecFlag
   isVerbosePrint = .false.
   toRecordTime = .false.
+  rngSeed = 1
 
   ! Evaluate each passed cmd args.
   posArgCount = 1
   do argCount = 1, command_argument_count()
-  call get_command_argument(argCount, cmdArg, status=readStatus)
-  if (readStatus == -1) exit
+    call get_command_argument(argCount, cmdArg, status=readStatus)
+    if (readStatus == -1) exit
 
-  ! i.) Keyword arguments.
-  ! ***Verbose parameter print.
-  if (cmdArg == "-v" .or. cmdArg == "--verbose") then
-    isVerbosePrint = .true.
-  ! ***Print help message.
-  else if (cmdArg == "-h" .or. cmdArg == "--help") then
-    call printHelp
-    call wrapUp
-    stop
-  else if (cmdArg == "--record-time") then
-    toRecordTime = .true.
-  ! ii.) Positional arguments. NOTE: All pos args must be integers.
-  else
-    read(cmdArg, *, iostat=readStatus) cmdInt
+    select case(cmdArg)
+      ! ***Verbose parameter print.
+      case ("-v", "--verbose")
+        isVerbosePrint = .true.
 
-    ! Assign casted value if type casting succeeds
-    if (readStatus == 0) then
-      select case (posArgCount)
-        ! ***Max time step.
-        case (1)
-          maxTimestep = cmdInt
-        ! ***Sample size.
-        case (2)
-          sampleSize = cmdInt
-        ! ***Starting population size.
-        case (3)
-          startPopSize = cmdInt
-        ! ***Record flag.
-        case (4)
-          recordFlag = cmdInt
-      end select
-    else
-      print "(3(a))", "***Error. '", trim(cmdArg) ,"' is not a valid " // &
-          " option. Try 'penna.out -h' for more information."
-      call wrapUp
-      stop
-    end if
+      ! ***Print help message.
+      case ("-h", "--help")
+        call printHelp()
+        call wrapUp()
+        stop
+      
+      ! *** Record mean elapsed time and its std deviation.
+      case ("--record-time")
+        toRecordTime = .true.
+      
+      ! ***Accept positional parameters.
+      case default
+        read(cmdArg, *, iostat=readStatus) cmdInt
 
-    posArgCount = posArgCount + 1
-  end if
+        ! Assign casted value if type casting succeeds
+        if (readStatus == 0) then
+          select case (posArgCount)
+            ! ***Max time step.
+            case (1)
+              maxTimestep = cmdInt
+            ! ***Sample size.
+            case (2)
+              sampleSize = cmdInt
+            ! ***Starting population size.
+            case (3)
+              startPopSize = cmdInt
+            ! ***Record flag.
+            case (4)
+              recordFlag = cmdInt
+          end select
+        else
+          print "(3(a))", "***Error. '", trim(cmdArg) ,"' is not a valid " // &
+              " option. Try 'penna.out -h' for more information."
+          call wrapUp
+          stop
+        end if
+
+        posArgCount = posArgCount + 1
+    end select
   end do
   end subroutine getCmdArgs
 

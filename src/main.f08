@@ -35,6 +35,7 @@ program Main
   integer :: sampleSize
   integer :: startPopSize
   integer :: recordFlag
+  integer :: rngSeed
   logical :: isVerbosePrint
   logical :: toRecordTime
   ! -------------------------------------------------------------------------- !
@@ -44,7 +45,7 @@ program Main
 
   ! Get command line arguments.
   call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-      isVerbosePrint, toRecordTime)
+      rngSeed, isVerbosePrint, toRecordTime)
 
   ! Pretty print cmd arguments and model parameters.
   call printArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
