@@ -62,7 +62,7 @@ contains
     integer :: out
     real    :: random
   
-    call random_number(random)
+    call getRandNumber(random)
     out = floor(random*(b - a + 1)) + a
   end function generateRandInt
 end module RandInd
