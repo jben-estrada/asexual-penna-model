@@ -1,4 +1,11 @@
 module Penna
+  ! -------------------------------------------------------------------------- !
+  ! MODULE:  Penna
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION: 
+  !>  Module containing one of the core procedures for the simulation of the
+  !!  Penna model (along with the `Pop` module)
+  ! -------------------------------------------------------------------------- !
   use Pop
   use WriterType
   use ModelParam
