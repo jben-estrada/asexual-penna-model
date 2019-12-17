@@ -282,23 +282,23 @@ contains
 
     ! TODO: Better help message. Could be made such that it is not hard-coded.
     ! ***Usage message.
-    print "(a, /a)", "usage: penna.out [-v | --verbose] [max-time-step] " // &
+    print "(a, /a)", "usage: penna.out [option] [max-time-step] " // &
       "[sample-size] [start-pop-size] [record-flag]", &
       "       penna.out [-h | --help]"
 
     ! ***Options message.
     print "(/a, *(/7(' '), 2(a)))", "options:", &
-      adjustl("-h, --help      "), adjustl("Show this message."), &
+      adjustl("-h, --help      "), adjustl("Show this message and exit."), &
       adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
       adjustl("--record-time   "), adjustl("Record the average elapsed " // &
           "time and the standard deviation."), &
-      adjustl("-seed [int]     "), adjustl("Set seed for the RNG to be " // &
+      adjustl("-seed=[int]     "), adjustl("Set seed for the RNG to be " // &
           "used. Must be a positive integer. [default: 1]"), &
-      adjustl("-rng [int]      "), adjustl("Choose RNG to be used. " // &
+      adjustl("-rng=[int]      "), adjustl("Choose RNG to be used. " // &
           " [default: 0 (intrinsic RNG)]")
 
     ! ***Optional parameters.
-    print "(/a/, *(7(' '), 2(a), i0, a/))", "optional parameters:", &
+    print "(a/, *(7(' '), 2(a), i0, a/))", "positional parameters:", &
       adjustl("max-time-step   "), adjustl("Maximum time step. [default: "), &
           MODEL_TIME_STEPS, "]", &
       adjustl("start-pop-size  "), adjustl("Starting population size. " // &
