@@ -6,6 +6,7 @@ module CmdInterface
 
   integer :: k  ! Index variable for `separator`
   character, public, parameter :: separator(29) = [("=", k = 1, 29)]
+  integer,           parameter :: MAX_LEN = 99
 
   public :: getCmdArgs
   public :: printArgs
@@ -19,147 +20,241 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
       rngChoice, rngSeed, isVerbosePrint, toRecordTime)
-  use RNG
-  implicit none
+    use RNG, only: RNG_INTRINSIC
+    implicit none
 
-  integer, intent(out) :: maxTimestep
-  integer, intent(out) :: sampleSize
-  integer, intent(out) :: startPopSize
-  integer, intent(out) :: recordFlag
-  integer, intent(out) :: rngChoice
-  integer, intent(out) :: rngSeed
-  logical, intent(out) :: isVerbosePrint
-  logical, intent(out) :: toRecordTime
+    integer, intent(out) :: maxTimestep
+    integer, intent(out) :: sampleSize
+    integer, intent(out) :: startPopSize
+    integer, intent(out) :: recordFlag
+    integer, intent(out) :: rngChoice
+    integer, intent(out) :: rngSeed
+    logical, intent(out) :: isVerbosePrint
+    logical, intent(out) :: toRecordTime
 
-  character(len=32) :: cmdArg
-  integer :: cmdInt
-  integer :: readStatus
-  integer :: argCount
-  integer :: posArgCount
+    character(len=32)      :: cmdArg
+    integer :: readStatus
+    integer :: argCount
 
-  ! Default values for cmd arguments.
-  maxTimestep = MODEL_TIME_STEPS
-  sampleSize = MODEL_SAMPLE_SIZE
-  startPopSize = MODEL_N0
-  recordFlag = nullRecFlag
-  isVerbosePrint = .false.
-  toRecordTime = .false.
-  rngChoice = RNG_INTRINSIC
-  rngSeed = 1
+    ! Default values for cmd arguments.
+    maxTimestep = MODEL_TIME_STEPS
+    sampleSize = MODEL_SAMPLE_SIZE
+    startPopSize = MODEL_N0
+    recordFlag = nullRecFlag
+    isVerbosePrint = .false.
+    toRecordTime = .false.
+    rngChoice = RNG_INTRINSIC
+    rngSeed = 1
 
-  ! Initialize index variables
-  posArgCount = 1
-  argCount = 1
+    ! Read command-line arguments.
+    do argCount = 1, command_argument_count()
+      call get_command_argument(argCount, cmdArg, status=readStatus)
+      if (readStatus == -1) exit
 
-  ! Null case.
-  if (command_argument_count()  == 0) return
+      call toggleSwitchArg(cmdArg, readStatus, isVerbosePrint, toRecordTime)
+      if (readStatus == 0) cycle
 
-  ! Read command-line arguments.
-  parseArg: do
-    call get_command_argument(argCount, cmdArg, status=readStatus)
-    if (readStatus == -1) exit
+      call assignKeyValArg(cmdArg, readStatus, rngSeed, rngChoice)
+      if (readStatus == 0) cycle
 
-    select case(cmdArg)
-      ! ***Verbose parameter print.
+      call assignPosArg(cmdArg, maxTimestep, sampleSize, startPopSize, &
+          recordFlag)
+    end do
+  end subroutine getCmdArgs
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: toggleSwitchArg
+  !>  If the provided cmd argument is a valid switch, toggle it.
+  ! -------------------------------------------------------------------------- !
+  subroutine toggleSwitchArg(arg, status, isVerbosePrint, toRecordTime)
+    implicit none
+
+    character(len=*), intent(in)    :: arg
+    integer,          intent(out)   :: status
+    logical,          intent(inout) :: isVerbosePrint
+    logical,          intent(inout) :: toRecordTime
+
+    status = 0
+    select case (arg)
+      ! ***Print all model parameters.
       case ("-v", "--verbose")
         isVerbosePrint = .true.
-
-      ! ***Print help message.
+      
+      ! ***Show the help message and then exit.
       case ("-h", "--help")
         call printHelp()
         stop
       
-      ! *** Record mean elapsed time and its std deviation.
+      ! ***Record mean elapsed time and the standard deviation.
       case ("--record-time")
         toRecordTime = .true.
-      
-      ! *** Get choice for RNG.
-      case ("-rng")
-        ! Get next cmd arg.
-        argCount  = argCount + 1
-        call get_command_argument(argCount, cmdArg, status=readStatus)
 
-        if (readStatus /= 0) then
-          print "(a)", "***ERROR. Invalid RNG flag. It must be an integer."
-          stop
-        end if
-
-        read(cmdArg, *, iostat=readStatus) cmdInt
-
-        ! Check for the validity of the RNG flag.
-        if (readStatus == 0 .and. any(RNG_FLAGS == cmdInt)) then
-            rngChoice = cmdInt
-        else
-          print "(a)", "***ERROR. Invalid RNG flag. Try 'penna.out -h' " // &
-              "to check for the available RNGs and their corresponding " // &
-              "integer flags."
-          stop
-        end if
-
-      ! *** Get seed for the Mersenne Twister RNG.
-      case ("-seed")
-        ! Get next cmd arg.
-        argCount  = argCount + 1
-        call get_command_argument(argCount, cmdArg, status=readStatus)
-
-        if (readStatus /= 0) then
-          print "(a)", "***ERROR. Invalid value for seed was provided."
-          stop
-        end if
-
-        read(cmdArg, *, iostat=readStatus) cmdInt
-
-        ! Check validity of `seed` input.
-        if (readStatus == 0) then
-          if (cmdInt > 0) then
-            rngSeed = cmdInt
-          else
-            print "(a)", "***ERROR. RNG seed must be a positive integer."
-            stop
-          end if
-        else
-          print "(a)", "***ERROR. The provided RNG seed is not valid. It " // &
-              "must be a positive integer."
-          stop
-        end if
-      
-      ! ***Accept positional parameters.
       case default
-        read(cmdArg, *, iostat=readStatus) cmdInt
+        status = 1
+    end select
+  end subroutine toggleSwitchArg
 
-        ! Assign casted value if type casting succeeds.
-        if (readStatus == 0) then
-          select case (posArgCount)
-            ! ***Max time step.
-            case (1)
-              maxTimestep = cmdInt
-            ! ***Sample size.
-            case (2)
-              sampleSize = cmdInt
-            ! ***Starting population size.
-            case (3)
-              startPopSize = cmdInt
-            ! ***Record flag.
-            case (4)
-              recordFlag = cmdInt
-          end select
-        else
-          print "(3(a))", "***ERROR. '", trim(cmdArg) ,"' is not a valid " // &
-              " option. Try 'penna.out -h' for more information."
-          stop
-        end if
 
-        posArgCount = posArgCount + 1
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignPosArg
+  !>  Assign valid positional arguments.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignPosArg(arg, maxTimeStep, sampleSize, startPopSize, &
+        recordFlag)
+    implicit none
+
+    character(len=*), intent(in)    :: arg
+    integer,          intent(inout) :: maxTimestep
+    integer,          intent(inout) :: sampleSize
+    integer,          intent(inout) :: startPopSize
+    integer,          intent(inout) :: recordFlag
+
+    integer, save :: posArgCount = 1
+    integer       :: int
+    integer       :: status
+
+    read(arg, *, iostat=status) int
+    if (status == 0) then
+      select case (posArgCount)
+        ! ***Max time step.
+        case (1)
+          maxTimestep = int
+        ! ***Sample size.
+        case (2)
+          sampleSize = int
+        ! ***Starting population size.
+        case (3)
+          startPopSize = int
+        ! ***Record flag.
+        case (4)
+          recordFlag = int
       end select
 
-      ! Exit condition
-      if (argCount == command_argument_count()) then
-        exit
-      else
-        argCount = argCount + 1
+      posArgCount = posArgCount + 1
+    else
+      print "(3(a))", "***ERROR. '", trim(arg) ,"' is not a valid option. " // &
+                "Try 'penna.out -h' for more information."
+      stop
+    end if
+  end subroutine assignPosArg
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignKeyValArg
+  !>  Assign valid key-value arguments. 
+  ! -------------------------------------------------------------------------- !
+  subroutine assignKeyValArg(arg, status, rngSeed, rngChoice)
+    use RNG, only: RNG_FLAGS
+    implicit none
+
+    character(len=*), intent(in)    :: arg
+    integer,          intent(out)   :: status
+    integer,          intent(inout) :: rngSeed
+    integer,          intent(inout) :: rngChoice
+
+    character(len=MAX_LEN) :: key
+    character(len=MAX_LEN) :: valStr
+    integer :: val
+
+    call parseKeyValArg(arg, key, valStr, status)
+
+    if (status == 0) then
+      read(valStr, *, iostat=status) val
+
+      if (status == 0) then
+        select case (key)
+          ! ***RNG seed.
+          case ("seed")
+            ! Check if the provided seed is positive.
+            if (val > 0) then
+              rngSeed = val
+            else
+              print "(a)", "***ERROR. RNG seed must be a positive integer."
+              stop 
+            end if
+            
+          ! ***RNG choice.
+          case ("rng")
+            if (any(RNG_FLAGS == val)) then
+              rngChoice = val
+            else
+              print "(a)", "***ERROR. Invalid RNG flag. Try 'penna.out -h' "// &
+              "to check for the available RNGs and their corresponding " // &
+              "integer flags."
+              stop
+            end if
+
+          case default
+            status = 1
+        end select
       end if
-    end do parseArg
-  end subroutine getCmdArgs
+    end if
+  end subroutine assignKeyValArg
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: parseKeyValArg
+  !>  Read and parse key-value arguments.
+  ! -------------------------------------------------------------------------- !
+  subroutine parseKeyValArg(arg, key, val, status)
+    implicit none
+
+    character(len=*),       intent(in)  :: arg
+    character(len=MAX_LEN), intent(out) :: key
+    character(len=MAX_LEN), intent(out) :: val
+    integer,                intent(out) :: status
+
+    character :: char
+    integer   :: i
+    logical   :: isReadingKey
+
+    character(len=:), allocatable :: keyTemp
+    character(len=:), allocatable :: valTemp
+
+    key = ""
+    val = ""
+    allocate(character(len=0) :: keyTemp)
+    allocate(character(len=0) :: valTemp)
+    status = 1
+    isReadingKey = .true.
+
+    ! Filter out invalid key-arg arguments.
+    if (len(arg) < 1) return
+    if (arg(1:1) /= "-") return
+
+    do i = 2, len(arg)
+      char = arg(i:i)
+      
+      ! Shift from LHS to RHS
+      if (char == "=") then
+        isReadingKey = .false.
+        cycle
+      end if
+
+      ! Read key/val.
+      if (isReadingKey) then
+        keyTemp = keyTemp // char
+      else
+        valTemp = valTemp // char
+      end if
+    end do
+
+    ! Parsing failed.
+    if (isReadingKey) then
+      key = ""
+      val = ""
+      status = 1
+    ! Parsing succeed.
+    else
+      key = keyTemp
+      val = valTemp
+      status = 0
+    end if
+
+    if (allocated(keyTemp)) deallocate(keyTemp)
+    if (allocated(valTemp)) deallocate(valTemp)
+  end subroutine parseKeyValArg
 
 
   ! -------------------------------------------------------------------------- !
@@ -219,7 +314,8 @@ contains
         flagStr(3), adjustl("- Record the average demographics of the " // &
             "last 300 steps."), &
         flagStr(4), adjustl("- Record death count.")
-    write(*, "(7(' '), a/, 2(9(' '), 2(a)/))") "- RNG flags are as follows:", &
+    write(*, "(7(' '), a/, 2(9(' '), 2(a)/))") "- RNG flags and their "// &
+        "corresponding RNGs are as follows:", &
         rngStr(1), adjustl("- a KISS pseudo-random number generator " // &
             "(the intrinsic RNG)"), &
         rngStr(2), adjustl("- MT19937, a Mersenne Twister pseudo-random " // &
@@ -232,35 +328,35 @@ contains
   !>  Print various parameters.
   ! -------------------------------------------------------------------------- !
   subroutine printArgs(maxTimestep, sampleSize, startPopSize, recordFlag, & 
-    isVerbosePrint)
-  implicit none
+      isVerbosePrint)
+    implicit none
 
-  integer, intent(in) :: maxTimestep
-  integer, intent(in) :: sampleSize
-  integer, intent(in) :: startPopSize
-  integer, intent(in) :: recordFlag
-  logical, intent(in) :: isVerbosePrint
+    integer, intent(in) :: maxTimestep
+    integer, intent(in) :: sampleSize
+    integer, intent(in) :: startPopSize
+    integer, intent(in) :: recordFlag
+    logical, intent(in) :: isVerbosePrint
 
-  logical :: toRecord
-  toRecord = recordFlag /= nullRecFlag
+    logical :: toRecord
+    toRecord = recordFlag /= nullRecFlag
 
-  ! ***Header
-  print "(*(a))", separator 
-  print "(a)", "Asexual Penna model"
-  print "(*(a))", separator
+    ! ***Header
+    print "(*(a))", separator 
+    print "(a)", "Asexual Penna model"
+    print "(*(a))", separator
 
-  ! ***Body (Extended model parameters)
-  if (isVerbosePrint) call printModelParams
+    ! ***Body (Extended model parameters)
+    if (isVerbosePrint) call printModelParams
 
-  ! ***Body
-  print "(2(a20, i9/), a20, i9)", &
-    "Number of time steps", maxTimestep, &
-    "Sample size", sampleSize, &
-    "Starting pop size", startPopSize
-  print "(a20, L9)", "Record result", toRecord
+    ! ***Body
+    print "(2(a20, i9/), a20, i9)", &
+      "Number of time steps", maxTimestep, &
+      "Sample size", sampleSize, &
+      "Starting pop size", startPopSize
+    print "(a20, L9)", "Record result", toRecord
 
-  ! ***End
-  print "(*(a))", separator
+    ! ***End
+    print "(*(a))", separator
   end subroutine printArgs
 
 
@@ -269,14 +365,14 @@ contains
   !>  Print extended model parameters.
   ! -------------------------------------------------------------------------- !
   subroutine printModelParams
-  implicit none
-  print "(6(a20, i9/), a20, i9)", &
-    "Genome length",        MODEL_L, &
-    "Mutation threshold",   MODEL_T, &
-    "Birth rate",           MODEL_B, &
-    "Mutation rate",        MODEL_M, &
-    "Min reproduciton age", MODEL_R, &
-    "Max reproduction age", MODEL_R_MAX, &
-    "Carrying capacity",    MODEL_K
+    implicit none
+    print "(6(a20, i9/), a20, i9)", &
+      "Genome length",        MODEL_L, &
+      "Mutation threshold",   MODEL_T, &
+      "Birth rate",           MODEL_B, &
+      "Mutation rate",        MODEL_M, &
+      "Min reproduciton age", MODEL_R, &
+      "Max reproduction age", MODEL_R_MAX, &
+      "Carrying capacity",    MODEL_K
   end subroutine printModelParams
 end module CmdInterface

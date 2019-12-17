@@ -241,8 +241,14 @@ contains
     stdDevTime = sqrt(sampleSize*sumSqrd - sum**2)/real(sampleSize, &
         kind=writeRK)
 
-    ! Print time statistics.
-    print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+    ! Print elapsed time.
+    if (sampleSize > 1) then
+      print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+    else
+      print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+    end if
+
+    ! Print the standard deviation.
     if (sampleSize > 1) &
       print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
 
