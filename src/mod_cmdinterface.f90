@@ -126,7 +126,7 @@ contains
     end select
 
     ! Check valid combination of switches.
-    if (isVerbosePrint .eqv. isSilent) then
+    if (isVerbosePrint .and. isSilent) then
       print "(a)", "***ERROR. Verbose print (-v or --verbose) " // &
           "and silent print (-s or --silent) cannot be passed at the same time."
       stop
