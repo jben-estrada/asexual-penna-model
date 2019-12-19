@@ -11,3 +11,4 @@ plot.py
 *.smod
 *.code-workspace
 *.out
+*.d
