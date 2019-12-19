@@ -23,6 +23,7 @@ module CmdInterface
     integer :: recordFlag     ! Record flag (see `Penna` module for values)
     integer :: rngChoice      ! RNG choice.
     integer :: rngSeed        ! Seed for the RNG.
+    logical :: isSilent       ! Run the program silently
     logical :: isVerbosePrint ! Print all scalar model parameters
     logical :: toRecordTime   ! Logical value, record mean elapsed time.
   end type CmdArgRecord
@@ -48,6 +49,7 @@ contains
     new % recordFlag = nullRecFlag
     new % isVerbosePrint = .false.
     new % toRecordTime = .false.
+    new % isSilent = .false.
     new % rngChoice = RNG_INTRINSIC
     new % rngSeed = 1
   end subroutine initCmdArgRecord
@@ -74,7 +76,7 @@ contains
       if (status == -1) exit
 
       call toggleSwitchArg(cmdArg, status, cmdArgs%isVerbosePrint, &
-          cmdArgs%toRecordTime)
+          cmdArgs%toRecordTime, cmdArgs%isSilent)
       if (status == 0) cycle
 
       call assignKeyValArg(cmdArg, status, cmdArgs%rngSeed, cmdArgs%rngChoice)
@@ -90,13 +92,15 @@ contains
   ! SUBROUTINE: toggleSwitchArg
   !>  If the provided cmd argument is a valid switch, toggle it.
   ! -------------------------------------------------------------------------- !
-  subroutine toggleSwitchArg(arg, status, isVerbosePrint, toRecordTime)
+  subroutine toggleSwitchArg(arg, status, isVerbosePrint, toRecordTime, &
+        isSilent)
     implicit none
 
     character(len=*), intent(in)    :: arg
     integer,          intent(out)   :: status
     logical,          intent(inout) :: isVerbosePrint
     logical,          intent(inout) :: toRecordTime
+    logical,          intent(inout) :: isSilent
 
     status = 0
     select case (arg)
@@ -109,6 +113,10 @@ contains
         call printHelp()
         stop
       
+      ! ***Run the program silently; do not print the model params and result.
+      case ("-s", "--silent")
+        isSilent = .true.
+      
       ! ***Record mean elapsed time and the standard deviation.
       case ("--record-time")
         toRecordTime = .true.
@@ -116,6 +124,13 @@ contains
       case default
         status = 1
     end select
+
+    ! Check valid combination of switches.
+    if (isVerbosePrint .eqv. isSilent) then
+      print "(a)", "***ERROR. Verbose print (-v or --verbose) " // &
+          "and silent print (-s or --silent) cannot be passed at the same time."
+      stop
+    end if
   end subroutine toggleSwitchArg
 
 
@@ -289,15 +304,15 @@ contains
     use RNG, only: RNG_FLAGS
     implicit none
 
-    character(len=3) :: flagStr(4) 
-    character(len=3) :: rngStr(2) 
+    character(len=3) :: recFlagStr(4)
+    character(len=3) :: rngStr(2)
     integer :: flagArr(4) = &
       [nullRecFlag, popRecFlag, demogRecFlag, deathRecFlag]
     integer :: i
 
     ! Cast record flag integers to strings.
-    do i = 1, size(flagStr)
-      write(flagStr(i), "(i2)") flagArr(i)
+    do i = 1, size(recFlagStr)
+      write(recFlagStr(i), "(i2)") flagArr(i)
     end do
 
     ! Cast RNG flag integers to strings.
@@ -315,6 +330,8 @@ contains
     print "(/a, *(/7(' '), 2(a)))", "options:", &
       adjustl("-h, --help      "), adjustl("Show this message and exit."), &
       adjustl("-v, --verbose   "), adjustl("Show all the model parameters."), &
+      adjustl("-s, --silent    "), adjustl("Do not show the model " // &
+          "parameters. The elapsed time is still shown."), &
       adjustl("--record-time   "), adjustl("Record the average elapsed " // &
           "time and the standard deviation."), &
       adjustl("-seed=[int]     "), adjustl("Set seed for the RNG to be " // &
@@ -334,11 +351,11 @@ contains
     ! ***Notes.
     write(*, "(a/, 7(' '), a/, 4(9(' '), 2(a)/))", advance="no") "notes:", &
         adjustl("- Record flags are as follows:"), &
-        flagStr(1), adjustl("- Do not record."), &
-        flagStr(2), adjustl("- Record the population size per unit time."), &
-        flagStr(3), adjustl("- Record the average demographics of the " // &
+        recFlagStr(1), adjustl("- Do not record."), &
+        recFlagStr(2), adjustl("- Record the population size per unit time."), &
+        recFlagStr(3), adjustl("- Record the average demographics of the " // &
             "last 300 steps."), &
-        flagStr(4), adjustl("- Record death count.")
+        recFlagStr(4), adjustl("- Record death count.")
     write(*, "(7(' '), a/, 2(9(' '), 2(a)/))") "- RNG flags and their "// &
         "corresponding RNGs are as follows:", &
         rngStr(1), adjustl("- a KISS pseudo-random number generator " // &
@@ -358,6 +375,9 @@ contains
 
     logical :: toRecord
     toRecord = cmdArgs%recordFlag /= nullRecFlag
+
+    ! Skip the Argument printing.
+    if (cmdArgs%isSilent) return
 
     ! ***Header
     print "(*(a))", separator 

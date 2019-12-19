@@ -58,5 +58,5 @@ program Main
 
   ! Wrap up. Deallocate any global allocatable variables.
   call wrapUp()
-  print "(*(a))", separator
+  if (.not.cmdArgs%isSilent) print "(*(a))", separator
 end program Main
