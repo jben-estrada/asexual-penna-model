@@ -192,7 +192,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
         toRecordTime)
-    use TickerType
+    use ProgBarType
     implicit none
 
     integer, intent(in) :: maxTimeStep
@@ -211,12 +211,12 @@ contains
     real(kind=writeRK)    :: sum
     real(kind=writeRK)    :: sumSqrd
 
-    type(Writer) :: timeWriter    ! `Writer` object to write timings stats
-    type(Ticker) :: runTicker     ! `Ticker` object for the fancy progress bar
+    type(ProgressBar) :: progBar       ! A `ProgressBar` object.
+    type(Writer)      :: timeWriter    ! A `Writer` object for writing timings.
     integer :: i
 
-    ! Initialize `runTicker`.
-    runTicker = constructTicker(20, sampleSize)
+    ! Initialize the progress bar.
+    call initProgressBar(progBar, 20, sampleSize)
 
     ! Call and time the `run` subroutine.
     sum = 0.
@@ -237,8 +237,8 @@ contains
       sum = sum + (endTimeReal - startTimeReal)*1e3
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
-      ! Print progress bar
-      call runTicker%incrementTick(show=.true.)
+      ! Print the progress bar.
+      call progBar%incrementCounter(show=.true.)
     end do
 
     ! Get average elapsed time and its std deviation.

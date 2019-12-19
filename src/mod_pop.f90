@@ -441,7 +441,7 @@ contains
   !!  pointer is pointing at. 
   ! -------------------------------------------------------------------------- !
   subroutine checkCurrIndivDeath(self, popSize)
-    use rng, only: getRandNumber
+    use RNG, only: getRandNumber
     implicit none
 
     class(PersonList), intent(inout) :: self
