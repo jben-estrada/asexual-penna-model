@@ -13,7 +13,19 @@ module CmdInterface
 
   integer :: k  ! Index variable for `separator`
   character, public, parameter :: separator(29) = [("=", k = 1, 29)]
-  integer,           parameter :: MAX_LEN = 99
+  integer,           parameter :: MAX_LEN = 99  ! Maximum buffer char length.
+
+  ! A unified container for the command-line arguments.
+  type, public :: CmdArgRecord
+    integer :: maxTimestep    ! Maximum time steps
+    integer :: sampleSize     ! Sample size
+    integer :: startPopSize   ! Starting population size
+    integer :: recordFlag     ! Record flag (see `Penna` module for values)
+    integer :: rngChoice      ! RNG choice.
+    integer :: rngSeed        ! Seed for the RNG.
+    logical :: isVerbosePrint ! Print all scalar model parameters
+    logical :: toRecordTime   ! Logical value, record mean elapsed time.
+  end type CmdArgRecord
 
   public :: getCmdArgs
   public :: printArgs
@@ -21,50 +33,55 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initCmdArgRecord
+  !>  Initialize a `CmdArgRecord` object.
+  ! -------------------------------------------------------------------------- !
+  subroutine initCmdArgRecord(new)
+    use RNG, only: RNG_INTRINSIC
+    implicit none
+    type(CmdArgRecord), intent(out) :: new
+  
+    ! Default values for command-line arguments.
+    new % maxTimestep = MODEL_TIME_STEPS
+    new % sampleSize = MODEL_SAMPLE_SIZE
+    new % startPopSize = MODEL_N0
+    new % recordFlag = nullRecFlag
+    new % isVerbosePrint = .false.
+    new % toRecordTime = .false.
+    new % rngChoice = RNG_INTRINSIC
+    new % rngSeed = 1
+  end subroutine initCmdArgRecord
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: getCmdArgs
   !>  Get command-line arguments.
   ! -------------------------------------------------------------------------- !
-  subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
-      rngChoice, rngSeed, isVerbosePrint, toRecordTime)
-    use RNG, only: RNG_INTRINSIC
+  subroutine getCmdArgs(cmdArgs)
     implicit none
-
-    integer, intent(out) :: maxTimestep
-    integer, intent(out) :: sampleSize
-    integer, intent(out) :: startPopSize
-    integer, intent(out) :: recordFlag
-    integer, intent(out) :: rngChoice
-    integer, intent(out) :: rngSeed
-    logical, intent(out) :: isVerbosePrint
-    logical, intent(out) :: toRecordTime
-
-    character(len=32)      :: cmdArg
+    type(CmdArgRecord), intent(out) :: cmdArgs
+  
+    character(len=MAX_LEN) :: cmdArg
     integer :: status
     integer :: argCount
 
-    ! Default values for command-line arguments.
-    maxTimestep = MODEL_TIME_STEPS
-    sampleSize = MODEL_SAMPLE_SIZE
-    startPopSize = MODEL_N0
-    recordFlag = nullRecFlag
-    isVerbosePrint = .false.
-    toRecordTime = .false.
-    rngChoice = RNG_INTRINSIC
-    rngSeed = 1
+    ! Assign default values.
+    call initCmdArgRecord(cmdArgs)
 
     ! Read command-line arguments.
     do argCount = 1, command_argument_count()
       call get_command_argument(argCount, cmdArg, status=status)
       if (status == -1) exit
 
-      call toggleSwitchArg(cmdArg, status, isVerbosePrint, toRecordTime)
+      call toggleSwitchArg(cmdArg, status, cmdArgs%isVerbosePrint, &
+          cmdArgs%toRecordTime)
       if (status == 0) cycle
 
-      call assignKeyValArg(cmdArg, status, rngSeed, rngChoice)
+      call assignKeyValArg(cmdArg, status, cmdArgs%rngSeed, cmdArgs%rngChoice)
       if (status == 0) cycle
 
-      call assignPosArg(cmdArg, maxTimestep, sampleSize, startPopSize, &
-          recordFlag)
+      call assignPosArg(cmdArg, cmdArgs%maxTimestep, cmdArgs%sampleSize, &
+          cmdArgs%startPopSize, cmdArgs%recordFlag)
     end do
   end subroutine getCmdArgs
 
@@ -335,18 +352,12 @@ contains
   ! SUBROUTINE: printArgs
   !>  Print various parameters.
   ! -------------------------------------------------------------------------- !
-  subroutine printArgs(maxTimestep, sampleSize, startPopSize, recordFlag, & 
-      isVerbosePrint)
+  subroutine printArgs(cmdArgs)
     implicit none
-
-    integer, intent(in) :: maxTimestep
-    integer, intent(in) :: sampleSize
-    integer, intent(in) :: startPopSize
-    integer, intent(in) :: recordFlag
-    logical, intent(in) :: isVerbosePrint
+    type(CmdArgRecord), intent(in) :: cmdArgs
 
     logical :: toRecord
-    toRecord = recordFlag /= nullRecFlag
+    toRecord = cmdArgs%recordFlag /= nullRecFlag
 
     ! ***Header
     print "(*(a))", separator 
@@ -354,13 +365,13 @@ contains
     print "(*(a))", separator
 
     ! ***Body (Extended model parameters)
-    if (isVerbosePrint) call printModelParams
+    if (cmdArgs%isVerbosePrint) call printModelParams
 
     ! ***Body
     print "(2(a20, i9/), a20, i9)", &
-      "Number of time steps", maxTimestep, &
-      "Sample size", sampleSize, &
-      "Starting pop size", startPopSize
+      "Number of time steps", cmdArgs%maxTimestep, &
+      "Sample size",          cmdArgs%sampleSize,  &
+      "Starting pop size",    cmdArgs%startPopSize
     print "(a20, L9)", "Record result", toRecord
 
     ! ***End

@@ -30,39 +30,31 @@ program Main
   use RNG, only: setSeed, chooseRNG
   implicit none
 
- ! Arguments to run the simulation.
-  integer :: timeSteps      ! Maximum time steps
-  integer :: sampleSize     ! Sample size
-  integer :: startPopSize   ! Starting population size
-  integer :: recordFlag     ! Record flag (see `Penna` module for values)
-  integer :: rngChoice      ! Seed for the RNG.
-  integer :: rngSeed        ! Seed for the RNG.
-  logical :: isVerbosePrint ! Print all scalar model parameters
-  logical :: toRecordTime   ! Logical val, record mean elapsed time.
+ ! A unified record for the command-line arguments.
+  type(CmdArgRecord) :: cmdArgs
 
   ! Get and then set model parameters
   ! ---------------------------------
   ! Initialize model parameters.
   call readModelParam()
   ! Get command-line arguments.
-  call getCmdArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-      rngChoice, rngSeed, isVerbosePrint, toRecordTime)
+  call getCmdArgs(cmdArgs)
+
   ! Pretty print cmd arguments and model parameters.
-  call printArgs(timeSteps, sampleSize, startPopSize, recordFlag, &
-      isVerbosePrint)
+  call printArgs(cmdArgs)
   ! ---------------------------------
 
   ! Initialize the random number generator.
   ! ---------------------------------------
   ! Choose RNG.
-  call chooseRNG(rngChoice)
+  call chooseRNG(cmdArgs%rngChoice)
   ! Set the seed for the chosen RNG.
-  call setSeed(rngSeed)
+  call setSeed(cmdArgs%rngSeed)
   ! ---------------------------------------
 
   ! Run the Penna model `sampleSize` times.
-  call multipleRun(timeSteps, startPopSize, sampleSize, recordFlag, &
-      toRecordTime)
+  call multipleRun(cmdArgs%maxTimestep, cmdArgs%startPopSize, &
+      cmdArgs%sampleSize, cmdArgs%recordFlag, cmdArgs%toRecordTime)
 
   ! Wrap up. Deallocate any global allocatable variables.
   call wrapUp()
