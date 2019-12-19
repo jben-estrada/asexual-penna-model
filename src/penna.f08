@@ -90,11 +90,13 @@ contains
       select case (recordFlag)
         case (popRecFlag)
           call runWriter%write(popFlag, int(popSize, kind=writeIK))
+
         case (demogRecFlag)
           call runWriter%write((ageDstrbFlag), &
               int(demog_ageDstrb, kind=writeIK))
           call runWriter%write(genomeDstrbFlag, &
               int(demog_genomeDstrb, kind=writeIK))
+
         case (deathRecFlag)
           call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
       end select
@@ -143,12 +145,15 @@ contains
         select case (population%getCurrIndivDeathIdx())
           case (DEAD_OLD_AGE)
             deathCount(1) = deathCount(1) + 1
+
           case (DEAD_MUTATION)
             deathCount(2) = deathCount(2) + 1
+
           case (DEAD_VERHULST)
             deathCount(3) = deathCount(3) + 1
+
           case default
-            error stop "Dead `Person` object has an invalid death index."
+            stop "Dead `Person` object has an invalid death index."
         end select
 
         popSizeChange = popSizeChange - 1
@@ -289,6 +294,7 @@ contains
     select case (recordFlag)
       case (nullRecFlag)
         ! Placeholder. Does nothing.
+
       case (popRecFlag)
         call runWriter%initialize(popFlag)
         call runWriter%writeHeader(popFlag, ["population size"])
@@ -308,7 +314,7 @@ contains
       case default
         print "(a, i0, a)", "***ERROR. '", recordFlag, &
             "' is an invalid record flag"
-        error stop
+        stop
     end select
   end subroutine initializeRunWriter
 

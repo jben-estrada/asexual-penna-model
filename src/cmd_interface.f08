@@ -1,4 +1,11 @@
 module CmdInterface
+  ! -------------------------------------------------------------------------- !
+  ! MODULE: CmdInterface
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Module containing procedures for the simple command-line interface of
+  !!  the program.
+  ! -------------------------------------------------------------------------- !
   use ModelParam
   use Penna
   implicit none
@@ -15,8 +22,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: getCmdArgs
-  !>  Get command line arguments.
-  !   TODO: Would be great if the dummy args are reduced.
+  !>  Get command-line arguments.
   ! -------------------------------------------------------------------------- !
   subroutine getCmdArgs(maxTimestep, sampleSize, startPopSize, recordFlag, &
       rngChoice, rngSeed, isVerbosePrint, toRecordTime)
@@ -33,10 +39,10 @@ contains
     logical, intent(out) :: toRecordTime
 
     character(len=32)      :: cmdArg
-    integer :: readStatus
+    integer :: status
     integer :: argCount
 
-    ! Default values for cmd arguments.
+    ! Default values for command-line arguments.
     maxTimestep = MODEL_TIME_STEPS
     sampleSize = MODEL_SAMPLE_SIZE
     startPopSize = MODEL_N0
@@ -48,14 +54,14 @@ contains
 
     ! Read command-line arguments.
     do argCount = 1, command_argument_count()
-      call get_command_argument(argCount, cmdArg, status=readStatus)
-      if (readStatus == -1) exit
+      call get_command_argument(argCount, cmdArg, status=status)
+      if (status == -1) exit
 
-      call toggleSwitchArg(cmdArg, readStatus, isVerbosePrint, toRecordTime)
-      if (readStatus == 0) cycle
+      call toggleSwitchArg(cmdArg, status, isVerbosePrint, toRecordTime)
+      if (status == 0) cycle
 
-      call assignKeyValArg(cmdArg, readStatus, rngSeed, rngChoice)
-      if (readStatus == 0) cycle
+      call assignKeyValArg(cmdArg, status, rngSeed, rngChoice)
+      if (status == 0) cycle
 
       call assignPosArg(cmdArg, maxTimestep, sampleSize, startPopSize, &
           recordFlag)
@@ -212,14 +218,15 @@ contains
     character(len=:), allocatable :: keyTemp
     character(len=:), allocatable :: valTemp
 
+    ! Initialize output and local variables.
     key = ""
     val = ""
+    status = 1  ! NOTE: A non-zero value for `status` means error. 
     allocate(character(len=0) :: keyTemp)
     allocate(character(len=0) :: valTemp)
-    status = 1
     isReadingKey = .true.
 
-    ! Filter out invalid key-arg arguments.
+    ! Filter out invalid key-val arguments.
     if (len(arg) < 1) return
     if (arg(1:1) /= "-") return
 
@@ -276,6 +283,7 @@ contains
       write(flagStr(i), "(i2)") flagArr(i)
     end do
 
+    ! Cast RNG flag integers to strings.
     do i = 1, size(rngStr)
       write(rngStr(i), "(i2)") RNG_FLAGS(i)
     end do
@@ -366,6 +374,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printModelParams
     implicit none
+
     print "(6(a20, i9/), a20, i9)", &
       "Genome length",        MODEL_L, &
       "Mutation threshold",   MODEL_T, &

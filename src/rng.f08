@@ -1,6 +1,6 @@
 module RNG
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  RNG
+  ! MODULE: RNG
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing procedures for setting and using various RNGs.
