@@ -30,7 +30,7 @@ program Main
   use RNG, only: setSeed, chooseRNG
   implicit none
 
- ! A unified record for the command-line arguments.
+  ! A unified record for the command-line arguments.
   type(CmdArgRecord) :: cmdArgs
 
   ! Get and then set model parameters
