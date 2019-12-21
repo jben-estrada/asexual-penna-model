@@ -343,6 +343,8 @@ contains
     print "(a/, *(7(' '), 2(a), i0, a/))", "positional parameters:", &
       adjustl("max-time-step   "), adjustl("Maximum time step. [default: "), &
           MODEL_TIME_STEPS, "]", &
+      adjustl("sample-size     "), adjustl("Sample size. " // &
+          "[default: "), MODEL_SAMPLE_SIZE, "]", &
       adjustl("start-pop-size  "), adjustl("Starting population size. " // &
           "[default: "), MODEL_N0, "]", &
       adjustl("record-flag     "), adjustl("Record specified data. " // &
