@@ -5,7 +5,7 @@ default:
 	@$(MAKE) -C $(SRCDIR)
 
 debug_build:
-	@$(MAKE) debug -C $(SRCDIR)
+	@$(MAKE) debug_build -C $(SRCDIR)
 
 # Clean dependency and object files.
 clean:

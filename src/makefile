@@ -17,9 +17,6 @@ DEPS :=$(SRCS:.f90=.d)
 
 all: default_build
 
-debug:
-	@$(foreach name,$(OBJS),echo $(name);)
-
 # Default build (release build).
 default_build: FFLAGS += -Ofast
 default_build: $(BINDIR)/$(TARGET)
@@ -41,22 +38,6 @@ $(BINDIR)/$(TARGET): $(OBJS)
 	@echo Compile $<...
 	@$(FC) $(FFLAGS) $(FDEP) -c $<
 
-
-# Module dependencies
-penna.mod: pop.mod writertype.mod modelparam.mod demographics.mod \
-	flag.mod progbartype.mod
-pop.mod: gene.mod flag.mod modelparam.mod randind.mod rng.mod
-cmdinterface.mod: modelparam.mod penna.mod rng.mod
-writertype.mod: updatearray.mod saveformat.mod
-demographics.mod: gene.mod modelparam.mod
-randind.mod: rng.mod
-rng.mod: mtmod.mod
-modelparam.mod:	
-flag.mod:
-progbartype.mod:
-gene.mod:
-updatearray.mod:
-saveformat.mod:
 
 .PHONY: clean
 clean:
