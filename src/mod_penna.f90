@@ -93,8 +93,6 @@ contains
         case (demogRecFlag)
           call runWriter%write((ageDstrbFlag), &
               int(demog_ageDstrb, kind=writeIK))
-          call runWriter%write(genomeDstrbFlag, &
-              int(demog_genomeDstrb, kind=writeIK))
 
         case (deathRecFlag)
           call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
@@ -168,11 +166,8 @@ contains
       end if
 
       ! Record demographics.
-      if (countdown <= DEMOG_LAST_STEPS) then
-        call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
-        call updateGenomeDstrb(population%getCurrIndivGenome(), &
-            demog_genomeDstrb)
-      end if
+      if (countdown <= DEMOG_LAST_STEPS) &
+          call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
 
       ! Proceed to the next element of the linked list.
       call population%nextElem(listStatus)
@@ -299,9 +294,8 @@ contains
         call runWriter%writeHeader(popFlag, ["population size"])
 
       case (demogRecFlag)
-        call runWriter%initialize([ageDstrbFlag, genomeDstrbFlag])
+        call runWriter%initialize(ageDstrbFlag)
         call runWriter%writeHeader(ageDstrbFlag, ["age =>"])
-        call runWriter%writeHeader(genomeDstrbFlag, ["age =>"])
 
       case (deathRecFlag)
         call runWriter%initialize(deathFlag)
