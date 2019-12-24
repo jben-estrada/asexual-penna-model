@@ -1,25 +1,16 @@
+# File names
+SRC_LIST :=source_list
 LIB_SRCS :=$(wildcard *.f90)
-LIB_OBJS :=$(LIB_SRCS:.f90=.o)
-LIB_DEPS :=$(LIB_SRCS:.f90=.d)
-LIB_MODS  =$(wildcard *.mod)
 
-VAR_FILE :=../compile.variables
+all:
+	@echo usage:
+	@echo "\tRun with 'copy_lib' rule to copy library to ./src"
+	@echo "\tRun with 'remove_lib' rule to remove library in ./src\n"
 
--include $(VAR_FILE)
+# Copy third-party library into the main source directory
+copy_lib: $(LIB_SRCS)
+	@$(foreach file,$^, cp $(file) ../;)
 
-all: default_build
-
-default_build: FFLAGS += -Ofast
-default_build: $(LIB_OBJS)
-# default_build: move_files
-
-debug_build: FFLAGS += -g -Wall -fcheck=all
-debug_build: $(LIB_OBJS)
-# debug_build: move_files
-
-%.d %.o: %.f90
-	@echo Compile third-party library $<...
-	@$(FC) $(FFLAGS) $(FDEP) -I ../ -J ../ -o ../$@ -c $<
-
-move_files: $(LIB_OBJS) $(LIB_DEPS) $(LIB_MODS)
-	@$(foreach file,$^, mv $(file) $(addprefix ../,$(file));)
+# Remove third-party library into the main source directory
+remove_lib: $(addprefix ../,$(LIB_SRCS))
+	@$(foreach file,$^, rm $(file);)
