@@ -14,6 +14,7 @@ module RandInd
   public :: generateRandInt
 contains
 
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: generateIndices
   !>  Generate a rank-1 array of unique integers in the interval

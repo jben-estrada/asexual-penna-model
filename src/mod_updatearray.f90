@@ -15,6 +15,7 @@ module UpdateArray
   integer, public, parameter :: arrIK = int32
   integer, public, parameter :: arrRK = real32
 
+  !----------------------------------------------------------------------------!
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: arrayInsert
   !>  Insert a number (either integer4 (int32) or real8 (int64)) of either rank
@@ -54,6 +55,7 @@ module UpdateArray
     procedure :: arrayRemoveElem_int
     procedure :: arrayRemoveElem_real
   end interface arrayRemoveElem
+  !----------------------------------------------------------------------------!
 
   public :: arrayInsert
   public :: arrayRemove

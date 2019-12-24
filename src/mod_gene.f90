@@ -15,6 +15,7 @@ module Gene
       [GENE_HEALTHY, GENE_UNHEALTHY]
 contains
 
+
   ! -------------------------------------------------------------------------- !
   ! FUNCTION:  Gene_randomGene
   !>  Generate a random gene. There is (should be) 1/2 probability of

@@ -61,6 +61,7 @@ module WriterType
   public :: deathFlag
 
   !----------------------------------------------------------------------------!
+  !----------------------------------------------------------------------------!
   ! GENERIC SUBROUTINE: constructWriter
   !>  Construct a `Writer` object.
   !----------------------------------------------------------------------------!
@@ -150,9 +151,11 @@ module WriterType
       integer,       intent(in)    :: flags(:)
     end subroutine
   end interface
+  !----------------------------------------------------------------------------!
 
   public :: constructWriter
 contains
+
 
   ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   function constructWriter_array(flags, initialize) result(new)

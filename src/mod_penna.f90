@@ -39,7 +39,6 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
   !>  Run the Penna model.
-  !   TODO: Seems to be too long. Could be separated into different procedures. 
   ! -------------------------------------------------------------------------- !
   subroutine run(maxTimestep, startPopSize, recordFlag)
     use Demographics
@@ -116,7 +115,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: evalPopulation
-  !>  Evaluate the population, i.e. 
+  !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
   subroutine evalPopulation(population, deathCount, popSize, countdown)
     use Flag
