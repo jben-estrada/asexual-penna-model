@@ -240,9 +240,12 @@ contains
   !>  Have the `Person` object the current pointer is pointing at
   !!  to reproduce.
   ! -------------------------------------------------------------------------- !
-  subroutine reproduceCurrIndiv(self)
+  subroutine reproduceCurrIndiv(self, updateGenome)
+    use Demographics, only: updateGenomeDstrb
     implicit none
+
     class(PersonList), intent(inout) :: self
+    logical,           intent(in)    :: updateGenome
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
@@ -259,6 +262,9 @@ contains
       call initializeIndiv(newIndiv_ptr, self%current_ptr%genome)
 
       oldIndiv_ptr%next => newIndiv_ptr
+
+      ! Update genome.
+      if (updateGenome) call updateGenomeDstrb(newIndiv_ptr%genome)
     end do
 
     ! Update the new tail.
@@ -308,7 +314,7 @@ contains
     if (associated(self%current_ptr)) then
       getCurrIndivAge = self%current_ptr%age
     else
-      error stop "The current pointer of a linked list is disassociated."
+      stop "The current pointer of a linked list is disassociated."
     end if
   end function getCurrIndivAge
 
@@ -327,7 +333,7 @@ contains
     if (associated(self%current_ptr)) then
       genome = self%current_ptr%genome
     else
-      error stop "The current pointer of a linked list is disassociated."
+      stop "The current pointer of a linked list is disassociated."
     end if
   end function getCurrIndivGenome
 

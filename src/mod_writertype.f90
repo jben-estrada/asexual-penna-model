@@ -57,9 +57,9 @@ module WriterType
   public :: popFlag
   public :: timeFlag
   public :: ageDstrbFlag
-  public :: genomeDstrbFlag
   public :: deathFlag
-
+  public :: divIdxFlag
+  public :: formatFlags
   !----------------------------------------------------------------------------!
   !----------------------------------------------------------------------------!
   ! GENERIC SUBROUTINE: constructWriter
@@ -123,7 +123,6 @@ module WriterType
       integer,       intent(in)    :: flag
     end subroutine
 
-
     module subroutine writer_listInitialize(self, flags)
       class(Writer), intent(inout) :: self
       integer,       intent(in)    :: flags(:)
@@ -158,13 +157,13 @@ contains
 
 
   ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
-  function constructWriter_array(flags, initialize) result(new)
+  subroutine constructWriter_array(new, flags, initialize)
     implicit none
 
-    integer, intent(in) :: flags(:)
-    logical, optional   :: initialize
+    type(Writer), intent(out) :: new
+    integer,      intent(in)  :: flags(:)
+    logical,      optional    :: initialize
 
-    type(Writer) :: new
     integer      :: i
     integer      :: flag
 
@@ -185,16 +184,16 @@ contains
         call new%initialize
       end if
     end if
-  end function constructWriter_array
+  end subroutine constructWriter_array
 
 
-  function constructWriter_scalar(flag, initialize) result(new)
+  subroutine constructWriter_scalar(new, flag, initialize)
     implicit none
 
-    integer, intent(in) :: flag
-    logical, optional   :: initialize
+    type(Writer), intent(out) :: new
+    integer,      intent(in)  :: flag
+    logical,      optional    :: initialize
 
-    type(Writer) :: new
 
     allocate(new%enabledFlags(0))
     allocate(new%liveFlags(0))
@@ -211,7 +210,7 @@ contains
         call new%initialize
       end if
     end if
-  end function constructWriter_scalar
+  end subroutine constructWriter_scalar
 
 
   !----------------------------------------------------------------------------!
@@ -349,10 +348,6 @@ submodule (WriterType) writer_write_procedures
   !!  type-bound procedure `[Writer]%write`.
   !----------------------------------------------------------------------------!
   implicit none
-  ! Format array
-  character(len=MAXLEN), parameter :: formats(FILECOUNT) = &
-      [popFormat, timeFormat, ageDstrbFormat, genomeDstrbFormat, deathFormat]
-  
 contains
   module subroutine writer_write_int(self, flag, arg)
     implicit none

@@ -4,8 +4,8 @@
 /results
 /test
 /bin
+/plot
 plot.sh
-plot.py
 *.csv
 *.mod
 *.smod

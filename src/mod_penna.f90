@@ -13,10 +13,11 @@ module Penna
   private
 
   ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: nullRecFlag = 0  ! Null
-  integer, parameter, public :: popRecFlag = 1   ! Population
-  integer, parameter, public :: demogRecFlag = 2 ! Age and genome demographics
-  integer, parameter, public :: deathRecFlag = 3 ! Death count
+  integer, parameter, public :: nullRecFlag = 0   ! *Record nothing.
+  integer, parameter, public :: popRecFlag = 1    ! Population.
+  integer, parameter, public :: demogRecFlag = 2  ! Age and genome demographics.
+  integer, parameter, public :: deathRecFlag = 3  ! Death count.
+  integer, parameter, public :: divIdxRecFlag = 4 ! Diversity index.
 
   public :: multipleRun
   public :: readModelParam
@@ -60,7 +61,7 @@ contains
     population = constructPersonList(startPopSize)
     popSize = startPopSize
     deathCount(:) = 0
-    call resetDstrbs()
+    call resetAgeDstrb()
     call initializeRunWriter(runWriter, recordFlag)
 
     ! Enable/disable demographics recording.
@@ -83,7 +84,7 @@ contains
 
       ! Evaluate population
       call evalPopulation(population, deathCount, popSize, &
-          maxTimestep - timeStep)
+          maxTimestep - timeStep, recordFlag)
 
       ! Record result.
       select case (recordFlag)
@@ -92,22 +93,27 @@ contains
 
         case (demogRecFlag)
           call runWriter%write((ageDstrbFlag), &
-              int(demog_ageDstrb, kind=writeIK))
+              int(ageDistribution, kind=writeIK))
 
         case (deathRecFlag)
           call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
+
+        case (divIdxRecFlag)
+          call runWriter%write(divIdxFlag, &
+              real(getDiversityIdx(), kind=writeRK))
       end select
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call population%resetReadPtrs()
-      if (recordFlag == demogRecFlag) call resetDstrbs()
+      if (recordFlag == demogRecFlag) call resetAgeDstrb()
+      if (recordFlag == divIdxRecFlag) call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
     call population%freePtr(popSize)
     call runWriter%close()
-    call deallocDstrb()
+    call deallocAgeDstrb()
   end subroutine run
 
 
@@ -115,7 +121,7 @@ contains
   ! SUBROUTINE: evalPopulation
   !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(population, deathCount, popSize, countdown)
+  subroutine evalPopulation(population, deathCount, popSize, countdown, recFlag)
     use Flag
     use Demographics
     implicit none
@@ -124,6 +130,7 @@ contains
     integer,          intent(inout) :: deathCount(3)
     integer,          intent(inout) :: popSize
     integer,          intent(in)    :: countdown
+    integer,          intent(in)    :: recFlag
 
     integer :: popSizeChange
     integer :: listStatus
@@ -158,16 +165,20 @@ contains
         ! Update age of the alive individuals.
         call population%updateCurrIndivAge()
 
+        ! Update genome distribution.
+        if (recFlag == divIdxRecFlag) &
+            call updateGenomeDstrb(population%getCurrIndivGenome())
+
         ! Check for birth events.
         if (population%isCurrIndivMature()) then
-          call population%reproduceCurrIndiv()
+          call population%reproduceCurrIndiv(recFlag == divIdxRecFlag)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
 
       ! Record demographics.
       if (countdown <= DEMOG_LAST_STEPS) &
-          call updateAgeDstrb(population%getCurrIndivAge(), demog_ageDstrb)
+          call updateAgeDstrb(population%getCurrIndivAge(), ageDistribution)
 
       ! Proceed to the next element of the linked list.
       call population%nextElem(listStatus)
@@ -253,7 +264,7 @@ contains
 
     ! Record mean time and std deviation.
     if (toRecordTime) then
-      timeWriter = constructWriter([timeFlag])
+      call constructWriter(timeWriter, [timeFlag])
       call timeWriter%initialize()
       call timeWriter%writeHeader(timeFlag, &
           ["max time step       ", &
@@ -282,8 +293,7 @@ contains
     type(Writer), intent(inout) :: runWriter
     integer,      intent(in)    :: recordFlag
 
-    runWriter = constructWriter([popFlag, ageDstrbFlag, genomeDstrbFlag, &
-        deathFlag])
+    call constructWriter(runWriter, formatFlags)
 
     select case (recordFlag)
       case (nullRecFlag)
@@ -303,6 +313,11 @@ contains
             ["death by old age        ", &
              "death by mutation       ", &
              "death by Verhulst factor"])
+   
+      case (divIdxRecFlag)
+        call runWriter%initialize(divIdxFlag)
+        call runWriter%writeHeader(divIdxFlag, &
+            ["Diversity index per time step"])
 
       case default
         print "(a, i0, a)", "***ERROR. '", recordFlag, &
