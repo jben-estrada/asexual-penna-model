@@ -13,9 +13,11 @@ OBJS :=$(SRCS:.f90=.o)
 DEPS :=$(SRCS:.f90=.d)
 TARGET :=penna.out
 
+# Create directory for executable.
+$(shell mkdir -p $(BINDIR))
+
 # Build (release build).
-default_build: $(BINDIR)/$(TARGET)
-default_build: clean
+build: $(BINDIR)/$(TARGET) clean
 
 # Link together object files.
 $(BINDIR)/$(TARGET): $(OBJS)
