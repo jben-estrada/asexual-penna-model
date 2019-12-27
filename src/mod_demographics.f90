@@ -176,24 +176,6 @@ contains
   end subroutine cascadeFreeNodes
 
 
-  subroutine printGenomDstrb()
-    implicit none
-
-    type(GenomeDstrbNode), pointer :: reader
-
-    reader => genomeDstrbHead
-    do
-      if (associated(reader)) then
-        write(*, "(i0, ' ')", advance="no") reader%count
-        reader => reader%next
-      else
-        print *, ""
-        exit
-      end if
-    end do
-  end subroutine printGenomDstrb
-
-
   ! -------------------------------------------------------------------------- !
   ! AGE DISTRIBUTION
   ! -------------------------------------------------------------------------- !
