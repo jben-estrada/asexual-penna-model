@@ -46,8 +46,19 @@
 ! subroutines added by Richard Woloshyn. (rwww@triumf.ca). June 30, 1999
 !
 !***********************************************************************
-! This module is rewritten to conform with modern standards
+! The `mtmod` module was changed to remove implicitly declared variables;
+! all of them are now explicitly declared. The driving program was also
+! removed to be able to use in other programs.
 !
+! In regard to the non-standard instrinsic procedures stated above,
+! this module do seem to compile in `gfortran 9.2.1` with the `-std=f2008`
+! flag. Meaning, their usage here could be within standard. However, one
+! should still exercise caution as, in some compilers such as in GCC, these
+! instrinsics are overloaded with non-standard specific procedures.
+! 
+! The changes were made by John Benedick Estrada (jestrada@nip.upd.edu.ph)
+! in December 2019 - January 2020.
+! 
 
  module mtmod
     private
