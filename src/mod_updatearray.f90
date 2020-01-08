@@ -362,10 +362,12 @@ contains
     real(kind=arrRK),              intent(in)    :: elem
     integer :: i
 
-    ! Do linear search. NOTE: Apparently `findloc` is not supported by
-    ! gfortran 8.1.0
+    ! Tolerance value. Two real numbers are considered 'equal' if
+    ! their difference is less that the tolerance value.
+    real(kind=arrRK), parameter :: realTolerance = 1e-10
+
     do i = 1, size(array)
-      if (array(i) == elem) then
+      if (abs(array(i) - elem) < realTolerance) then
         call arrayRemove_real(array, i)
         return
       end if
