@@ -2,7 +2,7 @@
 FC :=gfortran-9
 
 # Compiler flags
-FFLAGS = -std=f2008 -march=native
+FFLAGS = -std=f2008 -Wall -Wextra -fcheck=all -march=native
 FSYNTCHK := -fsyntax-only
 FDEP := -cpp -MD
 
@@ -18,7 +18,7 @@ default_build: FFLAGS += -Ofast
 default_build: build
 
 # Debug build.
-debug_build: FFLAGS += -g -Wall -fcheck=all
+debug_build: FFLAGS += -g -O0
 debug_build: build
 
 # Build (default).
