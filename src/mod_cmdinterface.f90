@@ -75,7 +75,7 @@ contains
       call get_command_argument(argCount, cmdArg, status=status)
       if (status == -1) exit
 
-      call toggleSwitchArg(cmdArg, status, cmdArgs%isVerbosePrint, &
+      call toggleFlagArg(cmdArg, status, cmdArgs%isVerbosePrint, &
           cmdArgs%toRecordTime, cmdArgs%isSilent)
       if (status == 0) cycle
 
@@ -89,10 +89,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: toggleSwitchArg
-  !>  If the provided cmd argument is a valid switch, toggle it.
+  ! SUBROUTINE: toggleFlagArg
+  !>  If the provided cmd argument is a valid flag, toggle it.
   ! -------------------------------------------------------------------------- !
-  subroutine toggleSwitchArg(arg, status, isVerbosePrint, toRecordTime, &
+  subroutine toggleFlagArg(arg, status, isVerbosePrint, toRecordTime, &
         isSilent)
     implicit none
 
@@ -125,13 +125,13 @@ contains
         status = 1
     end select
 
-    ! Check valid combination of switches.
+    ! Check valid combination of flags.
     if (isVerbosePrint .and. isSilent) then
       print "(a)", "***ERROR. Verbose print (-v or --verbose) " // &
           "and silent print (-s or --silent) cannot be passed at the same time."
       stop
     end if
-  end subroutine toggleSwitchArg
+  end subroutine toggleFlagArg
 
 
   ! -------------------------------------------------------------------------- !
