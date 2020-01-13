@@ -35,6 +35,7 @@ module ModelParam
   !               K    : The carrying capacity.
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
+  use RNG, only: RNG_INTRINSIC
   implicit none
   private
 
@@ -58,6 +59,8 @@ module ModelParam
   integer, protected, public, save :: MODEL_TIME_STEPS    ! Total time steps
   integer, protected, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
   integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
+  integer, protected, public, save :: MODEL_RNG           ! RNG flag.
+  integer, protected, public, save :: MODEL_RNG_SEED      ! RNG seed.
 
   ! -------------------------------------------------------------------------- !
   ! Buffer character length.
@@ -70,9 +73,9 @@ module ModelParam
 
   ! -------------------------------------------------------------------------- !
   ! Parameter count.
-  integer, parameter :: MODEL_PARAM_COUNT = 11
+  integer, parameter :: MODEL_PARAM_COUNT = 13
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
-  character(len=MAXLEN), parameter :: modelParamKeys(MODEL_PARAM_COUNT) = &
+  character(len=*), parameter :: modelParamKeys(MODEL_PARAM_COUNT) = &
       ["L          ", &
        "T          ", &
        "B          ", &
@@ -83,10 +86,12 @@ module ModelParam
        "N0         ", &
        "t_max      ", &
        "sample_size", &
-       "rec_flag   "]
+       "rec_flag   ", &
+       "rng        ", &
+       "seed       "]
   ! Default parameter values. NOTE: The order is the same with `modelParamKeys`.
   integer, parameter :: modelParamDefault(MODEL_PARAM_COUNT) = &
-      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0]
+      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0, RNG_INTRINSIC, 1]
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
@@ -170,6 +175,10 @@ contains
           MODEL_SAMPLE_SIZE = values(i)
         case (11)
           MODEL_REC_FLAG = values(i)
+        case (12)
+          MODEL_RNG = values(i)
+        case (13)
+          MODEL_RNG_SEED = values(i)
       end select
     end do
   end subroutine assignParameters

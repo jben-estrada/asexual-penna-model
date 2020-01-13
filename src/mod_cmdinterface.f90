@@ -38,7 +38,6 @@ contains
   !>  Initialize a `CmdArgRecord` object.
   ! -------------------------------------------------------------------------- !
   subroutine initCmdArgRecord(new)
-    use RNG, only: RNG_INTRINSIC
     implicit none
     type(CmdArgRecord), intent(out) :: new
   
@@ -50,8 +49,8 @@ contains
     new % isVerbosePrint = .false.
     new % toRecordTime = .false.
     new % isSilent = .false.
-    new % rngChoice = RNG_INTRINSIC
-    new % rngSeed = 1
+    new % rngChoice = MODEL_RNG
+    new % rngSeed = MODEL_RNG_SEED
   end subroutine initCmdArgRecord
 
 

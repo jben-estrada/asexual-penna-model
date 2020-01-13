@@ -24,10 +24,10 @@ debug_build: build
 # Build (default).
 build: compile_var
 	@echo Move third-party library source code into $(SRCDIR).
-	@$(MAKE) copy_lib -C $(LIBDIR)
-	@$(MAKE) -C $(SRCDIR)
+	@$(MAKE) copy_lib -C $(LIBDIR) --no-print-directory
+	@$(MAKE) -C $(SRCDIR) --no-print-directory
 	@echo Remove third-party library source code in $(SRCDIR).
-	@$(MAKE) remove_lib -C $(LIBDIR)
+	@$(MAKE) remove_lib -C $(LIBDIR) --no-print-directory
 
 # Create external variable file to share variables.
 compile_var:
