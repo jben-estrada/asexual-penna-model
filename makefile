@@ -25,6 +25,7 @@ debug_build: build
 build: compile_var
 	@echo Move third-party library source code into $(SRCDIR).
 	@$(MAKE) copy_lib -C $(LIBDIR) --no-print-directory
+	@echo Compile source code.
 	@$(MAKE) -C $(SRCDIR) --no-print-directory
 	@echo Remove third-party library source code in $(SRCDIR).
 	@$(MAKE) remove_lib -C $(LIBDIR) --no-print-directory
