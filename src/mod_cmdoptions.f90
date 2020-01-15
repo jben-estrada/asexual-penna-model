@@ -39,7 +39,7 @@ module CmdOptions
     cmdPosArgs(2)
 
   public :: initializeCmdOptions
-  public :: parseCmdArgs_
+  public :: parseCommandArguments
 contains
 
 
@@ -97,9 +97,13 @@ contains
   end subroutine initializeCmdOptions
 
 
-  subroutine parseCmdArgs_()
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: parseCommandArguments
+  !>  Parse command-line arguments with the defined CLI options in 'CmdOptions'
+  !!  This is essentially a wrapper to the 'parseCmdArgs' subroutine.
+  ! -------------------------------------------------------------------------- !
+  subroutine parseCommandArguments()
     implicit none
-
     call parseCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs)
-  end subroutine parseCmdArgs_
+  end subroutine parseCommandArguments
 end module CmdOptions

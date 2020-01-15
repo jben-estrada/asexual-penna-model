@@ -36,7 +36,7 @@ program Main
   ! --------
   call initializeCmdOptions()
 
-  call parseCmdArgs_()
+  call parseCommandArguments()
   ! --------
 
   ! ! A unified record for the command-line arguments.
