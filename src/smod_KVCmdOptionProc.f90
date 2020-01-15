@@ -4,43 +4,21 @@ submodule (CmdOptionType) KVBoundProcedure
 contains
 
 
-  logical function KVtype_allocatedValue(self)
-    implicit none
-    class(KeyValCmdOption), intent(in) :: self
-    
-    KVtype_allocatedValue = allocated(self % value)
-  end function KVtype_allocatedValue
-
-
-  integer function KVtype_getValue(self)
+  pure integer function KVtype_getValue(self)
     implicit none
     class(KeyValCmdOption), intent(in) :: self
 
-    if (allocated(self % value)) then
-      KVtype_getValue = self % value
-    else
-      print "(3a)", "***ERROR. '", self % getCommand(), "' has no value."
-      stop
-    end if
+    KVtype_getValue = self % value
   end function KVtype_getValue
 
 
-  subroutine KVtype_setValue(self, value)
+  subroutine assignOptionalKVVal(cmdKeyVal, value)
     implicit none
-    class(KeyValCmdOption), intent(inout) :: self
+
+    class(KeyValCmdOption), intent(inout) :: cmdKeyVal
     integer,                intent(in)    :: value
 
-    ! NOTE: Automatic allocation.
-    self % value = value
-  end subroutine KVtype_setValue
-
-
-  subroutine finalizeKVObj(self)
-    implicit none
-    type(KeyValCmdOption), intent(inout) :: self
-
-    if (allocated(self % command)) deallocate(self % command)
-    if (allocated(self % altCommand)) deallocate(self % altCommand)
-    if (allocated(self % value)) deallocate(self % value)
-  end subroutine finalizeKVObj
+    cmdKeyVal % isOptional = .true.
+    cmdKeyVal % value = value
+  end subroutine assignOptionalKVVal
 end submodule KVBoundProcedure

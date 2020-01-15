@@ -4,71 +4,41 @@ submodule (CmdOptionType) baseOptionProcedure
 contains
 
 
-  subroutine setCommand(self, command, altCommand)
+  subroutine setUsageMsg(cmdOption, usageMsg)
     implicit none
-    class(BaseCmdOption),       intent(inout) :: self
-    character(len=*),           intent(in)    :: command
-    character(len=*), optional, intent(in)    :: altCommand
+    class(BaseCmdOption), intent(inout) :: cmdOption
+    character(len=*),     intent(in)    :: usageMsg
 
-    ! Assign values of members. NOTE: Automatic allocation.
-    ! NOTE: For some reason, this causes a memory leak. I cannot fix it.
-    self % command = command
-
-    ! Assign alternative command. NOTE: Automatic allocation.
-    ! NOTE: For some reason, this causes a memory leak. I cannot fix it.
-    if (present(altCommand)) self % altCommand = altCommand
-  end subroutine setCommand
+    cmdOption % usageMsg = usageMsg
+  end subroutine setUsageMsg
 
 
   pure function getCommand(self) result(command)
     implicit none
+
     class(BaseCmdOption), intent(in) :: self
+    character(len=LONG_MAX_LEN)       :: command
 
-    character(len=:), allocatable :: command
-
-    if (allocated(self % command)) then
-      command = self % command
-    else
-      command = NULL_CHAR
-    end if
+    command = self % command
   end function getCommand
 
 
   pure function getAltCommand(self) result(altCommand)
     implicit none
+
     class(BaseCmdOption), intent(in) :: self
+    character(len=MAX_LEN)           :: altCommand
 
-    character(len=:), allocatable :: altCommand
-
-    if (allocated(self % altCommand)) then
-      altCommand = self % altCommand
-    else
-      altCommand = NULL_CHAR
-    end if
+    altCommand = self % altCommand
   end function getAltCommand
-
-
-  subroutine setUsageMsg(self, usageMsg)
-    implicit none
-    class(BaseCmdOption), intent(inout) :: self
-    character(len=*),     intent(in)    :: usageMsg
-
-    ! NOTE: Automatic allocation.
-    ! NOTE: For some reason, this causes a memory leak. I cannot fix it.
-    self % usageMsg = usageMsg
-  end subroutine setUsageMsg
 
 
   pure function getUsageMsg(self) result(usageMsg)
     implicit none
+
     class(BaseCmdOption), intent(in) :: self
+    character(len=LONG_MAX_LEN)  :: usageMsg
 
-    character(len=:), allocatable :: usageMsg
-
-    if (allocated(self % usageMsg)) then
-      usageMsg = self % usageMsg
-    else
-      usageMsg = NULL_CHAR
-    end if
+    usageMsg = self % usageMsg
   end function getUsageMsg
 end submodule baseOptionProcedure

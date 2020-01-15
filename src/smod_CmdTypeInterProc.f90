@@ -4,6 +4,33 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initializeCmdOption
+  !>  Initialize a command-line option.
+  ! -------------------------------------------------------------------------- !
+  subroutine initializeCmdOption(cmdOption, command, altCommand)
+    implicit none
+    
+    class(BaseCmdOption),       intent(out) :: cmdOption
+    character(len=*),           intent(in)  :: command
+    character(len=*), optional, intent(in)  :: altCommand
+
+    if (cmdOption % isInitialized) then
+      print "(a)", "***ERROR. A command-line option is already initialized."
+      stop
+    end if
+
+    cmdOption % isInitialized = .true.
+    cmdOption % command = command
+
+    if (present(altCommand)) then
+      cmdOption % altCommand = altCommand
+    else
+      cmdOption % altCommand = NULL_CHAR  
+    end if
+  end subroutine initializeCmdOption
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: parseCmdArgs
   !>  Parse command-line arguments.
   ! -------------------------------------------------------------------------- !
@@ -49,8 +76,8 @@ contains
     class(BaseCmdOption), intent(in) :: cmdOption
     character(len=*),     intent(in) :: cmdArg
 
-    compareCommand = cmdOption % getCommand() == trim(cmdArg) &
-        .or. cmdOption % getAltCommand() == trim(cmdArg)
+    compareCommand = cmdOption % command == cmdArg &
+        .or. cmdOption % altCommand == cmdArg
   end function compareCommand
 
 
@@ -72,7 +99,7 @@ contains
 
     do i = 1, size(cmdFlags)
       if (compareCommand(cmdFlags(i), cmdArg)) then
-        call cmdFlags(i) % toggle()
+        cmdFlags(i) % state = .not. cmdFlags(i) % state
         status = 0
         exit
       end if
@@ -126,9 +153,9 @@ contains
     read(valueChar, *, iostat=status) valueInt
 
     if (status == 0) then
-      call cmdOption % setValue(valueInt)
+      cmdOption % value = valueInt
     else
-      print "(3a)", "***ERROR. '", cmdOption % getCommand(), &
+      print "(3a)", "***ERROR. '", trim(cmdOption % command), &
           "' only accepts integers."
       stop
     end if
@@ -151,8 +178,8 @@ contains
 
     status = 1
     do i = 1, size(cmdPosArgs)
-      if (cmdPosArgs(i) % getPosition() == posCount) then
-        call cmdPosArgs(i) % setValue(cmdArg)
+      if (cmdPosArgs(i) % position == posCount) then
+        cmdPosArgs(i) % value = cmdArg
         posCount = posCount + 1
         status = 0
         exit

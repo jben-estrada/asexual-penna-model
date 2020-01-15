@@ -4,64 +4,41 @@ submodule (CmdOptionType) posBoundProcedure
 contains
 
 
-  logical function posType_allocatedValue(self)
+  subroutine setPosTypePosition(cmdPosOption, position)
     implicit none
-    class(PositionalCmdOption), intent(in) :: self
+
+    class(PositionalCmdOption), intent(inout) :: cmdPosOption
+    integer,                    intent(in)    :: position
     
-    posType_allocatedValue = allocated(self % value)
-  end function posType_allocatedValue
+    cmdPosOption % position = position 
+  end subroutine setPosTypePosition
 
 
-  function posType_getValue(self) result(value)
+  pure function posType_getValue(self) result(value)
     implicit none
-    class(PositionalCmdOption), intent(in) :: self
 
-    character(len=:), allocatable :: value
+    class(PositionalCmdOption), intent(in) :: self
+    character(len=LONG_MAX_LEN)            :: value
     
-    if (allocated(self % value)) then
-      value = self % value
-    else
-      print "(3a)", "***ERROR. '", self % getCommand(), "' has no value."
-      stop
-    end if
+    value = self % value
   end function posType_getValue
 
 
-  subroutine posType_setValue(self, value)
+  integer pure function posType_getPosition(self)
     implicit none
-
-    class(PositionalCmdOption), intent(inout) :: self
-    character(len=*),           intent(in)    :: value
-
-    ! NOTE: Automatic allocation.
-    self % value = value
-  end subroutine posType_setValue
-
-
-  subroutine posType_setPosition(self, position)
-    implicit none
-
-    class(PositionalCmdOption), intent(inout) :: self
-    integer,                    intent(in)    :: position
-    
-    self % position = position 
-  end subroutine posType_setPosition
-
-
-  integer function posType_getPosition(self)
-    implicit none
-    class(PositionalCmdOption), intent(inout) :: self
+    class(PositionalCmdOption), intent(in) :: self
 
     posType_getPosition = self % position
   end function posType_getPosition
 
 
-  subroutine finalizePosObj(self)
+  subroutine assignOptionalPosTypeVal(cmdPosArg, value)
     implicit none
-    type(PositionalCmdOption), intent(inout) :: self
 
-    if (allocated(self % command)) deallocate(self % command)
-    if (allocated(self % altCommand)) deallocate(self % altCommand)
-    if (allocated(self % value)) deallocate(self % value)
-  end subroutine finalizePosObj
+    class(PositionalCmdOption),  intent(inout) :: cmdPosArg
+    character(len=LONG_MAX_LEN), intent(in)    :: value
+
+    cmdPosArg % isOptional = .true.
+    cmdPosArg % value = value
+  end subroutine assignOptionalPosTypeVal
 end submodule posBoundProcedure

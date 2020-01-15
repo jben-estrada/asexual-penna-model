@@ -52,47 +52,47 @@ contains
     implicit none
 
     ! Assign command char of flag options.
-    call verbosePrintFlag % setCommand("-v", "--verbose")
-    call showHelpMsgFlag % setCommand("-h", "--help")
-    call recordTimeFlag % setCommand("-r", "--record-time")
-    call silentPrintFlag % setCommand("-s", "--silent")
+    call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
+    call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
+    call initializeCmdOption(recordTimeFlag, "-r", "--record-time")
+    call initializeCmdOption(silentPrintFlag, "-s", "--silent")
   
     ! Assign command char of key-value options.
-    call maxTimeStepArg % setCommand("-max-time-step")
-    call sampleSizeArg % setCommand("-sample-size")
-    call startPopSizeArg % setCommand("-pop-size")
-    call recordFlagArg % setCommand("-rec-flag")
-    call rngChoiceArg % setCommand("-rng")
-    call rngSeedArg % setCommand("-seed")
+    call initializeCmdOption(maxTimeStepArg, "--max-time-step")
+    call initializeCmdOption(sampleSizeArg, "--sample-size")
+    call initializeCmdOption(startPopSizeArg, "--pop-size")
+    call initializeCmdOption(recordFlagArg, "--rec-flag")
+    call initializeCmdOption(rngChoiceArg, "--rng")
+    call initializeCmdOption(rngSeedArg, "--seed")
 
-    ! Assign commansd char and position of position arguments.
-    call configDirPosArg % setCommand("config-directory")
-    call configDirPosArg % setPosition(1)
-    call vWeightDirPosArg % setCommand("vweight-directory")
-    call vWeightDirPosArg % setPosition(2)
+    ! Assign command char and position of position arguments.
+    call initializeCmdOption(configDirPosArg, "config-directory")
+    call initializeCmdOption(vWeightDirPosArg, "vweight-directory")
+    call setPosTypePosition(configDirPosArg, 1)
+    call setPosTypePosition(vWeightDirPosArg, 2)
 
     ! Set usage messages of flag options.
-    call verbosePrintFlag % setUsageMsg("Show all the model parameters.")
-    call showHelpMsgFlag % setUsageMsg("Show this message and exit.")
-    call recordTimeFlag % setUsageMsg("Record the average elapsed time " // &
-      "of the simulation.")
-    call silentPrintFlag % setUsageMsg("Do not show the model parameters.")
+    call setUsageMsg(verbosePrintFlag, "Show all the model parameters.")
+    call setUsageMsg(showHelpMsgFlag, "Show this message and exit.")
+    call setUsageMsg(recordTimeFlag, "Record the average elapsed time " // &
+        "of the simulation.")
+    call setUsageMsg(silentPrintFlag, "Do not show the model parameters.")
 
     ! Set usage messages of key-value options.
-    call maxTimeStepArg % setUsageMsg("Maximum time step.")
-    call sampleSizeArg % setUsageMsg("Sample size.")
-    call startPopSizeArg % setUsageMsg("Starting population size.")
-    call recordFlagArg % setUsageMsg("Record data specified by the " // &
+    call setUsageMsg(maxTimeStepArg, "Maximum time step.")
+    call setUsageMsg(sampleSizeArg, "Sample size.")
+    call setUsageMsg(startPopSizeArg, "Starting population size.")
+    call setUsageMsg(recordFlagArg, "Record data specified by the " // &
         "given integer flag.")
-    call rngChoiceArg % setUsageMsg("Choose a random number " // &
+    call setUsageMsg(rngChoiceArg, "Choose a random number " // &
         "generator (RNG) to be used as specified by the given" // &
         " integer flag.")
-    call rngSeedArg % setUsageMsg("Set the seed for the RNG.")
+    call setUsageMsg(rngSeedArg, "Set the seed for the RNG.")
 
     ! Set usage messages of positional arguments.
-    call configDirPosArg % setUsageMsg("Directory of .cfg file of " // &
+    call setUsageMsg(configDirPosArg, "Directory of .cfg file of " // &
         "model parameters.")
-    call vWeightDirPosArg % setUsageMsg("Directory of .cfg file of " // &
+    call setUsageMsg(vWeightDirPosArg, "Directory of .cfg file of " // &
         "Verhulst weights.")
   end subroutine initializeCmdOptions
 

@@ -4,7 +4,7 @@ submodule (CmdOptionType) flagBoundProcedure
 contains
 
 
-  logical function flagtype_getFlagState(self)
+  logical pure function flagtype_getFlagState(self)
     implicit none
     class(FlagCmdOption), intent(in) :: self
 
@@ -12,20 +12,14 @@ contains
   end function flagtype_getFlagState
 
 
-  subroutine flagtype_toggle(self)
+  subroutine assignInitialFlagState(cmdFlag, state)
     implicit none
-    class(FlagCmdOption), intent(inout) :: self
 
-    self % state = .not. self % state
-  end subroutine flagtype_toggle
+    class(FlagCmdOption), intent(inout) :: cmdFlag
+    logical,              intent(in)    :: state
 
-
-  subroutine finalizeFlagObj(self)
-    implicit none
-    type(FlagCmdOption), intent(inout) :: self
-
-    if (allocated(self % command)) deallocate(self % command)
-    if (allocated(self % altCommand)) deallocate(self % altCommand)
-  end subroutine finalizeFlagObj
+    cmdFlag % isOptional = .true.
+    cmdFlag % state = state
+  end subroutine assignInitialFlagState
 end submodule flagBoundProcedure
 
