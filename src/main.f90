@@ -25,38 +25,47 @@
 
 
 program Main
-  use Penna
-  use CmdInterface
-  use RNG, only: setSeed, chooseRNG
+  ! use Penna
+  ! use CmdInterface
+  ! use RNG, only: setSeed, chooseRNG
+  use CmdOptions
   implicit none
 
-  ! A unified record for the command-line arguments.
-  type(CmdArgRecord) :: cmdArgs
+  ! --------
+  ! DEBUG
+  ! --------
+  call initializeCmdOptions()
 
-  ! Get and then set model parameters
-  ! ---------------------------------
-  ! Initialize model parameters.
-  call readModelParam()
-  ! Get command-line arguments.
-  call getCmdArgs(cmdArgs)
+  call parseCmdArgs_()
+  ! --------
 
-  ! Pretty print cmd arguments and model parameters.
-  call printArgs(cmdArgs)
-  ! ---------------------------------
+  ! ! A unified record for the command-line arguments.
+  ! type(CmdArgRecord) :: cmdArgs
 
-  ! Initialize the random number generator.
-  ! ---------------------------------------
-  ! Choose RNG.
-  call chooseRNG(cmdArgs%rngChoice)
-  ! Set the seed for the chosen RNG.
-  call setSeed(cmdArgs%rngSeed)
-  ! ---------------------------------------
+  ! ! Get and then set model parameters
+  ! ! ---------------------------------
+  ! ! Initialize model parameters.
+  ! call readModelParam()
+  ! ! Get command-line arguments.
+  ! call getCmdArgs(cmdArgs)
 
-  ! Run the Penna model `sampleSize` times.
-  call multipleRun(cmdArgs%maxTimestep, cmdArgs%startPopSize, &
-      cmdArgs%sampleSize, cmdArgs%recordFlag, cmdArgs%toRecordTime)
+  ! ! Pretty print cmd arguments and model parameters.
+  ! call printArgs(cmdArgs)
+  ! ! ---------------------------------
 
-  ! Wrap up. Deallocate any global allocatable variables.
-  call wrapUp()
-  if (.not.cmdArgs%isSilent) print "(*(a))", separator
+  ! ! Initialize the random number generator.
+  ! ! ---------------------------------------
+  ! ! Choose RNG.
+  ! call chooseRNG(cmdArgs%rngChoice)
+  ! ! Set the seed for the chosen RNG.
+  ! call setSeed(cmdArgs%rngSeed)
+  ! ! ---------------------------------------
+
+  ! ! Run the Penna model `sampleSize` times.
+  ! call multipleRun(cmdArgs%maxTimestep, cmdArgs%startPopSize, &
+  !     cmdArgs%sampleSize, cmdArgs%recordFlag, cmdArgs%toRecordTime)
+
+  ! ! Wrap up. Deallocate any global allocatable variables.
+  ! call wrapUp()
+  ! if (.not.cmdArgs%isSilent) print "(*(a))", separator
 end program Main
