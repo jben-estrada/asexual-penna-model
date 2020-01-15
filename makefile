@@ -2,7 +2,7 @@
 FC :=gfortran-9
 
 # Compiler flags
-FFLAGS = -std=f2008 -Wall -Wextra -fcheck=all -march=native
+FFLAGS = -std=f2008 -Wall -Wextra -fcheck=all -march=native -pedantic
 FSYNTCHK := -fsyntax-only
 FDEP := -cpp -MD
 
