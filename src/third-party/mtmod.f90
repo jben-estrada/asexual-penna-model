@@ -115,7 +115,8 @@
 !                                    constant vector a
     integer, parameter :: LMASK =  2147483647
 !                                    least significant r bits
-    integer, parameter :: UMASK = -LMASK - 1
+!                                    NOTE: Removed the -1 term.
+    integer, parameter :: UMASK = -LMASK
 !                                    most significant w-r bits
 ! Tempering parameters
     integer, parameter :: TMASKB= -1658038656, TMASKC= -272236544
