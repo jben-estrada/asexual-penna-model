@@ -8,16 +8,10 @@ module Penna
   ! -------------------------------------------------------------------------- !
   use Pop
   use WriterType
+  use SaveFormat
   use ModelParam
   implicit none
   private
-
-  ! Record flags. TODO: Allow multiple flags.
-  integer, parameter, public :: nullRecFlag = 0   ! *Record nothing.
-  integer, parameter, public :: popRecFlag = 1    ! Population.
-  integer, parameter, public :: demogRecFlag = 2  ! Age and genome demographics.
-  integer, parameter, public :: deathRecFlag = 3  ! Death count.
-  integer, parameter, public :: divIdxRecFlag = 4 ! Diversity index.
 
   public :: multipleRun
   public :: readModelParam
@@ -65,7 +59,7 @@ contains
     call initializeRunWriter(runWriter, recordFlag)
 
     ! Enable/disable demographics recording.
-    if (recordFlag == demogRecFlag) then
+    if (recordFlag == ageDstrbFlag) then
       DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     else
       DEMOG_LAST_STEPS = -1
@@ -88,17 +82,17 @@ contains
 
       ! Record result.
       select case (recordFlag)
-        case (popRecFlag)
+        case (popFlag)
           call runWriter % write(popFlag, int(popSize, kind=writeIK))
 
-        case (demogRecFlag)
+        case (ageDstrbFlag)
           call runWriter % write((ageDstrbFlag), &
               int(ageDistribution, kind=writeIK))
 
-        case (deathRecFlag)
+        case (deathFlag)
           call runWriter % write(deathFlag, int(deathCount, kind=writeIK))
 
-        case (divIdxRecFlag)
+        case (divIdxFlag)
           call runWriter % write(divIdxFlag, &
               real(getDiversityIdx(), kind=writeRK))
       end select
@@ -106,8 +100,8 @@ contains
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call population % resetReadPtrs()
-      if (recordFlag == demogRecFlag) call resetAgeDstrb()
-      if (recordFlag == divIdxRecFlag) call freeGenomeDstrbList()
+      if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
+      if (recordFlag == divIdxFlag) call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
@@ -166,12 +160,12 @@ contains
         call population % updateCurrIndivAge()
 
         ! Update genome distribution.
-        if (recFlag == divIdxRecFlag) &
+        if (recFlag == divIdxFlag) &
             call updateGenomeDstrb(population % getCurrIndivGenome())
 
         ! Check for birth events.
         if (population % isCurrIndivMature()) then
-          call population % reproduceCurrIndiv(recFlag == divIdxRecFlag)
+          call population % reproduceCurrIndiv(recFlag == divIdxFlag)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
@@ -195,16 +189,9 @@ contains
   ! SUBROUTINE: multipleRun
   !>  Call the `run` subroutine and time it for `sampleSize` times.
   ! -------------------------------------------------------------------------- !
-  subroutine multipleRun(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
-        toRecordTime)
+  subroutine multipleRun()
     use ProgBarType
     implicit none
-
-    integer, intent(in) :: maxTimeStep
-    integer, intent(in) :: sampleSize   
-    integer, intent(in) :: startingPopSize
-    integer, intent(in) :: recordFlag
-    logical, intent(in) :: toRecordTime
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -263,7 +250,7 @@ contains
       print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
 
     ! Record mean time and std deviation.
-    if (toRecordTime) then
+    if (MODEL_REC_FLAG /= nullFlag) then
       call constructWriter(timeWriter, [timeFlag])
       call timeWriter % initialize()
       call timeWriter % writeHeader(timeFlag, &
@@ -284,7 +271,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeRunWriter
   !>  Initialize a `Writer` object based on the integer `recordFlag`
-  !!  passed.  There are three flags: `popRecFlag`, `demogRecFlag`
+  !!  passed.  There are three flags: `popFlag`, `ageDstrbFlag`
   !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
@@ -295,27 +282,24 @@ contains
 
     call constructWriter(runWriter, formatFlags)
 
-    select case (recordFlag)
-      case (nullRecFlag)
-        ! Placeholder. Does nothing.
+    if (recordFlag == nullFlag) return
 
-      case (popRecFlag)
-        call runWriter % initialize(popFlag)
+    call runWriter % initialize(recordFlag)
+
+    select case (recordFlag)
+      case (popFlag)
         call runWriter % writeHeader(popFlag, ["population size"])
 
-      case (demogRecFlag)
-        call runWriter % initialize(ageDstrbFlag)
+      case (ageDstrbFlag)
         call runWriter % writeHeader(ageDstrbFlag, ["age =>"])
 
-      case (deathRecFlag)
-        call runWriter % initialize(deathFlag)
+      case (deathFlag)
         call runWriter % writeHeader(deathFlag, &
             ["death by old age        ", &
              "death by mutation       ", &
              "death by Verhulst factor"])
    
-      case (divIdxRecFlag)
-        call runWriter % initialize(divIdxFlag)
+      case (divIdxFlag)
         call runWriter % writeHeader(divIdxFlag, &
             ["Diversity index per time step"])
 
