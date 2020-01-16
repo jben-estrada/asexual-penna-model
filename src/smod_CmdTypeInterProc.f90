@@ -21,7 +21,6 @@ contains
 
     cmdOption % isInitialized = .true.
     cmdOption % command = command
-
     if (present(altCommand)) then
       cmdOption % altCommand = altCommand
     else

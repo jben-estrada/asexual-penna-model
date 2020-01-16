@@ -18,12 +18,11 @@ module CmdOptionType
   ! Base type for all command-line argument type.
   type, public, abstract :: BaseCmdOption
     private
-    character(len=MAX_LEN)     :: command
-    character(len=MAX_LEN)     :: altCommand
+    character(len=MAX_LEN)      :: command
+    character(len=MAX_LEN)      :: altCommand
     character(len=LONG_MAX_LEN) :: usageMsg
 
     logical :: isOptional = .false.
-    logical :: isInitialized = .false.
   contains
     procedure :: getCommand
     procedure :: getAltCommand
