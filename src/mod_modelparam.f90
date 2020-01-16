@@ -39,58 +39,77 @@ module ModelParam
   implicit none
   private
 
-  ! Parameters whose values are from `model.ini`.
-  integer, protected, public, save :: MODEL_L     ! Genome length (unmodifiable)
-  integer, protected, public, save :: MODEL_T     ! Mutation threshold
-  integer, protected, public, save :: MODEL_B     ! Birth rate
-  integer, protected, public, save :: MODEL_M     ! Mutation rate
-  integer, protected, public, save :: MODEL_R     ! Reproduction age
-  integer, protected, public, save :: MODEL_R_MAX ! Maximum reproduction age
-  integer, protected, public, save :: MODEL_K     ! Carrying capacity
+  ! Parameter array.
+  integer, target :: modelParams(13) = 0
 
-  ! Parameters whose values are from `verhulst_weights.ini`.
-  ! Verhulst weights.
-  real, allocatable, protected, public, save :: MODEL_VERHULST_W(:)
-  ! Default Verhulst weight.
-  real, parameter :: VERHULST_W_DEFAULT = 0. 
+  ! Parameter count.
+  integer, parameter :: MODEL_PARAM_COUNT = size(modelParams)
+
+  ! Parameters whose values are from `model.ini`.
+  integer, protected, pointer, public :: MODEL_L => &
+    modelParams(1) ! Genome length
+  integer, protected, pointer, public :: MODEL_T => &
+    modelParams(2) ! Mutation threshold
+  integer, protected, pointer, public :: MODEL_B => &
+    modelParams(3) ! Birth rate
+  integer, protected, pointer, public :: MODEL_M => &
+    modelParams(4) ! Mutation rate
+  integer, protected, pointer, public :: MODEL_R => &
+    modelParams(5) ! Reproduction age
+  integer, protected, pointer, public :: MODEL_R_MAX => &
+    modelParams(6) ! Maximum reproduction age
+  integer, protected, pointer, public :: MODEL_K => &
+    modelParams(7) ! Carrying capacity
 
   ! Parameters whose values can be changed by command line arguments.
-  integer, protected, public, save :: MODEL_N0            ! Starting pop size
-  integer, protected, public, save :: MODEL_TIME_STEPS    ! Total time steps
-  integer, protected, public, save :: MODEL_SAMPLE_SIZE   ! Sample size
-  integer, protected, public, save :: MODEL_REC_FLAG      ! Record flag
-  integer, protected, public, save :: MODEL_RNG           ! RNG flag.
-  integer, protected, public, save :: MODEL_RNG_SEED      ! RNG seed.
+  integer, protected, pointer, public :: MODEL_N0 => &
+    modelParams(8) ! Starting pop size
+  integer, protected, pointer, public :: MODEL_TIME_STEPS => &
+    modelParams(9) ! Total time steps
+  integer, protected, pointer, public :: MODEL_SAMPLE_SIZE => &
+    modelParams(10)! Sample size
+  integer, protected, pointer, public :: MODEL_REC_FLAG => &
+    modelParams(11)! Record flag
+  integer, protected, pointer, public :: MODEL_RNG => &
+    modelParams(12)! RNG flag.
+  integer, protected, pointer, public :: MODEL_RNG_SEED => &
+    modelParams(13)! RNG seed.
+
+  ! -------------------------------------------------------------------------- !
+  ! Parameters whose values are from `verhulst_weights.ini`.
+  ! Verhulst weights.
+  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
+  ! Default Verhulst weight.
+  real, parameter :: VWEIGHT_DEFAULT = 0.
 
   ! -------------------------------------------------------------------------- !
   ! Buffer character length.
-  integer, parameter  :: MAXLEN = 256
+  integer, parameter :: MAX_LEN = 256
   ! Filenames from which model parameters are obtained.
-  character(len=MAXLEN), protected, public :: modelFilename = &
-      "config/model.cfg"
-  character(len=MAXLEN), protected, public :: vWeightsFilename = &
-      "config/v_weight.cfg"
+  character(len=MAX_LEN), protected, public :: MODEL_FILE_NAME = &
+      "./config/model.cfg"
+  character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
+      "./config/v_weight.cfg"
 
   ! -------------------------------------------------------------------------- !
-  ! Parameter count.
-  integer, parameter :: MODEL_PARAM_COUNT = 13
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
-  character(len=*), parameter :: modelParamKeys(MODEL_PARAM_COUNT) = &
-      ["L          ", &
-       "T          ", &
-       "B          ", &
-       "M          ", &
-       "R          ", &
-       "R_max      ", &
-       "K          ", &
-       "N0         ", &
-       "t_max      ", &
-       "sample_size", &
-       "rec_flag   ", &
-       "rng        ", &
-       "seed       "]
-  ! Default parameter values. NOTE: The order is the same with `modelParamKeys`.
-  integer, parameter :: modelParamDefault(MODEL_PARAM_COUNT) = &
+  character(len=*), parameter :: MODEL_PARAM_KEYS(MODEL_PARAM_COUNT) = &
+    ["L          ", &
+     "T          ", &
+     "B          ", &
+     "M          ", &
+     "R          ", &
+     "R_max      ", &
+     "K          ", &
+     "N0         ", &
+     "t_max      ", &
+     "sample_size", &
+     "rec_flag   ", &
+     "rng        ", &
+     "seed       "]
+
+  ! Default parameter values. NOTE: The order is the same with `MODEL_PARAM_KEYS`.
+  integer, parameter :: MODEL_PARAM_DEFAULT(MODEL_PARAM_COUNT) = &
       [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0, RNG_INTRINSIC, 1]
 
   ! -------------------------------------------------------------------------- !
@@ -107,9 +126,9 @@ module ModelParam
   ! End of line character.
   character, parameter :: EOL = "/"
   ! Default null value. This could be any non-positive integers.
-  integer, parameter :: NULLVALUE = -1
+  integer, parameter :: NULL_VALUE = -1
   ! Ignore value. This could also be any non-positive integers.
-  integer, parameter :: IGNOREVALUE = 0 
+  integer, parameter :: IGNORE_VALUE = 0 
 
   public :: readScalarParam
   public :: readVerhulstWeights
@@ -121,7 +140,7 @@ contains
   ! FUNCTION: getCharArrayIndex
   !>  Get the corresponding index of `elem` in a rank-1 array of 
   !!  characters `elem`. If `elem` is not found in `array`, it
-  !!  returns `nullValue` which is set to 0.
+  !!  returns `NULL_VALUE` which is set to 0.
   ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(elem) result(i)
     implicit none
@@ -129,14 +148,14 @@ contains
 
     integer :: i
 
-    do i = 1, size(modelParamKeys)
-      if (trim(modelParamKeys(i)) == elem) return
+    do i = 1, MODEL_PARAM_COUNT
+      if (MODEL_PARAM_KEYS(i) == elem) return
     end do
 
     if (elem == "") then
-      i = IGNOREVALUE
+      i = IGNORE_VALUE
     else
-      i = NULLVALUE
+      i = NULL_VALUE
     end if
   end function getCharArrayIndex
 
@@ -149,38 +168,7 @@ contains
     implicit none
     integer, intent(in) :: values(:)
 
-    integer :: i
-
-    do i = 1, MODEL_PARAM_COUNT
-      select case (i)
-        case (1)
-          MODEL_L = values(i)
-        case (2)
-          MODEL_T = values(i)
-        case (3)
-          MODEL_B = values(i)
-        case (4)
-          MODEL_M = values(i)
-        case (5)
-          MODEL_R = values(i)
-        case (6)
-          MODEL_R_MAX = values(i)
-        case (7)
-          MODEL_K = values(i)
-        case (8)
-          MODEL_N0 = values(i)
-        case (9)
-          MODEL_TIME_STEPS = values(i)
-        case (10)
-          MODEL_SAMPLE_SIZE = values(i)
-        case (11)
-          MODEL_REC_FLAG = values(i)
-        case (12)
-          MODEL_RNG = values(i)
-        case (13)
-          MODEL_RNG_SEED = values(i)
-      end select
-    end do
+    modelParams(:) = values(:)
   end subroutine assignParameters
 
 
@@ -194,7 +182,8 @@ contains
     integer :: i
 
     do i = 1, MODEL_PARAM_COUNT
-      print "(4(' '), a12, ': ', i0)", modelParamKeys(i), modelParamDefault(i)
+      print "(4(' '), a12, ': ', i0)", MODEL_PARAM_KEYS(i), &
+          MODEL_PARAM_DEFAULT(i)
     end do
 
     ! Print separator.
@@ -224,17 +213,17 @@ contains
     integer   :: i
     
     ! Assign default values.
-    values(:) = modelParamDefault
+    values(:) = MODEL_PARAM_DEFAULT
 
     ! Read file.
-    open(unit=modelUnit, file=modelFilename, status='old', iostat=fileStatus)
+    open(unit=modelUnit, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
-      print "(a/, 3a)", "***", "WARNING. Cannot read '", trim(modelFilename), &
+      print "(a/, 3a)", "***", "WARNING. Cannot read '", trim(MODEL_FILE_NAME),&
           "'. Using the following default values:"
       call printModelParam()
-      call assignParameters(modelParamDefault)
+      call assignParameters(MODEL_PARAM_DEFAULT)
       return
     end if
 
@@ -264,14 +253,14 @@ contains
           ! Read previous key and value.
           keyIdx = getCharArrayIndex(key)
           select case (keyIdx)
-            case (IGNOREVALUE)
+            case (IGNORE_VALUE)
               key = ""
               cycle
-            case (NULLVALUE)
+            case (NULL_VALUE)
               print "(3(a))", "***WARNING. '", key, &
                   "' is not a valid parameter. Ignoring this key."
               print "(a/, 10(' '), *(a, ', '))", "Valid parameters:", &
-                  (trim(modelParamKeys(i)), i = 1, size(modelParamKeys))
+                  (trim(MODEL_PARAM_KEYS(i)), i = 1, size(MODEL_PARAM_KEYS))
               key = ""
               cycle
             case default
@@ -323,21 +312,21 @@ contains
 
     ! Initialize Verhulst weight array.
     if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
-    MODEL_VERHULST_W(:) = VERHULST_W_DEFAULT
+    MODEL_VERHULST_W(:) = VWEIGHT_DEFAULT
 
     ! Read file.
     allocate(character(len=0) :: strippedFile)
-    open(unit=vWeightUnit, file=vWeightsFilename, status='old', &
+    open(unit=vWeightUnit, file=VWEIGHT_FILE_NAME, status='old', &
         iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
       print "(a/, 3(a))", "***", &
           "WARNING. Cannot read '", & 
-          trim(vWeightsFilename), &
+          trim(VWEIGHT_FILE_NAME), &
           "'. Using the following default value:"
       print "(/a, i0, /a, f4.2)", "age:    1-", MODEL_L, "weight: ", &
-          VERHULST_W_DEFAULT
+          VWEIGHT_DEFAULT
 
       ! Print separator.
       print "(a)", "***"
@@ -379,7 +368,7 @@ contains
           else if (vWeight > 1) then
             print "(a, f5.3, a)", "***WARNING. Given Verhulst weight" // &
                 "is outside the allowed range [0, 1]. Using the " // &
-                "default value (", VERHULST_W_DEFAULT, ")."
+                "default value (", VWEIGHT_DEFAULT, ")."
 
           ! ***Unknown error.
           else
@@ -392,7 +381,7 @@ contains
         else
           print "(3(a), f5.3, a)", "***WARNING. '", vWeightStr , &
               "' is not a valid value for a Verhulst factor. " // &
-              "Using the default value (", VERHULST_W_DEFAULT, ")."
+              "Using the default value (", VWEIGHT_DEFAULT, ")."
         end if CastCheck
         ! <<
         ! ===========================================
@@ -423,7 +412,7 @@ contains
     integer,                       intent(in)  :: unit
 
     character(len=:), allocatable :: line
-    character(len=MAXLEN)         :: rawLine
+    character(len=MAX_LEN)        :: rawLine
     character :: currChar
     integer   :: readStatus
     integer   :: charNum
