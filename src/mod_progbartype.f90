@@ -37,9 +37,9 @@ contains
 
     ! Get character bit for progress bar.
     if (present(charBit)) then
-      new%charBit = charBit
+      new % charBit = charBit
     else
-      new%charBit = defaultCharBit
+      new % charBit = defaultCharBit
     end if
 
     ! Initialize `ProgressBar` object.
@@ -50,7 +50,7 @@ contains
 
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [ProgressBar%]incrementTick
+  ! BOUND SUBROUTINE: [ProgressBar % ]incrementTick
   !>  Increment `counter` attribute of a `ProgressBar` object. The increment
   !!  value can be optionally changed. It can optionally show the
   !!  progress bar as well.
@@ -63,26 +63,26 @@ contains
     logical, optional :: show
 
     ! End of progress bar case.
-    if (self%counter == self%totalTicks) return
+    if (self % counter == self % totalTicks) return
 
     ! Increment internal counter for progress bar.
     if (present(increment)) then
-      self%counter = self%counter + increment
+      self % counter = self % counter + increment
     else
-      self%counter = self%counter + 1
+      self % counter = self % counter + 1
     end if
 
     ! Optionally show the progress bar.
     if (present(show)) then
       if (show) then
-        call self%showProgBar
+        call self % showProgBar
       end if
     end if
   end subroutine incrementCounter
 
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [ProgressBar%]showProgBar
+  ! BOUND SUBROUTINE: [ProgressBar % ]showProgBar
   !>  Print the progress bar.
   !----------------------------------------------------------------------------!
   subroutine showProgBar(self)
@@ -93,23 +93,23 @@ contains
     integer :: barLength
     integer :: i
 
-    barLength = int(self%counter * self%partition/self%totalTicks)
+    barLength = int(self % counter * self % partition/self % totalTicks)
 
     ! Get progress bar as a character array.
     allocate(tickArr(barLength))
 
     if (barLength > 0) then
-      tickArr = [(self%charBit, i = 1, barLength), &
-          (" ", i = self%partition - 1, barLength, -1)]
+      tickArr = [(self % charBit, i = 1, barLength), &
+          (" ", i = self % partition - 1, barLength, -1)]
     else
-      tickArr = [(" ", i = self%partition - 1, barLength, -1)]
+      tickArr = [(" ", i = self % partition - 1, barLength, -1)]
     end if
 
     ! Print the character array.
-    write(*, "(*(a))", advance="no") (char(8), i = 1, self%partition + 10)
+    write(*, "(*(a))", advance="no") (char(8), i = 1, self % partition + 10)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
-    write(*, "(f6.1, a)", advance="no") 100*real(self%counter) / &
-        real(self%totalTicks), "%"
+    write(*, "(f6.1, a)", advance="no") 100*real(self % counter) / &
+        real(self % totalTicks), " % "
 
     deallocate(tickArr)
   end subroutine showProgBar

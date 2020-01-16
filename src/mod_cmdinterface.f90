@@ -74,15 +74,16 @@ contains
       call get_command_argument(argCount, cmdArg, status=status)
       if (status == -1) exit
 
-      call toggleFlagArg(cmdArg, status, cmdArgs%isVerbosePrint, &
-          cmdArgs%toRecordTime, cmdArgs%isSilent)
+      call toggleFlagArg(cmdArg, status, cmdArgs % isVerbosePrint, &
+          cmdArgs % toRecordTime, cmdArgs % isSilent)
       if (status == 0) cycle
 
-      call assignKeyValArg(cmdArg, status, cmdArgs%rngSeed, cmdArgs%rngChoice)
+      call assignKeyValArg(cmdArg, status, cmdArgs % rngSeed, &
+          cmdArgs % rngChoice)
       if (status == 0) cycle
 
-      call assignPosArg(cmdArg, cmdArgs%maxTimestep, cmdArgs%sampleSize, &
-          cmdArgs%startPopSize, cmdArgs%recordFlag)
+      call assignPosArg(cmdArg, cmdArgs % maxTimestep, cmdArgs % sampleSize, &
+          cmdArgs % startPopSize, cmdArgs % recordFlag)
     end do
   end subroutine getCmdArgs
 
@@ -375,10 +376,10 @@ contains
     type(CmdArgRecord), intent(in) :: cmdArgs
 
     logical :: toRecord
-    toRecord = cmdArgs%recordFlag /= nullRecFlag
+    toRecord = cmdArgs % recordFlag /= nullRecFlag
 
     ! Skip the Argument printing.
-    if (cmdArgs%isSilent) return
+    if (cmdArgs % isSilent) return
 
     ! ***Header
     print "(*(a))", separator 
@@ -386,13 +387,13 @@ contains
     print "(*(a))", separator
 
     ! ***Body (Extended model parameters)
-    if (cmdArgs%isVerbosePrint) call printModelParams
+    if (cmdArgs % isVerbosePrint) call printModelParams
 
     ! ***Body
     print "(2(a20, i9/), a20, i9)", &
-      "Number of time steps", cmdArgs%maxTimestep, &
-      "Sample size",          cmdArgs%sampleSize,  &
-      "Starting pop size",    cmdArgs%startPopSize
+      "Number of time steps", cmdArgs % maxTimestep, &
+      "Sample size",          cmdArgs % sampleSize,  &
+      "Starting pop size",    cmdArgs % startPopSize
     print "(a20, L9)", "Record result", toRecord
 
     ! ***End

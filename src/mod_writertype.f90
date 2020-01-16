@@ -62,7 +62,7 @@ module WriterType
   public :: formatFlags
   !----------------------------------------------------------------------------!
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]write
+  ! BOUND SUBROUTINE: [Writer % ]write
   !>  Write `arg` into the file specified by `flag`. The procedure
   !!  accepts real or integer arguments of either rank 0 or 1.
   !----------------------------------------------------------------------------!
@@ -93,7 +93,7 @@ module WriterType
   end interface
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]initialize
+  ! BOUND SUBROUTINE: [Writer % ]initialize
   !>  Initialize the files specified to be written in. The files are
   !!  specified by the integer `flag`. Multiple `flag`s can also be
   !!  as an automatic array of integers.
@@ -121,7 +121,7 @@ module WriterType
   end interface
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]close
+  ! BOUND SUBROUTINE: [Writer % ]close
   !>  Close a unit for writing files specified by the integer `flag`. 
   !!  To close multiple units, a rank-1 array of integers `flags` can
   !!  be passed. To close all units, pass nothing. 
@@ -143,7 +143,7 @@ module WriterType
   end interface
 
   !----------------------------------------------------------------------------!
-  ! BOUND SUBROUTINE: [Writer%]writeHeader
+  ! BOUND SUBROUTINE: [Writer % ]writeHeader
   !>  Write the header of the .csv file to write on.
   !----------------------------------------------------------------------------!
   interface

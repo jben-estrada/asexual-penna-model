@@ -75,10 +75,10 @@ contains
 
     if (associated(node)) then
       ! Update genome distribution if match is found.
-      if (node%genome == genome) then
-        node%count = node%count + 1
+      if (node % genome == genome) then
+        node % count = node % count + 1
       else
-        call incrementGenomeCount(node%next, genome)
+        call incrementGenomeCount(node % next, genome)
       end if
 
     else
@@ -113,7 +113,7 @@ contains
         genomeDstrbHead => new
     ! Append the new node at the end of the list.
     if (associated(genomeDstrbTail)) &
-        genomeDstrbTail%next => new
+        genomeDstrbTail % next => new
     genomeDstrbTail => new
   end subroutine appendGenomeDstrbNode
 
@@ -149,11 +149,11 @@ contains
     ! Read genome count of each node in the genome distribution list.
     do
       if (associated(reader)) then
-        diversityIdx = diversityIdx - real(reader%count)/real(genomeCount) * &
-            log(real(reader%count)/real(genomeCount))
+        diversityIdx = diversityIdx - real(reader % count)/real(genomeCount) * &
+            log(real(reader % count)/real(genomeCount))
 
         ! Proceed to the next element of the genome distribution list.
-        reader => reader%next
+        reader => reader % next
       else
         exit
       end if
@@ -170,7 +170,7 @@ contains
     type(GenomeDstrbNode), pointer, intent(inout) :: node
 
     if (associated(node)) then
-      call cascadeFreeNodes(node%next)
+      call cascadeFreeNodes(node % next)
       deallocate(node)
     end if
   end subroutine cascadeFreeNodes

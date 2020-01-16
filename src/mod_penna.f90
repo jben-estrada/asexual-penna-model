@@ -89,30 +89,30 @@ contains
       ! Record result.
       select case (recordFlag)
         case (popRecFlag)
-          call runWriter%write(popFlag, int(popSize, kind=writeIK))
+          call runWriter % write(popFlag, int(popSize, kind=writeIK))
 
         case (demogRecFlag)
-          call runWriter%write((ageDstrbFlag), &
+          call runWriter % write((ageDstrbFlag), &
               int(ageDistribution, kind=writeIK))
 
         case (deathRecFlag)
-          call runWriter%write(deathFlag, int(deathCount, kind=writeIK))
+          call runWriter % write(deathFlag, int(deathCount, kind=writeIK))
 
         case (divIdxRecFlag)
-          call runWriter%write(divIdxFlag, &
+          call runWriter % write(divIdxFlag, &
               real(getDiversityIdx(), kind=writeRK))
       end select
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
-      call population%resetReadPtrs()
+      call population % resetReadPtrs()
       if (recordFlag == demogRecFlag) call resetAgeDstrb()
       if (recordFlag == divIdxRecFlag) call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
-    call population%freePtr(popSize)
-    call runWriter%close()
+    call population  %  freePtr(popSize)
+    call runWriter  %  close()
     call deallocAgeDstrb()
   end subroutine run
 
@@ -142,11 +142,11 @@ contains
       if (popSize == 0) exit
 
       ! Evaluate the current individual. 
-      call population%checkCurrIndivDeath(popSize)
+      call population % checkCurrIndivDeath(popSize)
 
-      if (population%isCurrIndivDead()) then
+      if (population % isCurrIndivDead()) then
         ! Count dead ones.
-        select case (population%getCurrIndivDeathIdx())
+        select case (population % getCurrIndivDeathIdx())
           case (DEAD_OLD_AGE)
             deathCount(1) = deathCount(1) + 1
 
@@ -163,25 +163,25 @@ contains
         popSizeChange = popSizeChange - 1
       else
         ! Update age of the alive individuals.
-        call population%updateCurrIndivAge()
+        call population % updateCurrIndivAge()
 
         ! Update genome distribution.
         if (recFlag == divIdxRecFlag) &
-            call updateGenomeDstrb(population%getCurrIndivGenome())
+            call updateGenomeDstrb(population % getCurrIndivGenome())
 
         ! Check for birth events.
-        if (population%isCurrIndivMature()) then
-          call population%reproduceCurrIndiv(recFlag == divIdxRecFlag)
+        if (population % isCurrIndivMature()) then
+          call population % reproduceCurrIndiv(recFlag == divIdxRecFlag)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
 
       ! Record demographics.
       if (countdown <= DEMOG_LAST_STEPS) &
-          call updateAgeDstrb(population%getCurrIndivAge(), ageDistribution)
+          call updateAgeDstrb(population % getCurrIndivAge(), ageDistribution)
 
       ! Proceed to the next element of the linked list.
-      call population%nextElem(listStatus)
+      call population % nextElem(listStatus)
       ! Exit condition.
       if (listStatus /= 0) exit
     end do evalPop
@@ -243,7 +243,7 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      call progBar%incrementCounter(show=.true.)
+      call progBar % incrementCounter(show=.true.)
     end do
 
     ! Get average elapsed time and its std deviation.
@@ -265,18 +265,18 @@ contains
     ! Record mean time and std deviation.
     if (toRecordTime) then
       call constructWriter(timeWriter, [timeFlag])
-      call timeWriter%initialize()
-      call timeWriter%writeHeader(timeFlag, &
+      call timeWriter % initialize()
+      call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
            "initial pop size    ", &
            "average elapsed time", &
            "standard deviation  "])
-      call timeWriter%write(timeFlag, &
+      call timeWriter % write(timeFlag, &
           [real(maxTimeStep, kind=writeRK), &
            real(startingPopSize, kind=writeRK), &
            meanTime, &
            stdDevTime])
-      call timeWriter%close()
+      call timeWriter % close()
     end if
   end subroutine multipleRun
 
@@ -300,23 +300,23 @@ contains
         ! Placeholder. Does nothing.
 
       case (popRecFlag)
-        call runWriter%initialize(popFlag)
-        call runWriter%writeHeader(popFlag, ["population size"])
+        call runWriter % initialize(popFlag)
+        call runWriter % writeHeader(popFlag, ["population size"])
 
       case (demogRecFlag)
-        call runWriter%initialize(ageDstrbFlag)
-        call runWriter%writeHeader(ageDstrbFlag, ["age =>"])
+        call runWriter % initialize(ageDstrbFlag)
+        call runWriter % writeHeader(ageDstrbFlag, ["age =>"])
 
       case (deathRecFlag)
-        call runWriter%initialize(deathFlag)
-        call runWriter%writeHeader(deathFlag, &
+        call runWriter % initialize(deathFlag)
+        call runWriter % writeHeader(deathFlag, &
             ["death by old age        ", &
              "death by mutation       ", &
              "death by Verhulst factor"])
    
       case (divIdxRecFlag)
-        call runWriter%initialize(divIdxFlag)
-        call runWriter%writeHeader(divIdxFlag, &
+        call runWriter % initialize(divIdxFlag)
+        call runWriter % writeHeader(divIdxFlag, &
             ["Diversity index per time step"])
 
       case default
