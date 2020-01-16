@@ -16,17 +16,30 @@ module RNG
 
   integer, save :: rngChoice
 
-  public :: chooseRNG
-  public :: setSeed
+  public :: initializeRNG
   public :: getRandNumber
 contains
 
 
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initializeRNG
+  !>  Initialize the chosen random number generator
+  ! -------------------------------------------------------------------------- !
+  subroutine initializeRNG()
+    use CmdOptions, only: rngChoiceArg, rngSeedArg
+    implicit none
+
+
+    call chooseRNG(rngChoiceArg % getValue())
+    call setSeed(rngSeedArg % getValue())
+  end subroutine initializeRNG
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: chooseRNG
   !>  Choose random number generator. So far, there are two RNGs available:
   !!  the intrinsic RNG (a KISS PRNG) and a Mersenne Twister RNG (MT19937).
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
   subroutine chooseRNG(choice)
     implicit none
     integer, intent(in) :: choice
@@ -40,10 +53,10 @@ contains
   end subroutine chooseRNG
 
 
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: setSeed
   !>  Set the seed for the chosen RNG.
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
   subroutine setSeed(seed)
     implicit none
     integer, intent(in) :: seed
@@ -75,11 +88,11 @@ contains
   end subroutine setSeed
 
 
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: getRandNumber
   !>  Get a random real number between 0 and 1. The exact range is RNG-
   !!  specific.
-  ! ---------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------- !
   subroutine getRandNumber(randnum)
     implicit none
     real, intent(out) :: randnum
