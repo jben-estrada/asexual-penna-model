@@ -38,6 +38,12 @@ contains
     class(PositionalCmdOption),  intent(inout) :: cmdPosArg
     character(len=LONG_MAX_LEN), intent(in)    :: value
 
+    if (cmdPosArg % isOptional) then
+      print "(3a)", "***ERROR. Cannot assign '", trim(cmdPosArg % command), &
+          "' its default value again."
+      stop
+    end if
+
     cmdPosArg % hasValue = .true.
     cmdPosArg % isOptional = .true.
     cmdPosArg % value = value

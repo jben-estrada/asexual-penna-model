@@ -18,6 +18,12 @@ contains
     class(FlagCmdOption), intent(inout) :: cmdFlag
     logical,              intent(in)    :: state
 
+    if (cmdFlag % isOptional) then
+      print "(3a)", "***ERROR. Cannot assign '", trim(cmdFlag % command), &
+          "' its default value again."
+      stop
+    end if
+
     cmdFlag % isOptional = .true.
     cmdFlag % state = state
   end subroutine assignInitialFlagState

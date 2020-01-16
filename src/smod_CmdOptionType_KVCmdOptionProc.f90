@@ -18,6 +18,12 @@ contains
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
     integer,                intent(in)    :: value
 
+    if (cmdKeyVal % isOptional) then
+      print "(3a)", "***ERROR. Cannot assign '", trim(cmdKeyVal % command), &
+          "' its default value again."
+      stop
+    end if
+
     cmdKeyVal % hasValue = .true.
     cmdKeyVal % isOptional = .true.
     cmdKeyVal % value = value
