@@ -38,6 +38,7 @@ contains
     class(PositionalCmdOption),  intent(inout) :: cmdPosArg
     character(len=LONG_MAX_LEN), intent(in)    :: value
 
+    cmdPosArg % hasValue = .true.
     cmdPosArg % isOptional = .true.
     cmdPosArg % value = value
   end subroutine assignOptionalPosTypeVal

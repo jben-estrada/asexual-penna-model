@@ -18,6 +18,7 @@ contains
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
     integer,                intent(in)    :: value
 
+    cmdKeyVal % hasValue = .true.
     cmdKeyVal % isOptional = .true.
     cmdKeyVal % value = value
   end subroutine assignOptionalKVVal

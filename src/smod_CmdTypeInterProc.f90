@@ -14,12 +14,6 @@ contains
     character(len=*),           intent(in)  :: command
     character(len=*), optional, intent(in)  :: altCommand
 
-    if (cmdOption % isInitialized) then
-      print "(a)", "***ERROR. A command-line option is already initialized."
-      stop
-    end if
-
-    cmdOption % isInitialized = .true.
     cmdOption % command = command
     if (present(altCommand)) then
       cmdOption % altCommand = altCommand
@@ -61,6 +55,10 @@ contains
         stop
       end if
     end do
+
+    ! Check for missing values.
+    call checkUninitializedValues(cmdKeyVal)
+    call checkUninitializedValues(cmdPosArgs)
   end subroutine parseCmdArgs
 
 
@@ -153,6 +151,7 @@ contains
 
     if (status == 0) then
       cmdOption % value = valueInt
+      cmdOption % hasValue = .true.
     else
       print "(3a)", "***ERROR. '", trim(cmdOption % command), &
           "' only accepts integers."
@@ -179,6 +178,8 @@ contains
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % position == posCount) then
         cmdPosArgs(i) % value = cmdArg
+        cmdPosArgs(i) % hasValue = .true.
+
         posCount = posCount + 1
         status = 0
         exit
@@ -235,4 +236,24 @@ contains
     end if
     if (allocated(tempStr)) deallocate(tempStr)
   end subroutine getKeyVal
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkUninitializedValues
+  !>  Check for command-line options with missing values.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkUninitializedValues(cmdOptions)
+    implicit none
+    class(BaseCmdOption), intent(in) :: cmdOptions(:)
+
+    integer :: i
+
+    do i =  1, size(cmdOptions)
+      if (.not. cmdOptions(i) % hasValue) then
+        print "(3a)", "***ERROR. The command '", trim(cmdOptions(i) % command),&
+            "' requires a value." 
+        stop
+      end if
+    end do
+  end subroutine checkUninitializedValues
 end submodule

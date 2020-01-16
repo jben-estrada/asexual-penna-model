@@ -23,6 +23,7 @@ module CmdOptionType
     character(len=LONG_MAX_LEN) :: usageMsg
 
     logical :: isOptional = .false.
+    logical :: hasValue = .false.
   contains
     procedure :: getCommand
     procedure :: getAltCommand
