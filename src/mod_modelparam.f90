@@ -92,27 +92,6 @@ module ModelParam
       "./config/v_weight.cfg"
 
   ! -------------------------------------------------------------------------- !
-  ! Parameter keys. NOTE: Padded with spaces to accept initializer.
-  character(len=*), parameter :: MODEL_PARAM_KEYS(MODEL_PARAM_COUNT) = &
-    ["L          ", &
-     "T          ", &
-     "B          ", &
-     "M          ", &
-     "R          ", &
-     "R_max      ", &
-     "K          ", &
-     "N0         ", &
-     "t_max      ", &
-     "sample_size", &
-     "rec_flag   ", &
-     "rng        ", &
-     "seed       "]
-
-  ! Default parameter values. NOTE: The order is the same with `MODEL_PARAM_KEYS`.
-  integer, parameter :: MODEL_PARAM_DEFAULT(MODEL_PARAM_COUNT) = &
-      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, 0, RNG_INTRINSIC, 1]
-
-  ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: modelUnit = 99
   integer, parameter :: vWeightUnit = 98
