@@ -93,7 +93,8 @@ contains
     integer :: barLength
     integer :: i
 
-    barLength = int(self % counter * self % partition/self % totalTicks)
+    barLength = int(self % counter &
+        * real(self % partition)/real(self % totalTicks))
 
     ! Get progress bar as a character array.
     allocate(tickArr(barLength))
@@ -109,7 +110,7 @@ contains
     write(*, "(*(a))", advance="no") (char(8), i = 1, self % partition + 10)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
     write(*, "(f6.1, a)", advance="no") 100*real(self % counter) / &
-        real(self % totalTicks), " % "
+        real(self % totalTicks), "%"
 
     deallocate(tickArr)
   end subroutine showProgBar
