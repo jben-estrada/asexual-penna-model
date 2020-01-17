@@ -1,3 +1,6 @@
+# NOTE: For some reason, compiling the third-party source in a separate folder,
+#				does not seem to link well with the others.
+
 # File names
 SRC_LIST :=source_list
 LIB_SRCS :=$(wildcard *.f90)
