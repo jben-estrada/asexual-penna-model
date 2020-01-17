@@ -18,7 +18,7 @@ module ProgBarType
     procedure :: incrementCounter
   end type ProgressBar
 
-  character, parameter :: defaultCharBit = ">"
+  character, parameter :: DEFAULT_CHAR_BIT = ">"
   public :: initProgressBar
 contains
 
@@ -39,7 +39,7 @@ contains
     if (present(charBit)) then
       new % charBit = charBit
     else
-      new % charBit = defaultCharBit
+      new % charBit = DEFAULT_CHAR_BIT
     end if
 
     ! Initialize `ProgressBar` object.
