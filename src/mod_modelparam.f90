@@ -84,7 +84,7 @@ module ModelParam
   ! Record-time state.
   logical, public, protected :: RECORD_TIME = .false.
   ! -------------------------------------------------------------------------- !
-  ! Parameters whose values are from `verhulst_weights.ini`.
+  ! Parameters whose values are from `v_weight.cfg`.
   ! Verhulst weights.
   real, allocatable, protected, public :: MODEL_VERHULST_W(:)
   ! Default Verhulst weight.
