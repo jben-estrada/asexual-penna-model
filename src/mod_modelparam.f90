@@ -246,8 +246,10 @@ contains
     ! Error handling.
     if (silentPrintFlag % getFlagState() .and. &
         verbosePrintFlag % getFlagState()) then
-      print "(a)", "***ERROR. '-v' or '--verbose' cannot be passed with " // &
-          "'-s' or '--silent'."
+      print "(*(a))", "***ERROR. '", trim(verbosePrintFlag % getCommand()), &
+          "' or '", trim(verbosePrintFlag % getAltCommand()), &
+          "' cannot be passed with '", trim(silentPrintFlag % getCommand()), &
+          "' or '", trim(silentPrintFlag % getAltCommand()), "'."
       stop
     end if
 
