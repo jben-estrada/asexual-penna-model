@@ -1,5 +1,8 @@
 submodule (ModelParam) ReadProcedures
+  use RNG, only: RNG_INTRINSIC
+  use SaveFormat, only: nullFlag
   implicit none
+
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
   character(len=*), parameter :: MODEL_PARAM_KEYS(MODEL_PARAM_COUNT) = &
     ["L          ", &
@@ -16,10 +19,29 @@ submodule (ModelParam) ReadProcedures
      "rng        ", &
      "seed       "]
 
+  ! -------------------------------------------------------------------------- !
   ! Internal default parameter values. If all things go wrong, this is used
   ! instead. NOTE: The order is the same with `MODEL_PARAM_KEYS`.
   integer, parameter :: MODEL_PARAM_DEFAULT(MODEL_PARAM_COUNT) = &
       [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, nullFlag, RNG_INTRINSIC, 1]
+  
+  ! -------------------------------------------------------------------------- !
+  ! Units for writing on files.
+  integer, parameter :: MODEL_UNIT = 99
+  integer, parameter :: VWEIGHT_UNIT = 98
+
+  ! Comment character.
+  character, parameter :: COMMENT = ";"
+  ! Key-value separator.
+  character, parameter :: KEYVAL_SEP = "="
+  ! Verhulst weight separator.
+  character, parameter :: VWEIGHT_SEP = ","
+  ! End of line character.
+  character, parameter :: EOL = "/"
+  ! Default null value. This could be any non-positive integers.
+  integer, parameter :: NULL_VALUE = -1
+  ! Ignore value. This could also be any non-positive integers.
+  integer, parameter :: IGNORE_VALUE = 0
 contains
 
 
@@ -48,7 +70,7 @@ contains
     values(:) = MODEL_PARAM_DEFAULT
 
     ! Read file.
-    open(unit=modelUnit, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
+    open(unit=MODEL_UNIT, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
@@ -61,8 +83,8 @@ contains
     end if
 
     ! Clean model config file.
-    call stripFile(strippedFile, modelUnit)    
-    close(modelUnit)
+    call stripFile(strippedFile, MODEL_UNIT)    
+    close(MODEL_UNIT)
 
     ! Evaluate file.
     allocate(character(len=0) :: strVal)
@@ -242,7 +264,7 @@ contains
 
     ! Read file.
     allocate(character(len=0) :: strippedFile)
-    open(unit=vWeightUnit, file=VWEIGHT_FILE_NAME, status='old', &
+    open(unit=VWEIGHT_UNIT, file=VWEIGHT_FILE_NAME, status='old', &
         iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
@@ -260,8 +282,8 @@ contains
     end if
     
     ! Clean Verhulst weight config file. 
-    call stripFile(strippedFile, vWeightUnit)
-    close(vWeightUnit)
+    call stripFile(strippedFile, VWEIGHT_UNIT)
+    close(VWEIGHT_UNIT)
 
     ! Evaluate stripped input.
     vWeightIdx = 1

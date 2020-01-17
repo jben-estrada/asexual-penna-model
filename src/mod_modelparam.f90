@@ -35,8 +35,6 @@ module ModelParam
   !               K    : The carrying capacity.
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
-  use RNG, only: RNG_INTRINSIC
-  use SaveFormat, only: nullFlag
   implicit none
   private
 
@@ -101,23 +99,6 @@ module ModelParam
   character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
       "./config/v_weight.cfg"
 
-  ! -------------------------------------------------------------------------- !
-  ! Units for writing on files.
-  integer, parameter :: modelUnit = 99
-  integer, parameter :: vWeightUnit = 98
-
-  ! Comment character.
-  character, parameter :: COMMENT = ";"
-  ! Key-value separator.
-  character, parameter :: KEYVAL_SEP = "="
-  ! Verhulst weight separator.
-  character, parameter :: VWEIGHT_SEP = ","
-  ! End of line character.
-  character, parameter :: EOL = "/"
-  ! Default null value. This could be any non-positive integers.
-  integer, parameter :: NULL_VALUE = -1
-  ! Ignore value. This could also be any non-positive integers.
-  integer, parameter :: IGNORE_VALUE = 0 
   ! -------------------------------------------------------------------------- !
   ! Pretty print separator.
   integer, private :: k
@@ -277,6 +258,7 @@ contains
   !!  if need be.
   ! -------------------------------------------------------------------------- !
   subroutine prettyPrintModelParams()
+    use SaveFormat, only: nullFlag
     implicit none
 
     ! Skip the argument printing.
