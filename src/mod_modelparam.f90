@@ -75,6 +75,15 @@ module ModelParam
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
     modelParams(13)! RNG seed.
 
+  ! Print states.
+  integer, public, parameter :: NORMAL_PRINT = 0
+  integer, public, parameter :: VERBOSE_PRINT = 1
+  integer, public, parameter :: SILENT_PRINT = 2
+
+  integer, public, protected :: PRINT_STATE = NORMAL_PRINT
+
+  ! Record-time state.
+  logical, public, protected :: RECORD_TIME = .false.
   ! -------------------------------------------------------------------------- !
   ! Parameters whose values are from `verhulst_weights.ini`.
   ! Verhulst weights.
