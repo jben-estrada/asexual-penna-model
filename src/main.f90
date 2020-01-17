@@ -25,47 +25,61 @@
 
 
 program Main
-  ! use Penna
-  ! use CmdInterface
-  ! use RNG, only: setSeed, chooseRNG
-  use CmdOptions
+  use Penna
+  use ModelParam
+  use RNG, only: initializeRNG
+  use CmdOptions, only: initializeCmdOptions, parseCmdArgs, showHelpMsgAndNotes
   implicit none
 
-  ! --------
-  ! DEBUG
-  ! --------
+  ! Initialize the command-line options.
   call initializeCmdOptions()
 
-  call parseCommandArguments()
-  ! --------
+  ! Get the paths of .cfg  files.
+  ! -------------------------------------------------------------------------- !
+  ! Initialize command-line optional arguments.
+  call assignOptionalCfgFilePath()
 
-  ! ! A unified record for the command-line arguments.
-  ! type(CmdArgRecord) :: cmdArgs
+  ! Get only the positional arguments.
+  call parseCmdArgs(.false., .false., .true.)
+  ! Assign the paths of .cfg files containing model parameters and
+  ! Verhulst weights.
+  call assignConfigFilePaths()
+  ! -------------------------------------------------------------------------- !
 
-  ! ! Get and then set model parameters
-  ! ! ---------------------------------
-  ! ! Initialize model parameters.
-  ! call readModelParam()
-  ! ! Get command-line arguments.
-  ! call getCmdArgs(cmdArgs)
+  ! Get the model parameters from the .cfg files.
+  ! -------------------------------------------------------------------------- !
+  ! Read the .cfg files.
+  call readScalarParam()
+  call readVerhulstWeights()
 
-  ! ! Pretty print cmd arguments and model parameters.
-  ! call printArgs(cmdArgs)
-  ! ! ---------------------------------
+  ! Assign the model parameters from the .cfg file as the default value.
+  ! (Non-default values would come from command-line arguments.)
+  call assignOptionalModelParamVal()
 
-  ! ! Initialize the random number generator.
-  ! ! ---------------------------------------
-  ! ! Choose RNG.
-  ! call chooseRNG(cmdArgs%rngChoice)
-  ! ! Set the seed for the chosen RNG.
-  ! call setSeed(cmdArgs%rngSeed)
-  ! ! ---------------------------------------
+  ! Get the remaining command-line arguments.
+  call parseCmdArgs(.true., .true., .false.)
 
-  ! ! Run the Penna model `sampleSize` times.
-  ! call multipleRun(cmdArgs%maxTimestep, cmdArgs%startPopSize, &
-  !     cmdArgs%sampleSize, cmdArgs%recordFlag, cmdArgs%toRecordTime)
+  ! Finally, assign model parameters obtained from the command-line arguments.
+  call assignModelParamFromCmdArgs()
+  ! -------------------------------------------------------------------------- !
 
-  ! ! Wrap up. Deallocate any global allocatable variables.
-  ! call wrapUp()
-  ! if (.not.cmdArgs%isSilent) print "(*(a))", separator
+  ! -------------------------------------------------------------------------- !
+  ! Initialize the RNG with the provided command-line arguments.
+  call initializeRNG()
+
+  ! Print the help message and stop the program if '-h' or '--help' is passed.
+  call showHelpMsgAndNotes()
+
+  ! Print the welcome text.
+  call prettyPrintModelParams()
+  ! -------------------------------------------------------------------------- !
+
+  ! -------------------------------------------------------------------------- !
+  ! Run the Penna model simulation.
+  call run(MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE, MODEL_REC_FLAG, &
+      RECORD_TIME, PRINT_STATE /= SILENT_PRINT)
+  ! -------------------------------------------------------------------------- !
+
+  ! Wrap up.
+  call deallocVerhulstWeights()
 end program Main

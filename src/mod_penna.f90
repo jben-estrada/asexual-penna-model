@@ -9,34 +9,20 @@ module Penna
   use Pop
   use WriterType
   use SaveFormat
-  use ModelParam
   implicit none
   private
 
-  public :: multipleRun
-  public :: readModelParam
-  public :: wrapUp
+  public :: run
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readModelParam
-  !>  Wrapper procedure for `readScalarParam`
+  ! SUBROUTINE: runOneInstance
+  !>  Run the Penna model simulation once.
   ! -------------------------------------------------------------------------- !
-  subroutine readModelParam()
-    implicit none
-
-    call readScalarParam
-    call readVerhulstWeights
-  end subroutine readModelParam
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: run
-  !>  Run the Penna model.
-  ! -------------------------------------------------------------------------- !
-  subroutine run(maxTimestep, startPopSize, recordFlag)
+  subroutine runOneInstance(maxTimestep, startPopSize, recordFlag)
     use Demographics
+    use ModelParam, only: MODEL_K
     implicit none
 
     integer, intent(in) :: maxTimestep
@@ -108,7 +94,7 @@ contains
     call population  %  freePtr(popSize)
     call runWriter  %  close()
     call deallocAgeDstrb()
-  end subroutine run
+  end subroutine runOneInstance
 
 
   ! -------------------------------------------------------------------------- !
@@ -118,6 +104,7 @@ contains
   subroutine evalPopulation(population, deathCount, popSize, countdown, recFlag)
     use Flag
     use Demographics
+    use ModelParam, only: MODEL_B
     implicit none
 
     type(PersonList), intent(inout) :: population
@@ -186,12 +173,21 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: multipleRun
-  !>  Call the `run` subroutine and time it for `sampleSize` times.
+  ! SUBROUTINE: run
+  !>  Run the Penna model simulation.
   ! -------------------------------------------------------------------------- !
-  subroutine multipleRun()
+  subroutine run(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
+        toRecordTime, printRunProgress)
     use ProgBarType
+    use ModelParam, only: PRINT_SEPARATOR
     implicit none
+
+    integer, intent(in) :: maxTimeStep
+    integer, intent(in) :: sampleSize   
+    integer, intent(in) :: startingPopSize
+    integer, intent(in) :: recordFlag
+    logical, intent(in) :: toRecordTime
+    logical, intent(in) :: printRunProgress
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -203,8 +199,8 @@ contains
     real(kind=writeRK)    :: sum
     real(kind=writeRK)    :: sumSqrd
 
-    type(ProgressBar) :: progBar       ! A `ProgressBar` object.
-    type(Writer)      :: timeWriter    ! A `Writer` object for writing timings.
+    type(ProgressBar) :: progBar    ! A `ProgressBar` object.
+    type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
     integer :: i
 
     ! Initialize the progress bar.
@@ -219,7 +215,7 @@ contains
       startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
 
       ! Run the actual simulation.
-      call run(maxTimeStep, startingPopSize, recordFlag)
+      call runOneInstance(maxTimeStep, startingPopSize, recordFlag)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
@@ -230,27 +226,32 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      call progBar % incrementCounter(show=.true.)
+      if (printRunProgress) then
+        call progBar % incrementCounter(show=.true.)
+      end if
     end do
 
     ! Get average elapsed time and its std deviation.
     meanTime = sum/real(sampleSize, kind=writeRK)
-    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2)/real(sampleSize, &
-        kind=writeRK)
+    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2) / &
+      real(sampleSize, kind=writeRK)
 
-    ! Print elapsed time.
-    if (sampleSize > 1) then
-      print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
-    else
-      print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+    ! Print timing statistics.
+    if (printRunProgress) then
+      ! Print elapsed time.
+      if (sampleSize > 1) then
+        print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+      else
+        print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+      end if
+
+      ! Print the standard deviation.
+      if (sampleSize > 1) &
+        print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
     end if
 
-    ! Print the standard deviation.
-    if (sampleSize > 1) &
-      print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
-
     ! Record mean time and std deviation.
-    if (MODEL_REC_FLAG /= nullFlag) then
+    if (toRecordTime) then
       call constructWriter(timeWriter, [timeFlag])
       call timeWriter % initialize()
       call timeWriter % writeHeader(timeFlag, &
@@ -265,7 +266,9 @@ contains
            stdDevTime])
       call timeWriter % close()
     end if
-  end subroutine multipleRun
+
+    if (printRunProgress) print "(*(a))", PRINT_SEPARATOR
+  end subroutine run
 
 
   ! -------------------------------------------------------------------------- !
@@ -309,15 +312,4 @@ contains
         stop
     end select
   end subroutine initializeRunWriter
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: wrapUp
-  !>  Wrap up the simulation. This deallocates allocatable arrays.
-  ! -------------------------------------------------------------------------- !
-  subroutine wrapUp
-    implicit none
-    
-    call deallocVerhulstWeights()
-  end subroutine wrapUp
 end module Penna

@@ -34,6 +34,7 @@ module CmdOptionType
   ! Key-value command-line argument type.
   type, public, extends(BaseCmdOption) :: KeyValCmdOption
     private
+    character(len=MAX_LEN) :: valueMsg
     integer :: value
   contains
     procedure :: getValue => KVtype_getValue
@@ -117,6 +118,11 @@ module CmdOptionType
       class(KeyValCmdOption), intent(inout) :: cmdKeyVal
       integer,                intent(in)    :: value
     end subroutine
+
+    module subroutine setValueMsg(cmdKeyVal, valueMsg)
+      class(KeyValCmdOption), intent(inout) :: cmdKeyVal
+      character(len=*),       intent(in)    :: valueMsg
+    end subroutine
   end interface
   ! -------------------------------------------------------------------------- !
 
@@ -152,18 +158,31 @@ module CmdOptionType
       character(len=*), optional, intent(in)  :: altCommand
     end subroutine
 
-    module subroutine parseCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs)
+    module subroutine parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &
+          readFlag, readKeyVal, readPosArg)
       class(FlagCmdOption),       intent(inout) :: cmdFlags(:)
       class(KeyValCmdOption),     intent(inout) :: cmdKeyVal(:)
       class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
+      logical,                    intent(in)    :: readFlag
+      logical,                    intent(in)    :: readKeyVal
+      logical,                    intent(in)    :: readPosArg
+    end subroutine
+
+    module subroutine showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
+      class(FlagCmdOption),       intent(in) :: cmdFlags(:)
+      class(KeyValCmdOption),     intent(in) :: cmdKeyVal(:)
+      class(PositionalCmdOption), intent(in) :: cmdPosArgs(:)
     end subroutine
   end interface
   ! -------------------------------------------------------------------------- !
 
-  public :: parseCmdArgs
+  public :: parsePassedCmdArgs
   public :: initializeCmdOption
+  public :: showHelpMsg
+
   public :: setUsageMsg
   public :: setPosTypePosition
+  public :: setValueMsg
 
   public :: assignOptionalPosTypeVal
   public :: assignOptionalKVVal

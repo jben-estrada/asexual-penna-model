@@ -39,7 +39,13 @@ module CmdOptions
     cmdPosArgs(2)
 
   public :: initializeCmdOptions
-  public :: parseCommandArguments
+  public :: parseCmdArgs
+  public :: showHelpMsgAndNotes
+
+  ! Routines for assigning optional values.
+  public :: assignOptionalKVVal
+  public :: assignOptionalPosTypeVal
+  public :: assignInitialFlagState
 contains
 
 
@@ -48,14 +54,13 @@ contains
   !>  Initialize command-line option types.
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
-    use ModelParam
     implicit none
 
     ! Assign command char of flag options.
     call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
     call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
     call initializeCmdOption(recordTimeFlag, "-r", "--record-time")
-    call initializeCmdOption(silentPrintFlag, "-s", "--silent")
+    call initializeCmdOption(silentPrintFlag, "-q", "--quiet")
   
     ! Assign command char of key-value options.
     call initializeCmdOption(maxTimeStepArg, "--max-time-step")
@@ -71,12 +76,23 @@ contains
     call setPosTypePosition(configDirPosArg, 1)
     call setPosTypePosition(vWeightDirPosArg, 2)
 
+    call setCmdOptionUsageMsgs()
+  end subroutine initializeCmdOptions
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setCmdOptionUsageMsgs
+  !>  Assign usage messages to module-defined command-line option objects.
+  ! -------------------------------------------------------------------------- !
+  subroutine setCmdOptionUsageMsgs()
+    implicit none
+
     ! Set usage messages of flag options.
     call setUsageMsg(verbosePrintFlag, "Show all the model parameters.")
     call setUsageMsg(showHelpMsgFlag, "Show this message and exit.")
     call setUsageMsg(recordTimeFlag, "Record the average elapsed time " // &
         "of the simulation.")
-    call setUsageMsg(silentPrintFlag, "Do not show the model parameters.")
+    call setUsageMsg(silentPrintFlag, "Quietly run the simulation.")
 
     ! Set usage messages of key-value options.
     call setUsageMsg(maxTimeStepArg, "Maximum time step.")
@@ -84,26 +100,65 @@ contains
     call setUsageMsg(startPopSizeArg, "Starting population size.")
     call setUsageMsg(recordFlagArg, "Record data specified by the " // &
         "given integer flag.")
-    call setUsageMsg(rngChoiceArg, "Choose a random number " // &
-        "generator (RNG) to be used as specified by the given" // &
-        " integer flag.")
+    call setUsageMsg(rngChoiceArg, "Choose an RNG to be used as specified " // &
+        "by the given integer flag.")
     call setUsageMsg(rngSeedArg, "Set the seed for the RNG.")
 
+    ! Set the message for the value in key-value options.
+    call setValueMsg(maxTimeStepArg, "<integer>")
+    call setValueMsg(sampleSizeArg, "<integer>")
+    call setValueMsg(startPopSizeArg, "<integer>")
+    call setValueMsg(recordFlagArg, "<integer>")
+    call setValueMsg(rngChoiceArg, "<integer>")
+    call setValueMsg(rngSeedArg, "<integer>")
+
     ! Set usage messages of positional arguments.
-    call setUsageMsg(configDirPosArg, "Directory of .cfg file of " // &
+    call setUsageMsg(configDirPosArg, "Path of .cfg file of " // &
         "model parameters.")
-    call setUsageMsg(vWeightDirPosArg, "Directory of .cfg file of " // &
+    call setUsageMsg(vWeightDirPosArg, "Path of .cfg file of " // &
         "Verhulst weights.")
-  end subroutine initializeCmdOptions
+  end subroutine setCmdOptionUsageMsgs
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: parseCommandArguments
-  !>  Parse command-line arguments with the defined CLI options in 'CmdOptions'
-  !!  This is essentially a wrapper to the 'parseCmdArgs' subroutine.
+  ! SUBROUTINE: parseNonPosArgs
+  !>  Parse key-value arguments and flags.
   ! -------------------------------------------------------------------------- !
-  subroutine parseCommandArguments()
+  subroutine parseCmdArgs(readFlag, readKeyVal, readPosArg)
     implicit none
-    call parseCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs)
-  end subroutine parseCommandArguments
+    logical, intent(in)    :: readFlag
+    logical, intent(in)    :: readKeyVal
+    logical, intent(in)    :: readPosArg
+
+    call parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &
+        readFlag, readKeyVal, readPosArg)
+  end subroutine parseCmdArgs
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: showHelpMsgAndNotes
+  !>  Show the help message together with notes with regards to integer flags.
+  ! -------------------------------------------------------------------------- !
+  subroutine showHelpMsgAndNotes()
+    implicit none
+    
+    if (showHelpMsgFlag % getFlagState()) then
+      call showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
+
+      ! Print notes:
+      print "(/a)", "notes:"
+      write(*, "(4(' '), a/, 5(8(' '), a/))", advance="no") &
+          "There are 5 record flags: ", &
+          "0 - record nothing", &
+          "1 - population count per time step", &
+          "2 - age distribution", &
+          "3 - death count", &
+          "4 - Shannon diversity index per time step"
+      write(*, "(4(' '), a/, 2(8(' '), a/))", advance="no") &
+          "The RNG flags are as follows: ", &
+          "0 - a KISS pseudo-RNG (the intrinsic RNG)", &
+          "1 - Mersenne twister (MT19937) pseudo-RNG"
+      stop
+    end if
+  end subroutine showHelpMsgAndNotes
 end module CmdOptions

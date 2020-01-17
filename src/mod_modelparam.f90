@@ -36,6 +36,7 @@ module ModelParam
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
   use RNG, only: RNG_INTRINSIC
+  use SaveFormat, only: nullFlag
   implicit none
   private
 
@@ -117,340 +118,195 @@ module ModelParam
   integer, parameter :: NULL_VALUE = -1
   ! Ignore value. This could also be any non-positive integers.
   integer, parameter :: IGNORE_VALUE = 0 
+  ! -------------------------------------------------------------------------- !
+  ! Pretty print separator.
+  integer :: k
+  character, public, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
+  ! -------------------------------------------------------------------------- !
 
+  interface
+    module subroutine readScalarParam()
+    end subroutine
+
+    module subroutine readVerhulstWeights()
+    end subroutine
+  end interface
+  ! -------------------------------------------------------------------------- !
+
+  ! Routines for reading config files.
   public :: readScalarParam
   public :: readVerhulstWeights
+
+  ! Routines for assigning model parameter values.
+  public :: assignOptionalModelParamVal
+  public :: assignOptionalCfgFilePath
+  public :: assignConfigFilePaths
+  public :: assignModelParamFromCmdArgs
+
+  ! Routine for memory management.
   public :: deallocVerhulstWeights
+
+  ! Other routines.
+  public :: prettyPrintModelParams
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCharArrayIndex
-  !>  Get the corresponding index of `elem` in a rank-1 array of 
-  !!  characters `elem`. If `elem` is not found in `array`, it
-  !!  returns `NULL_VALUE` which is set to 0.
+  ! SUBROUTINE: assignOptionalModelParamVal
+  !>  Assign optional values to command-line options associated to model
+  !!  parameters.
   ! -------------------------------------------------------------------------- !
-  function getCharArrayIndex(elem) result(i)
-    implicit none
-    character(len=:), allocatable, intent(in) :: elem
-
-    integer :: i
-
-    do i = 1, MODEL_PARAM_COUNT
-      if (MODEL_PARAM_KEYS(i) == elem) return
-    end do
-
-    if (elem == "") then
-      i = IGNORE_VALUE
-    else
-      i = NULL_VALUE
-    end if
-  end function getCharArrayIndex
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignParameters
-  !>  Assign model parameters from an array of integer `values`.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignParameters(values)
-    implicit none
-    integer, intent(in) :: values(:)
-
-    modelParams(:) = values(:)
-  end subroutine assignParameters
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: printModelParam
-  !>  Print the model parameters for error/warning messages.
-  ! -------------------------------------------------------------------------- !
-  subroutine printModelParam()
+  subroutine assignOptionalModelParamVal()
+    use CmdOptions
     implicit none
 
-    integer :: i
-
-    do i = 1, MODEL_PARAM_COUNT
-      print "(4(' '), a12, ': ', i0)", MODEL_PARAM_KEYS(i), &
-          MODEL_PARAM_DEFAULT(i)
-    end do
-
-    ! Print separator.
-    print "(a)", "***"
-  end subroutine printModelParam
+    ! Assign optional values to key-value options.
+    call assignOptionalKVVal(maxTimeStepArg, MODEL_TIME_STEPS)
+    call assignOptionalKVVal(sampleSizeArg, MODEL_SAMPLE_SIZE)
+    call assignOptionalKVVal(startPopSizeArg, MODEL_N0)
+    call assignOptionalKVVal(recordFlagArg, MODEL_REC_FLAG)
+    call assignOptionalKVVal(rngChoiceArg, MODEL_RNG)
+    call assignOptionalKVVal(rngSeedArg, MODEL_RNG_SEED)
+  end subroutine assignOptionalModelParamVal
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readScalarParams
-  !>  Read the scalar model parameters from an external file.
+  ! SUBROUTINE: assignOptionalCfgFilePath
+  !>  Assign the internal default values for the config file paths.
   ! -------------------------------------------------------------------------- !
-  subroutine readScalarParam
+  subroutine assignOptionalCfgFilePath()
+    use CmdOptions
     implicit none
-    
-    integer :: values(MODEL_PARAM_COUNT)
-    integer :: fileStatus
-    integer :: keyIdx
-    integer :: val
 
-    character(len=:), allocatable :: strippedFile
-    character(len=:), allocatable :: key
-    character(len=:), allocatable :: strVal
-    character :: currChar
-    integer   :: charNum
-    integer   :: castStatus
-    logical   :: isReadingKey
-    integer   :: i
-    
-    ! Assign default values.
-    values(:) = MODEL_PARAM_DEFAULT
+    call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
+    call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
+  end subroutine assignOptionalCfgFilePath
 
-    ! Read file.
-    open(unit=modelUnit, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
 
-    ! Warn missing file. TODO: Make better warning messages.
-    if (fileStatus /= 0) then
-      print "(a/, 3a)", "***", "WARNING. Cannot read '", trim(MODEL_FILE_NAME),&
-          "'. Using the following default values:"
-      call printModelParam()
-      call assignParameters(MODEL_PARAM_DEFAULT)
-      return
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignConfigFilePaths
+  !>  Get paths for configuration files.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignConfigFilePaths()
+    use CmdOptions
+    implicit none
+
+    logical :: exist
+
+    MODEL_FILE_NAME = configDirPosArg % getValue()
+    VWEIGHT_FILE_NAME = vWeightDirPosArg % getValue()
+
+    ! Inquire the existence of the config file for model paramters.
+    inquire(file=MODEL_FILE_NAME, exist=exist)
+    if (.not. exist) then
+      print "(3a)", "***ERROR. The file '", trim(MODEL_FILE_NAME), &
+          "' cannot be opened or does not exist."
+      print "(a)", "   Try 'penna.out -h' for more info " // &
+          "if this does not intend to be a file or directory."
+      stop
     end if
 
-    ! Clean model config file.
-    call stripFile(strippedFile, modelUnit)    
-    close(modelUnit)
-
-    ! Evaluate file.
-    allocate(character(len=0) :: strVal)
-    isReadingKey = .true.
-    key = ""
-    do charNum = 1, len(strippedFile)
-      currChar = strippedFile(charNum:charNum)
-
-      ! Check change in read state.
-      select case (currChar)
-        ! ***KEYVAL_SEP: Shift from reading LHS to RHS.
-        case (KEYVAL_SEP)
-          isReadingKey = .false.
-          strVal = ""
-          cycle
-
-        ! ***EOL: Shift from reading RHS to LHS.
-        case (EOL)
-          isReadingKey = .true.
-
-          ! Read previous key and value.
-          keyIdx = getCharArrayIndex(key)
-          select case (keyIdx)
-            case (IGNORE_VALUE)
-              key = ""
-              cycle
-            case (NULL_VALUE)
-              print "(3(a))", "***WARNING. '", key, &
-                  "' is not a valid parameter. Ignoring this key."
-              print "(a/, 10(' '), *(a, ', '))", "Valid parameters:", &
-                  (trim(MODEL_PARAM_KEYS(i)), i = 1, size(MODEL_PARAM_KEYS))
-              key = ""
-              cycle
-            case default
-              ! Cast the value string to integer.
-              read(strVal, *, iostat=castStatus) val
-              if (castStatus == 0) then
-                values(keyIdx) = val
-              else
-                print "(3(a))", "***WARNING. '", strVal, "' is not a valid" // &
-                    " value."
-              end if
-              key = ""
-          end select
-        
-        ! ***Neither case.
-        case default
-          ! 'Eat' input.
-          if (isReadingKey) then
-            key = key // currChar
-          else
-            strVal = strVal // currChar
-          end if
-      end select
-    end do
-
-    call assignParameters(values)
-    deallocate(strippedFile)
-    deallocate(key)
-    deallocate(strVal)
-  end subroutine readScalarParam
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readVerhulstWeights
-  !>  Read the Verhulst weights values from a .ini file.
-  ! -------------------------------------------------------------------------- !
-  subroutine readVerhulstWeights
-    implicit none
-
-    integer :: fileStatus
-    integer :: readStatus
-    integer :: charNum
-    integer :: vWeightIdx
-    real    :: vWeight
-
-    character(len=:), allocatable :: strippedFile
-    character(len=:), allocatable :: vWeightStr
-    character                     :: currChar
-
-    ! Initialize Verhulst weight array.
-    if (.not.allocated(MODEL_VERHULST_W)) allocate(MODEL_VERHULST_W(MODEL_L))
-    MODEL_VERHULST_W(:) = VWEIGHT_DEFAULT
-
-    ! Read file.
-    allocate(character(len=0) :: strippedFile)
-    open(unit=vWeightUnit, file=VWEIGHT_FILE_NAME, status='old', &
-        iostat=fileStatus)
-
-    ! Warn missing file. TODO: Make better warning messages.
-    if (fileStatus /= 0) then
-      print "(a/, 3(a))", "***", &
-          "WARNING. Cannot read '", & 
-          trim(VWEIGHT_FILE_NAME), &
-          "'. Using the following default value:"
-      print "(/a, i0, /a, f4.2)", "age:    1-", MODEL_L, "weight: ", &
-          VWEIGHT_DEFAULT
-
-      ! Print separator.
-      print "(a)", "***"
-      return
+    ! Inquire the existence of the config file for Verhulst weights.
+    inquire(file=VWEIGHT_FILE_NAME, exist=exist)
+    if (.not. exist) then
+      print "(3a)", "***ERROR. The file '", trim(VWEIGHT_FILE_NAME), &
+          "' cannot be opened or does not exist." 
+      print "(a)", "   Try 'penna.out -h' for more info " // &
+          "if this does not intend to be a file or directory."
+      stop
     end if
-    
-    ! Clean Verhulst weight config file. 
-    call stripFile(strippedFile, vWeightUnit)
-    close(vWeightUnit)
-
-    ! Evaluate stripped input.
-    vWeightIdx = 1
-    allocate(character(len=0) :: vWeightStr)
-    do charNum = 1, len(strippedFile)
-      currChar = strippedFile(charNum:charNum)
-
-      ! > Check read state. (NOTE: `>` are visual hints for nasty nested if's)
-      ! ======================================
-      ReadCheck: if (currChar == VWEIGHT_SEP &
-                     .or. charNum == len(strippedFile)) then
-        ! Cast string to real.
-        read(vWeightStr, *, iostat=readStatus) vWeight
-
-        ! >> Check if the char-to-real casting succeeds.
-        ! ===========================================
-        CastCheck: if (readStatus == 0) then
-
-          ! >>> Check all possible errors.
-          ! ==============================================================
-          AssignWeight: if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
-            MODEL_VERHULST_W(vWeightIdx) = vWeight
-
-          ! ***WARNING. Invalid number of weights.
-          else if (vWeightIdx > MODEL_L) then
-            print "(a)", "***WARNING. Given Verhulst weights exceeded the " // &
-                "maximum number of allowed number of weights."
-
-          ! ***WARNING. Invalid range.
-          else if (vWeight > 1) then
-            print "(a, f5.3, a)", "***WARNING. Given Verhulst weight" // &
-                "is outside the allowed range [0, 1]. Using the " // &
-                "default value (", VWEIGHT_DEFAULT, ")."
-
-          ! ***Unknown error.
-          else
-            stop "***ERROR. Unknown error when reading Verhulst weights."
-          end if AssignWeight
-          ! <<<
-          ! ==============================================================
-
-        ! ***WARNING. Invalid input.
-        else
-          print "(3(a), f5.3, a)", "***WARNING. '", vWeightStr , &
-              "' is not a valid value for a Verhulst factor. " // &
-              "Using the default value (", VWEIGHT_DEFAULT, ")."
-        end if CastCheck
-        ! <<
-        ! ===========================================
-
-        vWeightIdx = vWeightIdx + 1
-        vWeightStr = ""
-      ! Continue reading values for Verhulst weights.
-      else
-        if (isNumeric(currChar) .or. currChar == ".") &
-            vWeightStr = vWeightStr // currChar
-      end if ReadCheck
-      ! <
-      ! ======================================
-    end do
-
-    deallocate(vWeightStr)
-  end subroutine readVerhulstWeights
+  end subroutine assignConfigFilePaths
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: stripFile
-  !>  Read the specified file and strip whitespaces and
-  !!  comments (lines starting with ';').
+  ! SUBROUTINE: assignModelParamFromCmdArgs
+  !>  Assign model parameters from command-line arguments. The value of a 
+  !!  model parameter should not change if the correspoding command-line
+  !!  option is not passed.
   ! -------------------------------------------------------------------------- !
-  subroutine stripFile(strippedFile, unit)
+  subroutine assignModelParamFromCmdArgs()
+    use CmdOptions
     implicit none
-    character(len=:), allocatable, intent(out) :: strippedFile
-    integer,                       intent(in)  :: unit
 
-    character(len=:), allocatable :: line
-    character(len=MAX_LEN)        :: rawLine
-    character :: currChar
-    integer   :: readStatus
-    integer   :: charNum
+    ! Key-value options.
+    MODEL_TIME_STEPS = maxTimeStepArg % getValue()
+    MODEL_SAMPLE_SIZE = sampleSizeArg % getValue()
+    MODEL_N0 = startPopSizeArg % getValue()
+    MODEL_REC_FLAG = recordFlagArg % getValue()
+    MODEL_RNG = rngChoiceArg % getValue()
+    MODEL_RNG_SEED = rngSeedArg % getValue()
 
-    allocate(character(len=0) :: strippedFile)
-    allocate(character(len=0) :: line)
-    rawLine = ""
-    do
-      ! Read line.
-      read(unit, "(a)", iostat=readStatus) rawLine
-      if (readStatus == 0) then
-        line = trim(rawLine)
-      else
-        exit
-      end if
+    ! Print flags.
+    if (verbosePrintFlag % getFlagState()) PRINT_STATE = VERBOSE_PRINT
+    if (silentPrintFlag % getFlagState()) PRINT_STATE = SILENT_PRINT
 
-      ! Strip whitespaces.
-      do charNum = 1, len(line)
-        currChar = line(charNum:charNum)
-        
-        if (currChar == " ") then
-          cycle
-        else if (currChar == COMMENT) then
-          strippedFile = strippedFile // EOL
-          exit
-        end if
+    ! Record time flag.
+    RECORD_TIME = recordTimeFlag % getFlagState()
 
-        strippedFile = strippedFile // currChar
-        if (charNum == len(line)) strippedFile = strippedFile // EOL
-      end do
-    end do
+    ! Error handling.
+    if (silentPrintFlag % getFlagState() .and. &
+        verbosePrintFlag % getFlagState()) then
+      print "(a)", "***ERROR. '-v' or '--verbose' cannot be passed with " // &
+          "'-s' or '--silent'."
+      stop
+    end if
 
-    deallocate(line)
-  end subroutine
+    if (MODEL_TIME_STEPS <= 0) then
+      print "(a)", "***ERROR. The maximum time step must be a positive integer."
+      stop
+    end if
+
+    if (MODEL_SAMPLE_SIZE <= 0) then
+      print "(a)", "***ERROR. The sample size must be a positive integer."
+      stop
+    end if
+
+    if (MODEL_N0 <= 0) then
+      print "(a)", "***ERROR. The starting population size must be " // &
+          "a positive integer."
+      stop
+    end if
+  end subroutine assignModelParamFromCmdArgs
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isNumeric
-  !>  Check whether the character `char` is a number or not.
+  ! SUBROUTINE: prettyPrintModelParams
+  !>  Pretty print the model parameters. Can print verbosely or print nothing
+  !!  if need be.
   ! -------------------------------------------------------------------------- !
-  logical function isNumeric(char)
+  subroutine prettyPrintModelParams()
     implicit none
-    character, intent(in) :: char
 
-    integer :: asciiNum
-  
-    ! NOTE: ASCII characters from 48 to 57 are the numbers 0 to 9.
-    asciiNum = iachar(char)
-    isNumeric = (48 <= asciiNum .and. asciiNum <= 57)
-  end function isNumeric
+    ! Skip the argument printing.
+    if (PRINT_STATE == SILENT_PRINT) return
+
+    ! ***Header
+    print "(*(a))", PRINT_SEPARATOR 
+    print "(a)", "Asexual Penna model"
+    print "(*(a))", PRINT_SEPARATOR
+
+    ! ***Body (Extended model parameters)
+    if (PRINT_STATE == VERBOSE_PRINT) then
+      write(*, "(*(a20, i9/))", advance="no") &
+      "Genome length",        MODEL_L, &
+      "Mutation threshold",   MODEL_T, &
+      "Birth rate",           MODEL_B, &
+      "Mutation rate",        MODEL_M, &
+      "Min reproduciton age", MODEL_R, &
+      "Max reproduction age", MODEL_R_MAX, &
+      "Carrying capacity",    MODEL_K
+    end if
+
+    ! ***Body
+    write(*, "(*(a20, i9/))", advance="no") &
+      "Number of time steps", MODEL_TIME_STEPS, &
+      "Sample size",          MODEL_SAMPLE_SIZE,  &
+      "Starting pop size",    MODEL_N0
+    print "(a20, L9)", "Record result", MODEL_REC_FLAG /= nullFlag
+
+    ! ***End
+    print "(*(a))", PRINT_SEPARATOR
+  end subroutine prettyPrintModelParams
 
 
   ! -------------------------------------------------------------------------- !

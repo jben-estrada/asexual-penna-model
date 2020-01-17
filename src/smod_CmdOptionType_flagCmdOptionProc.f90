@@ -4,6 +4,10 @@ submodule (CmdOptionType) flagBoundProcedure
 contains
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: flagtype_getFlagState
+  !>  Get the state of the flag option.
+  ! -------------------------------------------------------------------------- !
   logical pure function flagtype_getFlagState(self)
     implicit none
     class(FlagCmdOption), intent(in) :: self
@@ -12,6 +16,12 @@ contains
   end function flagtype_getFlagState
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignInitialFlagState
+  !>  Assign an initial state to the flag option. By defauly, i.e. without
+  !!  invoking this subroutine, the state of all flags are set to false.
+  !!  This also marks the flag as optiona.
+  ! -------------------------------------------------------------------------- !
   subroutine assignInitialFlagState(cmdFlag, state)
     implicit none
 

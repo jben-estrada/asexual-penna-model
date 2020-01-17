@@ -3,7 +3,11 @@ submodule (CmdOptionType) baseOptionProcedure
   implicit none
 contains
 
-
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setUsageMsg
+  !>  Set the message on the usage of the provided command-line option.
+  !!  This will appear in the help message.
+  ! -------------------------------------------------------------------------- !
   subroutine setUsageMsg(cmdOption, usageMsg)
     implicit none
     class(BaseCmdOption), intent(inout) :: cmdOption
@@ -13,6 +17,10 @@ contains
   end subroutine setUsageMsg
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getCommand
+  !>  Get the command character of the given command-line option.
+  ! -------------------------------------------------------------------------- !
   pure function getCommand(self) result(command)
     implicit none
 
@@ -23,6 +31,10 @@ contains
   end function getCommand
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getAltCommand
+  !>  Get the alternate command character of the given command-line option.
+  ! -------------------------------------------------------------------------- !
   pure function getAltCommand(self) result(altCommand)
     implicit none
 
@@ -33,6 +45,10 @@ contains
   end function getAltCommand
 
 
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getUsageMsg
+  !>  Get the message on the usage of the given command-line option.
+  ! -------------------------------------------------------------------------- !
   pure function getUsageMsg(self) result(usageMsg)
     implicit none
 

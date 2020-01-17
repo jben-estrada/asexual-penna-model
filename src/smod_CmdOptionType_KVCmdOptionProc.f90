@@ -3,7 +3,10 @@ submodule (CmdOptionType) KVBoundProcedure
   implicit none
 contains
 
-
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: KVtype_getValue
+  !>  Get the value of the provided key-value command-line option.
+  ! -------------------------------------------------------------------------- !
   pure integer function KVtype_getValue(self)
     implicit none
     class(KeyValCmdOption), intent(in) :: self
@@ -12,6 +15,11 @@ contains
   end function KVtype_getValue
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignOptionalKVVal
+  !>  Assign the default value to a key-value command-line option.
+  !!  This also marks the command-line option optional.
+  ! -------------------------------------------------------------------------- !
   subroutine assignOptionalKVVal(cmdKeyVal, value)
     implicit none
 
@@ -28,4 +36,19 @@ contains
     cmdKeyVal % isOptional = .true.
     cmdKeyVal % value = value
   end subroutine assignOptionalKVVal
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setValueMsg
+  !>  Set the tag or message of the value. This will appear in the right-hand
+  !!  side of the key-value command-line option in the help message.
+  ! -------------------------------------------------------------------------- !
+  subroutine setValueMsg(cmdKeyVal, valueMsg)
+    implicit none
+
+    class(KeyValCmdOption), intent(inout) :: cmdKeyVal
+    character(len=*),       intent(in)    :: valueMsg
+
+    cmdKeyVal % valueMsg = valueMsg
+  end subroutine setValueMsg
 end submodule KVBoundProcedure

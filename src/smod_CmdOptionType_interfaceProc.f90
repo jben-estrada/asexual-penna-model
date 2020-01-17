@@ -24,15 +24,19 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: parseCmdArgs
-  !>  Parse command-line arguments.
+  ! SUBROUTINE: parsePassedCmdArgs
+  !>  Parse command-line arguments with the provided valid command-line options.
   ! -------------------------------------------------------------------------- !
-  subroutine parseCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs)
+  subroutine parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &
+      readFlag, readKeyVal, readPosArg)
     implicit none
 
     class(FlagCmdOption),       intent(inout) :: cmdFlags(:)
     class(KeyValCmdOption),     intent(inout) :: cmdKeyVal(:)
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
+    logical,                    intent(in)    :: readFlag
+    logical,                    intent(in)    :: readKeyVal
+    logical,                    intent(in)    :: readPosArg
 
     integer :: argCount
     integer :: status
@@ -43,13 +47,13 @@ contains
 
       if (cmdArg == NULL_CHAR) cycle
 
-      call toggleFlagOptions(cmdFlags, cmdArg, status)
+      call toggleFlagOptions(cmdFlags, cmdArg, status, readFlag)
       if (status == 0) cycle
 
-      call assignKeyValOption(cmdKeyVal, cmdArg, status)
+      call assignKeyValOption(cmdKeyVal, cmdArg, status, readKeyVal)
       if (status == 0) cycle
 
-      call assignPositionalArg(cmdPosArgs, cmdArg, status)
+      call assignPositionalArg(cmdPosArgs, cmdArg, status, readPosArg)
       if (status /= 0) then
         print "(3a)", "***ERROR. '", trim(cmdArg), "' is not a valid option."
         stop
@@ -57,9 +61,9 @@ contains
     end do
 
     ! Check for missing values.
-    call checkUninitializedValues(cmdKeyVal)
-    call checkUninitializedValues(cmdPosArgs)
-  end subroutine parseCmdArgs
+    if (readKeyVal) call checkUninitializedValues(cmdKeyVal)
+    if (readPosArg) call checkUninitializedValues(cmdPosArgs)
+  end subroutine parsePassedCmdArgs
 
 
   ! -------------------------------------------------------------------------- !
@@ -82,12 +86,13 @@ contains
   ! SUBROUTINE: toggleFlagOptions
   !>  Toggle the flag option matching with the passed command-line argument.
   ! -------------------------------------------------------------------------- !
-  subroutine toggleFlagOptions(cmdFlags, cmdArg, status)
+  subroutine toggleFlagOptions(cmdFlags, cmdArg, status, toRead)
     implicit none
 
     class(FlagCmdOption), intent(inout) :: cmdFlags(:)
     character(len=*),     intent(in)    :: cmdArg
     integer,              intent(out)   :: status
+    logical,              intent(in)    :: toRead
 
     integer :: i
 
@@ -96,9 +101,16 @@ contains
 
     do i = 1, size(cmdFlags)
       if (compareCommand(cmdFlags(i), cmdArg)) then
-        cmdFlags(i) % state = .not. cmdFlags(i) % state
         status = 0
-        exit
+
+        if (.not. toRead) exit
+
+        ! Check if the current flag option has already been toggled.
+        if (.not. cmdFlags(i) % hasValue) then
+          cmdFlags(i) % state = .not. cmdFlags(i) % state
+          cmdFlags(i) % hasValue = .true.
+          exit
+        end if
       end if
     end do
   end subroutine toggleFlagOptions
@@ -108,12 +120,13 @@ contains
   ! SUBROUTINE: assignKeyValOption
   !>  Assign the value for the matching key-value option.
   ! -------------------------------------------------------------------------- !
-  subroutine assignKeyValOption(cmdKeyVal, cmdArg, status)
+  subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, toRead)
     implicit none
   
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal(:)
-    character(len=*),       intent(in)  :: cmdArg
-    integer,                intent(out) :: status
+    character(len=*),       intent(in)    :: cmdArg
+    integer,                intent(out)   :: status
+    logical,                intent(in)    :: toRead
 
     character(len=MAX_LEN) :: key
     character(len=MAX_LEN) :: valueChar
@@ -126,7 +139,7 @@ contains
     status = 1
     do i = 1, size(cmdKeyVal)
       if (compareCommand(cmdKeyVal(i), key)) then
-        call assignValueTo(cmdKeyVal(i), valueChar)
+        call assignValueTo(cmdKeyVal(i), valueChar, toRead)
         status = 0
         exit
       end if
@@ -138,11 +151,12 @@ contains
   ! SUBROUTINE: assignValueTo
   !>  Assign value to the specified key-value option.
   ! -------------------------------------------------------------------------- !
-  subroutine assignValueTo(cmdOption, valueChar)
+  subroutine assignValueTo(cmdOption, valueChar, toRead)
     implicit none
     
     class(KeyValCmdOption), intent(inout) :: cmdOption
     character(len=*),       intent(in)    :: valueChar
+    logical,                intent(in)    :: toRead
 
     integer :: valueInt
     integer :: status
@@ -150,6 +164,9 @@ contains
     read(valueChar, *, iostat=status) valueInt
 
     if (status == 0) then
+
+      if (.not. toRead) return
+
       cmdOption % value = valueInt
       cmdOption % hasValue = .true.
     else
@@ -164,12 +181,13 @@ contains
   ! SUBROUTINE: assignPositionalArg
   !>  Assign positional arguments.
   ! -------------------------------------------------------------------------- !
-  subroutine assignPositionalArg(cmdPosArgs, cmdArg, status)
+  subroutine assignPositionalArg(cmdPosArgs, cmdArg, status, toRead)
     implicit none
 
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
     character(len=*),           intent(in)    :: cmdArg
     integer,                    intent(out)   :: status
+    logical,                    intent(in)    :: toRead
 
     integer, save :: posCount = 1
     integer :: i
@@ -177,11 +195,12 @@ contains
     status = 1
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % position == posCount) then
+        status = 0
+        if (.not. toRead) exit
+
         cmdPosArgs(i) % value = cmdArg
         cmdPosArgs(i) % hasValue = .true.
-
         posCount = posCount + 1
-        status = 0
         exit
       end if
     end do
@@ -256,4 +275,76 @@ contains
       end if
     end do
   end subroutine checkUninitializedValues
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: showHelpMsg
+  !>  Show the help messages with the provided command-line options.
+  ! -------------------------------------------------------------------------- !
+  subroutine showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
+    implicit none
+
+    class(FlagCmdOption),       intent(in) :: cmdFlags(:)
+    class(KeyValCmdOption),     intent(in) :: cmdKeyVal(:)
+    class(PositionalCmdOption), intent(in) :: cmdPosArgs(:)
+
+    character(len=:), allocatable :: tempChar
+    integer :: tempCharLen
+    integer :: i
+
+    ! Print the header.
+    print "(a/)", "usage: penna.out [options]"
+
+    print "(a)", "options:"
+    ! Print the usage message for flags.
+    do i = 1, size(cmdFlags)
+      tempChar = trim(cmdFlags(i) % command) // " " // &
+          trim(cmdFlags(i) % altCommand)
+
+      tempCharLen = 30*(1 + len(tempChar)/30)
+      print "(4(' '), 2a)", [character(len=tempCharLen) :: tempChar], &
+          trim(cmdFlags(i) % usageMsg)
+    end do
+
+    ! Print the usage message for key-value options.
+    do i = 1, size(cmdKeyVal)
+      tempChar = trim(cmdKeyVal(i) % command) // &
+          "=" // trim(cmdKeyVal(i) % valueMsg)
+        
+      if (cmdKeyVal(i) % altCommand /= NULL_CHAR) then
+        tempChar = tempChar // " " // trim(cmdKeyVal(i) % altCommand) // &
+            "=" // trim(cmdKeyVal(i) % valueMsg)
+      end if
+
+      tempCharLen = 30*(1 + len(tempChar)/30)
+      write(*, "(4(' '), 2a)", advance="no") &
+          [character(len=tempCharLen) :: tempChar], &
+          trim(cmdKeyVal(i) % usageMsg)
+      
+      if (cmdKeyVal(i) % isOptional) then
+        print "(a, i0, a)", " [", cmdKeyVal(i) % value, "]"
+      else
+        print *, ""
+      end if
+    end do
+
+    ! Print the positional arguments.
+    do i = 1, size(cmdPosArgs)
+      tempChar = trim(cmdPosArgs(i) % command) // " " // &
+          trim(cmdPosArgs(i) % altCommand)
+
+      tempCharLen = 30*(1 + len(tempChar)/30)
+      write(*, "(4(' '), 2a)", advance="no") &
+          [character(len=tempCharLen) :: tempChar], &
+          trim(cmdPosArgs(i) % usageMsg)
+      
+      if (cmdPosArgs(i) % isOptional) then
+        print "(3a)", " [", trim(cmdPosArgs(i) % value), "]"
+      else
+        print *, ""
+      end if
+    end do
+
+    deallocate(tempChar)
+  end subroutine showHelpMsg
 end submodule
