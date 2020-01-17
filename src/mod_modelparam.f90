@@ -120,7 +120,7 @@ module ModelParam
   integer, parameter :: IGNORE_VALUE = 0 
   ! -------------------------------------------------------------------------- !
   ! Pretty print separator.
-  integer :: k
+  integer, private :: k
   character, public, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
   ! -------------------------------------------------------------------------- !
 
