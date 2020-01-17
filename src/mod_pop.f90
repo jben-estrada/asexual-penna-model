@@ -6,7 +6,6 @@ module Pop
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
   use Gene
-  use Flag
   use ModelParam
   implicit none
   private

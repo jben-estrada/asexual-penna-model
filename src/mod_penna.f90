@@ -102,9 +102,8 @@ contains
   !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
   subroutine evalPopulation(population, deathCount, popSize, countdown, recFlag)
-    use Flag
     use Demographics
-    use ModelParam, only: MODEL_B
+    use ModelParam, only: MODEL_B, DEAD_MUTATION, DEAD_OLD_AGE, DEAD_VERHULST
     implicit none
 
     type(PersonList), intent(inout) :: population

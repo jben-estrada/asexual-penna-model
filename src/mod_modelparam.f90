@@ -74,6 +74,7 @@ module ModelParam
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
     modelParams(13)! RNG seed.
 
+  ! -------------------------------------------------------------------------- !
   ! Print states.
   integer, public, parameter :: NORMAL_PRINT = 0
   integer, public, parameter :: VERBOSE_PRINT = 1
@@ -83,12 +84,23 @@ module ModelParam
 
   ! Record-time state.
   logical, public, protected :: RECORD_TIME = .false.
-  ! -------------------------------------------------------------------------- !
   ! Parameters whose values are from `v_weight.cfg`.
   ! Verhulst weights.
   real, allocatable, protected, public :: MODEL_VERHULST_W(:)
   ! Default Verhulst weight.
   real, parameter :: VWEIGHT_DEFAULT = 0.
+  
+  ! -------------------------------------------------------------------------- !
+  ! Individual states.
+  integer, public, parameter :: ALIVE = 1
+  integer, public, parameter :: DEAD_OLD_AGE = 2
+  integer, public, parameter :: DEAD_MUTATION = 3
+  integer, public, parameter :: DEAD_VERHULST = 4
+  integer, public, parameter :: DEATH_REASONS(*) = &
+      [ALIVE,        &
+      DEAD_OLD_AGE,  &
+      DEAD_MUTATION, &
+      DEAD_VERHULST]
 
   ! -------------------------------------------------------------------------- !
   ! Buffer character length.
