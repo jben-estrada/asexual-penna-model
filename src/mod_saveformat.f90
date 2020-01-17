@@ -55,46 +55,46 @@ module SaveFormat
   ! Unit array.
   integer, parameter :: units(FILECOUNT) = &
       [popUnit, &
-       timeUnit, &
        ageDstrbUnit, &
        deathUnit, &
-       divIdxUnit &
+       divIdxUnit, &
+       timeUnit &
        ]
   
   ! Filename array.
   character(len=MAXLEN), parameter :: filenames(FILECOUNT) = &
       [popFilename, &
-       timeFilename, &
        ageDstrbFilename, &
        deathFilename, &
-       divIdxFilename &
+       divIdxFilename, &
+       timeFilename &
        ]
   
   ! Position array.
   character(len=MAXLEN), parameter :: positions(FILECOUNT) = &
     [popPosition, &
-     timePosition, &
      ageDstrbPosition, &
      deathPosition, &
-     divIdxPosition &
+     divIdxPosition, &
+     timePosition &
      ]
     
   ! Format array.
   character(len=MAXLEN), parameter :: formats(FILECOUNT) = &
      [popFormat, &
-      timeFormat, &
       ageDstrbFormat, &
       deathFormat, &
-      divIdxFormat &
+      divIdxFormat, &
+      timeFormat &
       ]
   
   ! Format flag array. (NOTE: Different from record flags)
   integer, parameter :: formatFlags(FILECOUNT) = &
       [popFlag, &
-       timeFlag, &
        ageDstrbFlag, &
        deathFlag, &
-       divIdxFlag &
+       divIdxFlag, &
+       timeFlag &
        ]
   ! -------------------------------------------------------------------------- !
 end module SaveFormat
