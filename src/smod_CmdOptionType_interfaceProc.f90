@@ -293,15 +293,20 @@ contains
     integer :: i
 
     ! Print the header.
-    print "(a/)", "usage: penna.out [options]"
+    write(*, "(a)", advance="no") "usage: penna.out [options]"
+    do i = 1, size(cmdPosArgs)
+      if (cmdPosArgs(i) % isOptional) write(*, "(a)", advance="no") " ["
+      write(*, "(a)", advance="no") trim(cmdPosArgs(i) % command)
+      if (cmdPosArgs(i) % isOptional) write(*, "(a)", advance="no") "]"
+    end do
 
-    print "(a)", "options:"
+    print "(//a)", "options:"
     ! Print the usage message for flags.
     do i = 1, size(cmdFlags)
       tempChar = trim(cmdFlags(i) % command) // " " // &
           trim(cmdFlags(i) % altCommand)
 
-      tempCharLen = 30*(1 + len(tempChar)/30)
+      tempCharLen = 25*(1 + len(tempChar)/25)
       print "(4(' '), 2a)", [character(len=tempCharLen) :: tempChar], &
           trim(cmdFlags(i) % usageMsg)
     end do
@@ -316,7 +321,7 @@ contains
             "=" // trim(cmdKeyVal(i) % valueMsg)
       end if
 
-      tempCharLen = 30*(1 + len(tempChar)/30)
+      tempCharLen = 25*(1 + len(tempChar)/25)
       write(*, "(4(' '), 2a)", advance="no") &
           [character(len=tempCharLen) :: tempChar], &
           trim(cmdKeyVal(i) % usageMsg)
@@ -333,7 +338,7 @@ contains
       tempChar = trim(cmdPosArgs(i) % command) // " " // &
           trim(cmdPosArgs(i) % altCommand)
 
-      tempCharLen = 30*(1 + len(tempChar)/30)
+      tempCharLen = 25*(1 + len(tempChar)/25)
       write(*, "(4(' '), 2a)", advance="no") &
           [character(len=tempCharLen) :: tempChar], &
           trim(cmdPosArgs(i) % usageMsg)

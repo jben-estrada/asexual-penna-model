@@ -71,8 +71,8 @@ contains
     call initializeCmdOption(rngSeedArg, "--seed")
 
     ! Assign command char and position of position arguments.
-    call initializeCmdOption(configDirPosArg, "config-directory")
-    call initializeCmdOption(vWeightDirPosArg, "vweight-directory")
+    call initializeCmdOption(configDirPosArg, "model-param-path")
+    call initializeCmdOption(vWeightDirPosArg, "vweight-path")
     call setPosTypePosition(configDirPosArg, 1)
     call setPosTypePosition(vWeightDirPosArg, 2)
 
@@ -105,17 +105,17 @@ contains
     call setUsageMsg(rngSeedArg, "Set the seed for the RNG.")
 
     ! Set the message for the value in key-value options.
-    call setValueMsg(maxTimeStepArg, "<integer>")
-    call setValueMsg(sampleSizeArg, "<integer>")
-    call setValueMsg(startPopSizeArg, "<integer>")
-    call setValueMsg(recordFlagArg, "<integer>")
-    call setValueMsg(rngChoiceArg, "<integer>")
-    call setValueMsg(rngSeedArg, "<integer>")
+    call setValueMsg(maxTimeStepArg, "<int>")
+    call setValueMsg(sampleSizeArg, "<int>")
+    call setValueMsg(startPopSizeArg, "<int>")
+    call setValueMsg(recordFlagArg, "<int>")
+    call setValueMsg(rngChoiceArg, "<int>")
+    call setValueMsg(rngSeedArg, "<int>")
 
     ! Set usage messages of positional arguments.
-    call setUsageMsg(configDirPosArg, "Path of .cfg file of " // &
+    call setUsageMsg(configDirPosArg, "Path of text (.cfg) file of " // &
         "model parameters.")
-    call setUsageMsg(vWeightDirPosArg, "Path of .cfg file of " // &
+    call setUsageMsg(vWeightDirPosArg, "Path of text (.cfg) file of " // &
         "Verhulst weights.")
   end subroutine setCmdOptionUsageMsgs
 
