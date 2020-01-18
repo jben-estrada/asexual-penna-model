@@ -31,12 +31,12 @@ module Pop
     type(Person), pointer :: old_ptr => null()
     type(Person), pointer :: current_ptr => null()
   contains
-    ! Inquiry functions.
+    ! Inquiry procedures.
     procedure :: isCurrIndivDead
     procedure :: isCurrIndivMature
-    procedure :: getCurrIndivDeathIdx
     procedure :: getCurrIndivAge
     procedure :: getCurrIndivGenome
+    procedure :: determineDeathType
 
     ! Transformational procedures.
     procedure :: killCurrentIndiv
@@ -49,6 +49,18 @@ module Pop
     procedure :: resetReadPtrs
     procedure :: freePtr
   end type PersonList
+
+  ! -------------------------------------------------------------------------- !
+  ! Individual states.
+  integer, public, parameter :: ALIVE = 1
+  integer, public, parameter :: DEAD_OLD_AGE = 2
+  integer, public, parameter :: DEAD_MUTATION = 3
+  integer, public, parameter :: DEAD_VERHULST = 4
+  integer, public, parameter :: DEATH_REASONS(*) = &
+      [ALIVE,        &
+      DEAD_OLD_AGE,  &
+      DEAD_MUTATION, &
+      DEAD_VERHULST]
 
   public :: constructPersonList
 contains
@@ -69,6 +81,32 @@ contains
     newLL % newTail_ptr => newLL % tail_ptr
     newLL % current_ptr => newLL % head_ptr
   end function constructPersonList
+
+
+  subroutine determineDeathType(self, deathByAge, deathByMutation, &
+        deathByVerhulst)
+    implicit none
+
+    class(PersonList), intent(in)   :: self
+    integer, pointer, intent(inout) :: deathByAge
+    integer, pointer, intent(inout) :: deathByMutation
+    integer, pointer, intent(inout) :: deathByVerhulst
+
+    select case (self % current_ptr % deathIndex)
+      case (DEAD_OLD_AGE)
+        deathByAge = deathByAge + 1
+
+      case (DEAD_MUTATION)
+        deathByMutation = deathByMutation + 1
+
+      case (DEAD_VERHULST)
+        deathByVerhulst = deathByVerhulst + 1
+
+      case default
+        print "(a)", "***ERROR. Dead 'Person' object has an invalid death index"
+        stop
+    end select
+  end subroutine determineDeathType
 
 
   !----------------------------------------------------------------------------!
@@ -282,23 +320,6 @@ contains
 
     isCurrIndivDead = self % current_ptr % deathIndex /= ALIVE
   end function isCurrIndivDead
-
-
-  ! -------------------------------------------------------------------------- !
-  ! BOUND FUNCTION: [PersonList % ]getCurrIndivDeathIdx
-  !>  Get the death index of the `Person` object the current pointer is
-  !!  pointing at.
-  ! -------------------------------------------------------------------------- !
-  integer function getCurrIndivDeathIdx(self)
-    implicit none
-    class(PersonList), intent(in) :: self
-
-    if (associated(self % current_ptr)) then
-      getCurrIndivDeathIdx = self % current_ptr % deathIndex
-    else
-      getCurrIndivDeathIdx = -1  ! An invalid value.
-    end if
-  end function getCurrIndivDeathIdx
 
 
   ! -------------------------------------------------------------------------- !

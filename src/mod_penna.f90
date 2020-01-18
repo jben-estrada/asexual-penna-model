@@ -29,13 +29,15 @@ contains
     integer, intent(in) :: startPopSize
     integer, intent(in) :: recordFlag
 
-    type(PersonList) :: population  ! Population list
-    type(Writer)     :: runWriter   ! `Writer` object for recording data 
-    integer :: timeStep             ! Time step
-    integer :: popSize              ! Population size
-    integer :: deathCount(3)        ! Death count 
-    ! NOTE: The elements of `deathCount` correspond to the following deaths:
-    !       1.) Death by old age, 2.) Death by mutation, 3.) Verhulst death
+    type(PersonList) :: population    ! Population list
+    type(Writer)     :: runWriter     ! `Writer` object for recording data 
+    integer, target  :: deathCount(3) ! Death count 
+    integer :: timeStep               ! Time step
+    integer :: popSize                ! Population size
+
+    integer, pointer :: deathByAge
+    integer, pointer :: deathByMutation
+    integer, pointer :: deathByVerhulst
 
     ! Initialize variables
     population = constructPersonList(startPopSize)
@@ -43,6 +45,11 @@ contains
     deathCount(:) = 0
     call resetAgeDstrb()
     call initializeRunWriter(runWriter, recordFlag)
+
+    ! Initialize pointers.
+    deathByAge => deathCount(1)
+    deathByMutation => deathCount(2)
+    deathByVerhulst => deathCount(3)
 
     ! Enable/disable demographics recording.
     if (recordFlag == ageDstrbFlag) then
@@ -63,8 +70,8 @@ contains
       end if
 
       ! Evaluate population
-      call evalPopulation(population, deathCount, popSize, &
-          maxTimestep - timeStep, recordFlag)
+      call evalPopulation(population, popSize, maxTimestep - timeStep, &
+        recordFlag, deathByAge, deathByMutation, deathByVerhulst)
 
       ! Record result.
       select case (recordFlag)
@@ -101,16 +108,19 @@ contains
   ! SUBROUTINE: evalPopulation
   !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(population, deathCount, popSize, countdown, recFlag)
+  subroutine evalPopulation(population, popSize, countdown, recFlag, &
+        deathByAge, deathByMutation, deathByVerhulst)
     use Demographics
-    use ModelParam, only: MODEL_B, DEAD_MUTATION, DEAD_OLD_AGE, DEAD_VERHULST
+    use ModelParam, only: MODEL_B
     implicit none
 
-    type(PersonList), intent(inout) :: population
-    integer,          intent(inout) :: deathCount(3)
-    integer,          intent(inout) :: popSize
-    integer,          intent(in)    :: countdown
-    integer,          intent(in)    :: recFlag
+    type(PersonList), intent(inout) :: population       ! Population object.
+    integer,          intent(inout) :: popSize          ! Population size.
+    integer, pointer, intent(inout) :: deathByAge       ! Death by age count.
+    integer, pointer, intent(inout) :: deathByMutation  ! Death by mutation.
+    integer, pointer, intent(inout) :: deathByVerhulst  ! Random death.
+    integer,          intent(in)    :: countdown        ! Count from max time.
+    integer,          intent(in)    :: recFlag          ! Record flag.
 
     integer :: popSizeChange
     integer :: listStatus
@@ -125,20 +135,9 @@ contains
       call population % checkCurrIndivDeath(popSize)
 
       if (population % isCurrIndivDead()) then
-        ! Count dead ones.
-        select case (population % getCurrIndivDeathIdx())
-          case (DEAD_OLD_AGE)
-            deathCount(1) = deathCount(1) + 1
-
-          case (DEAD_MUTATION)
-            deathCount(2) = deathCount(2) + 1
-
-          case (DEAD_VERHULST)
-            deathCount(3) = deathCount(3) + 1
-
-          case default
-            stop "Dead `Person` object has an invalid death index."
-        end select
+        ! Get the cause of death of the current dead individual.
+        call population % determineDeathType(deathByAge, deathByMutation, &
+            deathByVerhulst)
 
         popSizeChange = popSizeChange - 1
       else
