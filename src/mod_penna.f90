@@ -255,8 +255,8 @@ contains
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
            "initial pop size    ", &
-           "average elapsed time", &
-           "standard deviation  "])
+           "average time (ms)   ", &
+           "std deviation (ms)  "])
       call timeWriter % write(timeFlag, &
           [real(maxTimeStep, kind=writeRK), &
            real(startingPopSize, kind=writeRK), &
