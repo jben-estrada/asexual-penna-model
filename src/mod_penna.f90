@@ -177,7 +177,6 @@ contains
   subroutine run(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
         toRecordTime, printRunProgress)
     use ProgBarType
-    use ModelParam, only: PRINT_SEPARATOR
     implicit none
 
     integer, intent(in) :: maxTimeStep
@@ -200,6 +199,9 @@ contains
     type(ProgressBar) :: progBar    ! A `ProgressBar` object.
     type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
     integer :: i
+
+    ! Print separator for pretty printing.
+    character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
 
     ! Initialize the progress bar.
     call initProgressBar(progBar, 20, sampleSize)

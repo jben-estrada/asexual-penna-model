@@ -99,12 +99,6 @@ module ModelParam
   character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
       "./config/v_weight.cfg"
 
-  ! -------------------------------------------------------------------------- !
-  ! Pretty print separator.
-  integer, private :: k
-  character, public, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
-  ! -------------------------------------------------------------------------- !
-
   interface
     module subroutine readScalarParam()
     end subroutine
@@ -260,6 +254,10 @@ contains
   subroutine prettyPrintModelParams()
     use SaveFormat, only: nullFlag
     implicit none
+
+    ! Pretty print separator.
+    integer :: k
+    character, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
 
     ! Skip the argument printing.
     if (PRINT_STATE == SILENT_PRINT) return
