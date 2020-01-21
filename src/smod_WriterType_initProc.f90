@@ -7,9 +7,9 @@ submodule (WriterType) WriterTypeInitProc
   !----------------------------------------------------------------------------!
   implicit none
   contains
-  module subroutine initializeWriter(filename, unit, position)
-    implicit none
 
+
+  subroutine initializeWriter(filename, unit, position)
     character(len=*), intent(in) :: filename
     character(len=*), intent(in) :: position
     integer,          intent(in) :: unit
@@ -26,8 +26,7 @@ submodule (WriterType) WriterTypeInitProc
   end subroutine initializeWriter
 
 
-  module subroutine writer_initializeAll(self)
-    implicit none
+  subroutine writer_initializeAll(self)
     class(Writer), intent(inout) :: self
 
     integer :: flag
@@ -48,9 +47,7 @@ submodule (WriterType) WriterTypeInitProc
   end subroutine writer_initializeAll
 
 
-  module subroutine writer_initialize(self, flag)
-    implicit none
-
+  subroutine writer_initialize(self, flag)
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flag
 
@@ -66,9 +63,7 @@ submodule (WriterType) WriterTypeInitProc
   end subroutine writer_initialize
 
 
-  module subroutine writer_listInitialize(self, flags)
-    implicit none
-
+  subroutine writer_listInitialize(self, flags)
     class(Writer), intent(inout) :: self
     integer, intent(in)          :: flags(:)
 

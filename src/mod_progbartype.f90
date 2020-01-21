@@ -28,8 +28,6 @@ contains
   !>  Initialize a `ProgressBar` object.
   !----------------------------------------------------------------------------!
   subroutine initProgressBar(new, partition, totalTicks, charBit)
-    implicit none
-
     type(ProgressBar), intent(out) :: new
     integer,           intent(in)  :: partition
     integer,           intent(in)  :: totalTicks
@@ -56,7 +54,6 @@ contains
   !!  progress bar as well.
   !----------------------------------------------------------------------------!
   subroutine incrementCounter(self, increment, show)
-    implicit none
     class(ProgressBar), intent(inout) :: self
 
     integer, optional :: increment
@@ -86,7 +83,6 @@ contains
   !>  Print the progress bar.
   !----------------------------------------------------------------------------!
   subroutine showProgBar(self)
-    implicit none
     class(ProgressBar), intent(in) :: self
 
     character, allocatable :: tickArr(:)

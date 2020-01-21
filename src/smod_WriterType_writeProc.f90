@@ -7,9 +7,9 @@ submodule (WriterType) WriterTypeWriteProc
   !----------------------------------------------------------------------------!
   implicit none
   contains
-  module subroutine writer_write_int(self, flag, arg)
-    implicit none
 
+
+  subroutine writer_write_int(self, flag, arg)
     class(Writer),         intent(inout) :: self
     integer(kind=writeIK), intent(in)    :: arg
     integer,               intent(in)    :: flag
@@ -19,9 +19,7 @@ submodule (WriterType) WriterTypeWriteProc
   end subroutine writer_write_int
 
 
-  module subroutine writer_write_real(self, flag, arg)
-    implicit none
-
+  subroutine writer_write_real(self, flag, arg)
     class(Writer),      intent(inout) :: self
     integer,            intent(in)    :: flag
     real(kind=writeRK), intent(in)    :: arg
@@ -32,9 +30,7 @@ submodule (WriterType) WriterTypeWriteProc
   end subroutine writer_write_real
 
 
-  module subroutine writer_write_intArray(self, flag, arg)
-    implicit none
-
+  subroutine writer_write_intArray(self, flag, arg)
     class(Writer),         intent(inout) :: self
     integer,               intent(in)    :: flag
     integer(kind=writeIK), intent(in)    :: arg(:)
@@ -45,9 +41,7 @@ submodule (WriterType) WriterTypeWriteProc
   end subroutine writer_write_intArray
 
 
-  module subroutine writer_write_realArray(self, flag, arg)
-    implicit none
-
+  subroutine writer_write_realArray(self, flag, arg)
     class(Writer),      intent(inout) :: self
     integer,            intent(in)    :: flag
     real(kind=writeRK), intent(in)    :: arg(:)

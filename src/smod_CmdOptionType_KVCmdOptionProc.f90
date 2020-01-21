@@ -8,7 +8,6 @@ contains
   !>  Get the value of the provided key-value command-line option.
   ! -------------------------------------------------------------------------- !
   pure integer function KVtype_getValue(self)
-    implicit none
     class(KeyValCmdOption), intent(in) :: self
 
     KVtype_getValue = self % value
@@ -21,8 +20,6 @@ contains
   !!  This also marks the command-line option optional.
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalKVVal(cmdKeyVal, value)
-    implicit none
-
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
     integer,                intent(in)    :: value
 
@@ -44,8 +41,6 @@ contains
   !!  side of the key-value command-line option in the help message.
   ! -------------------------------------------------------------------------- !
   subroutine setValueMsg(cmdKeyVal, valueMsg)
-    implicit none
-
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
     character(len=*),       intent(in)    :: valueMsg
 

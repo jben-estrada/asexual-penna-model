@@ -50,8 +50,6 @@ contains
   !>  Read the scalar model parameters from an external file.
   ! -------------------------------------------------------------------------- !
   subroutine readScalarParam()
-    implicit none
-    
     integer :: values(MODEL_PARAM_COUNT)
     integer :: fileStatus
     integer :: keyIdx
@@ -153,8 +151,6 @@ contains
   !>  Print the model parameters for error/warning messages.
   ! -------------------------------------------------------------------------- !
   subroutine printModelParam()
-    implicit none
-
     integer :: i
 
     do i = 1, MODEL_PARAM_COUNT
@@ -173,7 +169,6 @@ contains
   !!  comments (lines starting with ';').
   ! -------------------------------------------------------------------------- !
   subroutine stripFile(strippedFile, unit)
-    implicit none
     character(len=:), allocatable, intent(out) :: strippedFile
     integer,                       intent(in)  :: unit
 
@@ -223,7 +218,6 @@ contains
   !!  returns `NULL_VALUE` which is set to 0.
   ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(elem) result(i)
-    implicit none
     character(len=:), allocatable, intent(in) :: elem
 
     integer :: i
@@ -245,9 +239,7 @@ contains
   ! SUBROUTINE: readVerhulstWeights
   !>  Read the Verhulst weights values from a .ini file.
   ! -------------------------------------------------------------------------- !
-  subroutine readVerhulstWeights
-    implicit none
-
+  subroutine readVerhulstWeights()
     integer :: fileStatus
     integer :: readStatus
     integer :: charNum
@@ -354,7 +346,6 @@ contains
   !>  Check whether the character `char` is a number or not.
   ! -------------------------------------------------------------------------- !
   logical function isNumeric(char)
-    implicit none
     character, intent(in) :: char
 
     integer :: asciiNum

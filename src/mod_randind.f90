@@ -22,8 +22,6 @@ contains
   !!  the passed `indices`.
   ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
-    implicit none
-
     integer, intent(in)  :: upper
     integer, intent(in)  :: lower
     integer, intent(out) :: indices(:)
@@ -55,8 +53,6 @@ contains
   !>  Generate a random integer in the interval [a, b].
   ! -------------------------------------------------------------------------- !
   function generateRandInt(a, b) result(out)
-    implicit none
-
     integer, intent(in) :: a
     integer, intent(in) :: b
 

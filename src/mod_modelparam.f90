@@ -132,7 +132,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalModelParamVal()
     use CmdOptions
-    implicit none
 
     ! Assign optional values to key-value options.
     call assignOptionalKVVal(maxTimeStepArg, MODEL_TIME_STEPS)
@@ -150,7 +149,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalCfgFilePath()
     use CmdOptions
-    implicit none
 
     call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
     call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
@@ -163,7 +161,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignConfigFilePaths()
     use CmdOptions
-    implicit none
 
     logical :: exist
 
@@ -200,7 +197,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine ModelParam_getCmdArgs(onlyPosArgs)
     use CmdOptions
-    implicit none
     logical, optional, intent(in) :: onlyPosArgs
 
     if (present(onlyPosArgs)) then
@@ -260,7 +256,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine prettyPrintModelParams()
     use SaveFormat, only: nullFlag
-    implicit none
 
     ! Pretty print separator.
     integer :: k
@@ -302,9 +297,7 @@ contains
   ! SUBROUTINE: deallocVerhulstWeights
   !>  Deallocate `MODEL_VERHULST_W` array.
   ! -------------------------------------------------------------------------- !
-  subroutine deallocVerhulstWeights
-    implicit none
-  
+  subroutine deallocVerhulstWeights()
     if (allocated(MODEL_VERHULST_W)) deallocate(MODEL_VERHULST_W)
   end subroutine deallocVerhulstWeights
 end module ModelParam

@@ -27,8 +27,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine RNG_getCmdArgs()
     use CmdOptions, only: rngChoiceArg, rngSeedArg
-    implicit none
-
 
     call chooseRNG(rngChoiceArg % getValue())
     call setSeed(rngSeedArg % getValue())
@@ -41,7 +39,6 @@ contains
   !!  the intrinsic RNG (a KISS PRNG) and a Mersenne Twister RNG (MT19937).
   ! -------------------------------------------------------------------------- !
   subroutine chooseRNG(choice)
-    implicit none
     integer, intent(in) :: choice
 
     if (any(RNG_FLAGS == choice)) then
@@ -58,7 +55,6 @@ contains
   !>  Set the seed for the chosen RNG.
   ! -------------------------------------------------------------------------- !
   subroutine setSeed(seed)
-    implicit none
     integer, intent(in) :: seed
 
     ! Local variables for setting seed of the instrinsic RNG.
@@ -94,7 +90,6 @@ contains
   !!  specific.
   ! -------------------------------------------------------------------------- !
   subroutine getRandNumber(randnum)
-    implicit none
     real, intent(out) :: randnum
     
     select case(rngChoice)

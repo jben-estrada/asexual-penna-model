@@ -22,8 +22,6 @@ contains
   !!  giving a healthy or an unhealthy gene.
   ! -------------------------------------------------------------------------- !
   function Gene_randomGene() result(gene)
-    implicit none
-
     integer(kind=personIK) :: gene
     integer :: randIndex
     real    :: rand
@@ -42,7 +40,6 @@ contains
   !!  genes.
   ! -------------------------------------------------------------------------- !
   function gene_MutatedGene() result(gene)
-    implicit none
     integer :: gene
 
     gene = GENE_UNHEALTHY
@@ -54,7 +51,6 @@ contains
   !>  Generate an array of genes of length `L`.
   ! -------------------------------------------------------------------------- !
   function gene_generateGenome(L)
-    implicit none
     integer, intent(in) :: L
 
     integer(kind=personIK) :: gene_generateGenome(L)

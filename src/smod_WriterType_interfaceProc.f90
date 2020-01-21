@@ -5,8 +5,6 @@ submodule (WriterType) WriterTypeInterfaceProc
 
   ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   subroutine constructWriter_array(new, flags, initialize)
-    implicit none
-
     type(Writer),      intent(out) :: new
     integer,           intent(in)  :: flags(:)
     logical, optional, intent(in)  :: initialize
@@ -35,8 +33,6 @@ submodule (WriterType) WriterTypeInterfaceProc
 
 
   subroutine constructWriter_scalar(new, flag, initialize)
-    implicit none
-
     type(Writer),      intent(out) :: new
     integer,           intent(in)  :: flag
     logical, optional, intent(in) :: initialize
@@ -66,7 +62,6 @@ submodule (WriterType) WriterTypeInterfaceProc
   !!  and `liveFlags`.
   !----------------------------------------------------------------------------!
   subroutine destroy(self)
-    implicit none
     type(Writer), intent(inout) :: self
 
     if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)

@@ -8,8 +8,9 @@ submodule (WriterType) WriterTypeCloseProc
   !----------------------------------------------------------------------------!
   implicit none
   contains
-  module subroutine writer_closeAll(self)
-    implicit none
+
+  
+  subroutine writer_closeAll(self)
     class(Writer), intent(inout) :: self
 
     integer :: flag
@@ -27,9 +28,7 @@ submodule (WriterType) WriterTypeCloseProc
   end subroutine writer_closeAll
 
 
-  module subroutine writer_close(self, flag)
-    implicit none
-
+  subroutine writer_close(self, flag)
     class(Writer), intent(inout) :: self
     integer,       intent(in)    :: flag
 
@@ -43,9 +42,7 @@ submodule (WriterType) WriterTypeCloseProc
   end subroutine writer_close
 
 
-  module subroutine writer_listclose(self, flags)
-    implicit none
-
+  subroutine writer_listclose(self, flags)
     class(Writer), intent(inout) :: self
     integer,       intent(in)    :: flags(:)
 

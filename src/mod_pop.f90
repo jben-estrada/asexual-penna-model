@@ -71,7 +71,6 @@ contains
   !>  Initialize a `PersonList` object.
   ! -------------------------------------------------------------------------- !
   function constructPersonList(startPopSize) result(newLL)
-    implicit none
     integer, intent(in) :: startPopSize
 
     type(PersonList)    :: newLL
@@ -85,7 +84,6 @@ contains
 
   subroutine determineDeathType(self, deathByAge, deathByMutation, &
         deathByVerhulst)
-    implicit none
 
     class(PersonList), intent(in)   :: self
     integer, pointer, intent(inout) :: deathByAge
@@ -114,8 +112,6 @@ contains
   !>  Get the `k`th binary digit of the integer `number`.
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
-    implicit none
-
     integer(kind=personIK), intent(in) :: number
     integer,                intent(in) :: k
     integer(kind=personIK) :: bit
@@ -130,7 +126,6 @@ contains
   !>  Initialize `indiv` with a healthy genome.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr)
-    implicit none
     type(Person), pointer, intent(inout) :: indiv_ptr
 
     indiv_ptr % genome = GENE_HEALTHY
@@ -147,7 +142,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
     use RandInd, only: generateIndices
-    implicit none
 
     type(Person), pointer,  intent(inout) :: indiv_ptr
     integer(kind=personIK), intent(in)    :: genome
@@ -177,7 +171,6 @@ contains
   !>  Generate a list of population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(popList, startPopSize)
-    implicit none
 
     type(PersonList), intent(inout) :: popList
     integer,          intent(in)    :: startPopSize
@@ -211,8 +204,6 @@ contains
   !>  Free the allocatable elements of the linked list.
   ! -------------------------------------------------------------------------- !
   subroutine freePtr(self, popSize)
-    implicit none
-
     class(PersonList), intent(inout) :: self
     integer,           intent(in)    :: popSize
 
@@ -243,7 +234,6 @@ contains
   !!  and remove it from the list.
   ! -------------------------------------------------------------------------- !
   subroutine killCurrentIndiv(self)
-    implicit none
     class(PersonList), intent(inout) :: self
 
     type(Person), pointer :: deadIndiv_ptr
@@ -262,7 +252,6 @@ contains
   !!  object to point at the next element of the linked list.
   ! -------------------------------------------------------------------------- !
   subroutine incrementPtr(list)
-    implicit none
     class(PersonList), intent(inout) :: list
 
     ! NOTE: We demand that `LL_nextElem` will never encounter a
@@ -279,7 +268,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine reproduceCurrIndiv(self, updateGenome)
     use Demographics, only: updateGenomeDstrb
-    implicit none
 
     class(PersonList), intent(inout) :: self
     logical,           intent(in)    :: updateGenome
@@ -315,7 +303,6 @@ contains
   !!  pointing at is dead.
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivDead(self)
-    implicit none
     class(PersonList), intent(inout) :: self
 
     isCurrIndivDead = self % current_ptr % deathIndex /= ALIVE
@@ -328,7 +315,6 @@ contains
   !!  pointing at.
   ! -------------------------------------------------------------------------- !
   integer function getCurrIndivAge(self)
-    implicit none
     class(PersonList), intent(in) :: self
 
     if (associated(self % current_ptr)) then
@@ -345,7 +331,6 @@ contains
   !!  pointing at.
   ! -------------------------------------------------------------------------- !
   function getCurrIndivGenome(self) result(genome)
-    implicit none
     class(PersonList), intent(in) :: self
 
     integer(kind=personIK) :: genome
@@ -366,8 +351,6 @@ contains
   !!  automatically.
   ! -------------------------------------------------------------------------- !
   subroutine nextElem(self, status)
-    implicit none
-
     class(PersonList), intent(inout) :: self
     integer,           intent(out)   :: status
 
@@ -422,7 +405,6 @@ contains
   !!  the list and the "previous" pointer is nullified.
   ! -------------------------------------------------------------------------- !
   subroutine resetReadPtrs(self)
-    implicit none
     class(PersonList), intent(inout) :: self
   
     self % current_ptr => self % head_ptr
@@ -435,7 +417,6 @@ contains
   !>  Update the age of the `Person` object `current_ptr` is pointing at.
   ! -------------------------------------------------------------------------- !
   subroutine updateCurrIndivAge(self)
-    implicit none
     class(PersonList), intent(inout) :: self
   
     self % current_ptr % age = self % current_ptr % age + 1
@@ -448,7 +429,6 @@ contains
   !!  at is able to reproduce.
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivMature(self)
-    implicit none
     class(PersonList), intent(inout) :: self
 
     logical :: lowerBound
@@ -468,7 +448,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine checkCurrIndivDeath(self, popSize)
     use RNG, only: getRandNumber
-    implicit none
 
     class(PersonList), intent(inout) :: self
     integer,           intent(in)    :: popSize

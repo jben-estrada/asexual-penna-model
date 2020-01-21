@@ -26,7 +26,7 @@ module UpdateArray
     procedure :: arrayInsert_intRange
     procedure :: arrayInsert_real
     procedure :: arrayInsert_realRange
-  end interface arrayInsert
+  end interface
 
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: generateIndices
@@ -35,7 +35,7 @@ module UpdateArray
   interface arrayRemove
     procedure :: arrayRemove_int
     procedure :: arrayRemove_real
-  end interface arrayRemove
+  end interface
 
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: arrayRemoveRange
@@ -44,7 +44,7 @@ module UpdateArray
   interface arrayRemoveRange
     procedure :: arrayRemoveRange_int
     procedure :: arrayRemoveRange_real
-  end interface arrayRemoveRange
+  end interface
 
   ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: arrayRemoveElem
@@ -54,21 +54,19 @@ module UpdateArray
   interface arrayRemoveElem
     procedure :: arrayRemoveElem_int
     procedure :: arrayRemoveElem_real
-  end interface arrayRemoveElem
+  end interface
   !----------------------------------------------------------------------------!
 
   public :: arrayInsert
   public :: arrayRemove
   public :: arrayRemoveRange
   public :: arrayRemoveElem
-  public :: alloc_check
+  public :: allocCheck
 contains
 
 
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_int(array, k, newElem)
-    implicit none
-
     integer(kind=arrIK), allocatable, intent(inout):: array(:)
     integer(kind=arrIK),              intent(in)   :: newElem
     integer,                          intent(in)   :: k
@@ -86,7 +84,7 @@ contains
     end if
 
     allocate(array(old_size + 1), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k) = newElem
     array(k+1:old_size+1) = temp(k:old_size)
@@ -97,8 +95,6 @@ contains
 
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_intRange(array, k, newElems)
-    implicit none
-
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: newElems(:)
     integer,                          intent(in)    :: k
@@ -120,7 +116,7 @@ contains
 
     ! Add newElems to array
     allocate(array(old_size + added), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k:k+added-1) = newElems(1:added)
     array(k+added:old_size+added) = temp(k:old_size)
@@ -131,8 +127,6 @@ contains
 
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_real(array, k, newElem)
-    implicit none
-
     real(kind=arrRK), allocatable, intent(inout):: array(:)
     real(kind=arrRK),              intent(in)   :: newElem
     integer,                       intent(in)   :: k
@@ -150,7 +144,7 @@ contains
     end if
 
     allocate(array(old_size + 1), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k) = newElem
     array(k+1:old_size+1) = temp(k:old_size)
@@ -161,8 +155,6 @@ contains
 
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_realRange(array, k, newElems)
-    implicit none
-
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     real(kind=arrRK),              intent(in)    :: newElems(:)
     integer,                       intent(in)    :: k
@@ -184,7 +176,7 @@ contains
 
     ! Add newElems to array
     allocate(array(old_size + added), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k:k+added-1) = newElems(1:added)
     array(k+added:old_size+added) = temp(k:old_size)
@@ -195,8 +187,6 @@ contains
 
   ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_int(array,  k)
-    implicit none
-
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer,                          intent(in)    :: k
 
@@ -215,7 +205,7 @@ contains
 
     ! Reassign elements of `array` w/o the kth element.
     allocate(array(old_size - 1), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k:old_size-1) = temp(k+1:size(temp))
     
@@ -225,10 +215,8 @@ contains
 
   ! === ARRAY REMOVE SPECIFIC PROCEDURE ===
   subroutine arrayRemove_real(array,  k)
-    implicit none
-
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
-    integer, intent(in) :: k
+    integer,                       intent(in)    :: k
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size
@@ -245,7 +233,7 @@ contains
 
     ! Reassign elements of `array` w/o the kth element.
     allocate(array(old_size - 1), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:k-1) = temp(1:k-1)
     array(k:old_size-1) = temp(k+1:size(temp))
     
@@ -255,8 +243,6 @@ contains
 
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_int(array, a, b)
-    implicit none
-
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: a
     integer,                          intent(in)    :: b
@@ -286,7 +272,7 @@ contains
 
     ! Reassign elements to `array` w/o the elements of index `a` to `b`
     allocate (array(new_size), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:a-1) = temp(1:a-1)
     array(a:new_size) = temp(b+1:size(temp))
 
@@ -296,8 +282,6 @@ contains
 
   ! === ARRAY REMOVE RANGE SPECIFIC PROCEDURES ===
   subroutine arrayRemoveRange_real(array, a, b)
-    implicit none
-
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     integer,                       intent(in)    :: a
     integer,                       intent(in)    :: b
@@ -327,7 +311,7 @@ contains
 
     ! Reassign elements to `array` w/o the elements of index `a` to `b`
     allocate (array(new_size), stat=error)
-    call alloc_check(error)
+    call allocCheck(error)
     array(1:a-1) = temp(1:a-1)
     array(a:new_size) = temp(b+1:size(temp))
 
@@ -337,8 +321,6 @@ contains
 
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_int(array, elem)
-    implicit none
-
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
     integer(kind=arrIK),              intent(in)    :: elem
     integer :: i
@@ -356,8 +338,6 @@ contains
 
   ! === ARRAY REMOVE ELEMENT SPECIFIC PROCEDURES ===
   subroutine arrayRemoveElem_real(array, elem)
-    implicit none
-
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
     real(kind=arrRK),              intent(in)    :: elem
     integer :: i
@@ -376,18 +356,16 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: alloc_check
+  ! SUBROUTINE: allocCheck
   !>  Check whether the statements `allocate`, `deallocate` or `move_alloc` are
   !   run successfully. If they fail, the program is stopped. Otherwise, do
   !   nothing.
   ! -------------------------------------------------------------------------- !
-  subroutine alloc_check(x)
-    implicit none
-
+  subroutine allocCheck(x)
     integer, intent(in) :: x
     if (x /= 0) then
       print "(a, i0)", "***ERROR: Space cannot be allocated. status value: ", x
       error stop
     end if
-  end subroutine alloc_check
+  end subroutine allocCheck
 end module UpdateArray

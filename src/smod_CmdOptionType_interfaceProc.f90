@@ -8,8 +8,6 @@ contains
   !>  Initialize a command-line option.
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOption(cmdOption, command, altCommand)
-    implicit none
-    
     class(BaseCmdOption),       intent(out) :: cmdOption
     character(len=*),           intent(in)  :: command
     character(len=*), optional, intent(in)  :: altCommand
@@ -29,8 +27,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &
       readFlag, readKeyVal, readPosArg)
-    implicit none
-
     class(FlagCmdOption),       intent(inout) :: cmdFlags(:)
     class(KeyValCmdOption),     intent(inout) :: cmdKeyVal(:)
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
@@ -72,8 +68,6 @@ contains
   !!  argument.
   ! -------------------------------------------------------------------------- !
   logical function compareCommand(cmdOption, cmdArg)
-    implicit none
-
     class(BaseCmdOption), intent(in) :: cmdOption
     character(len=*),     intent(in) :: cmdArg
 
@@ -87,8 +81,6 @@ contains
   !>  Toggle the flag option matching with the passed command-line argument.
   ! -------------------------------------------------------------------------- !
   subroutine toggleFlagOptions(cmdFlags, cmdArg, status, toRead)
-    implicit none
-
     class(FlagCmdOption), intent(inout) :: cmdFlags(:)
     character(len=*),     intent(in)    :: cmdArg
     integer,              intent(out)   :: status
@@ -121,8 +113,6 @@ contains
   !>  Assign the value for the matching key-value option.
   ! -------------------------------------------------------------------------- !
   subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, toRead)
-    implicit none
-  
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal(:)
     character(len=*),       intent(in)    :: cmdArg
     integer,                intent(out)   :: status
@@ -152,8 +142,6 @@ contains
   !>  Assign value to the specified key-value option.
   ! -------------------------------------------------------------------------- !
   subroutine assignValueTo(cmdOption, valueChar, toRead)
-    implicit none
-    
     class(KeyValCmdOption), intent(inout) :: cmdOption
     character(len=*),       intent(in)    :: valueChar
     logical,                intent(in)    :: toRead
@@ -182,8 +170,6 @@ contains
   !>  Assign positional arguments.
   ! -------------------------------------------------------------------------- !
   subroutine assignPositionalArg(cmdPosArgs, cmdArg, status, toRead)
-    implicit none
-
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
     character(len=*),           intent(in)    :: cmdArg
     integer,                    intent(out)   :: status
@@ -212,8 +198,6 @@ contains
   !>  Get the key and value characters from the provided cmd argument.
   ! -------------------------------------------------------------------------- !
   subroutine getKeyVal(cmdArg, key, value, status)
-    implicit none
-
     character(len=*),       intent(in)  :: cmdArg
     character(len=MAX_LEN), intent(out) :: key
     character(len=MAX_LEN), intent(out) :: value
@@ -262,7 +246,6 @@ contains
   !>  Check for command-line options with missing values.
   ! -------------------------------------------------------------------------- !
   subroutine checkUninitializedValues(cmdOptions)
-    implicit none
     class(BaseCmdOption), intent(in) :: cmdOptions(:)
 
     integer :: i
@@ -282,8 +265,6 @@ contains
   !>  Show the help messages with the provided command-line options.
   ! -------------------------------------------------------------------------- !
   subroutine showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
-    implicit none
-
     class(FlagCmdOption),       intent(in) :: cmdFlags(:)
     class(KeyValCmdOption),     intent(in) :: cmdKeyVal(:)
     class(PositionalCmdOption), intent(in) :: cmdPosArgs(:)

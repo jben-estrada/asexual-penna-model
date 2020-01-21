@@ -4,7 +4,6 @@ submodule (WriterType) WriterTypeWrHdrProc
 
 
   subroutine writer_writeHeader(self, flag, header)
-    implicit none
     class(Writer),    intent(in) :: self
     integer,          intent(in) :: flag
     character(len=*), intent(in) :: header(:)

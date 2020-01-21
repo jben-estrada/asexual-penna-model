@@ -9,7 +9,6 @@ contains
   !>  Get the state of the flag option.
   ! -------------------------------------------------------------------------- !
   logical pure function flagtype_getFlagState(self)
-    implicit none
     class(FlagCmdOption), intent(in) :: self
 
     flagtype_getFlagState = self % state
@@ -23,8 +22,6 @@ contains
   !!  This also marks the flag as optiona.
   ! -------------------------------------------------------------------------- !
   subroutine assignInitialFlagState(cmdFlag, state)
-    implicit none
-
     class(FlagCmdOption), intent(inout) :: cmdFlag
     logical,              intent(in)    :: state
 

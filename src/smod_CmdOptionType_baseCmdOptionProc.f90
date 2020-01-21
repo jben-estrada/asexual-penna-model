@@ -9,7 +9,6 @@ contains
   !!  This will appear in the help message.
   ! -------------------------------------------------------------------------- !
   subroutine setUsageMsg(cmdOption, usageMsg)
-    implicit none
     class(BaseCmdOption), intent(inout) :: cmdOption
     character(len=*),     intent(in)    :: usageMsg
 
@@ -22,10 +21,8 @@ contains
   !>  Get the command character of the given command-line option.
   ! -------------------------------------------------------------------------- !
   pure function getCommand(self) result(command)
-    implicit none
-
     class(BaseCmdOption), intent(in) :: self
-    character(len=LONG_MAX_LEN)       :: command
+    character(len=LONG_MAX_LEN)      :: command
 
     command = self % command
   end function getCommand
@@ -36,8 +33,6 @@ contains
   !>  Get the alternate command character of the given command-line option.
   ! -------------------------------------------------------------------------- !
   pure function getAltCommand(self) result(altCommand)
-    implicit none
-
     class(BaseCmdOption), intent(in) :: self
     character(len=MAX_LEN)           :: altCommand
 
@@ -50,8 +45,6 @@ contains
   !>  Get the message on the usage of the given command-line option.
   ! -------------------------------------------------------------------------- !
   pure function getUsageMsg(self) result(usageMsg)
-    implicit none
-
     class(BaseCmdOption), intent(in) :: self
     character(len=LONG_MAX_LEN)  :: usageMsg
 

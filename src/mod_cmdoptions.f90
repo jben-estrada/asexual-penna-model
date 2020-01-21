@@ -54,8 +54,6 @@ contains
   !>  Initialize command-line option types.
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
-    implicit none
-
     ! Assign command char of flag options.
     call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
     call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
@@ -85,8 +83,6 @@ contains
   !>  Assign usage messages to module-defined command-line option objects.
   ! -------------------------------------------------------------------------- !
   subroutine setCmdOptionUsageMsgs()
-    implicit none
-
     ! Set usage messages of flag options.
     call setUsageMsg(verbosePrintFlag, "Show all the model parameters.")
     call setUsageMsg(showHelpMsgFlag, "Show this message and exit.")
@@ -124,8 +120,7 @@ contains
   ! SUBROUTINE: parseNonPosArgs
   !>  Parse key-value arguments and flags.
   ! -------------------------------------------------------------------------- !
-  subroutine parseCmdArgs(readFlag, readKeyVal, readPosArg)
-    implicit none
+  subroutine parseCmdArgs(readFlag, readKeyVal, readPosArg)    
     logical, intent(in)    :: readFlag
     logical, intent(in)    :: readKeyVal
     logical, intent(in)    :: readPosArg
@@ -140,8 +135,6 @@ contains
   !>  Show the help message together with notes with regards to integer flags.
   ! -------------------------------------------------------------------------- !
   subroutine showHelpMsgAndNotes()
-    implicit none
-    
     if (showHelpMsgFlag % getFlagState()) then
       call showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
 

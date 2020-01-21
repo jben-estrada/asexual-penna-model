@@ -55,7 +55,6 @@ contains
   !!  the non-matching genome.
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome)
-    implicit none
     integer(kind=personIK), intent(in) :: genome
 
     call incrementGenomeCount(genomeDstrbHead, genome)
@@ -68,8 +67,6 @@ contains
   !>  Increment genome count and update 
   ! -------------------------------------------------------------------------- !
   recursive subroutine incrementGenomeCount(node, genome)
-    implicit none
-
     type(GenomeDstrbNode), pointer, intent(inout) :: node
     integer(kind=personIK),         intent(in)    :: genome
 
@@ -94,7 +91,6 @@ contains
   !!  list.
   ! -------------------------------------------------------------------------- !
   subroutine appendGenomeDstrbNode(genome)
-    implicit none
     integer(kind=personIK), intent(in) :: genome
 
     type(GenomeDstrbNode), pointer :: new
@@ -123,8 +119,6 @@ contains
   !>  Free allocated nodes of the genome distribution list and reset counters.
   ! -------------------------------------------------------------------------- !
   subroutine freeGenomeDstrbList()
-    implicit none
-  
     genomeDstrbTail => null()
     genomeCount = 0
     call cascadeFreeNodes(genomeDstrbHead)
@@ -137,7 +131,6 @@ contains
   !!  list.
   ! -------------------------------------------------------------------------- !
   function getDiversityIdx() result(diversityIdx)
-    implicit none
     real :: diversityIdx
 
     type(GenomeDstrbNode), pointer :: reader
@@ -166,7 +159,6 @@ contains
   !>  Free allocated nodes.
   ! -------------------------------------------------------------------------- !
   recursive subroutine cascadeFreeNodes(node)
-    implicit none
     type(GenomeDstrbNode), pointer, intent(inout) :: node
 
     if (associated(node)) then
@@ -184,7 +176,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine resetAgeDstrb
     use ModelParam, only: MODEL_L
-    implicit none
 
     if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
     ageDistribution(:) = 0
@@ -196,8 +187,6 @@ contains
   !>  Update the age demographics.
   ! -------------------------------------------------------------------------- !
   subroutine updateAgeDstrb(age, dstrb)
-    implicit none
-  
     integer, intent(in)    :: age
     integer, intent(inout) :: dstrb(:)
 
@@ -210,8 +199,6 @@ contains
   !>  Deallocate demographic arrays
   ! -------------------------------------------------------------------------- !
   subroutine deallocAgeDstrb
-    implicit none
-
     if (allocated(ageDistribution)) deallocate(ageDistribution)
   end subroutine deallocAgeDstrb
 end module Demographics

@@ -9,8 +9,6 @@ contains
   !>  Set the position of the positional command-line option.
   ! -------------------------------------------------------------------------- !
   subroutine setPosTypePosition(cmdPosOption, position)
-    implicit none
-
     class(PositionalCmdOption), intent(inout) :: cmdPosOption
     integer,                    intent(in)    :: position
     
@@ -23,8 +21,6 @@ contains
   !>  Get the value of the positional command-line option.
   ! -------------------------------------------------------------------------- !
   pure function posType_getValue(self) result(value)
-    implicit none
-
     class(PositionalCmdOption), intent(in) :: self
     character(len=LONG_MAX_LEN)            :: value
     
@@ -37,7 +33,6 @@ contains
   !>  Get the position of the positional command-line option.
   ! -------------------------------------------------------------------------- !
   integer pure function posType_getPosition(self)
-    implicit none
     class(PositionalCmdOption), intent(in) :: self
 
     posType_getPosition = self % position
@@ -50,8 +45,6 @@ contains
   !!  This also marks the command-line option as optional.
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalPosTypeVal(cmdPosArg, value)
-    implicit none
-
     class(PositionalCmdOption),  intent(inout) :: cmdPosArg
     character(len=LONG_MAX_LEN), intent(in)    :: value
 

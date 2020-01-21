@@ -23,7 +23,6 @@ contains
   subroutine runOneInstance(maxTimestep, startPopSize, recordFlag)
     use Demographics
     use ModelParam, only: MODEL_K
-    implicit none
 
     integer, intent(in) :: maxTimestep
     integer, intent(in) :: startPopSize
@@ -112,7 +111,6 @@ contains
         deathByAge, deathByMutation, deathByVerhulst)
     use Demographics
     use ModelParam, only: MODEL_B
-    implicit none
 
     type(PersonList), intent(inout) :: population       ! Population object.
     integer,          intent(inout) :: popSize          ! Population size.
@@ -177,7 +175,6 @@ contains
   subroutine run(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
         toRecordTime, printRunProgress)
     use ProgBarType
-    implicit none
 
     integer, intent(in) :: maxTimeStep
     integer, intent(in) :: sampleSize   
@@ -278,8 +275,6 @@ contains
   !!  and `death_recflag`.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
-    implicit none
-
     type(Writer), intent(inout) :: runWriter
     integer,      intent(in)    :: recordFlag
 
