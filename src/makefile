@@ -26,9 +26,12 @@ $(BINDIR)/$(TARGET): $(OBJS)
 
 -include $(DEPS)
 
-%.o %.d: %.f90
+%.o: %.f90 %.d
 	@echo "\tCompile $<..."
-	@$(FC) $(FFLAGS) $(FDEP) -c $<
+	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@
+
+%.d: %.f90
+	@-$(FC) $(FFLAGS) $(FDEP) -fsyntax-only -S $<
 
 # Remove unneeded files for building.
 .PHONY: clean
