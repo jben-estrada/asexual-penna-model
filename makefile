@@ -44,8 +44,3 @@ clean:
 .PHONY: clean_mod
 clean_mod:
 	@$(RM) -f $(SRCDIR)/*.mod $(SRCDIR)/*.smod
-
-# Run test script
-.PHONY: test
-test:
-	@test/test.sh
