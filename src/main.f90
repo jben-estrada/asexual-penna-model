@@ -28,7 +28,7 @@
 program Main
   use Penna
   use ModelParam
-  use RNG, only: initializeRNG
+  use RNG, only: RNG_getCmdArgs
   use CmdOptions, only: initializeCmdOptions, parseCmdArgs, showHelpMsgAndNotes
   implicit none
 
@@ -44,7 +44,7 @@ program Main
   call parseCmdArgs(.false., .false., .true.)
   ! Assign the paths of .cfg files containing model parameters and
   ! Verhulst weights.
-  call assignConfigFilePaths()
+  call ModelParam_getCmdArgs(.true.)
   ! -------------------------------------------------------------------------- !
 
   ! Get the model parameters from the .cfg files.
@@ -61,12 +61,12 @@ program Main
   call parseCmdArgs(.true., .true., .false.)
 
   ! Finally, assign model parameters obtained from the command-line arguments.
-  call assignModelParamFromCmdArgs()
+  call ModelParam_getCmdArgs(.false.)
   ! -------------------------------------------------------------------------- !
 
   ! -------------------------------------------------------------------------- !
   ! Initialize the RNG with the provided command-line arguments.
-  call initializeRNG()
+  call RNG_getCmdArgs()
 
   ! Print the help message and stop the program if '-h' or '--help' is passed.
   call showHelpMsgAndNotes()

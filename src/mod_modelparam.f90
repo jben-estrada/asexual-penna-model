@@ -115,8 +115,7 @@ module ModelParam
   ! Routines for assigning model parameter values.
   public :: assignOptionalModelParamVal
   public :: assignOptionalCfgFilePath
-  public :: assignConfigFilePaths
-  public :: assignModelParamFromCmdArgs
+  public :: ModelParam_getCmdArgs
 
   ! Routine for memory management.
   public :: deallocVerhulstWeights
@@ -194,14 +193,22 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignModelParamFromCmdArgs
+  ! SUBROUTINE: ModelParam_getCmdArgs
   !>  Assign model parameters from command-line arguments. The value of a 
   !!  model parameter should not change if the correspoding command-line
   !!  option is not passed.
   ! -------------------------------------------------------------------------- !
-  subroutine assignModelParamFromCmdArgs()
+  subroutine ModelParam_getCmdArgs(onlyPosArgs)
     use CmdOptions
     implicit none
+    logical, optional, intent(in) :: onlyPosArgs
+
+    if (present(onlyPosArgs)) then
+      if (onlyPosArgs) then
+        call assignConfigFilePaths()
+        return
+      end if
+    end if
 
     ! Key-value options.
     MODEL_TIME_STEPS = maxTimeStepArg % getValue()
@@ -243,7 +250,7 @@ contains
           "a positive integer."
       stop
     end if
-  end subroutine assignModelParamFromCmdArgs
+  end subroutine ModelParam_getCmdArgs
 
 
   ! -------------------------------------------------------------------------- !

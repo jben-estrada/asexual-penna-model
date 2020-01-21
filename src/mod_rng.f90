@@ -16,7 +16,7 @@ module RNG
 
   integer, save :: rngChoice
 
-  public :: initializeRNG
+  public :: RNG_getCmdArgs
   public :: getRandNumber
 contains
 
@@ -25,14 +25,14 @@ contains
   ! SUBROUTINE: initializeRNG
   !>  Initialize the chosen random number generator
   ! -------------------------------------------------------------------------- !
-  subroutine initializeRNG()
+  subroutine RNG_getCmdArgs()
     use CmdOptions, only: rngChoiceArg, rngSeedArg
     implicit none
 
 
     call chooseRNG(rngChoiceArg % getValue())
     call setSeed(rngSeedArg % getValue())
-  end subroutine initializeRNG
+  end subroutine RNG_getCmdArgs
 
 
   ! -------------------------------------------------------------------------- !
