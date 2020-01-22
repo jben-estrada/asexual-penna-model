@@ -35,9 +35,12 @@ module ModelParam
   !               K    : The carrying capacity.
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
+  use CmdOptions
   implicit none
   private
 
+  ! MODEL PARAMETERS
+  ! -------------------------------------------------------------------------- !
   ! Parameter array.
   integer, target :: modelParams(13) = 0
 
@@ -64,16 +67,24 @@ module ModelParam
   integer, protected, pointer, public :: MODEL_N0 => &
     modelParams(8) ! Starting pop size
   integer, protected, pointer, public :: MODEL_TIME_STEPS => &
-    modelParams(9) ! Total time steps
+  modelParams(9) ! Total time steps
   integer, protected, pointer, public :: MODEL_SAMPLE_SIZE => &
-    modelParams(10)! Sample size
+  modelParams(10)! Sample size
   integer, protected, pointer, public :: MODEL_REC_FLAG => &
-    modelParams(11)! Record flag
+  modelParams(11)! Record flag
   integer, protected, pointer, public :: MODEL_RNG => &
-    modelParams(12)! RNG flag.
+  modelParams(12)! RNG flag.
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
-    modelParams(13)! RNG seed.
+  modelParams(13)! RNG seed.
 
+  ! Parameters whose values are from `v_weight.cfg`.
+  ! Verhulst weights.
+  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
+  ! Default Verhulst weight.
+  real, parameter :: VWEIGHT_DEFAULT = 0.
+
+
+  ! STATE PARAMETERS
   ! -------------------------------------------------------------------------- !
   ! Print states.
   integer, public, parameter :: NORMAL_PRINT = 0
@@ -84,12 +95,9 @@ module ModelParam
 
   ! Record-time state.
   logical, public, protected :: RECORD_TIME = .false.
-  ! Parameters whose values are from `v_weight.cfg`.
-  ! Verhulst weights.
-  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
-  ! Default Verhulst weight.
-  real, parameter :: VWEIGHT_DEFAULT = 0.
 
+
+  ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
   ! Buffer character length.
   integer, parameter :: MAX_LEN = 256
@@ -99,60 +107,27 @@ module ModelParam
   character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
       "./config/v_weight.cfg"
 
+
+  ! SUBMODULE INTERFACE
+  ! -------------------------------------------------------------------------- !
   interface
-    module subroutine readScalarParam()
+    module subroutine readScalarModelParamCfg()
     end subroutine
 
-    module subroutine readVerhulstWeights()
+    module subroutine readVerhulstWeightsCfg()
     end subroutine
   end interface
+
   ! -------------------------------------------------------------------------- !
-
-  ! Routines for reading config files.
-  public :: readScalarParam
-  public :: readVerhulstWeights
-
-  ! Routines for assigning model parameter values.
-  public :: assignOptionalModelParamVal
-  public :: assignOptionalCfgFilePath
-  public :: ModelParam_getCmdArgs
+  ! Initialization routines.
+  public :: assignModelParams
+  public :: assignConfigFilePaths
 
   ! Routine for memory management.
   public :: deallocVerhulstWeights
-
   ! Other routines.
   public :: prettyPrintModelParams
 contains
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignOptionalModelParamVal
-  !>  Assign optional values to command-line options associated to model
-  !!  parameters.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignOptionalModelParamVal()
-    use CmdOptions
-
-    ! Assign optional values to key-value options.
-    call assignOptionalKVVal(maxTimeStepArg, MODEL_TIME_STEPS)
-    call assignOptionalKVVal(sampleSizeArg, MODEL_SAMPLE_SIZE)
-    call assignOptionalKVVal(startPopSizeArg, MODEL_N0)
-    call assignOptionalKVVal(recordFlagArg, MODEL_REC_FLAG)
-    call assignOptionalKVVal(rngChoiceArg, MODEL_RNG)
-    call assignOptionalKVVal(rngSeedArg, MODEL_RNG_SEED)
-  end subroutine assignOptionalModelParamVal
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignOptionalCfgFilePath
-  !>  Assign the internal default values for the config file paths.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignOptionalCfgFilePath()
-    use CmdOptions
-
-    call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
-    call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
-  end subroutine assignOptionalCfgFilePath
 
 
   ! -------------------------------------------------------------------------- !
@@ -160,12 +135,18 @@ contains
   !>  Get paths for configuration files.
   ! -------------------------------------------------------------------------- !
   subroutine assignConfigFilePaths()
-    use CmdOptions
-
     logical :: exist
 
+    ! Assign the default config file paths.
+    call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
+    call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
+
+    ! Get the config file paths from command-line arguments.
     MODEL_FILE_NAME = configDirPosArg % getValue()
     VWEIGHT_FILE_NAME = vWeightDirPosArg % getValue()
+
+    ! Get the positional command-line arguments.
+    call parseCmdArgs(.false., .false., .true.)
 
     ! Inquire the existence of the config file for model paramters.
     inquire(file=MODEL_FILE_NAME, exist=exist)
@@ -190,29 +171,38 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: ModelParam_getCmdArgs
+  ! SUBROUTINE: assignModelParams
   !>  Assign model parameters from command-line arguments. The value of a 
   !!  model parameter should not change if the correspoding command-line
   !!  option is not passed.
   ! -------------------------------------------------------------------------- !
-  subroutine ModelParam_getCmdArgs(onlyPosArgs)
-    use CmdOptions
-    logical, optional, intent(in) :: onlyPosArgs
+  subroutine assignModelParams()
+    ! Read the model parameters from the config files.
+    call readScalarModelParamCfg()
+    call readVerhulstWeightsCfg()
 
-    if (present(onlyPosArgs)) then
-      if (onlyPosArgs) then
-        call assignConfigFilePaths()
-        return
-      end if
-    end if
+    ! Assign optional values to key-value options.
+    call assignOptionalKVVal(maxTimeStepArg, MODEL_TIME_STEPS)
+    call assignOptionalKVVal(sampleSizeArg, MODEL_SAMPLE_SIZE)
+    call assignOptionalKVVal(startPopSizeArg, MODEL_N0)
+    call assignOptionalKVVal(recordFlagArg, MODEL_REC_FLAG)
+    call assignOptionalKVVal(rngChoiceArg, MODEL_RNG)
+    call assignOptionalKVVal(rngSeedArg, MODEL_RNG_SEED)
 
-    ! Key-value options.
+    ! Get key-value command-line arguments w/c so happens to only contain
+    ! model parameters.
+    call parseCmdArgs(.false., .true., .false.)
+
+    ! Assign model parameters from the command-line arguments.
     MODEL_TIME_STEPS = maxTimeStepArg % getValue()
     MODEL_SAMPLE_SIZE = sampleSizeArg % getValue()
     MODEL_N0 = startPopSizeArg % getValue()
     MODEL_REC_FLAG = recordFlagArg % getValue()
     MODEL_RNG = rngChoiceArg % getValue()
     MODEL_RNG_SEED = rngSeedArg % getValue()
+
+    ! Get the flag command-line arguments.
+    call parseCmdArgs(.true., .false., .false.)
 
     ! Print flags.
     if (verbosePrintFlag % getFlagState()) PRINT_STATE = VERBOSE_PRINT
@@ -221,7 +211,25 @@ contains
     ! Record time flag.
     RECORD_TIME = recordTimeFlag % getFlagState()
 
-    ! Error handling.
+    ! Check for errors and invalid passed arguments.
+    call checkValidModelParams()
+  end subroutine assignModelParams
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkValidModelParams
+  !>  Check the assigned model parameters for invalid values.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkValidModelParams()
+    character(len=*), parameter :: MODIFYABLE_PARAM_CHAR(*) = &
+      ["maximum time step       ", &
+       "sample size             ", &
+       "starting population size"]
+    integer, parameter :: MODIFYABLE_PARAM_IDX(size(MODIFYABLE_PARAM_CHAR)) = &
+      [9, 10, 8]
+    integer :: i
+
+    ! Check invalid combination of flags.
     if (silentPrintFlag % getFlagState() .and. &
         verbosePrintFlag % getFlagState()) then
       print "(*(a))", "***ERROR. '", trim(verbosePrintFlag % getCommand()), &
@@ -231,22 +239,16 @@ contains
       stop
     end if
 
-    if (MODEL_TIME_STEPS <= 0) then
-      print "(a)", "***ERROR. The maximum time step must be a positive integer."
-      stop
-    end if
-
-    if (MODEL_SAMPLE_SIZE <= 0) then
-      print "(a)", "***ERROR. The sample size must be a positive integer."
-      stop
-    end if
-
-    if (MODEL_N0 <= 0) then
-      print "(a)", "***ERROR. The starting population size must be " // &
-          "a positive integer."
-      stop
-    end if
-  end subroutine ModelParam_getCmdArgs
+    ! Check for non-positive model parameters; all numerical model parameters
+    ! must be positive as of now.
+    do i = 1, size(MODIFYABLE_PARAM_CHAR)
+      if (modelParams(MODIFYABLE_PARAM_IDX(i)) <= 0) then
+        print "(3a)", "***ERROR. The '", trim(MODIFYABLE_PARAM_CHAR(i)), &
+            "' must be a positive integer."
+        stop
+      end if
+    end do
+  end subroutine checkValidModelParams
 
 
   ! -------------------------------------------------------------------------- !

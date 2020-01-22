@@ -26,45 +26,19 @@
 
 
 program Main
-  use Penna
   use ModelParam
+  use Penna, only: run
   use RNG, only: RNG_getCmdArgs
-  use CmdOptions, only: initializeCmdOptions, parseCmdArgs, showHelpMsgAndNotes
+  use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
   implicit none
 
   ! Initialize the command-line options.
   call initializeCmdOptions()
 
-  ! Get the paths of .cfg  files.
-  ! -------------------------------------------------------------------------- !
-  ! Initialize command-line optional arguments.
-  call assignOptionalCfgFilePath()
+  ! Initialize the model parameters.
+  call assignConfigFilePaths()
+  call assignModelParams()
 
-  ! Get only the positional arguments.
-  call parseCmdArgs(.false., .false., .true.)
-  ! Assign the paths of .cfg files containing model parameters and
-  ! Verhulst weights.
-  call ModelParam_getCmdArgs(.true.)
-  ! -------------------------------------------------------------------------- !
-
-  ! Get the model parameters from the .cfg files.
-  ! -------------------------------------------------------------------------- !
-  ! Read the .cfg files.
-  call readScalarParam()
-  call readVerhulstWeights()
-
-  ! Assign the model parameters from the .cfg file as the default value.
-  ! (Non-default values would come from command-line arguments.)
-  call assignOptionalModelParamVal()
-
-  ! Get the remaining command-line arguments.
-  call parseCmdArgs(.true., .true., .false.)
-
-  ! Finally, assign model parameters obtained from the command-line arguments.
-  call ModelParam_getCmdArgs(.false.)
-  ! -------------------------------------------------------------------------- !
-
-  ! -------------------------------------------------------------------------- !
   ! Initialize the RNG with the provided command-line arguments.
   call RNG_getCmdArgs()
 
@@ -73,13 +47,10 @@ program Main
 
   ! Print the welcome text.
   call prettyPrintModelParams()
-  ! -------------------------------------------------------------------------- !
 
-  ! -------------------------------------------------------------------------- !
   ! Run the Penna model simulation.
   call run(MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE, MODEL_REC_FLAG, &
       RECORD_TIME, PRINT_STATE /= SILENT_PRINT)
-  ! -------------------------------------------------------------------------- !
 
   ! Wrap up.
   call deallocVerhulstWeights()

@@ -3,6 +3,7 @@ submodule (ModelParam) ReadProcedures
   use SaveFormat, only: nullFlag
   implicit none
 
+  ! -------------------------------------------------------------------------- !
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
   character(len=*), parameter :: MODEL_PARAM_KEYS(MODEL_PARAM_COUNT) = &
     ["L          ", &
@@ -24,12 +25,16 @@ submodule (ModelParam) ReadProcedures
   ! instead. NOTE: The order is the same with `MODEL_PARAM_KEYS`.
   integer, parameter :: MODEL_PARAM_DEFAULT(MODEL_PARAM_COUNT) = &
       [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, nullFlag, RNG_INTRINSIC, 1]
-  
+
+
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: MODEL_UNIT = 99
   integer, parameter :: VWEIGHT_UNIT = 98
 
+
+  ! NON-LITERAL CHARACTERS.
+  ! -------------------------------------------------------------------------- !
   ! Comment character.
   character, parameter :: COMMENT = ";"
   ! Key-value separator.
@@ -46,10 +51,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readScalarParams
+  ! SUBROUTINE: readScalarModelParamCfg
   !>  Read the scalar model parameters from an external file.
   ! -------------------------------------------------------------------------- !
-  subroutine readScalarParam()
+  subroutine readScalarModelParamCfg()
     integer :: values(MODEL_PARAM_COUNT)
     integer :: fileStatus
     integer :: keyIdx
@@ -143,7 +148,7 @@ contains
     deallocate(strippedFile)
     deallocate(key)
     deallocate(strVal)
-  end subroutine readScalarParam
+  end subroutine readScalarModelParamCfg
 
 
   ! -------------------------------------------------------------------------- !
@@ -236,10 +241,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: readVerhulstWeights
+  ! SUBROUTINE: readVerhulstWeightsCfg
   !>  Read the Verhulst weights values from a .ini file.
   ! -------------------------------------------------------------------------- !
-  subroutine readVerhulstWeights()
+  subroutine readVerhulstWeightsCfg()
     integer :: fileStatus
     integer :: readStatus
     integer :: charNum
@@ -338,7 +343,7 @@ contains
     end do
 
     deallocate(vWeightStr)
-  end subroutine readVerhulstWeights
+  end subroutine readVerhulstWeightsCfg
 
 
   ! -------------------------------------------------------------------------- !
