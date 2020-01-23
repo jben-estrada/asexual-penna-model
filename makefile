@@ -32,7 +32,7 @@ build: compile_var
 
 # Create external variable file to share variables.
 compile_var:
-	@echo "FC :=$(FC)\nFFLAGS = $(FFLAGS)\nFSYNTCHK := $(FSYNTCHK)\nFDEP := $(FDEP)"\
+	@printf "FC :=$(FC)\nFFLAGS = $(FFLAGS)\nFSYNTCHK := $(FSYNTCHK)\nFDEP := $(FDEP)"\
 		 > $(SRCDIR)/$(VAR_FILE)
 
 # Clean dependency and object files.

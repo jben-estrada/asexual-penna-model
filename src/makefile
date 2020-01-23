@@ -21,13 +21,13 @@ build: $(BINDIR)/$(TARGET) clean
 
 # Link together object files.
 $(BINDIR)/$(TARGET): $(OBJS)
-	@echo "\tLink together object files."
+	@printf "\tLink together object files.\n"
 	@$(FC) $(SPEC_FFLAGS) $^ -o $(BINDIR)/$(TARGET)
 
 -include $(DEPS)
 
 %.o: %.f90 %.d
-	@echo "\tCompile $<..."
+	@printf "\tCompile $<...\n"
 	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@
 
 %.d: %.f90
