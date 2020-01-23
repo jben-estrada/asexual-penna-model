@@ -8,7 +8,7 @@ module WriterType
   ! -------------------------------------------------------------------------- !
   use UpdateArray
   use SaveFormat
-  use iso_fortran_env, only: int64, real64
+  use, intrinsic :: iso_fortran_env, only: int64, real64
   implicit none
   private
 

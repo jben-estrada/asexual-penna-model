@@ -6,7 +6,7 @@ module UpdateArray
   !>  Module containing procedures for array manipulations which involve
   !   allocations and deallocations.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: int32, real32
+  use, intrinsic :: iso_fortran_env, only: int32, real32
   implicit none
   private
 

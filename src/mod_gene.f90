@@ -6,7 +6,7 @@ module Gene
   !>  Module containing gene parameters and procedures for generating
   !!  genomes.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: personIK => int64, personRK => real64
+  use, intrinsic :: iso_fortran_env, only: personIK => int64, personRK => real64
   implicit none
 
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0
