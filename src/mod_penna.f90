@@ -231,10 +231,13 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      if (printRunProgress) then
+      if (printRunProgress .and. sampleSize > 1) then
         call progBar % incrementCounter(show=.true.)
       end if
     end do
+
+    ! Remove the progress bar.
+    write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
 
     ! Get average elapsed time and its std deviation.
     meanTime = sum/real(sampleSize, kind=writeRK)
@@ -245,9 +248,9 @@ contains
     if (printRunProgress) then
       ! Print elapsed time.
       if (sampleSize > 1) then
-        print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+        print "(a, f12.3, a)", "Average time: ", meanTime, " ms"
       else
-        print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+        print "(a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
       end if
 
       ! Print the standard deviation.
