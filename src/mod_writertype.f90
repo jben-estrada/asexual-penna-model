@@ -59,7 +59,13 @@ module WriterType
   public :: ageDstrbFlag
   public :: deathFlag
   public :: divIdxFlag
-  public :: formatFlags
+    !! Shannon diversity index per time step.
+  public :: timeFlag
+    !! Timing statistics.
+
+  public :: recordFlagArray
+    !! Array of format flags.
+
   !----------------------------------------------------------------------------!
   !----------------------------------------------------------------------------!
   ! BOUND SUBROUTINE: [Writer % ]write

@@ -42,7 +42,8 @@ submodule (WriterType) WriterTypeInitProc
 
     do i = 1, size(self%enabledFlags)
       flag = self%enabledFlags(i)
-      call initializeWriter(filenames(flag), units(flag), positions(flag))
+      call initializeWriter(filenameArray(flag), unitArray(flag), &
+          positionArray(flag))
     end do
   end subroutine writer_initializeAll
 
@@ -59,7 +60,8 @@ submodule (WriterType) WriterTypeInitProc
 
     self%liveFlags = [flag]  ! NOTE: Automatic allocation
 
-    call initializeWriter(filenames(flag), units(flag), positions(flag))
+    call initializeWriter(filenameArray(flag), unitArray(flag), &
+        positionArray(flag))
   end subroutine writer_initialize
 
 
@@ -77,7 +79,8 @@ submodule (WriterType) WriterTypeInitProc
       flag = flags(i)
       if (.not.any(self%enabledFlags == flag)) cycle
       call arrayInsert(self%liveFlags, 1, flag)
-      call initializeWriter(filenames(flag), units(flag), positions(flag))
+      call initializeWriter(filenameArray(flag), unitArray(flag), &
+          positionArray(flag))
     end do
   end subroutine writer_listInitialize
 end submodule WriterTypeInitProc

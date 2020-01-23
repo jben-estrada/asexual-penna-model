@@ -18,7 +18,7 @@ submodule (WriterType) WriterTypeCloseProc
 
     do i = 1, size(self%liveFlags)
       flag = self%liveFlags(i)
-      close(units(flag))
+      close(unitArray(flag))
     end do
 
     if (allocated(self%liveFlags)) then
@@ -37,7 +37,7 @@ submodule (WriterType) WriterTypeCloseProc
       return
     end if
 
-    close(units(flag))
+    close(unitArray(flag))
     call arrayRemoveElem(self%enabledFlags, flag)
   end subroutine writer_close
 
@@ -53,7 +53,7 @@ submodule (WriterType) WriterTypeCloseProc
         print "(a, i2)", "***WARNING. Chosen flag is not initialized! flag: ", &
             flags(i)
       else
-        close(units(flags(i)))
+        close(unitArray(flags(i)))
         call arrayRemoveElem(self%enabledFlags, flags(i))
       end if
     end do

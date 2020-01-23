@@ -15,7 +15,7 @@ submodule (WriterType) WriterTypeWriteProc
     integer,               intent(in)    :: flag
 
     if (.not.any(self%liveFlags == flag)) return
-    write(units(flag), formats(flag)) arg
+    write(unitArray(flag), formatArray(flag)) arg
   end subroutine writer_write_int
 
 
@@ -26,7 +26,7 @@ submodule (WriterType) WriterTypeWriteProc
 
     if (.not.any(self%liveFlags == flag)) return
 
-    write(units(flag), formats(flag)) arg
+    write(unitArray(flag), formatArray(flag)) arg
   end subroutine writer_write_real
 
 
@@ -37,7 +37,7 @@ submodule (WriterType) WriterTypeWriteProc
 
     if (.not.any(self%liveFlags == flag)) return
 
-    write(units(flag), formats(flag)) arg
+    write(unitArray(flag), formatArray(flag)) arg
   end subroutine writer_write_intArray
 
 
@@ -48,7 +48,7 @@ submodule (WriterType) WriterTypeWriteProc
 
     if (.not.any(self%liveFlags == flag)) return
 
-    write(units(flag), formats(flag)) arg
+    write(unitArray(flag), formatArray(flag)) arg
   end subroutine writer_write_realArray
 end submodule WriterTypeWriteProc
 

@@ -4,8 +4,8 @@ module SaveFormat
   ! Number of Files to save
   integer, parameter :: FILECOUNT = 5
   
-  ! Max character length
-  integer, parameter :: MAXLEN = 32
+  integer, parameter :: MAX_LEN = 32
+    !! Max character length.
 
   ! SAVED FILE FORMATS
   ! -------------------------------------------------------------------------- !
@@ -53,7 +53,7 @@ module SaveFormat
   ! ARRAYS
   ! -------------------------------------------------------------------------- !
   ! Unit array.
-  integer, parameter :: units(FILECOUNT) = &
+  integer, parameter :: unitArray(FILECOUNT) = &
       [popUnit, &
        ageDstrbUnit, &
        deathUnit, &
@@ -62,7 +62,7 @@ module SaveFormat
        ]
   
   ! Filename array.
-  character(len=MAXLEN), parameter :: filenames(FILECOUNT) = &
+  character(len=MAX_LEN), parameter :: filenameArray(FILECOUNT) = &
       [popFilename, &
        ageDstrbFilename, &
        deathFilename, &
@@ -71,7 +71,7 @@ module SaveFormat
        ]
   
   ! Position array.
-  character(len=MAXLEN), parameter :: positions(FILECOUNT) = &
+  character(len=MAX_LEN), parameter :: positionArray(FILECOUNT) = &
     [popPosition, &
      ageDstrbPosition, &
      deathPosition, &
@@ -80,7 +80,7 @@ module SaveFormat
      ]
     
   ! Format array.
-  character(len=MAXLEN), parameter :: formats(FILECOUNT) = &
+  character(len=MAX_LEN), parameter :: formatArray(FILECOUNT) = &
      [popFormat, &
       ageDstrbFormat, &
       deathFormat, &
@@ -89,7 +89,7 @@ module SaveFormat
       ]
   
   ! Format flag array. (NOTE: Different from record flags)
-  integer, parameter :: formatFlags(FILECOUNT) = &
+  integer, parameter :: recordFlagArray(FILECOUNT) = &
       [popFlag, &
        ageDstrbFlag, &
        deathFlag, &

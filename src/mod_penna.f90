@@ -278,7 +278,7 @@ contains
     type(Writer), intent(inout) :: runWriter
     integer,      intent(in)    :: recordFlag
 
-    call constructWriter(runWriter, formatFlags)
+    call constructWriter(runWriter, recordFlagArray)
 
     if (recordFlag == nullFlag) return
 
