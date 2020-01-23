@@ -19,7 +19,7 @@ module RNG
   integer :: rngChoice
     !! The RNG flag chosen at the beginning of the program.
 
-  public :: RNG_getCmdArgs
+  public :: assignRNGParams
   public :: getRandNumber
 contains
 
@@ -28,12 +28,12 @@ contains
   ! SUBROUTINE: initializeRNG
   !>  Initialize the chosen random number generator
   ! -------------------------------------------------------------------------- !
-  subroutine RNG_getCmdArgs()
+  subroutine assignRNGParams()
     use CmdOptions, only: rngChoiceArg, rngSeedArg
 
     call chooseRNG(rngChoiceArg % getValue())
     call setSeed(rngSeedArg % getValue())
-  end subroutine RNG_getCmdArgs
+  end subroutine assignRNGParams
 
 
   ! -------------------------------------------------------------------------- !

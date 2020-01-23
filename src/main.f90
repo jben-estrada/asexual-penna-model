@@ -28,7 +28,7 @@
 program Main
   use ModelParam
   use Penna, only: run
-  use RNG, only: RNG_getCmdArgs
+  use RNG, only: assignRNGParams
   use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
   implicit none
 
@@ -40,7 +40,7 @@ program Main
   call assignModelParams()
 
   ! Initialize the RNG with the provided command-line arguments.
-  call RNG_getCmdArgs()
+  call assignRNGParams()
 
   ! Print the help message and stop the program if '-h' or '--help' is passed.
   call showHelpMsgAndNotes()
