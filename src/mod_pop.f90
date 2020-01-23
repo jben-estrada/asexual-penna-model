@@ -10,26 +10,38 @@ module Pop
   implicit none
   private
 
-  ! `Person` derived type. A node to the population linked-list.
   type :: Person
+    !! A node to the population linked-list. This represents a single
+    !! individual with its own age and genome.
     integer(kind=personIK) :: genome
+      !! Genome of this individual.
     integer :: age
+      !! The age of this individual.
     integer :: deathIndex
+      !! Vitality of this individual. Values greater than 1 denotes death.
     integer :: mutationCount
+      !! Number of mutations in this individual's genome.
 
-    type(Person), pointer  :: next => null() ! Next node in linked list
+    type(Person), pointer  :: next => null()
+      !! Pointer to the next element in the list of individuals.
   end type Person
 
-
-  ! Linked-list derived type.
   type, public :: PersonList
+    !! Linked-list of `Person` objects.
     private
     type(Person), pointer :: head_ptr => null()
+      !! The head of the list.
     type(Person), pointer :: tail_ptr => null()
+      !! The tail of the list at every beginning of each time steps. 
     type(Person), pointer :: newTail_ptr => null()
+      !! The transient tail of the list during each time steps. At the end of 
+      !! each time steps, `tail_ptr` is updated to point to this pointer.
 
-    type(Person), pointer :: old_ptr => null()
     type(Person), pointer :: current_ptr => null()
+      !! The reading pointer for reading and modifying the list.
+      !! This points to the current individual.
+    type(Person), pointer :: old_ptr => null()
+      !! The pointer before `current_ptr`.
   contains
     ! Inquiry procedures.
     procedure :: isCurrIndivDead
@@ -72,6 +84,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function constructPersonList(startPopSize) result(newLL)
     integer, intent(in) :: startPopSize
+      !! Starting population size.
 
     type(PersonList)    :: newLL
     
@@ -82,13 +95,22 @@ contains
   end function constructPersonList
 
 
+  !----------------------------------------------------------------------------!
+  ! SUBROUTINE: determineDeathType
+  !>  Determine the death of the current individual. This routine fails if
+  !!  the current individual is alive.
+  !----------------------------------------------------------------------------!
   subroutine determineDeathType(self, deathByAge, deathByMutation, &
         deathByVerhulst)
 
     class(PersonList), intent(in)   :: self
+      !! The linked-list of individuals represented as `Person` objects.
     integer, pointer, intent(inout) :: deathByAge
+      !! Pointer for death by age counter.
     integer, pointer, intent(inout) :: deathByMutation
+      !! Pointer for death by mutation.
     integer, pointer, intent(inout) :: deathByVerhulst
+      !! Pointer for death by Verhulst killing.
 
     select case (self % current_ptr % deathIndex)
       case (DEAD_OLD_AGE)
@@ -101,7 +123,8 @@ contains
         deathByVerhulst = deathByVerhulst + 1
 
       case default
-        print "(a)", "***ERROR. Dead 'Person' object has an invalid death index"
+        print "(a)", "***ERROR. The current individual is not dead " // &
+            "or has an invalid death index."
         stop
     end select
   end subroutine determineDeathType
@@ -113,7 +136,9 @@ contains
   !----------------------------------------------------------------------------!
   function getBinDigit(number, k) result(bit)
     integer(kind=personIK), intent(in) :: number
+      !! A word or a bit-array represented as an integer.
     integer,                intent(in) :: k
+      !! The position of the bit to obtain. Starts with 1.
     integer(kind=personIK) :: bit
 
     bit = 0
@@ -123,10 +148,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
-  !>  Initialize `indiv` with a healthy genome.
+  !>  Initialize the `Person` object `indiv_ptr` is pointing to with 
+  !!  a healthy genome.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr)
     type(Person), pointer, intent(inout) :: indiv_ptr
+      !! The pointer to the individual or the `Person` object to be initialized.
 
     indiv_ptr % genome = GENE_HEALTHY
     indiv_ptr % age = 0_personIK
@@ -137,14 +164,16 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeIndiv
-  !>  Initialize `indiv` with genes inherited from another `Person`
+  !>  Initialize `indiv_ptr` with genes inherited from another `Person`
   !!  object.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
     use RandInd, only: generateIndices
 
     type(Person), pointer,  intent(inout) :: indiv_ptr
+      !! The pointer to the individual or the `Person` object to be initialized.
     integer(kind=personIK), intent(in)    :: genome
+      !! Genome from another `Person` object.
 
     integer :: mutations(MODEL_M)
     integer :: i
@@ -171,9 +200,10 @@ contains
   !>  Generate a list of population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
   subroutine generatePopulation(popList, startPopSize)
-
     type(PersonList), intent(inout) :: popList
+      !! The list of `Person` objects to be initialized.
     integer,          intent(in)    :: startPopSize
+      !! Starting population size.
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
@@ -205,7 +235,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine freePtr(self, popSize)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
     integer,           intent(in)    :: popSize
+      !! The size of `self`.
 
     type(Person), pointer :: curr_ptr => null()
     type(Person), pointer :: next_ptr => null()
@@ -235,6 +267,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine killCurrentIndiv(self)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
 
     type(Person), pointer :: deadIndiv_ptr
 
@@ -253,6 +286,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine incrementPtr(list)
     class(PersonList), intent(inout) :: list
+      !! The linked-list of individuals represented as `Person` objects.
 
     ! NOTE: We demand that `LL_nextElem` will never encounter a
     ! disassociated pointer.
@@ -263,14 +297,15 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [PersonList % ]reproduceCurrIndiv
-  !>  Have the `Person` object the current pointer is pointing at
-  !!  to reproduce.
+  !>  Have the `Person` object the current pointer is pointing at to reproduce.
   ! -------------------------------------------------------------------------- !
   subroutine reproduceCurrIndiv(self, updateGenome)
     use Demographics, only: updateGenomeDstrb
 
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
     logical,           intent(in)    :: updateGenome
+      !! Update the genome distribution if true.
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
@@ -304,6 +339,7 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivDead(self)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
 
     isCurrIndivDead = self % current_ptr % deathIndex /= ALIVE
   end function isCurrIndivDead
@@ -316,6 +352,7 @@ contains
   ! -------------------------------------------------------------------------- !
   integer function getCurrIndivAge(self)
     class(PersonList), intent(in) :: self
+      !! The linked-list of individuals represented as `Person` objects.
 
     if (associated(self % current_ptr)) then
       getCurrIndivAge = self % current_ptr % age
@@ -332,6 +369,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function getCurrIndivGenome(self) result(genome)
     class(PersonList), intent(in) :: self
+      !! The linked-list of individuals represented as `Person` objects.
 
     integer(kind=personIK) :: genome
 
@@ -352,7 +390,10 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine nextElem(self, status)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
     integer,           intent(out)   :: status
+      !! Status of this routine. Returns 0 if incrementing the `current_ptr` of
+      !! `self` succeeds. Returns -1 if the end of the `self` is reached.
 
     ! ***Terminal case: end of the linked-list.
     !    This corresponds to `status` = -1.
@@ -406,6 +447,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine resetReadPtrs(self)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
   
     self % current_ptr => self % head_ptr
     self % old_ptr => null()
@@ -418,7 +460,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine updateCurrIndivAge(self)
     class(PersonList), intent(inout) :: self
-  
+      !! The linked-list of individuals represented as `Person` objects.
+
     self % current_ptr % age = self % current_ptr % age + 1
   end subroutine updateCurrIndivAge
 
@@ -430,6 +473,7 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function isCurrIndivMature(self)
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
 
     logical :: lowerBound
     logical :: upperBound
@@ -443,14 +487,16 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [PersonList % ]checkCurrIndivDeath
-  !>  Update the death status of the  `Person` object the current
-  !!  pointer is pointing at. 
+  !>  Update the death status of the  `Person` object the current pointer is 
+  !!  pointing at. 
   ! -------------------------------------------------------------------------- !
   subroutine checkCurrIndivDeath(self, popSize)
     use RNG, only: getRandNumber
 
     class(PersonList), intent(inout) :: self
+      !! The linked-list of individuals represented as `Person` objects.
     integer,           intent(in)    :: popSize
+      !! The current population size for calculating the Verhulst factor.
   
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor

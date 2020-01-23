@@ -8,7 +8,6 @@ module Penna
   ! -------------------------------------------------------------------------- !
   use Pop
   use WriterType
-  use SaveFormat
   implicit none
   private
 
@@ -25,8 +24,11 @@ contains
     use ModelParam, only: MODEL_K
 
     integer, intent(in) :: maxTimestep
+      !! Maximum (total) time step.
     integer, intent(in) :: startPopSize
+      !! Starting population size.
     integer, intent(in) :: recordFlag
+      !! Record flag. Valid values are found in the `SaveFormat` module.
 
     type(PersonList) :: population    ! Population list
     type(Writer)     :: runWriter     ! `Writer` object for recording data 
@@ -112,13 +114,13 @@ contains
     use Demographics
     use ModelParam, only: MODEL_B
 
-    type(PersonList), intent(inout) :: population       ! Population object.
-    integer,          intent(inout) :: popSize          ! Population size.
-    integer, pointer, intent(inout) :: deathByAge       ! Death by age count.
-    integer, pointer, intent(inout) :: deathByMutation  ! Death by mutation.
-    integer, pointer, intent(inout) :: deathByVerhulst  ! Random death.
-    integer,          intent(in)    :: countdown        ! Count from max time.
-    integer,          intent(in)    :: recFlag          ! Record flag.
+    type(PersonList), intent(inout) :: population       !! Population object.
+    integer,          intent(inout) :: popSize          !! Population size.
+    integer, pointer, intent(inout) :: deathByAge       !! Death by age count.
+    integer, pointer, intent(inout) :: deathByMutation  !! Death by mutation.
+    integer, pointer, intent(inout) :: deathByVerhulst  !! Random death.
+    integer,          intent(in)    :: countdown        !! Count from max time.
+    integer,          intent(in)    :: recFlag          !! Record flag.
 
     integer :: popSizeChange
     integer :: listStatus
@@ -176,12 +178,18 @@ contains
         toRecordTime, printRunProgress)
     use ProgBarType
 
-    integer, intent(in) :: maxTimeStep
-    integer, intent(in) :: sampleSize   
+    integer, intent(in) :: maxTimeStep 
+      !! Maximum (total) time step. 
+    integer, intent(in) :: sampleSize 
+      !! Number of times the simulation is run. 
     integer, intent(in) :: startingPopSize
+      !! Starting population size.
     integer, intent(in) :: recordFlag
-    logical, intent(in) :: toRecordTime
-    logical, intent(in) :: printRunProgress
+      !! Record flag. Valid values are found in the `SaveFormat` module. 
+    logical, intent(in) :: toRecordTime 
+      !! Record timing stats into a csv file if true.
+    logical, intent(in) :: printRunProgress 
+      !! Print the run progress if true.
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -276,7 +284,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
     type(Writer), intent(inout) :: runWriter
+      !! The `Writer` object to be initialized.
     integer,      intent(in)    :: recordFlag
+      !! Record flag. Values can be found in `SaveFormat`.
 
     call constructWriter(runWriter, recordFlagArray)
 

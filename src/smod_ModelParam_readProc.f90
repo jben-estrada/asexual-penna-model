@@ -175,7 +175,10 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine stripFile(strippedFile, unit)
     character(len=:), allocatable, intent(out) :: strippedFile
+      !! Content of a file whose comments and extra white-spaces are stripped.
     integer,                       intent(in)  :: unit
+      !! Unit integer corresponding to the file from which `strippedFile` is
+      !! obtained.
 
     character(len=:), allocatable :: line
     character(len=MAX_LEN)        :: rawLine
@@ -218,12 +221,12 @@ contains
   
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: getCharArrayIndex
-  !>  Get the corresponding index of `elem` in a rank-1 array of 
-  !!  characters `elem`. If `elem` is not found in `array`, it
-  !!  returns `NULL_VALUE` which is set to 0.
+  !>  Get the corresponding index of `elem` in a rank-1 array of characters 
+  !!  `elem`. If `elem` is not found in `array`, it returns `NULL_VALUE`.
   ! -------------------------------------------------------------------------- !
   function getCharArrayIndex(elem) result(i)
     character(len=:), allocatable, intent(in) :: elem
+      !! Character whose corresponding index is to be obtained.
 
     integer :: i
 
@@ -352,6 +355,7 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function isNumeric(char)
     character, intent(in) :: char
+      !! Character to be compared.
 
     integer :: asciiNum
   

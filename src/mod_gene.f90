@@ -10,9 +10,12 @@ module Gene
   implicit none
 
   integer(kind=personIK), parameter :: GENE_HEALTHY = 0
+    !! Integer representation of healthy genes.
   integer(kind=personIK), parameter :: GENE_UNHEALTHY = 1
+    !! Integer representation of unhealthy genes.
   integer(kind=personIK), parameter :: GENE_GENES(2) = &
       [GENE_HEALTHY, GENE_UNHEALTHY]
+    !! Array of 'gene' integers. Used for getting random genes.
 contains
 
 
@@ -36,8 +39,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION:  gene_MutatedGene
-  !>  Generate a mutated gene. As of now, it only returns unhealthy
-  !!  genes.
+  !>  Generate a mutated gene. As of now, it only returns unhealthy genes.
   ! -------------------------------------------------------------------------- !
   function gene_MutatedGene() result(gene)
     integer :: gene
@@ -52,6 +54,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function gene_generateGenome(L)
     integer, intent(in) :: L
+      !! Length of the genome to be generated.
 
     integer(kind=personIK) :: gene_generateGenome(L)
     integer :: i

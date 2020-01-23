@@ -10,10 +10,11 @@ module UpdateArray
   implicit none
   private
 
-  ! Module integer and real kinds
   ! Note: Can be changed when this module is to be reused in other projects.
   integer, public, parameter :: arrIK = int32
+    !! Integer kind for integer arrays to be modified in this module.
   integer, public, parameter :: arrRK = real32
+    !! Real kind for real arrays to be modified in this module.
 
   ! SUBMODULE INTERFACES
   !----------------------------------------------------------------------------!
@@ -136,6 +137,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine allocCheck(x)
     integer, intent(in) :: x
+      !! Status of invoked `allocate` statement.
+
     if (x /= 0) then
       print "(a, i0)", "***ERROR: Space cannot be allocated. status value: ", x
       error stop

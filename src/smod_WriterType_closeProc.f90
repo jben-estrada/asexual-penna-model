@@ -12,6 +12,7 @@ submodule (WriterType) WriterTypeCloseProc
   
   subroutine writer_closeAll(self)
     class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
 
     integer :: flag
     integer :: i
@@ -30,7 +31,9 @@ submodule (WriterType) WriterTypeCloseProc
 
   subroutine writer_close(self, flag)
     class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
     integer,       intent(in)    :: flag
+      !! Integer flag whose corresponding output file is to be closed if active.
 
     if (.not.any(self%liveFlags == flag)) then
       print "(a, i2)", "Chosen flag is not initialized! flag: ", flag
@@ -44,7 +47,10 @@ submodule (WriterType) WriterTypeCloseProc
 
   subroutine writer_listclose(self, flags)
     class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
     integer,       intent(in)    :: flags(:)
+      !! Array of integer flags whose corresponding output files are to be 
+      !! closed if active.
 
     integer :: i
 

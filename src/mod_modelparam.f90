@@ -41,71 +41,76 @@ module ModelParam
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
-  ! Parameter array.
   integer, target :: modelParams(13) = 0
+    !! Array of model parameters.
 
-  ! Parameter count.
   integer, parameter :: MODEL_PARAM_COUNT = size(modelParams)
+    !! Number of model parameters.
 
   ! Parameters whose values are from `model.ini`.
   integer, protected, pointer, public :: MODEL_L => &
-    modelParams(1) ! Genome length
+    modelParams(1) !! Genome length
   integer, protected, pointer, public :: MODEL_T => &
-    modelParams(2) ! Mutation threshold
+    modelParams(2) !! Mutation threshold
   integer, protected, pointer, public :: MODEL_B => &
-    modelParams(3) ! Birth rate
+    modelParams(3) !! Birth rate
   integer, protected, pointer, public :: MODEL_M => &
-    modelParams(4) ! Mutation rate
+    modelParams(4) !! Mutation rate
   integer, protected, pointer, public :: MODEL_R => &
-    modelParams(5) ! Reproduction age
+    modelParams(5) !! Reproduction age
   integer, protected, pointer, public :: MODEL_R_MAX => &
-    modelParams(6) ! Maximum reproduction age
+    modelParams(6) !! Maximum reproduction age
   integer, protected, pointer, public :: MODEL_K => &
-    modelParams(7) ! Carrying capacity
+    modelParams(7) !! Carrying capacity
 
   ! Parameters whose values can be changed by command line arguments.
   integer, protected, pointer, public :: MODEL_N0 => &
-    modelParams(8) ! Starting pop size
+    modelParams(8) !! Starting pop size
   integer, protected, pointer, public :: MODEL_TIME_STEPS => &
-  modelParams(9) ! Total time steps
+  modelParams(9)   !! Total time steps
   integer, protected, pointer, public :: MODEL_SAMPLE_SIZE => &
-  modelParams(10)! Sample size
+  modelParams(10)  !! Sample size
   integer, protected, pointer, public :: MODEL_REC_FLAG => &
-  modelParams(11)! Record flag
+  modelParams(11)  !! Record flag. Corresponds to data to be recorded.
   integer, protected, pointer, public :: MODEL_RNG => &
-  modelParams(12)! RNG flag.
+  modelParams(12)  !! RNG flag. Corresponds to a random number generator.
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
-  modelParams(13)! RNG seed.
+  modelParams(13)  !! RNG seed.
 
   ! Parameters whose values are from `v_weight.cfg`.
-  ! Verhulst weights.
   real, allocatable, protected, public :: MODEL_VERHULST_W(:)
-  ! Default Verhulst weight.
+    !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
+    !! Default Verhulst weight.
 
 
   ! STATE PARAMETERS
   ! -------------------------------------------------------------------------- !
   ! Print states.
   integer, public, parameter :: NORMAL_PRINT = 0
+    !! Flag corresponding to default printing of model parameters.
   integer, public, parameter :: VERBOSE_PRINT = 1
+    !! Flag corresponding to printing of all scalar model parameters.
   integer, public, parameter :: SILENT_PRINT = 2
-
+    !! Flag correspondong to supressed printing.
   integer, public, protected :: PRINT_STATE = NORMAL_PRINT
+    !! Printing state. 
 
-  ! Record-time state.
   logical, public, protected :: RECORD_TIME = .false.
+    !! Record-time state.
 
 
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
   ! Buffer character length.
   integer, parameter :: MAX_LEN = 256
+    !! Maximum character length for buffer characters.
+
   ! Filenames from which model parameters are obtained.
   character(len=MAX_LEN), protected, public :: MODEL_FILE_NAME = &
-      "./config/model.cfg"
+      "./config/model.cfg" !! Path for file containing scalar model parameters.
   character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
-      "./config/v_weight.cfg"
+      "./config/v_weight.cfg" !! Path for file with Verhulst weights.
 
 
   ! SUBMODULE INTERFACE
@@ -257,7 +262,7 @@ contains
   !!  if need be.
   ! -------------------------------------------------------------------------- !
   subroutine prettyPrintModelParams()
-    use SaveFormat, only: nullFlag
+    use WriterType, only: nullFlag
 
     ! Pretty print separator.
     integer :: k

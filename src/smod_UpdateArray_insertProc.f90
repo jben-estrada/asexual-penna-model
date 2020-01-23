@@ -5,8 +5,11 @@ contains
 
   subroutine arrayInsert_int(array, k, newElem)
     integer(kind=arrIK), allocatable, intent(inout):: array(:)
+      !! 1-dimensional array of integers to be modified.
     integer(kind=arrIK),              intent(in)   :: newElem
+      !! Integer to be inserted into `array`.
     integer,                          intent(in)   :: k
+      !! Index into which the `newElem` is to be inserted.
 
     integer(kind=arrIK), allocatable  :: temp(:)
     integer :: old_size
@@ -30,11 +33,14 @@ contains
   end subroutine arrayInsert_int
 
 
-  ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_intRange(array, k, newElems)
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of integers to be modified.
     integer(kind=arrIK),              intent(in)    :: newElems(:)
+      !! Array of integers to be inserted into `array`.
     integer,                          intent(in)    :: k
+      !! Index into which the `newElem` is to be inserted. This would result to
+      !! an array with a sub-array from index k to k+n to be `newElems`.
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -65,8 +71,11 @@ contains
   ! === ARRAY INSERT SPECIFIC PROCEDURE===
   subroutine arrayInsert_real(array, k, newElem)
     real(kind=arrRK), allocatable, intent(inout):: array(:)
+      !! 1-dimensional array of real numbers to be modified.
     real(kind=arrRK),              intent(in)   :: newElem
+      !! Real number to be inserted into `array`.
     integer,                       intent(in)   :: k
+      !! Index into which the `newElem` is to be inserted.
 
     real(kind=arrRK), allocatable  :: temp(:)
     integer :: old_size
@@ -92,8 +101,12 @@ contains
 
   subroutine arrayInsert_realRange(array, k, newElems)
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of real numbers to be modified.
     real(kind=arrRK),              intent(in)    :: newElems(:)
+      !! Array of real numbers to be inserted into `array`.
     integer,                       intent(in)    :: k
+      !! Index into which the `newElem` is to be inserted. This would result to
+      !! an array with a sub-array from index k to k+n to be `newElems`.
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size

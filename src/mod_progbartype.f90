@@ -9,16 +9,20 @@ module ProgBarType
   private
 
   type, public :: ProgressBar
-    integer   :: partition
-    integer   :: totalTicks
-    integer   :: counter
-    character :: charBit
+    !! A derived type for displaying progress bars.
+    private
+    integer   :: partition  !! Number at which `counter` is partitioned.
+    integer   :: totalTicks !! Number to reach 100% of the progress bar.
+    integer   :: counter    !! Number representing progress.
+    character :: charBit    !! Character to be displayed to denote progress.
   contains
     procedure :: showProgBar
     procedure :: incrementCounter
   end type ProgressBar
 
   character, parameter :: DEFAULT_CHAR_BIT = ">"
+    !! Default character bit.
+
   public :: initProgressBar
 contains
 
@@ -29,9 +33,14 @@ contains
   !----------------------------------------------------------------------------!
   subroutine initProgressBar(new, partition, totalTicks, charBit)
     type(ProgressBar), intent(out) :: new
+      !! `ProgressBar` object to be initialized.
     integer,           intent(in)  :: partition
+      !! The `partition` for the `partition` attribute of `new`. 
     integer,           intent(in)  :: totalTicks
+      !! The `totalTicks` for the `totalTicks` attribute of `new`. 
     character,         optional    :: charBit
+      !! The `charBit` for the `charBit` attribute of `new`.
+      !! Defaults to `DEFAULT_CHAR_BIT`.
 
     ! Get character bit for progress bar.
     if (present(charBit)) then
@@ -55,9 +64,11 @@ contains
   !----------------------------------------------------------------------------!
   subroutine incrementCounter(self, increment, show)
     class(ProgressBar), intent(inout) :: self
-
+      !! `ProgressBar` object to be updated.
     integer, optional :: increment
+      !! Number to increment the `counter` attribute of `self`.
     logical, optional :: show
+      !! Show the progress bar if true. Deafults to `.false.`
 
     ! End of progress bar case.
     if (self % counter == self % totalTicks) return
@@ -84,6 +95,7 @@ contains
   !----------------------------------------------------------------------------!
   subroutine showProgBar(self)
     class(ProgressBar), intent(in) :: self
+      !! `ProgressBar` object to be shown.
 
     character, allocatable :: tickArr(:)
     integer :: barLength

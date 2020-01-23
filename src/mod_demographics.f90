@@ -11,39 +11,47 @@ module Demographics
   
   ! AGE DISTRIBUTION
   ! -------------------------------------------------------------------------- !
-  ! Age distribution.
-  integer, public, allocatable, save :: ageDistribution(:) 
+  integer, public, allocatable :: ageDistribution(:) 
+    !! Age distribution.
   
   ! Time step range for recording demographics.
   integer, public, parameter :: DEF_DEMOG_LAST_STEP = 300
-  integer, public, save      :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
+    !! Default final time steps when to record the age distribution.
+  integer, public            :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
+    !! Final time steps when when to record the age distribution.
+    !! Defaults to `DEF_DEMOG_LAST_STEP`. Changes to a negative value if
+    !! the age distribution is not to be recorded. 
 
   public :: resetAgeDstrb
   public :: updateAgeDstrb
   public :: deallocAgeDstrb
 
+
   ! SHANNON DIVERSITY INDEX AND GENOME DISTRIBUTION.
   ! -------------------------------------------------------------------------- !
   ! Genome count. This should be equal to population size.
-  integer, save :: genomeCount = 0
+  integer :: genomeCount = 0
 
-  ! Node type for genome distribution lists.
   type GenomeDstrbNode
+    !! Node type for genome distribution lists.
     integer(kind=personIK)         :: genome
+      !! The genome of this `GenomeDstrbNode` object.
     integer                        :: count = 0
+      !! Count of `Person` objects with the same value for `genome`
+      !! as in this `GenomeDstrbNode` object.
+
     type(GenomeDstrbNode), pointer :: next => null()
+      !! Pointer to the element of genome distribution list.
   end type
-  
-  ! Head of genome distribution list.
+
   type(GenomeDstrbNode), pointer :: genomeDstrbHead => null()
+    !! Head of the genome distribution list.
   type(GenomeDstrbNode), pointer :: genomeDstrbTail => null()
-  
-  ! TODO: Test Shannon diversity index!
+    !! Tail of the genome distribution list.
 
   public :: updateGenomeDstrb
   public :: freeGenomeDstrbList
   public :: getDiversityIdx
-  ! -------------------------------------------------------------------------- !
 contains
 
 
@@ -56,6 +64,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome)
     integer(kind=personIK), intent(in) :: genome
+      !! The genome to be added to the genome distribution.
 
     call incrementGenomeCount(genomeDstrbHead, genome)
     genomeCount = genomeCount + 1
@@ -64,11 +73,13 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: incrementGenomeCount
-  !>  Increment genome count and update 
+  !>  Increment genome count and update.
   ! -------------------------------------------------------------------------- !
   recursive subroutine incrementGenomeCount(node, genome)
     type(GenomeDstrbNode), pointer, intent(inout) :: node
+      !! The `GenomeDstrbNode` object to be compared with `genome`.
     integer(kind=personIK),         intent(in)    :: genome
+      !! The genome to be compared to given node in genome distribution list.
 
     if (associated(node)) then
       ! Update genome distribution if match is found.
@@ -92,6 +103,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine appendGenomeDstrbNode(genome)
     integer(kind=personIK), intent(in) :: genome
+      !! The genome the `GenomeDstrbNode` will contain.
 
     type(GenomeDstrbNode), pointer :: new
 
@@ -160,6 +172,7 @@ contains
   ! -------------------------------------------------------------------------- !
   recursive subroutine cascadeFreeNodes(node)
     type(GenomeDstrbNode), pointer, intent(inout) :: node
+      !! The `GenomeDstrbNode` object to be deallocated.
 
     if (associated(node)) then
       call cascadeFreeNodes(node % next)
@@ -170,11 +183,13 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! AGE DISTRIBUTION
+  !
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: resetAgeDstrb
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
-  subroutine resetAgeDstrb
+  subroutine resetAgeDstrb()
     use ModelParam, only: MODEL_L
 
     if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
@@ -188,7 +203,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine updateAgeDstrb(age, dstrb)
     integer, intent(in)    :: age
+      !! The age to be added into the age distribution.
     integer, intent(inout) :: dstrb(:)
+      !! The age distribution.
 
     dstrb(age) = dstrb(age) + 1
   end subroutine updateAgeDstrb
@@ -198,7 +215,7 @@ contains
   ! SUBROUTINE: deallocDstrb
   !>  Deallocate demographic arrays
   ! -------------------------------------------------------------------------- !
-  subroutine deallocAgeDstrb
+  subroutine deallocAgeDstrb()
     if (allocated(ageDistribution)) deallocate(ageDistribution)
   end subroutine deallocAgeDstrb
 end module Demographics

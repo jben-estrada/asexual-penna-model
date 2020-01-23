@@ -5,8 +5,11 @@ submodule (WriterType) WriterTypeWrHdrProc
 
   subroutine writer_writeHeader(self, flag, header)
     class(Writer),    intent(in) :: self
+      !! `Writer` object.
     integer,          intent(in) :: flag
+      !! Flag corresponding to an output file to be written on.
     character(len=*), intent(in) :: header(:)
+      !! Headers to describe sets of data.
 
     integer :: i
 

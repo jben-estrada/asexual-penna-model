@@ -23,8 +23,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine generateIndices(lower, upper, indices)
     integer, intent(in)  :: upper
+      !! The inclusive upper bound of integers to be randomly generated.
     integer, intent(in)  :: lower
+      !! The inclusive lower bound of integers to be randomly generated.
     integer, intent(out) :: indices(:)
+      !! The array of random integers to be used as randomized indices.
     
     integer :: index = 0
     real    :: random = 0
@@ -54,7 +57,9 @@ contains
   ! -------------------------------------------------------------------------- !
   function generateRandInt(a, b) result(out)
     integer, intent(in) :: a
+      !! The inclusive upper bound of the integer to be randomly generated.
     integer, intent(in) :: b
+      !! The inclusive lower bound of the integer to be randomly generated.
 
     integer :: out
     real    :: random

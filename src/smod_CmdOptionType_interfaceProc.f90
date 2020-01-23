@@ -9,8 +9,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOption(cmdOption, command, altCommand)
     class(BaseCmdOption),       intent(out) :: cmdOption
+      !! Command-line option to initialize.
     character(len=*),           intent(in)  :: command
+      !! Command character to assign to `command` attribute of `cmdOption`.
     character(len=*), optional, intent(in)  :: altCommand
+    !! Alternat command to assign to `altCommand` attribute of `cmdOption`.
 
     cmdOption % command = command
     if (present(altCommand)) then
@@ -28,11 +31,17 @@ contains
   subroutine parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &
       readFlag, readKeyVal, readPosArg)
     class(FlagCmdOption),       intent(inout) :: cmdFlags(:)
+      !! Command-line flags to be modified by passed cmd arguments.
     class(KeyValCmdOption),     intent(inout) :: cmdKeyVal(:)
+      !! Command-line key-value options to be modified by passed cmd arguments.
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
+      !! Positional command-line options to be modified by passed cmd arguments.
     logical,                    intent(in)    :: readFlag
+      !! Read and assign passed flags.
     logical,                    intent(in)    :: readKeyVal
+      !! Read and assign passed key-value options.
     logical,                    intent(in)    :: readPosArg
+      !! Read and assign passed positional arguments.
 
     integer :: argCount
     integer :: status
@@ -69,7 +78,9 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function compareCommand(cmdOption, cmdArg)
     class(BaseCmdOption), intent(in) :: cmdOption
+      !! Command-line option whose `command` attribute is to compared with.
     character(len=*),     intent(in) :: cmdArg
+      !! Command character to be compared with `cmdOption`.
 
     compareCommand = cmdOption % command == cmdArg &
         .or. cmdOption % altCommand == cmdArg
@@ -82,9 +93,14 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine toggleFlagOptions(cmdFlags, cmdArg, status, toRead)
     class(FlagCmdOption), intent(inout) :: cmdFlags(:)
+      !! Command-line flags to be modified.
     character(len=*),     intent(in)    :: cmdArg
+      !! Passed command-line argument.
     integer,              intent(out)   :: status
+      !! Status of this routine. Return non-zero value to signify failure.
+      !! Return `0` if reading and assigning succeeds.
     logical,              intent(in)    :: toRead
+      !! Check validity of passed argument but do not read and assign.
 
     integer :: i
 
@@ -114,9 +130,14 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, toRead)
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal(:)
+      !! Command-line key-value options to be modified.
     character(len=*),       intent(in)    :: cmdArg
+      !! Passed command-line argument.
     integer,                intent(out)   :: status
+      !! Status of this routine. Return non-zero value to signify failure.
+      !! Return `0` if reading and assigning succeeds.
     logical,                intent(in)    :: toRead
+      !! Check validity of passed argument but do not read and assign.
 
     character(len=MAX_LEN) :: key
     character(len=MAX_LEN) :: valueChar
@@ -143,8 +164,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignValueTo(cmdOption, valueChar, toRead)
     class(KeyValCmdOption), intent(inout) :: cmdOption
+      !! A command-line key-value option to be modified.
     character(len=*),       intent(in)    :: valueChar
+      !! Value obtained from a command-line argument.
     logical,                intent(in)    :: toRead
+      !! Check validity of passed argument but do not read and assign.
 
     integer :: valueInt
     integer :: status
@@ -171,9 +195,14 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignPositionalArg(cmdPosArgs, cmdArg, status, toRead)
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
+      !! Positional command-line option.
     character(len=*),           intent(in)    :: cmdArg
+      !! Passed command-line argument.
     integer,                    intent(out)   :: status
+      !! Status of this routine. Return non-zero value to signify failure.
+      !! Return `0` if reading and assigning succeeds.
     logical,                    intent(in)    :: toRead
+      !! Check validity of passed argument but do not read and assign.
 
     integer, save :: posCount = 1
     integer :: i
@@ -199,9 +228,14 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getKeyVal(cmdArg, key, value, status)
     character(len=*),       intent(in)  :: cmdArg
+      !! Raw command-line argument.
     character(len=MAX_LEN), intent(out) :: key
+      !! Key character obtained from the given command-line argument. 
     character(len=MAX_LEN), intent(out) :: value
+      !! Value character obtained from the given command-line argument.
     integer,                intent(out) :: status
+      !! Status of this routine. Return non-zero value to signify failure.
+      !! Return `0` if reading and assigning succeeds.
 
     integer   :: i
     character :: currChar
@@ -247,6 +281,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine checkUninitializedValues(cmdOptions)
     class(BaseCmdOption), intent(in) :: cmdOptions(:)
+      !! Command-line options to be checked for uniinitialized values.
 
     integer :: i
 
@@ -266,8 +301,11 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
     class(FlagCmdOption),       intent(in) :: cmdFlags(:)
+      !! Command-line flags.
     class(KeyValCmdOption),     intent(in) :: cmdKeyVal(:)
+      !! Command-line key-value options.
     class(PositionalCmdOption), intent(in) :: cmdPosArgs(:)
+      !! Positional command-line options.
 
     character(len=:), allocatable :: tempChar
     integer :: tempCharLen

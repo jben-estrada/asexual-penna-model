@@ -9,6 +9,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure integer function KVtype_getValue(self)
     class(KeyValCmdOption), intent(in) :: self
+      !! Command-line key-value options.
 
     KVtype_getValue = self % value
   end function KVtype_getValue
@@ -21,7 +22,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalKVVal(cmdKeyVal, value)
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
+      !! Command-line key-value options.
     integer,                intent(in)    :: value
+      !! Default value to be assigned to `value` attribute of `self`.
 
     if (cmdKeyVal % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdKeyVal % command), &
@@ -42,7 +45,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setValueMsg(cmdKeyVal, valueMsg)
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
+      !! Command-line key-value options.
     character(len=*),       intent(in)    :: valueMsg
+      !! Short description of the value of `cmdKeyVal` option.
 
     cmdKeyVal % valueMsg = valueMsg
   end subroutine setValueMsg

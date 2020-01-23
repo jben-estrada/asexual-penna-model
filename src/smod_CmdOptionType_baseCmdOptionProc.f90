@@ -10,7 +10,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setUsageMsg(cmdOption, usageMsg)
     class(BaseCmdOption), intent(inout) :: cmdOption
+      !! Command-line option to modify its usage message.
     character(len=*),     intent(in)    :: usageMsg
+      !! The usage message to replace `usageMsg` of `cmdOption`.
 
     cmdOption % usageMsg = usageMsg
   end subroutine setUsageMsg
@@ -22,6 +24,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure function getCommand(self) result(command)
     class(BaseCmdOption), intent(in) :: self
+      !! Command-line option.
     character(len=LONG_MAX_LEN)      :: command
 
     command = self % command
@@ -34,6 +37,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure function getAltCommand(self) result(altCommand)
     class(BaseCmdOption), intent(in) :: self
+      !! Command-line option.
     character(len=MAX_LEN)           :: altCommand
 
     altCommand = self % altCommand
@@ -46,6 +50,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure function getUsageMsg(self) result(usageMsg)
     class(BaseCmdOption), intent(in) :: self
+      !! Command-line option.
     character(len=LONG_MAX_LEN)  :: usageMsg
 
     usageMsg = self % usageMsg

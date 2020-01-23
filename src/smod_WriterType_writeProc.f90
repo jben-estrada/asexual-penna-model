@@ -11,8 +11,11 @@ submodule (WriterType) WriterTypeWriteProc
 
   subroutine writer_write_int(self, flag, arg)
     class(Writer),         intent(inout) :: self
+      !! `Writer` object.
     integer(kind=writeIK), intent(in)    :: arg
+      !! A data point to be written on the output file.
     integer,               intent(in)    :: flag
+      !! Flag corresponding to the output file to be written on.
 
     if (.not.any(self%liveFlags == flag)) return
     write(unitArray(flag), formatArray(flag)) arg
@@ -21,8 +24,11 @@ submodule (WriterType) WriterTypeWriteProc
 
   subroutine writer_write_real(self, flag, arg)
     class(Writer),      intent(inout) :: self
-    integer,            intent(in)    :: flag
+      !! `Writer` object.
     real(kind=writeRK), intent(in)    :: arg
+      !! A data point to be written on the output file.
+    integer,            intent(in)    :: flag
+      !! Flag corresponding to the output file to be written on.
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -32,8 +38,11 @@ submodule (WriterType) WriterTypeWriteProc
 
   subroutine writer_write_intArray(self, flag, arg)
     class(Writer),         intent(inout) :: self
-    integer,               intent(in)    :: flag
+      !! `Writer` object.
     integer(kind=writeIK), intent(in)    :: arg(:)
+      !! Data to be written on the output file.
+    integer,               intent(in)    :: flag
+      !! Flag corresponding to the output file to be written on.
 
     if (.not.any(self%liveFlags == flag)) return
 
@@ -43,12 +52,14 @@ submodule (WriterType) WriterTypeWriteProc
 
   subroutine writer_write_realArray(self, flag, arg)
     class(Writer),      intent(inout) :: self
-    integer,            intent(in)    :: flag
+      !! `Writer` object.
     real(kind=writeRK), intent(in)    :: arg(:)
+      !! Data to be written on the output file.
+    integer,            intent(in)    :: flag
+      !! Flag corresponding to the output file to be written on.
 
     if (.not.any(self%liveFlags == flag)) return
 
     write(unitArray(flag), formatArray(flag)) arg
   end subroutine writer_write_realArray
 end submodule WriterTypeWriteProc
-

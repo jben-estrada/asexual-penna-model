@@ -10,7 +10,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setPosTypePosition(cmdPosOption, position)
     class(PositionalCmdOption), intent(inout) :: cmdPosOption
+      !! Positional command-line option.
     integer,                    intent(in)    :: position
+      !! Position of `cmdPosOption` in passed positional command-line arguments.
     
     cmdPosOption % position = position 
   end subroutine setPosTypePosition
@@ -22,6 +24,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure function posType_getValue(self) result(value)
     class(PositionalCmdOption), intent(in) :: self
+      !! Positional command-line option.
     character(len=LONG_MAX_LEN)            :: value
     
     value = self % value
@@ -34,6 +37,7 @@ contains
   ! -------------------------------------------------------------------------- !
   integer pure function posType_getPosition(self)
     class(PositionalCmdOption), intent(in) :: self
+      !! Positional command-line option.
 
     posType_getPosition = self % position
   end function posType_getPosition
@@ -46,7 +50,9 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalPosTypeVal(cmdPosArg, value)
     class(PositionalCmdOption),  intent(inout) :: cmdPosArg
+      !! Positional command-line option to be modified.
     character(len=LONG_MAX_LEN), intent(in)    :: value
+      !! Default value of `cmdPosArg` to be assigned to its `value` attribute.
 
     if (cmdPosArg % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdPosArg % command), &

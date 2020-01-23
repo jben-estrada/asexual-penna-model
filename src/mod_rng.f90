@@ -9,12 +9,15 @@ module RNG
   implicit none
   private
 
-  integer, public, parameter :: RNG_INTRINSIC = 0         ! a KISS PRNG.
-  integer, public, parameter :: RNG_MERSENNE_TWISTER = 1  ! MT19937 PRNG.
+  integer, public, parameter :: RNG_INTRINSIC = 0
+    !! FLag corresponding to the intrinsic pseudo-RNG of Fortran.
+  integer, public, parameter :: RNG_MERSENNE_TWISTER = 1
+    !! Flag corresponding to the Mersenne Twister MT19937 pseudo-RNG.
   integer, public, parameter :: RNG_FLAGS(2) = &
-      [RNG_INTRINSIC, RNG_MERSENNE_TWISTER]
+      [RNG_INTRINSIC, RNG_MERSENNE_TWISTER] !! Array of RNG flags.
 
-  integer, save :: rngChoice
+  integer :: rngChoice
+    !! The RNG flag chosen at the beginning of the program.
 
   public :: RNG_getCmdArgs
   public :: getRandNumber
@@ -40,6 +43,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine chooseRNG(choice)
     integer, intent(in) :: choice
+      !! RNG flag.
 
     if (any(RNG_FLAGS == choice)) then
       rngChoice = choice
@@ -56,6 +60,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setSeed(seed)
     integer, intent(in) :: seed
+      !! Seed for the chosen RNG represented by `rngChosen` of `RNG` module.
 
     ! Local variables for setting seed of the instrinsic RNG.
     integer :: seedSize
@@ -91,6 +96,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine getRandNumber(randnum)
     real, intent(out) :: randnum
+      !! The generated random number between 0 and 1. The clusivity of bounds
+      !! are RNG-specific.
     
     select case(rngChoice)
       ! KISS PRNG

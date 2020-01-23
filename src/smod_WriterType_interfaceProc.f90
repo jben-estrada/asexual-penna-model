@@ -3,11 +3,13 @@ submodule (WriterType) WriterTypeInterfaceProc
   contains
 
 
-  ! === `Writer` CONSTRUCTOR SPECIFIC PROCEDURES ===
   subroutine constructWriter_array(new, flags, initialize)
     type(Writer),      intent(out) :: new
+      !! Newly initialized `Writer` object. 
     integer,           intent(in)  :: flags(:)
+      !! Flags corresponding to output files available to be written on.
     logical, optional, intent(in)  :: initialize
+      !! Initialize `new` with all its available output files set to active.
 
     integer      :: i
     integer      :: flag
@@ -34,9 +36,11 @@ submodule (WriterType) WriterTypeInterfaceProc
 
   subroutine constructWriter_scalar(new, flag, initialize)
     type(Writer),      intent(out) :: new
+      !! Newly initialized `Writer` object.
     integer,           intent(in)  :: flag
+      !! Flag corresponding to output files available to be written on.
     logical, optional, intent(in) :: initialize
-
+      !! Initialize `new` with all its available output files set to active.
 
     allocate(new%enabledFlags(0))
     allocate(new%liveFlags(0))
@@ -63,6 +67,7 @@ submodule (WriterType) WriterTypeInterfaceProc
   !----------------------------------------------------------------------------!
   subroutine destroy(self)
     type(Writer), intent(inout) :: self
+      !! `Writer` object to be destroyed.
 
     if (allocated(self%enabledFlags)) deallocate(self%enabledFlags)
     if (allocated(self%liveFlags)) deallocate(self%liveFlags)

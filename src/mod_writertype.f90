@@ -12,10 +12,11 @@ module WriterType
   implicit none
   private
 
-  ! Module integer and real kinds
   ! Note: Can be changed when this module is to be reused in other projects. 
   integer, public, parameter :: writeIK = int64
+    !! Integer kind for integer arguments of procedures in this module.
   integer, public, parameter :: writeRK = real64
+    !! Real kind for integer arguments of procedures in this module.
 
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
@@ -29,17 +30,32 @@ module WriterType
         writer_initialize, &
         writer_initializeAll, &
         writer_listInitialize
+    !! Initialize writing of data as specified by the integer flag(s).
+    !! Passing an integer initializes the corresponding output file.
+    !! Passing an array of integer initializes all the output files specified
+    !! by the elements of the array.
+    !! Passing none initializes all defined output files in `SaveFormat` module.
+
     generic, public :: close => &
         writer_close, &
         writer_closeAll, &
         writer_listclose
+    !! Close specified active output files as specified by integer flag(s).
+    !! Passing an integer closes the corresponding output file.
+    !! Passing an array of integers closes all the corresponding output files.
+    !! Passing none closes all active output files.
+
     generic, public :: write => &
         writer_write_int, &
         writer_write_real, &
         writer_write_intArray, &
         writer_write_realArray
+    !! Write an integer or real value of rank 0 (scalar) or rank 1 (1D array).
+
     procedure, public :: writeHeader => writer_writeHeader
+    !! Write the header of the CSV file.
     final :: destroy
+    !! Destructor. Deallocate any allocated attributes.
 
     procedure :: writer_initialize
     procedure :: writer_initializeAll
@@ -53,11 +69,15 @@ module WriterType
     procedure :: writer_write_realArray
   end type
 
-  ! File flags
+  ! Format/Record flags from `SaveFormat`.
+  public :: nullFlag
+    !! Nothing (do not record).
   public :: popFlag
-  public :: timeFlag
+    !! Population size per time step.
   public :: ageDstrbFlag
-  public :: deathFlag
+    !! Age distribution in the last 300 time steps. 
+  public :: deathFlag 
+    !! Death counts (death by age, mutation, Verhulst factor) per time step.
   public :: divIdxFlag
     !! Shannon diversity index per time step.
   public :: timeFlag

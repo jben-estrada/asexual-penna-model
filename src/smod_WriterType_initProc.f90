@@ -11,8 +11,11 @@ submodule (WriterType) WriterTypeInitProc
 
   subroutine initializeWriter(filename, unit, position)
     character(len=*), intent(in) :: filename
+      !! Path to the output file.
     character(len=*), intent(in) :: position
+      !! Position of the writer when writing into the specified output file.
     integer,          intent(in) :: unit
+      !! Unit corresponding to the output file.
 
     logical :: exists
 
@@ -50,7 +53,9 @@ submodule (WriterType) WriterTypeInitProc
 
   subroutine writer_initialize(self, flag)
     class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
     integer, intent(in)          :: flag
+      !! Flag corresponding to the output file to be written.
 
     if (.not.any(self%enabledFlags == flag)) return
 
@@ -67,7 +72,9 @@ submodule (WriterType) WriterTypeInitProc
 
   subroutine writer_listInitialize(self, flags)
     class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
     integer, intent(in)          :: flags(:)
+      !! Array of flags corresponding to the output files to be written.
 
     integer :: i
     integer :: flag

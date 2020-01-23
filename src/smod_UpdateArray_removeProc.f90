@@ -5,7 +5,9 @@ contains
 
   subroutine arrayRemove_int(array,  k)
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of integers to be modified.
     integer,                          intent(in)    :: k
+      !! Index of the element in `array` to be removed.
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -32,7 +34,9 @@ contains
 
   subroutine arrayRemove_real(array,  k)
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of real numbers to be modified.
     integer,                       intent(in)    :: k
+      !! Index of the element in `array` to be removed.
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size
@@ -60,8 +64,11 @@ contains
   
   subroutine arrayRemoveRange_int(array, a, b)
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of integers to be modified.
     integer(kind=arrIK),              intent(in)    :: a
+      !! The inclusive lower bound of the sub-array in `array` to be removed.
     integer,                          intent(in)    :: b
+    !! The inclusive upper bound of the sub-array in `array` to be removed.
 
     integer(kind=arrIK), allocatable :: temp(:)
     integer :: old_size
@@ -98,8 +105,11 @@ contains
 
   subroutine arrayRemoveRange_real(array, a, b)
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of real numbers to be modified.
     integer,                       intent(in)    :: a
+    !! The inclusive lower bound of the sub-array in `array` to be removed.
     integer,                       intent(in)    :: b
+    !! The inclusive upper bound of the sub-array in `array` to be removed.
 
     real(kind=arrRK), allocatable :: temp(:)
     integer :: old_size
@@ -136,11 +146,13 @@ contains
 
   subroutine arrayRemoveElem_int(array, elem)
     integer(kind=arrIK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of integers to be modified.
     integer(kind=arrIK),              intent(in)    :: elem
+      !! The integer in `array` to be removed its first instance.
+
     integer :: i
 
-    ! Do linear search. NOTE: Apparently `findloc` is not supported by
-    ! gfortran 8.1.0
+    ! Do linear search.
     do i = 1, size(array)
       if (array(i) == elem) then
         call arrayRemove_int(array, i)
@@ -152,7 +164,9 @@ contains
 
   subroutine arrayRemoveElem_real(array, elem)
     real(kind=arrRK), allocatable, intent(inout) :: array(:)
+      !! 1-dimensional array of real numbers to be modified.
     real(kind=arrRK),              intent(in)    :: elem
+      !! The real number in `array` to be removed its first instance.
     integer :: i
 
     ! Tolerance value. Two real numbers are considered 'equal' if
