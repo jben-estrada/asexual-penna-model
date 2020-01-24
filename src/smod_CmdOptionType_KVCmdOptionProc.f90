@@ -1,7 +1,15 @@
 
 submodule (CmdOptionType) KVBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: KVBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdOptionType` containing type-bound procedures for the
+  !!  type `KeyValCmdOption`.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
+
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: KVtype_getValue

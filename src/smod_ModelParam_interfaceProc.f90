@@ -1,4 +1,12 @@
 submodule (ModelParam) InterfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: interfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `ModelParam` containing public procedures with their
+  !!  private "helper" procedures for interfacing with other modules, program,
+  !!  or other procedures.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
 

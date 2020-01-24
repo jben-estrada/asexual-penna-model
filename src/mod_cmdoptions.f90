@@ -1,4 +1,11 @@
 module CmdOptions
+  ! -------------------------------------------------------------------------- !
+  ! MODULE: CmdOptions
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Module containing declaration of `BaseCmdOption` instances and wrapper
+  !!  procedures to interface with the main program, and modules and procedures.
+  ! -------------------------------------------------------------------------- !
   use CmdOptionType
   implicit none
   private

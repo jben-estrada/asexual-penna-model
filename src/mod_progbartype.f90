@@ -1,10 +1,10 @@
 module ProgBarType
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! MODULE:  ProgBarType
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing a derived type for printing progress bars.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   implicit none
   private
 
@@ -27,10 +27,10 @@ module ProgBarType
 contains
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initProgressBar
   !>  Initialize a `ProgressBar` object.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   subroutine initProgressBar(new, partition, totalTicks, charBit)
     type(ProgressBar), intent(out) :: new
       !! `ProgressBar` object to be initialized.
@@ -56,12 +56,12 @@ contains
   end subroutine initProgressBar
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [ProgressBar % ]incrementTick
   !>  Increment `counter` attribute of a `ProgressBar` object. The increment
   !!  value can be optionally changed. It can optionally show the
   !!  progress bar as well.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   subroutine incrementCounter(self, increment, show)
     class(ProgressBar), intent(inout) :: self
       !! `ProgressBar` object to be updated.
@@ -89,10 +89,10 @@ contains
   end subroutine incrementCounter
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [ProgressBar % ]showProgBar
   !>  Print the progress bar.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   subroutine showProgBar(self)
     class(ProgressBar), intent(in) :: self
       !! `ProgressBar` object to be shown.

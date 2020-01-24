@@ -1,8 +1,21 @@
-submodule (WriterType) WriterTypeInterfaceProc
+submodule (WriterType) interfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: interfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `WriterType` containing public procedures with their
+  !!  private "helper" procedures for interfacing with other modules, program,
+  !!  or other procedures.
+  ! -------------------------------------------------------------------------- !
   implicit none
   contains
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: constructWriter_array
+  !>  Create and initialize, if `initialize` is true, a new `Writer` object
+  !!  with list of file information as `OutputFile` objects. 
+  ! -------------------------------------------------------------------------- !
   subroutine constructWriter_array(new, files, initialize)
     type(Writer),      intent(inout) :: new
       !! Newly initialized `Writer` object. 
@@ -15,7 +28,7 @@ submodule (WriterType) WriterTypeInterfaceProc
 
     ! Allocate allocatable attributes.
     if (allocated(new % availableFiles)) deallocate(new % availableFiles)
-    if (allocated(new % liveFiles)) deallocate(new % liveFiles)
+    if (allocated(new % activeFiles)) deallocate(new % activeFiles)
 
     ! Assign new flags 
     do i = 1, size(files)
@@ -31,6 +44,11 @@ submodule (WriterType) WriterTypeInterfaceProc
   end subroutine constructWriter_array
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: constructWriter_scalar
+  !>  Create and initialize, if `initialize` is true, a new `Writer` object
+  !!  with file information as an `OutputFile` object. 
+  ! -------------------------------------------------------------------------- !
   subroutine constructWriter_scalar(new, file, initialize)
     type(Writer),      intent(inout) :: new
       !! Newly initialized `Writer` object.
@@ -62,6 +80,10 @@ submodule (WriterType) WriterTypeInterfaceProc
   end subroutine constructWriter_scalar
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: removeFilebyFlag
+  !>  Remove an `OutputFile` object from an allocatable array of the same type.
+  ! -------------------------------------------------------------------------- !
   subroutine removeFilebyFlag(array, flag)
     type(OutputFile), allocatable, intent(inout) :: array(:)
       !! Array of `OutputfFiles` to be modified.
@@ -106,34 +128,10 @@ submodule (WriterType) WriterTypeInterfaceProc
   end subroutine removeFilebyFlag
 
 
-  subroutine findFileByFlag(array, flag, foundFile)
-    type(OutputFile), allocatable, intent(in)    :: array(:)
-      !! `Writer` object whose files are to be searched.
-    type(OutputFile), allocatable, intent(inout) :: foundFile
-      !! The sought file. Unallocaeted if no file with the given `flag` is
-      !! found. 
-    integer, intent(in) :: flag
-      !! Flag of the corresponding sought file.
-
-    integer :: i
-
-    if (allocated(array)) then
-      if (allocated(foundFile)) deallocate(foundFile)
-
-      do i = 1, size(array)
-        if (array(i) % flag == flag) then
-          foundFile = array(i) ! NOTE: Automatic allocation.
-          exit
-        end if
-      end do
-    else
-      print "(a)", "***ERROR. Provided array to find flags with " // &
-        "is not yet allocated."
-      stop
-    end if
-  end subroutine findFileByFlag
-
-
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: removeFilebyFlag
+  !>  Remove an `OutputFile` object from an allocatable array of the same type.
+  ! -------------------------------------------------------------------------- !
   subroutine appendOutputFile(array, file)
     type(OutputFile), allocatable, intent(inout) :: array(:)
       !! Array of `Outputfile` to be modified.
@@ -163,16 +161,49 @@ submodule (WriterType) WriterTypeInterfaceProc
   end subroutine appendOutputFile
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: findFileByFlag
+  !>  Return an `OutputFile` object from an array of the same type that matches
+  !!  the integer `flag`.
+  ! -------------------------------------------------------------------------- !
+  subroutine findFileByFlag(array, flag, foundFile)
+    type(OutputFile), allocatable, intent(in)    :: array(:)
+      !! `Writer` object whose files are to be searched.
+    type(OutputFile), allocatable, intent(inout) :: foundFile
+      !! The sought file. Unallocaeted if no file with the given `flag` is
+      !! found. 
+    integer, intent(in) :: flag
+      !! Flag of the corresponding sought file.
+
+    integer :: i
+
+    if (allocated(array)) then
+      if (allocated(foundFile)) deallocate(foundFile)
+
+      do i = 1, size(array)
+        if (array(i) % flag == flag) then
+          foundFile = array(i) ! NOTE: Automatic allocation.
+          exit
+        end if
+      end do
+    else
+      print "(a)", "***ERROR. Provided array to find flags with " // &
+        "is not yet allocated."
+      stop
+    end if
+  end subroutine findFileByFlag
+
+
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer%]destroy
   !>  Deallocate the allocatable attributes `enabledFlags`
   !!  and `liveFlags`.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   subroutine destroy(self)
     type(Writer), intent(inout) :: self
       !! `Writer` object to be destroyed.
 
     if (allocated(self % availableFiles)) deallocate(self % availableFiles)
-    if (allocated(self % liveFiles)) deallocate(self % liveFiles)
+    if (allocated(self % activeFiles)) deallocate(self % activeFiles)
   end subroutine destroy
 end submodule

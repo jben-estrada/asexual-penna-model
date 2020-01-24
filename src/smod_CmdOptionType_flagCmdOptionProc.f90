@@ -1,5 +1,12 @@
 
 submodule (CmdOptionType) flagBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: flagBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdOptionType` containing type-bound procedures for the
+  !!  type `FlagCmdOption`.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
 

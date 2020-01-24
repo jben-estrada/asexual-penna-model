@@ -1,5 +1,12 @@
 
 submodule (CmdOptionType) posBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: posBoundProcedure
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdOptionType` containing bound procedures for the type
+  !!  `PositionalCmdOption`.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
 

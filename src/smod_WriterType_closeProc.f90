@@ -1,33 +1,47 @@
 
 
 submodule (WriterType) WriterTypeCloseProc
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! SUBMODULE: WriterTypeCloseProc
-  !>  Submodule containing the specific procedures for the generic
-  !!  type-bound procedure `[Writer]%close`.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `WriterType` containing the specific procedures for the
+  !!  generic type-bound procedure `[Writer] % close`.
+  ! -------------------------------------------------------------------------- !
   implicit none
   contains
 
-  
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_closeAll
+  !>  Close all active files, i.e. `OPEN`ed files, available to `self`. This is
+  !!  one of the specific procedures to the bound procedure `close` of `Writer`
+  !!  objects.
+  ! -------------------------------------------------------------------------- !
   subroutine writer_closeAll(self)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
     integer :: i
 
-    if (allocated(self % liveFiles)) then
+    if (allocated(self % activeFiles)) then
       ! Close all active output files.
-      do i = 1, size(self % liveFiles)
-        close(self % liveFiles(i) % unit)
+      do i = 1, size(self % activeFiles)
+        close(self % activeFiles(i) % unit)
       end do
 
-      ! Empty the `liveFiles` attribute.
-      deallocate(self % liveFiles)
-      allocate(self % liveFiles(0))
+      ! Empty the `activeFiles` attribute.
+      deallocate(self % activeFiles)
+      allocate(self % activeFiles(0))
     end if
   end subroutine writer_closeAll
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_close
+  !>  Close a specific active files, i.e. an `OPEN`ed file, available to `self`.
+  !!  This is one of the specific procedures to the bound procedure `close` of
+  !!  `Writer` objects.
+  ! -------------------------------------------------------------------------- !
   subroutine writer_close(self, flag)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
@@ -36,10 +50,16 @@ submodule (WriterType) WriterTypeCloseProc
 
     type(OutputFile), allocatable :: foundFile
 
-    call findFileByFlag(self % liveFiles, flag, foundFile)
+    call findFileByFlag(self % activeFiles, flag, foundFile)
   end subroutine writer_close
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_listclose
+  !>  Close list of specific active files, i.e. `OPEN`ed files, available to
+  !!  `self`. This is one of the specific procedures to the bound procedure
+  !!  `close` of `Writer` objects.
+  ! -------------------------------------------------------------------------- !
   subroutine writer_listclose(self, flags)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
@@ -52,11 +72,11 @@ submodule (WriterType) WriterTypeCloseProc
 
     ! Search for the files to remove.
     do i = 1, size(flags)
-      call findFileByFlag(self % liveFiles, flags(i), foundFile)
+      call findFileByFlag(self % activeFiles, flags(i), foundFile)
 
       ! Remove file to remove.
       if (allocated(foundFile)) &
-         call removeFilebyFlag(self % liveFiles, foundFile % flag)
+         call removeFilebyFlag(self % activeFiles, foundFile % flag)
     end do
   end subroutine writer_listclose
 end submodule

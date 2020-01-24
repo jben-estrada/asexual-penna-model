@@ -1,4 +1,11 @@
 module CmdOptionType
+  ! -------------------------------------------------------------------------- !
+  ! MODULE: CmdOptionType
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Module containing derived type definitions of `BaseCmdOption` and its
+  !!  extensions.
+  ! -------------------------------------------------------------------------- !
   implicit none
   private
 

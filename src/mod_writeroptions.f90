@@ -128,13 +128,19 @@ contains
   end function getOutputFile
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: constructAvailableWriter
+  !>  Create and initialize if `initiliaze` is true a `Writer` object with the
+  !!  defined `OutputFile` objects and their corresponding flags in
+  !!  `WriterOptions` module.
+  ! -------------------------------------------------------------------------- !
   subroutine constructAvailableWriter(out, flags, initialize)
     type(Writer),      intent(out) :: out
       !! New `Writer` object.
     integer,           intent(in)  :: flags(:)
       !! Record flags.
     logical, optional, intent(in)  :: initialize
-      !! Initialize `new` immeadieately. Default is `.false.`
+      !! Initialize `new` immediately. Default is `.false.`
   
     type(OutputFile) :: foundFiles(size(flags))
     logical :: initialize_

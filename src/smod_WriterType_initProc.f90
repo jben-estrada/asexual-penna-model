@@ -1,10 +1,12 @@
 
 submodule (WriterType) WriterTypeInitProc
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! SUBMODULE: WriterTypeInitProc
-  !>  Submodule containing the specific procedures for the generic
-  !!  type-bound procedure `[Writer]%initialize`.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `WriterType` containing the specific procedures for the
+  !!  generic type-bound procedure `[Writer] % initialize`.
+  ! -------------------------------------------------------------------------- !
   implicit none
   contains
 
@@ -44,10 +46,10 @@ submodule (WriterType) WriterTypeInitProc
     end do
 
     ! Put all enabled flags into live flags
-    if(allocated(self % liveFiles)) deallocate(self % liveFiles)
-    allocate(self % liveFiles(size(self % availableFiles)))
+    if(allocated(self % activeFiles)) deallocate(self % activeFiles)
+    allocate(self % activeFiles(size(self % availableFiles)))
 
-    self % liveFiles(:) = self % availableFiles(:)
+    self % activeFiles(:) = self % availableFiles(:)
   end subroutine writer_initializeAll
 
 
@@ -71,9 +73,9 @@ submodule (WriterType) WriterTypeInitProc
       call initializeFile(foundFile)
 
       ! Set the found file as active for writing.
-      if (allocated(self % liveFiles)) deallocate(self % liveFiles)
-      allocate(self % liveFiles(1))
-      self % liveFiles = [foundFile]
+      if (allocated(self % activeFiles)) deallocate(self % activeFiles)
+      allocate(self % activeFiles(1))
+      self % activeFiles = [foundFile]
 
       deallocate(foundFile)
     else
@@ -94,8 +96,8 @@ submodule (WriterType) WriterTypeInitProc
     integer :: i
 
     if (allocated(self % availableFiles)) then
-      if(allocated(self % liveFiles)) deallocate(self % liveFiles)
-      allocate(self % liveFiles(0))
+      if(allocated(self % activeFiles)) deallocate(self % activeFiles)
+      allocate(self % activeFiles(0))
   
       ! Check the flags if its corresponding file is available.
       do i = 1, size(flags)
@@ -105,7 +107,7 @@ submodule (WriterType) WriterTypeInitProc
           call initializeFile(foundFile)
           
           !! Insert active file.
-          call appendOutputFile(self % liveFiles, foundFile)
+          call appendOutputFile(self % activeFiles, foundFile)
         end if
       end do
     end if

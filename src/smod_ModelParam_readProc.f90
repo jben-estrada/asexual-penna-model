@@ -1,4 +1,11 @@
 submodule (ModelParam) ReadProcedures
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: ReadProcedures
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `ModelParam` containing procedures for reading files of
+  !!  model parameters and "Verhulst weight".
+  ! -------------------------------------------------------------------------- !
   use RNG, only: RNG_INTRINSIC
   use WriterOptions, only: nullFlag
   implicit none

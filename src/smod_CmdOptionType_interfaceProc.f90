@@ -1,4 +1,12 @@
-submodule (CmdOptionType) InterfaceProcedures
+submodule (CmdOptionType) interfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: interfaceProcedures
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdOptionType` containing public procedures with their
+  !!  private "helper" procedures for interfacing with other modules, program,
+  !!  or other procedures.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
 

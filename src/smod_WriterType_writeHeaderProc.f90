@@ -1,8 +1,19 @@
 submodule (WriterType) WriterTypeWrHdrProc
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: WriterTypeWrHdrProc
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `WriterType` containing the specific procedures for the
+  !!  generic type-bound procedure `[Writer] % writeHeader`.
+  ! -------------------------------------------------------------------------- !
   implicit none
   contains
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_writeHeader
+  !>  Write the header of the active file specified by the integer `flag`.
+  ! -------------------------------------------------------------------------- !
   subroutine writer_writeHeader(self, flag, header)
     class(Writer),    intent(in) :: self
       !! `Writer` object.
@@ -16,10 +27,10 @@ submodule (WriterType) WriterTypeWrHdrProc
 
     ! Do linear search for the file to write on.
     flagFound = .false.
-    do i = 1, size(self % liveFiles)
+    do i = 1, size(self % activeFiles)
 
-      if (self % liveFiles(i) % flag == flag) then
-        write(self % liveFiles(i) % unit, "(*(a, ', '))") &
+      if (self % activeFiles(i) % flag == flag) then
+        write(self % activeFiles(i) % unit, "(*(a, ', '))") &
           (trim(header(j)), j = 1, size(header))
 
         flagFound = .true.

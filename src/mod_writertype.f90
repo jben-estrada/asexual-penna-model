@@ -38,7 +38,7 @@ module WriterType
   type, public :: Writer
     private
     type(OutputFile), allocatable :: availableFiles(:)
-    type(OutputFile), allocatable :: liveFiles(:)
+    type(OutputFile), allocatable :: activeFiles(:)
   contains
     private
     generic, public :: initialize => &
@@ -85,12 +85,12 @@ module WriterType
   end type
 
 
-  !----------------------------------------------------------------------------!
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer % ]write
   !>  Write `arg` into the file specified by `flag`. The procedure
   !!  accepts real or integer arguments of either rank 0 or 1.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   interface
     module subroutine writer_write_int(self, flag, arg)
       class(Writer),         intent(inout) :: self
@@ -117,12 +117,12 @@ module WriterType
     end subroutine
   end interface
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer % ]initialize
   !>  Initialize the files specified to be written in. The files are
   !!  specified by the integer `flag`. Multiple `flag`s can also be
   !!  as an automatic array of integers.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   interface
     module subroutine writer_initializeAll(self)
       class(Writer), intent(inout) :: self
@@ -139,12 +139,12 @@ module WriterType
     end subroutine
   end interface
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer % ]close
   !>  Close a unit for writing files specified by the integer `flag`. 
   !!  To close multiple units, a rank-1 array of integers `flags` can
   !!  be passed. To close all units, pass nothing. 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   interface
     module subroutine writer_closeAll(self)
       class(Writer), intent(inout) :: self
@@ -161,10 +161,10 @@ module WriterType
     end subroutine
   end interface
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer % ]writeHeader
   !>  Write the header of the .csv file to write on.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   interface
     module subroutine writer_writeHeader(self, flag, header)
       class(Writer),    intent(in) :: self
@@ -208,15 +208,15 @@ module WriterType
     end subroutine destroy
   end interface
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! GENERIC SUBROUTINE: constructWriter
   !>  Construct a `Writer` object.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   interface constructWriter
     procedure :: constructWriter_array
     procedure :: constructWriter_scalar
   end interface constructWriter
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
 
   public :: constructWriter
 end module WriterType

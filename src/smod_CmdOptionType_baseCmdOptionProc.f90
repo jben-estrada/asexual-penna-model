@@ -1,7 +1,15 @@
 
 submodule (CmdOptionType) baseOptionProcedure
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: baseOptionProcedure
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdOptionType` containing type-bound procedures for the
+  !!  abstract type `BaseCmdOption` and all its type extensions.
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
+
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: setUsageMsg

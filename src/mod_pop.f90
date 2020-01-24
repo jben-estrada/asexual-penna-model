@@ -95,11 +95,11 @@ contains
   end function constructPersonList
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: determineDeathType
   !>  Determine the death of the current individual. This routine fails if
   !!  the current individual is alive.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   subroutine determineDeathType(self, deathByAge, deathByMutation, &
         deathByVerhulst)
 
@@ -130,10 +130,10 @@ contains
   end subroutine determineDeathType
 
 
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   ! FUNCTION: getBinDigit
   !>  Get the `k`th binary digit of the integer `number`.
-  !----------------------------------------------------------------------------!
+  ! -------------------------------------------------------------------------- !
   function getBinDigit(number, k) result(bit)
     integer(kind=personIK), intent(in) :: number
       !! A word or a bit-array represented as an integer.
