@@ -21,17 +21,18 @@ build: $(BINDIR)/$(TARGET) clean
 
 # Link together object files.
 $(BINDIR)/$(TARGET): $(OBJS)
-	@printf "\tLink together object files.\n"
+	@printf "\n\tLinking together object files.\n"
 	@$(FC) $(SPEC_FFLAGS) $^ -o $(BINDIR)/$(TARGET)
 
 -include $(DEPS)
 
 %.o: %.f90 %.d
-	@printf "\tCompile $<...\n"
+	@printf "\tCompiling $<\n"
 	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@
 
 %.d: %.f90
-	@-$(FC) $(FFLAGS) $(FDEP) -fsyntax-only -S $<
+	@printf "\tGetting the dependencies of $<\n"
+	@$(FC) $(FFLAGS) $(FDEP) -fsyntax-only -S $<
 
 # Remove unneeded files for building.
 .PHONY: clean
