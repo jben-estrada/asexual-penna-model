@@ -9,45 +9,45 @@ submodule (WriterType) WriterTypeInitProc
   contains
 
 
-  subroutine initializeWriter(filename, unit, position)
-    character(len=*), intent(in) :: filename
-      !! Path to the output file.
-    character(len=*), intent(in) :: position
-      !! Position of the writer when writing into the specified output file.
-    integer,          intent(in) :: unit
-      !! Unit corresponding to the output file.
+  subroutine initializeFile(file)
+    type(OutputFile) :: file
+      !! Output file to initialize.
 
     logical :: exists
 
-    inquire(file=filename, exist=exists)
+    inquire(file=file % filename, exist=exists)
 
     if (exists) then
-      open(unit, file=filename, status="old", position=position)
+      open(file % unit, file=file % filename, status="old", &
+        position=file % position)
     else
-      open(unit, file=filename, status="new")
+      open(file % unit, file=file % filename, status="new")
     end if
-  end subroutine initializeWriter
+  end subroutine initializeFile
 
 
   subroutine writer_initializeAll(self)
     class(Writer), intent(inout) :: self
-
-    integer :: flag
+      !! `Writer` type.
     integer :: i
 
-    if (size(self%enabledFlags) == 0) return
+    if (allocated(self % availableFiles)) then
+      if (size(self % availableFiles) == 0) return
+    else
+      print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
+      stop
+    end if
+    
+    ! Initialize all available files in `self`.
+    do i = 1, size(self % availableFiles)
+      call initializeFile(self % availableFiles(i))
+    end do
 
     ! Put all enabled flags into live flags
-    if(allocated(self%liveFlags)) deallocate(self%liveFlags)
-    allocate(self%liveFlags(size(self%enabledFlags)))
+    if(allocated(self % liveFiles)) deallocate(self % liveFiles)
+    allocate(self % liveFiles(size(self % availableFiles)))
 
-    self%liveFlags = self%enabledFlags  ! Hopefully, just a copy.
-
-    do i = 1, size(self%enabledFlags)
-      flag = self%enabledFlags(i)
-      call initializeWriter(filenameArray(flag), unitArray(flag), &
-          positionArray(flag))
-    end do
+    self % liveFiles(:) = self % availableFiles(:)
   end subroutine writer_initializeAll
 
 
@@ -57,37 +57,57 @@ submodule (WriterType) WriterTypeInitProc
     integer, intent(in)          :: flag
       !! Flag corresponding to the output file to be written.
 
-    if (.not.any(self%enabledFlags == flag)) return
+    type(OutputFile), allocatable :: foundFile
 
-    ! Put enabled flag to live flag
-    if(allocated(self%liveFlags)) deallocate(self%liveFlags)
-    allocate(self%liveFlags(1))
+    if (allocated(self % availableFiles)) then
+      ! Search for the file corresponding to the given flag.
+      call findFileByFlag(self % availableFiles, flag, foundFile)
+    else
+      print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
+      stop
+    end if
 
-    self%liveFlags = [flag]  ! NOTE: Automatic allocation
+    if (allocated(foundFile)) then
+      call initializeFile(foundFile)
 
-    call initializeWriter(filenameArray(flag), unitArray(flag), &
-        positionArray(flag))
+      ! Set the found file as active for writing.
+      if (allocated(self % liveFiles)) deallocate(self % liveFiles)
+      allocate(self % liveFiles(1))
+      self % liveFiles = [foundFile]
+
+      deallocate(foundFile)
+    else
+      print "(a, i0, a)", "***ERROR. File with flag (", flag, &
+          ") is not available."
+      stop
+    end if
   end subroutine writer_initialize
 
 
   subroutine writer_listInitialize(self, flags)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
-    integer, intent(in)          :: flags(:)
+    integer,       intent(in)    :: flags(:)
       !! Array of flags corresponding to the output files to be written.
 
+    type(OutputFile), allocatable :: foundFile
     integer :: i
-    integer :: flag
 
-    if(allocated(self%liveFlags)) deallocate(self%liveFlags)
-    allocate(self%liveFlags(0))
-
-    do i = 1, size(flags)
-      flag = flags(i)
-      if (.not.any(self%enabledFlags == flag)) cycle
-      call arrayInsert(self%liveFlags, 1, flag)
-      call initializeWriter(filenameArray(flag), unitArray(flag), &
-          positionArray(flag))
-    end do
+    if (allocated(self % availableFiles)) then
+      if(allocated(self % liveFiles)) deallocate(self % liveFiles)
+      allocate(self % liveFiles(0))
+  
+      ! Check the flags if its corresponding file is available.
+      do i = 1, size(flags)
+        call findFileByFlag(self % availableFiles, flags(i), foundFile)
+  
+        if (allocated(foundFile)) then
+          call initializeFile(foundFile)
+          
+          !! Insert active file.
+          call appendOutputFile(self % liveFiles, foundFile)
+        end if
+      end do
+    end if
   end subroutine writer_listInitialize
 end submodule WriterTypeInitProc

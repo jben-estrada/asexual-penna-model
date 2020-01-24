@@ -262,7 +262,7 @@ contains
   !!  if need be.
   ! -------------------------------------------------------------------------- !
   subroutine prettyPrintModelParams()
-    use WriterType, only: nullFlag
+    use WriterOptions, only: nullFlag
 
     ! Pretty print separator.
     integer :: k

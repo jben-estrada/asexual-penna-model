@@ -6,7 +6,7 @@ submodule (WriterType) WriterTypeWriteProc
   !!  type-bound procedure `[Writer]%write`.
   !----------------------------------------------------------------------------!
   implicit none
-  contains
+contains
 
 
   subroutine writer_write_int(self, flag, arg)
@@ -17,8 +17,17 @@ submodule (WriterType) WriterTypeWriteProc
     integer,               intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
-    if (.not.any(self%liveFlags == flag)) return
-    write(unitArray(flag), formatArray(flag)) arg
+    type(OutputFile), allocatable :: foundFile
+
+    call findFileByFlag(self % liveFiles, flag, foundFile)
+
+    if (allocated(foundFile)) then
+      write(foundFile % unit, foundFile % format) arg
+    else
+      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
+          ") not found."
+      stop
+    end if
   end subroutine writer_write_int
 
 
@@ -30,9 +39,17 @@ submodule (WriterType) WriterTypeWriteProc
     integer,            intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
-    if (.not.any(self%liveFlags == flag)) return
+    type(OutputFile), allocatable :: foundFile
 
-    write(unitArray(flag), formatArray(flag)) arg
+    call findFileByFlag(self % liveFiles, flag, foundFile)
+
+    if (allocated(foundFile)) then
+      write(foundFile % unit, foundFile % format) arg
+    else
+      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
+          ") not found."
+      stop
+    end if
   end subroutine writer_write_real
 
 
@@ -44,9 +61,17 @@ submodule (WriterType) WriterTypeWriteProc
     integer,               intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
-    if (.not.any(self%liveFlags == flag)) return
+    type(OutputFile), allocatable :: foundFile
 
-    write(unitArray(flag), formatArray(flag)) arg
+    call findFileByFlag(self % liveFiles, flag, foundFile)
+
+    if (allocated(foundFile)) then
+      write(foundFile % unit, foundFile % format) arg
+    else
+      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
+          ") not found."
+      stop
+    end if
   end subroutine writer_write_intArray
 
 
@@ -58,8 +83,16 @@ submodule (WriterType) WriterTypeWriteProc
     integer,            intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
-    if (.not.any(self%liveFlags == flag)) return
+    type(OutputFile), allocatable :: foundFile
 
-    write(unitArray(flag), formatArray(flag)) arg
+    call findFileByFlag(self % liveFiles, flag, foundFile)
+
+    if (allocated(foundFile)) then
+      write(foundFile % unit, foundFile % format) arg
+    else
+      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
+          ") not found."  
+      stop
+    end if
   end subroutine writer_write_realArray
 end submodule WriterTypeWriteProc

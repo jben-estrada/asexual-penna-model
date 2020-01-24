@@ -7,7 +7,7 @@ module Penna
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
   use Pop
-  use WriterType
+  use WriterOptions
   implicit none
   private
 
@@ -28,7 +28,7 @@ contains
     integer, intent(in) :: startPopSize
       !! Starting population size.
     integer, intent(in) :: recordFlag
-      !! Record flag. Valid values are found in the `SaveFormat` module.
+      !! Record flag. Valid values are found in the `WriterOptions` module.
 
     type(PersonList) :: population    ! Population list
     type(Writer)     :: runWriter     ! `Writer` object for recording data 
@@ -99,8 +99,8 @@ contains
     end do mainLoop
 
     ! Wrap up.
-    call population  %  freePtr(popSize)
-    call runWriter  %  close()
+    call population % freePtr(popSize)
+    call runWriter % close()
     call deallocAgeDstrb()
   end subroutine runOneInstance
 
@@ -185,7 +185,7 @@ contains
     integer, intent(in) :: startingPopSize
       !! Starting population size.
     integer, intent(in) :: recordFlag
-      !! Record flag. Valid values are found in the `SaveFormat` module. 
+      !! Record flag. Valid values are found in the `WriterOptions` module. 
     logical, intent(in) :: toRecordTime 
       !! Record timing stats into a csv file if true.
     logical, intent(in) :: printRunProgress 
@@ -207,6 +207,9 @@ contains
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
+
+    ! Initialize the writer objects.
+    call initializeWriterObjects()
 
     ! Initialize the progress bar.
     call initProgressBar(progBar, 20, sampleSize)
@@ -260,7 +263,7 @@ contains
 
     ! Record mean time and std deviation.
     if (toRecordTime) then
-      call constructWriter(timeWriter, [timeFlag])
+      call constructWriter(timeWriter, getOutputFile(timeFlag))
       call timeWriter % initialize()
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
@@ -289,14 +292,15 @@ contains
     type(Writer), intent(inout) :: runWriter
       !! The `Writer` object to be initialized.
     integer,      intent(in)    :: recordFlag
-      !! Record flag. Values can be found in `SaveFormat`.
-
-    call constructWriter(runWriter, recordFlagArray)
+      !! Record flag. Values can be found in `WriterOptions`.
 
     if (recordFlag == nullFlag) return
 
-    call runWriter % initialize(recordFlag)
+    ! Construct the `Writer` type.
+    call constructWriter(runWriter, &
+        getOutputFile([popFlag, ageDstrbFlag, deathFlag, divIdxFlag]))
 
+    call runWriter % initialize(recordFlag)
     select case (recordFlag)
       case (popFlag)
         call runWriter % writeHeader(popFlag, ["population size"])

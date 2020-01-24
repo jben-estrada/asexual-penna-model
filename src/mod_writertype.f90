@@ -7,23 +7,39 @@ module WriterType
   !!  unified interface for writing files.
   ! -------------------------------------------------------------------------- !
   use UpdateArray
-  use SaveFormat
-  use, intrinsic :: iso_fortran_env, only: int64, real64
+  use, intrinsic :: iso_fortran_env, only: writeIK => int64, &
+    writeRK => real64
   implicit none
   private
 
   ! Note: Can be changed when this module is to be reused in other projects. 
-  integer, public, parameter :: writeIK = int64
+  public :: writeIK
     !! Integer kind for integer arguments of procedures in this module.
-  integer, public, parameter :: writeRK = real64
+  public :: writeRK
     !! Real kind for integer arguments of procedures in this module.
+
+  integer, parameter, public :: MAX_LEN = 32
+    !! Max character length.
+
+  ! -------------------------------------------------------------------------- !
+  type, public :: OutputFile
+    !! Output file structure. A convenient container of classes.
+    character(MAX_LEN) :: filename
+    character(MAX_LEN) :: format
+    character(MAX_LEN) :: position
+    integer :: unit
+    integer :: flag
+  end type
+
+  ! All defined `OutputFile` objects.
+  type(OutputFile), allocatable, protected, public :: outputFiles(:)
 
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
   type, public :: Writer
     private
-    integer, public, allocatable :: enabledFlags(:)
-    integer,         allocatable :: liveFlags(:)
+    type(OutputFile), allocatable :: availableFiles(:)
+    type(OutputFile), allocatable :: liveFiles(:)
   contains
     private
     generic, public :: initialize => &
@@ -54,7 +70,7 @@ module WriterType
 
     procedure, public :: writeHeader => writer_writeHeader
     !! Write the header of the CSV file.
-    final :: destroy
+    ! final :: destroy
     !! Destructor. Deallocate any allocated attributes.
 
     procedure :: writer_initialize
@@ -69,22 +85,6 @@ module WriterType
     procedure :: writer_write_realArray
   end type
 
-  ! Format/Record flags from `SaveFormat`.
-  public :: nullFlag
-    !! Nothing (do not record).
-  public :: popFlag
-    !! Population size per time step.
-  public :: ageDstrbFlag
-    !! Age distribution in the last 300 time steps. 
-  public :: deathFlag 
-    !! Death counts (death by age, mutation, Verhulst factor) per time step.
-  public :: divIdxFlag
-    !! Shannon diversity index per time step.
-  public :: timeFlag
-    !! Timing statistics.
-
-  public :: recordFlagArray
-    !! Array of format flags.
 
   !----------------------------------------------------------------------------!
   !----------------------------------------------------------------------------!
@@ -125,12 +125,6 @@ module WriterType
   !!  as an automatic array of integers.
   !----------------------------------------------------------------------------!
   interface
-    module subroutine initializeWriter(filename, unit, position)
-      character(len=*), intent(in) :: filename
-      character(len=*), intent(in) :: position
-      integer,          intent(in) :: unit
-    end subroutine
-
     module subroutine writer_initializeAll(self)
       class(Writer), intent(inout) :: self
     end subroutine
@@ -182,16 +176,32 @@ module WriterType
 
 
   interface
-    module subroutine constructWriter_array(new, flags, initialize)
-      type(Writer),      intent(out) :: new
-      integer,           intent(in)  :: flags(:)
-      logical, optional, intent(in)  :: initialize
+    module subroutine constructWriter_array(new, files, initialize)
+      type(Writer),      intent(inout) :: new
+      type(OutputFile),  intent(in)    :: files(:)
+      logical, optional, intent(in)    :: initialize
     end subroutine
 
-    module subroutine constructWriter_scalar(new, flag, initialize)
-      type(Writer),      intent(out) :: new
-      integer,           intent(in)  :: flag
-      logical, optional, intent(in)  :: initialize
+    module subroutine constructWriter_scalar(new, file, initialize)
+      type(Writer),      intent(inout) :: new
+      type(OutputFile),  intent(in)    :: file
+      logical, optional, intent(in)    :: initialize
+    end subroutine
+
+    module subroutine findFileByFlag(array, flag, foundFile)
+      type(OutputFile), allocatable, intent(in)    :: array(:)
+      type(OutputFile), allocatable, intent(inout) :: foundFile
+      integer, intent(in) :: flag
+    end subroutine
+
+    module subroutine removeFilebyFlag(array, flag)
+      type(OutputFile), allocatable, intent(inout) :: array(:)
+      integer,                       intent(in)    :: flag
+    end subroutine
+
+    module subroutine appendOutputFile(array, file)
+      type(OutputFile), allocatable, intent(inout) :: array(:)
+      type(OutputFile),              intent(in)    :: file
     end subroutine
 
     module subroutine destroy(self)

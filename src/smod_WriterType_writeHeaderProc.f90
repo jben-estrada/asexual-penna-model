@@ -11,14 +11,26 @@ submodule (WriterType) WriterTypeWrHdrProc
     character(len=*), intent(in) :: header(:)
       !! Headers to describe sets of data.
 
-    integer :: i
+    logical :: flagFound
+    integer :: i, j
 
-    if (.not.any(self%liveFlags == flag)) return
-    do i = 1, size(header)
-      write(unitArray(flag), "(a, ', ')", advance="no") trim(header(i))
+    ! Do linear search for the file to write on.
+    flagFound = .false.
+    do i = 1, size(self % liveFiles)
+
+      if (self % liveFiles(i) % flag == flag) then
+        write(self % liveFiles(i) % unit, "(*(a, ', '))") &
+          (trim(header(j)), j = 1, size(header))
+
+        flagFound = .true.
+        exit
+      end if
     end do
-    
-    ! Print new line.
-    write(unitArray(flag), *) ""
+
+    if (.not. flagFound) then
+      print "(a, i0, a)", "***ERROR. Cannot write header, flag (", flag, &
+          ") not found."
+      stop
+    end if
   end subroutine writer_writeHeader
 end submodule

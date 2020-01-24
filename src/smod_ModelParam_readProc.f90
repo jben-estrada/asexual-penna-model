@@ -1,6 +1,6 @@
 submodule (ModelParam) ReadProcedures
   use RNG, only: RNG_INTRINSIC
-  use SaveFormat, only: nullFlag
+  use WriterOptions, only: nullFlag
   implicit none
 
   ! -------------------------------------------------------------------------- !
