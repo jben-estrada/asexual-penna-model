@@ -66,24 +66,12 @@ module WriterOptions
     !! Timing statistics.
   ! -------------------------------------------------------------------------- !
 
-  ! -------------------------------------------------------------------------- !
-  ! GENERIC FUNCTION: getOutputFile
-  !>  Get the `OutputFile` object corresponding to the passed `flag` integer.
-  !!  This object contains the necessary information about the output file.
-  ! -------------------------------------------------------------------------- !
-  interface getOutputFile
-    procedure :: getOutputFile_scalar
-    procedure :: getOutputFile_array
-  end interface
-  ! -------------------------------------------------------------------------- !
-
-  ! Module initialization procedures. 
+  ! Initialization procedures. 
   public :: initializeWriterObjects
-  public :: getOutputFile
+  public :: constructAvailableWriter
   
   ! Public `WriterType` procedures and derived types. 
   public :: Writer
-  public :: constructWriter
   public :: writeIK
   public :: writeRK
 contains
@@ -111,7 +99,12 @@ contains
   end subroutine initializeWriterObjects
 
 
-  function getOutputFile_scalar(flag) result(out)
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getOutputFile
+  !>  Get the `OutputFile` object corresponding to the passed `flag` integer.
+  !!  This object contains the necessary information about the output file.
+  ! -------------------------------------------------------------------------- !
+  function getOutputFile(flag) result(out)
     integer, intent(in) :: flag
       !! Flag to compare
     type(OutputFile)    :: out
@@ -132,17 +125,32 @@ contains
         print "(a, i0, a)", "***ERROR. No file with flag (", flag, ") found."
         stop
     end select
-  end function getOutputFile_scalar
+  end function getOutputFile
 
 
-  function getOutputFile_array(flags) result(out)
-    integer, intent(in) :: flags(:)
-      !! Flags to compare.
-    type(OutputFile) :: out(size(flags))
+  subroutine constructAvailableWriter(out, flags, initialize)
+    type(Writer),      intent(out) :: out
+      !! New `Writer` object.
+    integer,           intent(in)  :: flags(:)
+      !! Record flags.
+    logical, optional, intent(in)  :: initialize
+      !! Initialize `new` immeadieately. Default is `.false.`
+  
+    type(OutputFile) :: foundFiles(size(flags))
+    logical :: initialize_
     integer :: i
 
     do i = 1, size(flags)
-      out(i) = getOutputFile_scalar(flags(i))
+      foundFiles(i) = getOutputFile(flags(i))
     end do
-  end function getOutputFile_array
+
+    ! Assign default value to 
+    if (present(initialize)) then
+      initialize_ = initialize
+    else
+      initialize_ = .false.
+    end if
+
+    call constructWriter(out, foundFiles, initialize_)
+  end subroutine constructAvailableWriter
 end module WriterOptions

@@ -263,8 +263,7 @@ contains
 
     ! Record mean time and std deviation.
     if (toRecordTime) then
-      call constructWriter(timeWriter, getOutputFile(timeFlag))
-      call timeWriter % initialize()
+      call constructAvailableWriter(timeWriter, [timeFlag], .true.)
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
            "initial pop size    ", &
@@ -297,8 +296,8 @@ contains
     if (recordFlag == nullFlag) return
 
     ! Construct the `Writer` type.
-    call constructWriter(runWriter, &
-        getOutputFile([popFlag, ageDstrbFlag, deathFlag, divIdxFlag]))
+    call constructAvailableWriter(runWriter, &
+        [popFlag, ageDstrbFlag, deathFlag, divIdxFlag])
 
     call runWriter % initialize(recordFlag)
     select case (recordFlag)
