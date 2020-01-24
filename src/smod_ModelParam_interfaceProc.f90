@@ -13,13 +13,13 @@ contains
     ! Assign the default config file paths.
     call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
     call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
+    
+    ! Get the positional command-line arguments.
+    call parseCmdArgs(.false., .false., .true.)
 
     ! Get the config file paths from command-line arguments.
     MODEL_FILE_NAME = configDirPosArg % getValue()
     VWEIGHT_FILE_NAME = vWeightDirPosArg % getValue()
-
-    ! Get the positional command-line arguments.
-    call parseCmdArgs(.false., .false., .true.)
 
     ! Inquire the existence of the config file for model paramters.
     inquire(file=MODEL_FILE_NAME, exist=exist)
