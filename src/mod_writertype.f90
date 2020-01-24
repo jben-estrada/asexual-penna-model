@@ -6,7 +6,6 @@ module WriterType
   !>  Module containing the `Writer` type, a type (class) for creating
   !!  unified interface for writing files.
   ! -------------------------------------------------------------------------- !
-  use UpdateArray
   use, intrinsic :: iso_fortran_env, only: writeIK => int64, &
     writeRK => real64
   implicit none
