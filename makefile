@@ -21,6 +21,9 @@ default_build: build
 debug_build: FFLAGS += -g -O0
 debug_build: build
 
+static_build: FFLAGS += -O3 -static
+static_build: build
+
 # Build (default).
 build: compile_var
 	@echo Moving third-party library source code into $(SRCDIR).
