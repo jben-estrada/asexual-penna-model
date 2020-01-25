@@ -27,7 +27,7 @@
 
 program Main
   use ModelParam
-  use Penna, only: run
+  use Penna, only: run, deallocAllocatables
   use RNG, only: assignRNGParams
   use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
   implicit none
@@ -53,5 +53,5 @@ program Main
       RECORD_TIME, PRINT_STATE /= SILENT_PRINT)
 
   ! Wrap up.
-  call deallocVerhulstWeights()
+  call deallocAllocatables()
 end program Main

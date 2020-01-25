@@ -12,7 +12,22 @@ module Penna
   private
 
   public :: run
+  public :: deallocAllocatables
 contains
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: deallocAllocatables
+  !>  A wrapper subroutine to deallocate any allocatable variables in other
+  !!  module.
+  ! -------------------------------------------------------------------------- !
+  subroutine deallocAllocatables()
+    use ModelParam, only: deallocVerhulstWeights
+    use WriterOptions, only: deallocWriterTypeAlloctbl
+  
+    call deallocVerhulstWeights()
+    call deallocWriterTypeAlloctbl()
+  end subroutine deallocAllocatables
 
 
   ! -------------------------------------------------------------------------- !

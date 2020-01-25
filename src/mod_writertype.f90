@@ -203,6 +203,9 @@ module WriterType
       type(OutputFile),              intent(in)    :: file
     end subroutine
 
+    module subroutine deallocWriterTypeAlloctbl()
+    end subroutine
+
     module subroutine destroy(self)
       type(Writer), intent(inout) :: self
     end subroutine destroy
@@ -219,4 +222,5 @@ module WriterType
   ! -------------------------------------------------------------------------- !
 
   public :: constructWriter
+  public :: deallocWriterTypeAlloctbl
 end module WriterType

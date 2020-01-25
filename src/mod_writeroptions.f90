@@ -74,6 +74,7 @@ module WriterOptions
   public :: Writer
   public :: writeIK
   public :: writeRK
+  public :: deallocWriterTypeAlloctbl
 contains
 
 

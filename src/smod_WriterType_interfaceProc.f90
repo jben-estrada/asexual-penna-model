@@ -195,6 +195,15 @@ submodule (WriterType) interfaceProcedures
 
 
   ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: deallocWriterTypeAlloctbl
+  !>  Deallocate any module allocatable variables.
+  ! -------------------------------------------------------------------------- !
+  subroutine deallocWriterTypeAlloctbl()
+    if (allocated(outputFiles)) deallocate(outputFiles)
+  end subroutine deallocWriterTypeAlloctbl
+
+
+  ! -------------------------------------------------------------------------- !
   ! BOUND SUBROUTINE: [Writer%]destroy
   !>  Deallocate the allocatable attributes `enabledFlags`
   !!  and `liveFlags`.
