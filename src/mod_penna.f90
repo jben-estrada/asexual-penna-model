@@ -7,6 +7,7 @@ module Penna
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
   use Pop
+  use ModelParam
   use WriterOptions
   implicit none
   private
@@ -38,7 +39,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine runOneInstance(maxTimestep, startPopSize, recordFlag)
     use Demographics
-    use ModelParam, only: MODEL_K
 
     integer, intent(in) :: maxTimestep
       !! Maximum (total) time step.
@@ -128,7 +128,6 @@ contains
   subroutine evalPopulation(population, popSize, countdown, recFlag, &
         deathByAge, deathByMutation, deathByVerhulst)
     use Demographics
-    use ModelParam, only: MODEL_B
 
     type(PersonList), intent(inout) :: population       !! Population object.
     integer,          intent(inout) :: popSize          !! Population size.
@@ -190,22 +189,8 @@ contains
   ! SUBROUTINE: run
   !>  Run the Penna model simulation.
   ! -------------------------------------------------------------------------- !
-  subroutine run(maxTimeStep, startingPopSize, sampleSize, recordFlag, &
-        toRecordTime, printRunProgress)
+  subroutine run()
     use ProgBarType
-
-    integer, intent(in) :: maxTimeStep 
-      !! Maximum (total) time step. 
-    integer, intent(in) :: sampleSize 
-      !! Number of times the simulation is run. 
-    integer, intent(in) :: startingPopSize
-      !! Starting population size.
-    integer, intent(in) :: recordFlag
-      !! Record flag. Valid values are found in the `WriterOptions` module. 
-    logical, intent(in) :: toRecordTime 
-      !! Record timing stats into a csv file if true.
-    logical, intent(in) :: printRunProgress 
-      !! Print the run progress if true.
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -220,26 +205,29 @@ contains
     type(ProgressBar) :: progBar    ! A `ProgressBar` object.
     type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
     integer :: i
+    logical :: printProgress
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
+
+    printProgress = MODEL_REC_FLAG /= SILENT_PRINT
 
     ! Initialize the writer objects.
     call initializeWriterObjects()
 
     ! Initialize the progress bar.
-    call initProgressBar(progBar, 20, sampleSize)
+    call initProgressBar(progBar, 20, MODEL_SAMPLE_SIZE)
 
     ! Call and time the `run` subroutine.
     sum = 0.
     sumSqrd = 0.
-    do i = 1, sampleSize
+    do i = 1, MODEL_SAMPLE_SIZE
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
 
       ! Run the actual simulation.
-      call runOneInstance(maxTimeStep, startingPopSize, recordFlag)
+      call runOneInstance(MODEL_TIME_STEPS, MODEL_N0, MODEL_REC_FLAG)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
@@ -250,7 +238,7 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      if (printRunProgress .and. sampleSize > 1) then
+      if (printProgress .and. MODEL_SAMPLE_SIZE > 1) then
         call progBar % incrementCounter(show=.true.)
       end if
     end do
@@ -259,26 +247,26 @@ contains
     write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
 
     ! Get average elapsed time and its std deviation.
-    meanTime = sum/real(sampleSize, kind=writeRK)
-    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2) / &
-      real(sampleSize, kind=writeRK)
+    meanTime = sum/real(MODEL_SAMPLE_SIZE, kind=writeRK)
+    stdDevTime = sqrt(MODEL_SAMPLE_SIZE*sumSqrd - sum**2) / &
+      real(MODEL_SAMPLE_SIZE, kind=writeRK)
 
     ! Print timing statistics.
-    if (printRunProgress) then
+    if (printProgress) then
       ! Print elapsed time.
-      if (sampleSize > 1) then
+      if (MODEL_SAMPLE_SIZE > 1) then
         print "(a, f12.3, a)", "Average time: ", meanTime, " ms"
       else
         print "(a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
       end if
 
       ! Print the standard deviation.
-      if (sampleSize > 1) &
+      if (MODEL_SAMPLE_SIZE > 1) &
         print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
     end if
 
     ! Record mean time and std deviation.
-    if (toRecordTime) then
+    if (RECORD_TIME) then
       call constructAvailableWriter(timeWriter, [timeFlag], .true.)
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
@@ -286,14 +274,14 @@ contains
            "average time (ms)   ", &
            "std deviation (ms)  "])
       call timeWriter % write(timeFlag, &
-          [real(maxTimeStep, kind=writeRK), &
-           real(startingPopSize, kind=writeRK), &
+          [real(MODEL_TIME_STEPS, kind=writeRK), &
+           real(MODEL_N0, kind=writeRK), &
            meanTime, &
            stdDevTime])
       call timeWriter % close()
     end if
 
-    if (printRunProgress) print "(*(a))", PRINT_SEPARATOR
+    if (printProgress) print "(*(a))", PRINT_SEPARATOR
   end subroutine run
 
 

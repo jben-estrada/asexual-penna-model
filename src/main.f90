@@ -26,7 +26,8 @@
 
 
 program Main
-  use ModelParam
+  use ModelParam, only: assignConfigFilePaths, assignModelParams, &
+      prettyPrintModelParams
   use Penna, only: run, deallocAllocatables
   use RNG, only: assignRNGParams
   use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
@@ -49,8 +50,7 @@ program Main
   call prettyPrintModelParams()
 
   ! Run the Penna model simulation.
-  call run(MODEL_TIME_STEPS, MODEL_N0, MODEL_SAMPLE_SIZE, MODEL_REC_FLAG, &
-      RECORD_TIME, PRINT_STATE /= SILENT_PRINT)
+  call run()
 
   ! Wrap up.
   call deallocAllocatables()
