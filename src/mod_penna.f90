@@ -24,9 +24,11 @@ contains
   subroutine deallocAllocatables()
     use ModelParam, only: deallocVerhulstWeights
     use WriterOptions, only: deallocWriterTypeAlloctbl
+    use Demographics, only: deallocAgeDstrb
   
     call deallocVerhulstWeights()
     call deallocWriterTypeAlloctbl()
+    call deallocAgeDstrb()
   end subroutine deallocAllocatables
 
 
@@ -116,7 +118,6 @@ contains
     ! Wrap up.
     call population % freePtr(popSize)
     call runWriter % close()
-    call deallocAgeDstrb()
   end subroutine runOneInstance
 
 
