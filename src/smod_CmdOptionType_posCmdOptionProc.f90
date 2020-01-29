@@ -26,19 +26,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: posType_getValue
-  !>  Get the value of the positional command-line option.
-  ! -------------------------------------------------------------------------- !
-  pure function posType_getValue(self) result(value)
-    class(PositionalCmdOption), intent(in) :: self
-      !! Positional command-line option.
-    character(len=LONG_MAX_LEN)            :: value
-    
-    value = self % value
-  end function posType_getValue
-
-
-  ! -------------------------------------------------------------------------- !
   ! FUNCTION: posType_getPosition
   !>  Get the position of the positional command-line option.
   ! -------------------------------------------------------------------------- !

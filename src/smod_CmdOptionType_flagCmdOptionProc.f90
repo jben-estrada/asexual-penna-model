@@ -19,7 +19,7 @@ contains
     class(FlagCmdOption), intent(in) :: self
       !! Command-line flag.
 
-    flagtype_getFlagState = self % state
+    flagtype_getFlagState = (self % value == TRUE_FLAG)
   end function flagtype_getFlagState
 
 
@@ -41,7 +41,13 @@ contains
       stop
     end if
 
+    if (state) then
+      cmdFlag % value = TRUE_FLAG
+    else
+      cmdFlag % value = FALSE_FLAG
+    end if
+
     cmdFlag % isOptional = .true.
-    cmdFlag % state = state
+    cmdFlag % hasValue = .true.
   end subroutine assignInitialFlagState
 end submodule flagBoundProcedure

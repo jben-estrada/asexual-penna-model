@@ -12,18 +12,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: KVtype_getValue
-  !>  Get the value of the provided key-value command-line option.
-  ! -------------------------------------------------------------------------- !
-  pure integer function KVtype_getValue(self)
-    class(KeyValCmdOption), intent(in) :: self
-      !! Command-line key-value options.
-
-    KVtype_getValue = self % value
-  end function KVtype_getValue
-
-
-  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: assignOptionalKVVal
   !>  Assign the default value to a key-value command-line option.
   !!  This also marks the command-line option optional.
@@ -31,18 +19,18 @@ contains
   subroutine assignOptionalKVVal(cmdKeyVal, value)
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
       !! Command-line key-value options.
-    integer,                intent(in)    :: value
+    character(len=*),       intent(in)    :: value
       !! Default value to be assigned to `value` attribute of `self`.
 
     if (cmdKeyVal % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdKeyVal % command), &
           "' its default value again."
       stop
+    else
+      cmdKeyVal % hasValue = .true.
+      cmdKeyVal % isOptional = .true.
+      cmdKeyVal % value = value
     end if
-
-    cmdKeyVal % hasValue = .true.
-    cmdKeyVal % isOptional = .true.
-    cmdKeyVal % value = value
   end subroutine assignOptionalKVVal
 
 

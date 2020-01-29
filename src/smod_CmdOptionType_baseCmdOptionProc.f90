@@ -63,4 +63,17 @@ contains
 
     usageMsg = self % usageMsg
   end function getUsageMsg
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getValue
+  !>  Get the assigned value of the given `BaseCmdOption` object.
+  ! -------------------------------------------------------------------------- !
+  pure function getValue(self) result(value)
+    class(BaseCmdOption), intent(in) :: self
+
+    character(len=LONG_MAX_LEN) :: value
+
+    value = self % value
+  end function getValue
 end submodule baseOptionProcedure

@@ -58,29 +58,31 @@ contains
   !!  option is not passed.
   ! -------------------------------------------------------------------------- !
   subroutine assignModelParams()
+    use CastProcedures
+
     ! Read the model parameters from the config files.
     call readScalarModelParamCfg()
     call readVerhulstWeightsCfg()
 
     ! Assign optional values to key-value options.
-    call assignOptionalKVVal(maxTimeStepArg, MODEL_TIME_STEPS)
-    call assignOptionalKVVal(sampleSizeArg, MODEL_SAMPLE_SIZE)
-    call assignOptionalKVVal(startPopSizeArg, MODEL_N0)
-    call assignOptionalKVVal(recordFlagArg, MODEL_REC_FLAG)
-    call assignOptionalKVVal(rngChoiceArg, MODEL_RNG)
-    call assignOptionalKVVal(rngSeedArg, MODEL_RNG_SEED)
+    call assignOptionalKVVal(maxTimeStepArg, castIntToChar(MODEL_TIME_STEPS))
+    call assignOptionalKVVal(sampleSizeArg, castIntToChar(MODEL_SAMPLE_SIZE))
+    call assignOptionalKVVal(startPopSizeArg, castIntToChar(MODEL_N0))
+    call assignOptionalKVVal(recordFlagArg, castIntToChar(MODEL_REC_FLAG))
+    call assignOptionalKVVal(rngChoiceArg, castIntToChar(MODEL_RNG))
+    call assignOptionalKVVal(rngSeedArg, castIntToChar(MODEL_RNG_SEED))
 
     ! Get key-value command-line arguments w/c so happens to only contain
     ! model parameters.
     call parseCmdArgs(.false., .true., .false.)
 
     ! Assign model parameters from the command-line arguments.
-    MODEL_TIME_STEPS = maxTimeStepArg % getValue()
-    MODEL_SAMPLE_SIZE = sampleSizeArg % getValue()
-    MODEL_N0 = startPopSizeArg % getValue()
-    MODEL_REC_FLAG = recordFlagArg % getValue()
-    MODEL_RNG = rngChoiceArg % getValue()
-    MODEL_RNG_SEED = rngSeedArg % getValue()
+    MODEL_TIME_STEPS = castCharToInt(maxTimeStepArg % getValue())
+    MODEL_SAMPLE_SIZE = castCharToInt(sampleSizeArg % getValue())
+    MODEL_N0 = castCharToInt(startPopSizeArg % getValue())
+    MODEL_REC_FLAG = castCharToInt(recordFlagArg % getValue())
+    MODEL_RNG = castCharToInt(rngChoiceArg % getValue())
+    MODEL_RNG_SEED = castCharToInt(rngSeedArg % getValue())
 
     ! Get the flag command-line arguments.
     call parseCmdArgs(.true., .false., .false.)

@@ -30,9 +30,10 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignRNGParams()
     use CmdOptions, only: rngChoiceArg, rngSeedArg
+    use CastProcedures, only: castCharToInt
 
-    call chooseRNG(rngChoiceArg % getValue())
-    call setSeed(rngSeedArg % getValue())
+    call chooseRNG(castCharToInt(rngChoiceArg % getValue()))
+    call setSeed(castCharToInt(rngSeedArg % getValue()))
   end subroutine assignRNGParams
 
 

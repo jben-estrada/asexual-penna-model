@@ -19,6 +19,10 @@ module CmdOptionType
   ! Null character.
   character, public, parameter :: NULL_CHAR = ""
 
+  ! States.
+  character, parameter :: TRUE_FLAG = "T"
+  character, parameter :: FALSE_FLAG = "F"
+
 
   ! DERIVED TYPE DEFINITIONS.
   ! -------------------------------------------------------------------------- !
@@ -31,6 +35,7 @@ module CmdOptionType
       !! Alternative to the `command` attribute.
     character(len=LONG_MAX_LEN) :: usageMsg
       !! The help message for this command-line option.
+    character(len=LONG_MAX_LEN) :: value = ""
 
     logical :: isOptional = .false.
       !! Mark whether this command-line option is optional or not.
@@ -46,6 +51,7 @@ module CmdOptionType
       !! Get the alternative character to `command`, `altCommand`.
     procedure :: getUsageMsg
       !! Get the usage message of the this command-line option.
+    procedure :: getValue
   end type BaseCmdOption
   ! -------------------------------------------------------------------------- !
 
@@ -54,44 +60,30 @@ module CmdOptionType
     private
     character(len=MAX_LEN) :: valueMsg
       !! Description of the value of this command-line option.
-    integer :: value
-      !! The integer value of this command-line option.
-  contains
-    procedure :: getValue => KVtype_getValue
-      !! Get the value of this command-line option. Alias for `KVtype_getValue`.
-    procedure, private :: KVtype_getValue
   end type KeyValCmdOption
   ! -------------------------------------------------------------------------- !
 
   type, public, extends(BaseCmdOption) :: FlagCmdOption
-    !! Flag command-line option type.
-    private
-    logical :: state = .false.
-      !! The state of the command-line flag. Default is `.false.`.
+    !! Flag command-line option.
+    private  
+    logical :: isToggled = .false.
   contains
     procedure :: getFlagState => flagtype_getFlagState
-      !! Get the state of this command-line flag. 
-      !! Alias for `flagtype_getFlagState`.
-    procedure, private :: flagtype_getFlagState 
+      !! Get the state of this command-line flag.
   end type FlagCmdOption
   ! -------------------------------------------------------------------------- !
 
   type, public, extends(BaseCmdOption) :: PositionalCmdOption
     ! Positional command-line option type.
     private
-    character(len=LONG_MAX_LEN) :: value
+    ! character(len=LONG_MAX_LEN) :: value
       !! The value of this positional command-line option.
     integer :: position = -1
       !! The position of this command-line option.
   contains
-    procedure :: getValue => posType_getValue
-      !! Get the value of this positional command-line option.
-      !! Alias for `posType_getValue`.
     procedure :: getPosition => posType_getPosition
       !! Get the position of this positional command-line option.
       !! Alias for `posType_getPosition`.
-
-    procedure, private :: posType_getValue
     procedure, private :: posType_getPosition
   end type PositionalCmdOption
   ! -------------------------------------------------------------------------- !
@@ -120,6 +112,11 @@ module CmdOptionType
       class(BaseCmdOption), intent(in) :: self
       character(len=LONG_MAX_LEN) :: getUsageMsg
     end function
+
+    module pure function getValue(self)
+      class(BaseCmdOption), intent(in) :: self
+      character(len=LONG_MAX_LEN)      :: getValue
+    end function
   end interface
 
   ! 'FlagCmdOption' type-bound procedure.
@@ -137,14 +134,9 @@ module CmdOptionType
 
   ! 'KeyValCmdOption' type-bound procedure.
   interface
-    module pure function KVtype_getValue(self)
-      class(KeyValCmdOption), intent(in) :: self
-      integer :: KVtype_getValue
-    end function
-
     module subroutine assignOptionalKVVal(cmdKeyVal, value)
       class(KeyValCmdOption), intent(inout) :: cmdKeyVal
-      integer,                intent(in)    :: value
+      character(len=*),       intent(in)    :: value
     end subroutine
 
     module subroutine setValueMsg(cmdKeyVal, valueMsg)
@@ -159,11 +151,6 @@ module CmdOptionType
       class(PositionalCmdOption), intent(inout) :: cmdPosOption
       integer,                    intent(in)    :: position
     end subroutine
-
-    module pure function posType_getValue(self)
-      class(PositionalCmdOption), intent(in) :: self
-      character(len=LONG_MAX_LEN) :: posType_getValue
-    end function
 
     module pure function posType_getPosition(self)
       class(PositionalCmdOption), intent(in) :: self

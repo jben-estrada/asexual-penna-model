@@ -117,19 +117,37 @@ contains
 
     do i = 1, size(cmdFlags)
       if (compareCommand(cmdFlags(i), cmdArg)) then
+        ! Mark the routine to be successful in finding a syntactically-valid
+        ! value.
         status = 0
 
-        if (.not. toRead) exit
-
         ! Check if the current flag option has already been toggled.
-        if (.not. cmdFlags(i) % hasValue) then
-          cmdFlags(i) % state = .not. cmdFlags(i) % state
+        if (toRead .and. .not. cmdFlags(i) % isToggled) then
+          cmdFlags(i) % value = invertFlagChar(cmdFlags(i) % value)
           cmdFlags(i) % hasValue = .true.
-          exit
+          cmdFlags(i) % isToggled = .true.
         end if
+        exit
       end if
     end do
   end subroutine toggleFlagOptions
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: incertFlagChar
+  !>  Invert the given `flagChar` character. More precisely "T" -> "F" and
+  !!  "F" -> "T".
+  ! -------------------------------------------------------------------------- !
+  character pure function invertFlagChar(flagChar)
+    character(len=*), intent(in) :: flagChar
+      !! Flag character. It must be either "T" or "F".
+
+    if (flagChar == TRUE_FLAG) then
+      invertFlagChar = FALSE_FLAG
+    else
+      invertFlagChar = TRUE_FLAG
+    end if
+  end function invertFlagChar
 
 
   ! -------------------------------------------------------------------------- !
@@ -148,53 +166,28 @@ contains
       !! Check validity of passed argument but do not read and assign.
 
     character(len=MAX_LEN) :: key
-    character(len=MAX_LEN) :: valueChar
+    character(len=MAX_LEN) :: value
     integer :: i
 
     ! Get key and value from 'cmdArg' char.
-    call getKeyVal(cmdArg, key, valueChar, status)
+    call getKeyVal(cmdArg, key, value, status)
     if (status /= 0) return
     
     status = 1
     do i = 1, size(cmdKeyVal)
       if (compareCommand(cmdKeyVal(i), key)) then
-        call assignValueTo(cmdKeyVal(i), valueChar, toRead)
+        ! Mark the routine to be successful in finding a syntactically-valid
+        ! value.
         status = 0
+
+        if (toRead) then
+          cmdKeyVal(i) % value = value
+          cmdKeyVal(i) % hasValue = .true.
+        end if
         exit
       end if
     end do
   end subroutine assignKeyValOption
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignValueTo
-  !>  Assign value to the specified key-value option.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignValueTo(cmdOption, valueChar, toRead)
-    class(KeyValCmdOption), intent(inout) :: cmdOption
-      !! A command-line key-value option to be modified.
-    character(len=*),       intent(in)    :: valueChar
-      !! Value obtained from a command-line argument.
-    logical,                intent(in)    :: toRead
-      !! Check validity of passed argument but do not read and assign.
-
-    integer :: valueInt
-    integer :: status
-
-    read(valueChar, *, iostat=status) valueInt
-
-    if (status == 0) then
-
-      if (.not. toRead) return
-
-      cmdOption % value = valueInt
-      cmdOption % hasValue = .true.
-    else
-      print "(3a)", "***ERROR. '", trim(cmdOption % command), &
-          "' only accepts integers."
-      stop
-    end if
-  end subroutine assignValueTo
 
 
   ! -------------------------------------------------------------------------- !
@@ -218,12 +211,16 @@ contains
     status = 1
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % position == posCount) then
+        ! Mark the routine to be successful in finding a syntactically-valid
+        ! value.
         status = 0
-        if (.not. toRead) exit
 
-        cmdPosArgs(i) % value = cmdArg
-        cmdPosArgs(i) % hasValue = .true.
-        posCount = posCount + 1
+        if (toRead) then
+          cmdPosArgs(i) % value = cmdArg
+          cmdPosArgs(i) % hasValue = .true.
+          posCount = posCount + 1
+        end if
+
         exit
       end if
     end do
@@ -273,7 +270,7 @@ contains
     end do
 
     if (isReadingKey) then
-      ! Mark the routine "failed" since no "=" is detected.
+      ! Mark the routine as failed since no "=" is detected.
       status = 1
     else
       ! Get the value string.
@@ -354,7 +351,7 @@ contains
           trim(cmdKeyVal(i) % usageMsg)
       
       if (cmdKeyVal(i) % isOptional) then
-        print "(a, i0, a)", " [", cmdKeyVal(i) % value, "]"
+        print "(*(a))", " [", trim(adjustl(cmdKeyVal(i) % value)), "]"
       else
         print *, ""
       end if
