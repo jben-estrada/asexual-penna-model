@@ -357,7 +357,9 @@ contains
     if (associated(self % current_ptr)) then
       getCurrIndivAge = self % current_ptr % age
     else
-      stop "The current pointer of a linked list is disassociated."
+      print "(a)", "***ERROR. The current pointer of a linked list is " // &
+          "disassociated."
+      stop
     end if
   end function getCurrIndivAge
 
@@ -376,7 +378,9 @@ contains
     if (associated(self % current_ptr)) then
       genome = self % current_ptr % genome
     else
-      stop "The current pointer of a linked list is disassociated."
+      print "(a)", "***ERROR. The current pointer of a linked list is " // &
+          " disassociated."
+      stop
     end if
   end function getCurrIndivGenome
 
