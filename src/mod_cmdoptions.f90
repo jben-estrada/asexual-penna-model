@@ -62,13 +62,13 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
     ! Assign command char of flag options.
-    call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
+    call initializeCmdOption(verbosePrintFlag, "--verbose")
     call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
-    call initializeCmdOption(recordTimeFlag, "-r", "--record-time")
+    call initializeCmdOption(recordTimeFlag, "-t", "--record-time")
     call initializeCmdOption(silentPrintFlag, "-q", "--quiet")
   
     ! Assign command char of key-value options.
-    call initializeCmdOption(maxTimeStepArg, "--max-time-step")
+    call initializeCmdOption(maxTimeStepArg, "--time-step")
     call initializeCmdOption(sampleSizeArg, "--sample-size")
     call initializeCmdOption(startPopSizeArg, "--pop-size")
     call initializeCmdOption(recordFlagArg, "--rec-flag")
