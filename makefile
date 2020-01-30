@@ -24,6 +24,13 @@ debug_build: build
 static_build: FFLAGS += -O3 -static
 static_build: build
 
+# Get 
+dep: compile_var
+	@echo Obtaining only the dependency files.
+	@$(MAKE) dep -C $(SRCDIR) --no-print-directory
+	@echo Removing build files.
+	@$(RM) $(SRCDIR)/$(VAR_FILE)
+
 # Build (default).
 build: compile_var
 	@echo Moving third-party library source code into $(SRCDIR).

@@ -19,6 +19,10 @@ $(shell mkdir -p $(BINDIR))
 # Build (release build).
 build: $(BINDIR)/$(TARGET) clean
 
+# Depedencies only
+dep: $(DEPS)
+	
+
 # Link together object files.
 $(BINDIR)/$(TARGET): $(OBJS)
 	@printf "\n\tLinking together object files.\n"
