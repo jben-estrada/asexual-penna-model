@@ -87,9 +87,14 @@ contains
     ! Get the flag command-line arguments.
     call parseCmdArgs(.true., .false., .false.)
 
-    ! Print flags.
-    if (verbosePrintFlag % getFlagState()) PRINT_STATE = VERBOSE_PRINT
-    if (silentPrintFlag % getFlagState()) PRINT_STATE = SILENT_PRINT
+    ! Get values of print flags.
+    if (verbosePrintFlag % getFlagState()) then
+      PRINT_STATE = VERBOSE_PRINT
+    else if (silentPrintFlag % getFlagState()) then
+      PRINT_STATE = SILENT_PRINT
+    else if (versionPrintFlag % getFlagState()) then
+      PRINT_STATE = VERSION_PRINT 
+    end if
 
     ! Record time flag.
     RECORD_TIME = recordTimeFlag % getFlagState()
@@ -135,19 +140,39 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: prettyPrintModelParams
+  ! SUBROUTINE: printModelParams
   !>  Pretty print the model parameters. Can print verbosely or print nothing
   !!  if need be.
   ! -------------------------------------------------------------------------- !
-  subroutine prettyPrintModelParams()
+  subroutine printProgDetails()
+    select case (PRINT_STATE)
+      case (NORMAL_PRINT, VERBOSE_PRINT)
+        call printModelParams()
+
+      case (VERSION_PRINT)
+        call printVersion()
+      
+      case (SILENT_PRINT)
+        ! Do nothing
+
+      case default
+        print "(a)", "***ERROR. Invalid 'PRINT_STATE' value."
+        stop
+      end select
+  end subroutine printProgDetails
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: printModelParams
+  !>  Pretty print the model parameters. Can print verbosely or print nothing
+  !!  if need be.
+  ! -------------------------------------------------------------------------- !
+  subroutine printModelParams()
     use WriterOptions, only: nullFlag
 
     ! Pretty print separator.
     integer :: k
     character, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
-
-    ! Skip the argument printing.
-    if (PRINT_STATE == SILENT_PRINT) return
 
     ! ***Header
     print "(*(a))", PRINT_SEPARATOR 
@@ -175,7 +200,17 @@ contains
 
     ! ***End
     print "(*(a))", PRINT_SEPARATOR
-  end subroutine prettyPrintModelParams
+  end subroutine printModelParams
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: printVersion
+  !>  Print the program version and stop the program.
+  ! -------------------------------------------------------------------------- !
+  subroutine printVersion()
+    print "(a, ' ', a)", trim(PROG_NAME), trim(PROG_VERSION)
+    stop
+  end subroutine printVersion
 
 
   ! -------------------------------------------------------------------------- !

@@ -27,7 +27,7 @@
 
 program Main
   use ModelParam, only: assignConfigFilePaths, assignModelParams, &
-      prettyPrintModelParams
+      printProgDetails
   use Penna, only: run, deallocAllocatables
   use RNG, only: assignRNGParams
   use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
@@ -47,7 +47,7 @@ program Main
   call showHelpMsgAndNotes()
 
   ! Print the welcome text.
-  call prettyPrintModelParams()
+  call printProgDetails()
 
   ! Run the Penna model simulation.
   call run()

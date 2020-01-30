@@ -11,15 +11,17 @@ module CmdOptions
   private
 
   ! Flag options.
-  type(FlagCmdOption), target :: cmdFlags(4)
-  type(FlagCmdOption), pointer, protected, public :: verbosePrintFlag => &
+  type(FlagCmdOption), target :: cmdFlags(5)
+  type(FlagCmdOption), pointer, protected, public :: versionPrintFlag => &
     cmdFlags(1)
-  type(FlagCmdOption), pointer, protected, public :: showHelpMsgFlag => &
+  type(FlagCmdOption), pointer, protected, public :: verbosePrintFlag => &
     cmdFlags(2)
-  type(FlagCmdOption), pointer, protected, public :: recordTimeFlag => &
+  type(FlagCmdOption), pointer, protected, public :: showHelpMsgFlag => &
     cmdFlags(3)
-  type(FlagCmdOption), pointer, protected, public :: silentPrintFlag => &
+  type(FlagCmdOption), pointer, protected, public :: recordTimeFlag => &
     cmdFlags(4)
+  type(FlagCmdOption), pointer, protected, public :: silentPrintFlag => &
+    cmdFlags(5)
 
   ! Key-value arguments: Model parameters.
   type(KeyValCmdOption), target :: cmdKeyVal(6)
@@ -62,6 +64,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
     ! Assign command char of flag options.
+    call initializeCmdOption(versionPrintFlag, "-v", "--version")
     call initializeCmdOption(verbosePrintFlag, "--verbose")
     call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
     call initializeCmdOption(recordTimeFlag, "-t", "--record-time")

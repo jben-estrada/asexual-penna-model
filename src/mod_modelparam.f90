@@ -3,7 +3,7 @@ module ModelParam
   ! MODULE:  ModelParam
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION: 
-  !>  Module containing the Penna model parameters.
+  !>  Module containing the Penna model parameters and other common data.
   !
   !   Parameters
   !   ----------
@@ -38,6 +38,12 @@ module ModelParam
   use CmdOptions
   implicit none
   private
+
+  ! PROGRAM DETAILS
+  ! -------------------------------------------------------------------------- !
+  character(len=*), public, parameter :: PROG_NAME = &
+      "Asexual Penna model simulation"
+  character(len=*), public, parameter :: PROG_VERSION = "0.0.1"
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
@@ -92,13 +98,14 @@ module ModelParam
   integer, public, parameter :: VERBOSE_PRINT = 1
     !! Flag corresponding to printing of all scalar model parameters.
   integer, public, parameter :: SILENT_PRINT = 2
-    !! Flag correspondong to supressed printing.
+    !! Flag corresponding to supressed printing.
+  integer, public, parameter :: VERSION_PRINT = 3
+    !! Flag corresponding to printing of the program version.
   integer, public, protected :: PRINT_STATE = NORMAL_PRINT
     !! Printing state. 
 
   logical, public, protected :: RECORD_TIME = .false.
     !! Record-time state.
-
 
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
@@ -132,7 +139,7 @@ module ModelParam
     module subroutine assignConfigFilePaths()
     end subroutine
 
-    module subroutine prettyPrintModelParams()
+    module subroutine printProgDetails()
     end subroutine
 
     module subroutine deallocVerhulstWeights()
@@ -148,5 +155,5 @@ module ModelParam
   ! Routine for memory management.
   public :: deallocVerhulstWeights
   ! Other routines.
-  public :: prettyPrintModelParams
+  public :: printProgDetails
 end module ModelParam
