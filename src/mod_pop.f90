@@ -134,7 +134,7 @@ contains
   ! FUNCTION: getBinDigit
   !>  Get the `k`th binary digit of the integer `number`.
   ! -------------------------------------------------------------------------- !
-  function getBinDigit(number, k) result(bit)
+  pure function getBinDigit(number, k) result(bit)
     integer(kind=personIK), intent(in) :: number
       !! A word or a bit-array represented as an integer.
     integer,                intent(in) :: k
@@ -337,8 +337,8 @@ contains
   !>  Check whether the `Person` object the current pointer is
   !!  pointing at is dead.
   ! -------------------------------------------------------------------------- !
-  logical function isCurrIndivDead(self)
-    class(PersonList), intent(inout) :: self
+  logical pure function isCurrIndivDead(self)
+    class(PersonList), intent(in) :: self
       !! The linked-list of individuals represented as `Person` objects.
 
     isCurrIndivDead = self % current_ptr % deathIndex /= ALIVE
@@ -475,8 +475,8 @@ contains
   !>  Inquire whether the `Person` object the current pointer is pointing
   !!  at is able to reproduce.
   ! -------------------------------------------------------------------------- !
-  logical function isCurrIndivMature(self)
-    class(PersonList), intent(inout) :: self
+  logical pure function isCurrIndivMature(self)
+    class(PersonList), intent(in) :: self
       !! The linked-list of individuals represented as `Person` objects.
 
     logical :: lowerBound

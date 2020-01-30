@@ -41,7 +41,7 @@ contains
   ! FUNCTION:  gene_MutatedGene
   !>  Generate a mutated gene. As of now, it only returns unhealthy genes.
   ! -------------------------------------------------------------------------- !
-  function gene_MutatedGene() result(gene)
+  pure function gene_MutatedGene() result(gene)
     integer :: gene
 
     gene = GENE_UNHEALTHY
@@ -52,7 +52,7 @@ contains
   ! FUNCTION:  gene_generateGenome
   !>  Generate an array of genes of length `L`.
   ! -------------------------------------------------------------------------- !
-  function gene_generateGenome(L)
+  pure function gene_generateGenome(L)
     integer, intent(in) :: L
       !! Length of the genome to be generated.
 

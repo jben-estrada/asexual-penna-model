@@ -84,7 +84,7 @@ contains
   !>  Compare command and alternative command with the passed command-line
   !!  argument.
   ! -------------------------------------------------------------------------- !
-  logical function compareCommand(cmdOption, cmdArg)
+  logical pure function compareCommand(cmdOption, cmdArg)
     class(BaseCmdOption), intent(in) :: cmdOption
       !! Command-line option whose `command` attribute is to compared with.
     character(len=*),     intent(in) :: cmdArg

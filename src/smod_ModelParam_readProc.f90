@@ -231,7 +231,7 @@ contains
   !>  Get the corresponding index of `elem` in a rank-1 array of characters 
   !!  `elem`. If `elem` is not found in `array`, it returns `NULL_VALUE`.
   ! -------------------------------------------------------------------------- !
-  function getCharArrayIndex(elem) result(i)
+  pure function getCharArrayIndex(elem) result(i)
     character(len=:), allocatable, intent(in) :: elem
       !! Character whose corresponding index is to be obtained.
 
@@ -360,7 +360,7 @@ contains
   ! FUNCTION: isNumeric
   !>  Check whether the character `char` is a number or not.
   ! -------------------------------------------------------------------------- !
-  logical function isNumeric(char)
+  logical pure function isNumeric(char)
     character, intent(in) :: char
       !! Character to be compared.
 
