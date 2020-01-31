@@ -22,6 +22,12 @@
 !   23-Nov-2019 - Major change to population handling.
 !   06-Dec-2019 - Enhanced the population handling (via OO approach).
 !   17-Jan-2020 - Major improvements to the command-line interface.
+!
+! TODO:
+!	- Implement multiple allowed record flag.
+!	- Makew the program record bad gene distribution.
+!	- Implement randomized initial genome.
+!	- Remove the internal default model parameters.
 !------------------------------------------------------------------------------
 
 
