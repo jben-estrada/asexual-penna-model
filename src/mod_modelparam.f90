@@ -43,7 +43,7 @@ module ModelParam
   ! -------------------------------------------------------------------------- !
   character(len=*), public, parameter :: PROG_NAME = &
       "Asexual Penna model simulation"
-  character(len=*), public, parameter :: PROG_VERSION = "0.0.1"
+  character(len=*), public, parameter :: PROG_VERSION = ""
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
