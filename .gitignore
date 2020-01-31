@@ -1,12 +1,10 @@
 /__deprecated
 /results
 /test
-/bin
 /plot
 plot.sh
 *.csv
 *.mod
 *.smod
 *.code-workspace
-*.out
 *.d

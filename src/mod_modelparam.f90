@@ -115,9 +115,9 @@ module ModelParam
 
   ! Filenames from which model parameters are obtained.
   character(len=MAX_LEN), protected, public :: MODEL_FILE_NAME = &
-      "./config/model.cfg" !! Path for file containing scalar model parameters.
+      "./bin/model.cfg" !! Path for file containing scalar model parameters.
   character(len=MAX_LEN), protected, public :: VWEIGHT_FILE_NAME = &
-      "./config/v_weight.cfg" !! Path for file with Verhulst weights.
+      "./bin/v_weight.cfg" !! Path for file with Verhulst weights.
 
 
   ! SUBMODULE INTERFACE
