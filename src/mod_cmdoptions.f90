@@ -64,8 +64,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
     ! Assign command char of flag options.
-    call initializeCmdOption(versionPrintFlag, "-v", "--version")
-    call initializeCmdOption(verbosePrintFlag, "--verbose")
+    call initializeCmdOption(versionPrintFlag, "-V", "--version")
+    call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
     call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
     call initializeCmdOption(recordTimeFlag, "-t", "--record-time")
     call initializeCmdOption(silentPrintFlag, "-q", "--quiet")
