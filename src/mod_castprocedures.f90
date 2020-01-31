@@ -7,9 +7,14 @@ module CastProcedures
   !   to another.
   ! -------------------------------------------------------------------------- !
   implicit none
+  private
   
-  integer, private, parameter :: MAX_LEN = 64
+  integer, parameter :: MAX_LEN = 64
     !! Maximum character length for x-to-char procedures.
+
+  public :: castCharToInt
+  public :: castIntToChar
+  public :: castIntPtrToChar
 contains
 
 
@@ -42,15 +47,19 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: castIntToChar
-  !>  Cast the input integer `int` into a 64 long character.
+  !>  Cast the integer `int` into a 64 long character.
   ! -------------------------------------------------------------------------- !
   character(len=MAX_LEN) function castIntToChar(int, castStat)
-    integer, pointer,  intent(in) :: int
+    integer,           intent(in) :: int
       !! Integer to cast to character.
     integer, optional, intent(out) :: castStat
       !! Casting status. A value of 0 means
 
     integer :: status
+
+    ! Initialize the output.
+    castIntToChar = ""
+
     write(castIntToChar, *, iostat=status) int
 
     ! Handle casting error in other procedures/program.
@@ -66,4 +75,42 @@ contains
       end if
     end if
   end function castIntToChar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: castIntPtrToChar
+  !>  Cast the integer pointer `int` into a 64 long character.
+  ! -------------------------------------------------------------------------- !
+  character(len=MAX_LEN) function castIntPtrToChar(intPtr, castStat)
+    integer, pointer,  intent(in) :: intPtr
+      !! Integer to cast to character.
+    integer, optional, intent(out) :: castStat
+      !! Casting status. A value of 0 means
+
+    integer :: status
+
+    if (associated(intPtr)) then
+      ! Initialize the output.
+      castIntPtrToChar = ""
+
+      write(castIntPtrToChar, *, iostat=status) intPtr
+    else
+      print "(a)", "***ERROR. The 'int' dummy argument is not associated " // &
+          "with any target."
+      stop  
+    end if
+
+    ! Handle casting error in other procedures/program.
+    if (present(castStat)) then
+      castStat = status
+    else
+      
+      ! Handle casting error in this function.
+      if (status /= 0) then
+        print "(a, i0, a)", "***ERROR. '", intPtr, &
+            "' cannot be casted to character."
+        stop
+      end if
+    end if
+  end function castIntPtrToChar
 end module CastProcedures
