@@ -68,7 +68,7 @@ module ModelParam
   integer, parameter :: MODEL_PARAM_COUNT = size(modelParams)
     !! Number of model parameters.
 
-  ! Parameters whose values are from `model.ini`.
+  ! Parameters whose values are from an external config file.
   integer, protected, pointer, public :: MODEL_L => &
     modelParams(1) !! Genome length
   integer, protected, pointer, public :: MODEL_T => &
@@ -84,6 +84,11 @@ module ModelParam
   integer, protected, pointer, public :: MODEL_K => &
     modelParams(7) !! Carrying capacity
 
+  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
+    !! Verhulst weights.
+  real, parameter :: VWEIGHT_DEFAULT = 0.
+    !! Default Verhulst weight.
+
   ! Parameters whose values can be changed by command line arguments.
   integer, protected, pointer, public :: MODEL_N0 => &
     modelParams(8)   !! Starting pop size
@@ -97,12 +102,6 @@ module ModelParam
     modelParams(12)  !! RNG flag. Corresponds to a random number generator.
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
     modelParams(13)  !! RNG seed.
-
-  ! Parameters whose values are from `v_weight.cfg`.
-  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
-    !! Verhulst weights.
-  real, parameter :: VWEIGHT_DEFAULT = 0.
-    !! Default Verhulst weight.
 
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
