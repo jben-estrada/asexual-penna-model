@@ -17,16 +17,25 @@ contains
   ! FUNCTION: castCharToInt
   !>  Cast the input character `char` into an integer.
   ! -------------------------------------------------------------------------- !
-  integer function castCharToInt(char)
+  integer function castCharToInt(char, caststat)
     character(len=*), intent(in) :: char
       !! Character to cast to integer.
+    integer, optional, intent(out) :: castStat
+    !! Casting status. A value of 0 means
 
     integer :: status
     read(char, *, iostat=status) castCharToInt
 
-    if (status /= 0) then
-      print "(*(a))", "***ERROR. '", trim(adjustl(char)), "' is not numeric."
-      stop
+    ! Handle casting error in other procedures/program.
+    if (present(castStat)) then
+      castStat = status
+    else
+
+      ! Handle casting error in this function.
+      if (status /= 0) then
+        print "(*(a))", "***ERROR. '", trim(adjustl(char)), "' is not numeric."
+        stop
+      end if
     end if
   end function castCharToInt
 
@@ -35,16 +44,26 @@ contains
   ! FUNCTION: castIntToChar
   !>  Cast the input integer `int` into a 64 long character.
   ! -------------------------------------------------------------------------- !
-  character(len=MAX_LEN) function castIntToChar(int)
-    integer, pointer, intent(in) :: int
+  character(len=MAX_LEN) function castIntToChar(int, castStat)
+    integer, pointer,  intent(in) :: int
       !! Integer to cast to character.
+    integer, optional, intent(out) :: castStat
+      !! Casting status. A value of 0 means
 
     integer :: status
     write(castIntToChar, *, iostat=status) int
 
-    if (status /= 0) then
-      print "(a, i0, a)", "***ERROR. '", int, "' cannot be casted to character."
-      stop
+    ! Handle casting error in other procedures/program.
+    if (present(castStat)) then
+      castStat = status
+    else
+      
+      ! Handle casting error in this function.
+      if (status /= 0) then
+        print "(a, i0, a)", "***ERROR. '", int, &
+            "' cannot be casted to character."
+        stop
+      end if
     end if
   end function castIntToChar
 end module CastProcedures
