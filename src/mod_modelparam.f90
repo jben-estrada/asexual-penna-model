@@ -86,17 +86,17 @@ module ModelParam
 
   ! Parameters whose values can be changed by command line arguments.
   integer, protected, pointer, public :: MODEL_N0 => &
-    modelParams(8) !! Starting pop size
+    modelParams(8)   !! Starting pop size
   integer, protected, pointer, public :: MODEL_TIME_STEPS => &
-  modelParams(9)   !! Total time steps
+    modelParams(9)   !! Total time steps
   integer, protected, pointer, public :: MODEL_SAMPLE_SIZE => &
-  modelParams(10)  !! Sample size
+    modelParams(10)  !! Sample size
   integer, protected, pointer, public :: MODEL_REC_FLAG => &
-  modelParams(11)  !! Record flag. Corresponds to data to be recorded.
+    modelParams(11)  !! Record flag. Corresponds to data to be recorded.
   integer, protected, pointer, public :: MODEL_RNG => &
-  modelParams(12)  !! RNG flag. Corresponds to a random number generator.
+    modelParams(12)  !! RNG flag. Corresponds to a random number generator.
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
-  modelParams(13)  !! RNG seed.
+    modelParams(13)  !! RNG seed.
 
   ! Parameters whose values are from `v_weight.cfg`.
   real, allocatable, protected, public :: MODEL_VERHULST_W(:)
