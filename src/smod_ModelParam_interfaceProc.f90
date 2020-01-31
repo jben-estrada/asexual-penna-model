@@ -89,15 +89,15 @@ contains
 
     ! Get values of print flags.
     if (verbosePrintFlag % getFlagState()) then
-      PRINT_STATE = VERBOSE_PRINT
+      PROG_PRINT_STATE = VERBOSE_PRINT
     else if (silentPrintFlag % getFlagState()) then
-      PRINT_STATE = SILENT_PRINT
+      PROG_PRINT_STATE = SILENT_PRINT
     else if (versionPrintFlag % getFlagState()) then
-      PRINT_STATE = VERSION_PRINT 
+      PROG_PRINT_STATE = VERSION_PRINT 
     end if
 
     ! Record time flag.
-    RECORD_TIME = recordTimeFlag % getFlagState()
+    PROG_RECORD_TIME = recordTimeFlag % getFlagState()
 
     ! Check for errors and invalid passed arguments.
     call checkValidModelParams()
@@ -145,7 +145,7 @@ contains
   !!  if need be.
   ! -------------------------------------------------------------------------- !
   subroutine printProgDetails()
-    select case (PRINT_STATE)
+    select case (PROG_PRINT_STATE)
       case (NORMAL_PRINT, VERBOSE_PRINT)
         call printModelParams()
 
@@ -156,7 +156,7 @@ contains
         ! Do nothing
 
       case default
-        print "(a)", "***ERROR. Invalid 'PRINT_STATE' value."
+        print "(a)", "***ERROR. Invalid 'PROG_PRINT_STATE' value."
         stop
       end select
   end subroutine printProgDetails
@@ -180,7 +180,7 @@ contains
     print "(*(a))", PRINT_SEPARATOR
 
     ! ***Body (Extended model parameters)
-    if (PRINT_STATE == VERBOSE_PRINT) then
+    if (PROG_PRINT_STATE == VERBOSE_PRINT) then
       write(*, "(*(a20, i9/))", advance="no") &
       "Genome length",        MODEL_L, &
       "Mutation threshold",   MODEL_T, &

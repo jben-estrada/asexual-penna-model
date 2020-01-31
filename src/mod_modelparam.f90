@@ -45,6 +45,21 @@ module ModelParam
       "Asexual Penna model simulation"
   character(len=*), public, parameter :: PROG_VERSION = ""
 
+    ! Print states.
+  integer, public, parameter :: NORMAL_PRINT = 0
+    !! Flag corresponding to default printing of model parameters.
+  integer, public, parameter :: VERBOSE_PRINT = 1
+    !! Flag corresponding to printing of all scalar model parameters.
+  integer, public, parameter :: SILENT_PRINT = 2
+    !! Flag corresponding to supressed printing.
+  integer, public, parameter :: VERSION_PRINT = 3
+    !! Flag corresponding to printing of the program version.
+  integer, public, protected :: PROG_PRINT_STATE = NORMAL_PRINT
+    !! Printing state. 
+
+  logical, public, protected :: PROG_RECORD_TIME = .false.
+    !! Record-time state.
+
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
   integer, target :: modelParams(13) = 0
@@ -88,24 +103,6 @@ module ModelParam
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
-
-
-  ! STATE PARAMETERS
-  ! -------------------------------------------------------------------------- !
-  ! Print states.
-  integer, public, parameter :: NORMAL_PRINT = 0
-    !! Flag corresponding to default printing of model parameters.
-  integer, public, parameter :: VERBOSE_PRINT = 1
-    !! Flag corresponding to printing of all scalar model parameters.
-  integer, public, parameter :: SILENT_PRINT = 2
-    !! Flag corresponding to supressed printing.
-  integer, public, parameter :: VERSION_PRINT = 3
-    !! Flag corresponding to printing of the program version.
-  integer, public, protected :: PRINT_STATE = NORMAL_PRINT
-    !! Printing state. 
-
-  logical, public, protected :: RECORD_TIME = .false.
-    !! Record-time state.
 
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !

@@ -210,7 +210,7 @@ contains
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
 
-    printProgress = MODEL_REC_FLAG /= SILENT_PRINT
+    printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 
     ! Initialize the writer objects.
     call initializeWriterObjects()
@@ -266,7 +266,7 @@ contains
     end if
 
     ! Record mean time and std deviation.
-    if (RECORD_TIME) then
+    if (PROG_RECORD_TIME) then
       call constructAvailableWriter(timeWriter, [timeFlag], .true.)
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
