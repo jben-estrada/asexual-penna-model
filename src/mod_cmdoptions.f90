@@ -94,6 +94,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setCmdOptionUsageMsgs()
     ! Set usage messages of flag options.
+    call setUsageMsg(versionPrintFlag, "Show the version information and exit.")
     call setUsageMsg(verbosePrintFlag, "Show all the model parameters.")
     call setUsageMsg(showHelpMsgFlag, "Show this message and exit.")
     call setUsageMsg(recordTimeFlag, "Record the average elapsed time " // &
