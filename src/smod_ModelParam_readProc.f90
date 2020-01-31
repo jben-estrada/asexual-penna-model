@@ -23,7 +23,8 @@ submodule (ModelParam) ReadProcedures
      "sample_size", &
      "rec_flag   ", &
      "rng        ", &
-     "seed       "]
+     "seed       ", &
+     "mttn_count "]
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.

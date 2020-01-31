@@ -62,7 +62,7 @@ module ModelParam
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
-  integer, target :: modelParams(13) = 0
+  integer, target :: modelParams(14) = 0
     !! Array of model parameters.
 
   integer, parameter :: MODEL_PARAM_COUNT = size(modelParams)
@@ -102,6 +102,8 @@ module ModelParam
     modelParams(12)  !! RNG flag. Corresponds to a random number generator.
   integer, protected, pointer, public :: MODEL_RNG_SEED => &
     modelParams(13)  !! RNG seed.
+  integer, protected, pointer, public :: MODEL_MTTN_COUNT => &
+    modelParams(14)  !! Initial mutation count of individuals in starting pop.
 
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
