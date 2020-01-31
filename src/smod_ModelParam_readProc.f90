@@ -6,8 +6,6 @@ submodule (ModelParam) ReadProcedures
   !>  Submodule of `ModelParam` containing procedures for reading files of
   !!  model parameters and "Verhulst weight".
   ! -------------------------------------------------------------------------- !
-  use RNG, only: RNG_INTRINSIC
-  use WriterOptions, only: nullFlag
   implicit none
 
   ! -------------------------------------------------------------------------- !
@@ -28,13 +26,6 @@ submodule (ModelParam) ReadProcedures
      "seed       "]
 
   ! -------------------------------------------------------------------------- !
-  ! Internal default parameter values. If all things go wrong, this is used
-  ! instead. NOTE: The order is the same with `MODEL_PARAM_KEYS`.
-  integer, parameter :: MODEL_PARAM_DEFAULT(MODEL_PARAM_COUNT) = &
-      [32, 3, 1, 1, 9, 9, 20000, 100, 100, 1, nullFlag, RNG_INTRINSIC, 1]
-
-
-  ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: MODEL_UNIT = 99
   integer, parameter :: VWEIGHT_UNIT = 98
@@ -50,7 +41,7 @@ submodule (ModelParam) ReadProcedures
   character, parameter :: VWEIGHT_SEP = ","
   ! End of line character.
   character, parameter :: EOL = "/"
-  ! Default null value. This could be any non-positive integers.
+  ! Null value. This could be any non-positive integers.
   integer, parameter :: NULL_VALUE = -1
   ! Ignore value. This could also be any non-positive integers.
   integer, parameter :: IGNORE_VALUE = 0
@@ -64,32 +55,26 @@ contains
   subroutine readScalarModelParamCfg()
     integer :: values(MODEL_PARAM_COUNT)
     integer :: fileStatus
-    integer :: keyIdx
-    integer :: val
 
     character(len=:), allocatable :: strippedFile
     character(len=:), allocatable :: key
-    character(len=:), allocatable :: strVal
+    character(len=:), allocatable :: valChar
     character :: currChar
     integer   :: charNum
-    integer   :: castStatus
     logical   :: isReadingKey
     integer   :: i
     
-    ! Assign default values.
-    values(:) = MODEL_PARAM_DEFAULT
+    ! Initialize the array of scalar model parameters.
+    values(:) = NULL_VALUE
 
     ! Read file.
     open(unit=MODEL_UNIT, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
-      print "(a/, 3a)", "***", "WARNING. Cannot read '", trim(MODEL_FILE_NAME),&
-          "'. Using the following default values:"
-      call printModelParam()
-      modelParams(:) = MODEL_PARAM_DEFAULT(:)
-
-      return
+      print "(a)", "***ERROR. Cannot read '", trim(MODEL_FILE_NAME),&
+          "'."
+      stop
     end if
 
     ! Clean model config file.
@@ -97,82 +82,109 @@ contains
     close(MODEL_UNIT)
 
     ! Evaluate file.
-    allocate(character(len=0) :: strVal)
+    allocate(character(len=0) :: valChar)
     isReadingKey = .true.
     key = ""
     do charNum = 1, len(strippedFile)
       currChar = strippedFile(charNum:charNum)
 
       ! Check change in read state.
-      select case (currChar)
+      evalChar: select case (currChar)
         ! ***KEYVAL_SEP: Shift from reading LHS to RHS.
         case (KEYVAL_SEP)
           isReadingKey = .false.
-          strVal = ""
+          valChar = ""
           cycle
 
-        ! ***EOL: Shift from reading RHS to LHS.
+        ! ***EOL: End of line character. 
+        ! Assign value and proceed to the next line.
         case (EOL)
           isReadingKey = .true.
+          call interpretKeyVal(key, valChar, values)
 
-          ! Read previous key and value.
-          keyIdx = getCharArrayIndex(key)
-          select case (keyIdx)
-            case (IGNORE_VALUE)
-              key = ""
-              cycle
-            case (NULL_VALUE)
-              print "(3(a))", "***WARNING. '", key, &
-                  "' is not a valid parameter. Ignoring this key."
-              print "(a/, 10(' '), *(a, ', '))", "Valid parameters:", &
-                  (trim(MODEL_PARAM_KEYS(i)), i = 1, size(MODEL_PARAM_KEYS))
-              key = ""
-              cycle
-            case default
-              ! Cast the value string to integer.
-              read(strVal, *, iostat=castStatus) val
-              if (castStatus == 0) then
-                values(keyIdx) = val
-              else
-                print "(3(a))", "***WARNING. '", strVal, "' is not a valid" // &
-                    " value."
-              end if
-              key = ""
-          end select
-        
-        ! ***Neither case.
+        ! ***Default case.
         case default
           ! 'Eat' input.
           if (isReadingKey) then
             key = key // currChar
           else
-            strVal = strVal // currChar
+            valChar = valChar // currChar
           end if
-      end select
+      end select evalChar
     end do
+
+    ! Check for unassigned values.
+    if (any(values == NULL_VALUE)) then
+      print "(3a, /a)", "***ERROR. There is a missing model parameter in '", &
+          trim(MODEL_FILE_NAME), "'.", "Check if the following " // &
+          "parameters are all present:"
+
+      ! Print the model parameter keys.
+      write(*, "(a)", advance="no") "    "
+      do i = 1, MODEL_PARAM_COUNT - 1
+        write(*, "(a, ', ')", advance="no") trim(MODEL_PARAM_KEYS(i))
+      end do
+      print "(a)", trim(MODEL_PARAM_KEYS(MODEL_PARAM_COUNT))
+
+      stop
+    end if
 
     modelParams(:) = values(:)
     deallocate(strippedFile)
     deallocate(key)
-    deallocate(strVal)
+    deallocate(valChar)
   end subroutine readScalarModelParamCfg
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: printModelParam
-  !>  Print the model parameters for error/warning messages.
+  ! SUBROUTINE: interpretKeyVal
+  !>  Interpret and assign the key-value pairs with the corresponding model
+  !!  parameter. 
   ! -------------------------------------------------------------------------- !
-  subroutine printModelParam()
-    integer :: i
+  subroutine interpretKeyVal(key, valChar, values)
+    use CastProcedures, only: castCharToInt
 
-    do i = 1, MODEL_PARAM_COUNT
-      print "(4(' '), a12, ': ', i0)", MODEL_PARAM_KEYS(i), &
-          MODEL_PARAM_DEFAULT(i)
-    end do
+    character(len=:), allocatable, intent(inout) :: key
+    character(len=:), allocatable, intent(inout) :: valChar
+    integer,                       intent(inout) :: values(:)
 
-    ! Print separator.
-    print "(a)", "***"
-  end subroutine printModelParam
+    integer :: keyIdx
+    integer :: val
+    integer :: castStatus
+    
+    ! Read the obtained key and value.
+    keyIdx = getCharArrayIndex(key)
+    select case (keyIdx)
+      ! ***IGNORE_VALUE: The current line is just a line of comment or
+      ! whitespaces.
+      case (IGNORE_VALUE)
+        ! Reset `key` for the next line to read.
+        key = ""
+
+      ! NULL_VALUE: Invalid key was passed.
+      case (NULL_VALUE)
+        print "(5a)", "***ERROR. '", key, "' in '", &
+            trim(MODEL_FILE_NAME), "' is not a valid parameter."
+        stop
+
+      ! ***Defaut case: The given key is valid.
+      case default
+        ! Cast the value character to integer.
+        val = castCharToInt(valChar, castStatus)
+
+        ! Check if casting succeeds.
+        if (castStatus == 0) then
+          values(keyIdx) = val
+        else
+          print "(5a)", "***ERROR. '", valChar, "' is not a valid" // &
+              " value for '", key, "'."
+          stop
+        end if
+
+        ! Reset `key` for the next line to read.
+        key = ""
+    end select
+  end subroutine interpretKeyVal
 
 
   ! -------------------------------------------------------------------------- !
