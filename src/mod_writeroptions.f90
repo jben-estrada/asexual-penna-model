@@ -41,9 +41,16 @@ module WriterOptions
   character(len=MAX_LEN), parameter :: divIdxPosition = "asis"
   type(OutputFile) :: divIdxFile
 
+  ! Bad gene distribution per time step.
+  integer, parameter :: badGeneDstrbUnit = 104
+  character(len=MAX_LEN), parameter :: badGeneDstrbFilename = "badGeneDstrb.csv"
+  character(len=MAX_LEN), parameter :: badGeneDstrbFormat = "(*(i6, ','))"
+  character(len=MAX_LEN), parameter :: badGeneDstrbPosition = "asis"
+  type(OutputFile) :: badGeneDstrbFile
+
   ! Timing statistics record.
   ! Format: <no. of time step> <no. of population> <wall time>
-  integer, parameter :: timeUnit = 104
+  integer, parameter :: timeUnit = 105
   character(len=MAX_LEN), parameter :: timeFilename = "time_f08.csv"
   character(len=MAX_LEN), parameter :: timeFormat = "(*(f10.5, ','))"
   character(len=MAX_LEN), parameter :: timePosition = "append"
@@ -62,7 +69,9 @@ module WriterOptions
     !! per time step.
   integer, public, parameter :: divIdxFlag = 4
     !! Shannon diversity index per time step.
-  integer, public, parameter :: timeFlag = 5
+  integer, public, parameter :: badGeneFlag = 5
+    !! Bad gene distribution per time step.
+  integer, public, parameter :: timeFlag = 6
     !! Timing statistics.
   ! -------------------------------------------------------------------------- !
 
@@ -94,12 +103,15 @@ contains
     ! Diversity index per time step file.
     divIdxFile = OutputFile(divIdxFilename, divIdxFormat, divIdxPosition, &
         divIdxUnit, divIdxFlag)
+    ! Bad gene distribution per time step.
+    badGeneDstrbFile = OutputFile(badGeneDstrbFilename, badGeneDstrbFormat, &
+        badGeneDstrbPosition, badGeneDstrbUnit, badGeneFlag)
     ! Time statistics file.
     timeFile = OutputFile(timeFilename, timeFormat, timePosition, timeUnit, &
         timeFlag)
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
-        timeFile])
+        badGeneDstrbFile, timeFile])
   end subroutine initializeWriterObjects
 
 
@@ -122,6 +134,8 @@ contains
         out = deathFile
       case (divIdxFlag)
         out = divIdxFile
+      case (badGeneFlag)
+        out = badGeneDstrbFile
       case (timeFlag)
         out = timeFile
 

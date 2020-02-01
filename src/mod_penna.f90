@@ -348,7 +348,7 @@ contains
 
     ! Construct the `Writer` type.
     call constructAvailableWriter(runWriter, &
-        [popFlag, ageDstrbFlag, deathFlag, divIdxFlag])
+        [popFlag, ageDstrbFlag, deathFlag, divIdxFlag, badGeneFlag])
 
     call runWriter % initialize(recordFlag)
     select case (recordFlag)
@@ -367,6 +367,9 @@ contains
       case (divIdxFlag)
         call runWriter % writeHeader(divIdxFlag, &
             ["Diversity index per time step"])
+      
+      case (badGeneFlag)
+        call runWriter % writeHeader(badGeneFlag, ["TEST"])
 
       case default
         print "(a, i0, a)", "***ERROR. '", recordFlag, &

@@ -157,7 +157,8 @@ contains
           "1 - population count per time step", &
           "2 - age distribution", &
           "3 - death count", &
-          "4 - Shannon diversity index per time step"
+          "4 - Shannon diversity index per time step", &
+          "5 - Bad gene distribution per time step"
       write(*, "(4(' '), a/, 2(8(' '), a/))", advance="no") &
           "The RNG flags are as follows: ", &
           "0 - a KISS pseudo-RNG (the intrinsic RNG)", &
