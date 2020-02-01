@@ -151,7 +151,7 @@ contains
 
       ! Print notes:
       print "(/a)", "notes:"
-      write(*, "(4(' '), a/, 5(8(' '), a/))", advance="no") &
+      write(*, "(4(' '), a/, 6(8(' '), a/))", advance="no") &
           "There are 5 record flags: ", &
           "0 - record nothing", &
           "1 - population count per time step", &
