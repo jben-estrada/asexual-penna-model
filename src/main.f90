@@ -26,7 +26,6 @@
 ! TODO:
 !	- Implement multiple allowed record flag.
 !	- Makew the program record bad gene distribution.
-!	- Implement randomized initial genome.
 !------------------------------------------------------------------------------
 
 
