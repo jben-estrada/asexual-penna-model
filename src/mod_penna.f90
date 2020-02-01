@@ -108,13 +108,18 @@ contains
         case (divIdxFlag)
           call runWriter % write(divIdxFlag, &
               real(getDiversityIdx(), kind=writeRK))
+        
+        case (badGeneFlag)
+          call runWriter % write(badGeneFlag, &
+              int(getBadGeneDstrb(), kind=writeIK))
       end select
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call population % resetReadPtrs()
       if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
-      if (recordFlag == divIdxFlag) call freeGenomeDstrbList()
+      if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
+          call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
@@ -163,7 +168,7 @@ contains
         call population % updateCurrIndivAge()
 
         ! Update genome distribution.
-        if (recFlag == divIdxFlag) &
+        if (recFlag == divIdxFlag .or. recFlag == badGeneFlag) &
             call updateGenomeDstrb(population % getCurrIndivGenome())
 
         ! Check for birth events.
@@ -335,10 +340,11 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeRunWriter
   !>  Initialize a `Writer` object based on the integer `recordFlag`
-  !!  passed.  There are three flags: `popFlag`, `ageDstrbFlag`
-  !!  and `death_recflag`.
+  !!  passed. The flags are defined in the `SaveFormat` module.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
+    use CastProcedures, only: castIntToChar
+
     type(Writer), intent(inout) :: runWriter
       !! The `Writer` object to be initialized.
     integer,      intent(in)    :: recordFlag
@@ -363,13 +369,13 @@ contains
             ["death by old age        ", &
              "death by mutation       ", &
              "death by Verhulst factor"])
-   
+
       case (divIdxFlag)
         call runWriter % writeHeader(divIdxFlag, &
             ["Diversity index per time step"])
       
       case (badGeneFlag)
-        call runWriter % writeHeader(badGeneFlag, ["TEST"])
+        call runWriter % writeHeader(badGeneFlag, ["age =>"])
 
       case default
         print "(a, i0, a)", "***ERROR. '", recordFlag, &

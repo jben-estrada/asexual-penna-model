@@ -133,22 +133,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getBinDigit
-  !>  Get the `k`th binary digit of the integer `number`.
-  ! -------------------------------------------------------------------------- !
-  pure function getBinDigit(number, k) result(bit)
-    integer(kind=personIK), intent(in) :: number
-      !! A word or a bit-array represented as an integer.
-    integer,                intent(in) :: k
-      !! The position of the bit to obtain. Starts with 1.
-    integer(kind=personIK) :: bit
-
-    bit = 0
-    bit = iand(shiftr(number, k - 1), 1_personIK)
-  end function getBinDigit
-
-
-  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
   !>  Initialize the `Person` object `indiv_ptr` is pointing to `Person` with 
   !!  a healthy genome by default. Can be made to have the `Person` object to
@@ -222,7 +206,7 @@ contains
 
     indiv_ptr % genome = genome
     do i = 1, size(mutations)
-      if (getBinDigit(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
+      if (getGene(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
         indiv_ptr % genome = ior(indiv_ptr % genome, &
             int(shiftl(1, mutations(i)), kind=personIK))
       end if
@@ -559,7 +543,7 @@ contains
     end if
 
     ! Count mutation.
-    if (getBinDigit(self % current_ptr % genome, nextAge) == GENE_UNHEALTHY) &
+    if (getGene(self % current_ptr % genome, nextAge) == GENE_UNHEALTHY) &
       self % current_ptr % mutationCount = &
           self % current_ptr % mutationCount + 1
 

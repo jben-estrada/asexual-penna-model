@@ -26,8 +26,7 @@ module Demographics
   public :: updateAgeDstrb
   public :: deallocAgeDstrb
 
-
-  ! SHANNON DIVERSITY INDEX AND GENOME DISTRIBUTION.
+  ! SHANNON DIVERSITY INDEX, GENOME DISTRIBUTION & BAD GENE DISTRIBUTION.
   ! -------------------------------------------------------------------------- !
   ! Genome count. This should be equal to population size.
   integer :: genomeCount = 0
@@ -52,6 +51,7 @@ module Demographics
   public :: updateGenomeDstrb
   public :: freeGenomeDstrbList
   public :: getDiversityIdx
+  public :: getBadGeneDstrb
 contains
 
 
@@ -164,6 +164,40 @@ contains
       end if
     end do
   end function getDiversityIdx
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getBadGeneDstrb
+  !>  Get the distribution of bad genes in the population's genomes.
+  ! -------------------------------------------------------------------------- !
+  function getBadGeneDstrb() result(badGeneDstrb)
+    use Gene, only: getGene, GENE_UNHEALTHY
+    use ModelParam, only: MODEL_L
+
+    integer :: badGeneDstrb(MODEL_L)
+
+    type(GenomeDstrbNode), pointer :: reader
+    integer :: i
+
+    badGeneDstrb(:) = 0
+    reader => genomeDstrbHead
+
+    do
+      if (associated(reader)) then
+
+        ! Count the bad genes of the current genome.
+        do i = 1, MODEL_L
+          if (getGene(reader % genome, i) == GENE_UNHEALTHY) &
+            badGeneDstrb(i) = badGeneDstrb(i) + 1
+        end do
+
+        ! Get to the next element of genome distribution list.
+        reader => reader % next
+      else
+        exit
+      end if
+    end do
+  end function
 
 
   ! -------------------------------------------------------------------------- !
