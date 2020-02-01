@@ -7,7 +7,6 @@ module Penna
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
   use Pop
-  use ModelParam
   use WriterOptions
   implicit none
   private
@@ -39,6 +38,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine runOneInstance(maxTimestep, startPopSize, initMttnCount,recordFlag)
     use Demographics
+    use ModelParam, only: MODEL_K
 
     integer, intent(in) :: maxTimestep
       !! Maximum (total) time step.
@@ -130,6 +130,7 @@ contains
   subroutine evalPopulation(population, popSize, countdown, recFlag, &
         deathByAge, deathByMutation, deathByVerhulst)
     use Demographics
+    use ModelParam, only: MODEL_B
 
     type(PersonList), intent(inout) :: population       !! Population object.
     integer,          intent(inout) :: popSize          !! Population size.
@@ -188,11 +189,34 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: run
-  !>  Run the Penna model simulation.
+  ! SUBROUTINE: runMultipleInstance
+  !>  Run the Penna model simulation many times.
   ! -------------------------------------------------------------------------- !
-  subroutine run()
+  subroutine runMultipleInstance( &
+      maxTimeStep,    &
+      startPopSize,   &
+      initMttnCount,  &
+      recordFlag,     &
+      sampleSize,     &
+      recordTime,     &
+      printProgress   &
+    )
     use ProgBarType
+
+    integer, intent(in) :: maxTimeStep
+      !! Maximum (total) time step.
+    integer, intent(in) :: startPopSize
+      !! Starting population size.
+    integer, intent(in) :: initMttnCount
+      !! Initial mutation count of each individuals.
+    integer, intent(in) :: recordFlag
+      !! Record flag. Valid values are found in the `WriterOptions` module.
+    integer, intent(in) :: sampleSize
+      !! Sample size. Number of times the simulation is run.
+    logical, intent(in) :: recordTime
+      !! Record mean elapsed time and the corresponding standard deviation.
+    logical, intent(in) :: printProgress
+      !! Print the progress with a progress bar.
 
     real(kind=writeRK)    :: meanTime
     real(kind=writeRK)    :: stdDevTime
@@ -207,30 +231,27 @@ contains
     type(ProgressBar) :: progBar    ! A `ProgressBar` object.
     type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
     integer :: i
-    logical :: printProgress
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
-
-    printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 
     ! Initialize the writer objects.
     call initializeWriterObjects()
 
     ! Initialize the progress bar.
-    call initProgressBar(progBar, 20, MODEL_SAMPLE_SIZE)
+    call initProgressBar(progBar, 20, sampleSize)
 
     ! Call and time the `run` subroutine.
     sum = 0.
     sumSqrd = 0.
-    do i = 1, MODEL_SAMPLE_SIZE
+    do i = 1, sampleSize
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
 
       ! Run the actual simulation.
-      call runOneInstance(MODEL_TIME_STEPS, MODEL_N0, MODEL_MTTN_COUNT, &
-          MODEL_REC_FLAG)
+      call runOneInstance(maxTimeStep, startPopSize, initMttnCount, &
+          recordFlag)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
@@ -241,7 +262,7 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      if (printProgress .and. MODEL_SAMPLE_SIZE > 1) then
+      if (printProgress .and. sampleSize > 1) then
         call progBar % incrementCounter(show=.true.)
       end if
     end do
@@ -250,26 +271,26 @@ contains
     write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
 
     ! Get average elapsed time and its std deviation.
-    meanTime = sum/real(MODEL_SAMPLE_SIZE, kind=writeRK)
-    stdDevTime = sqrt(MODEL_SAMPLE_SIZE*sumSqrd - sum**2) / &
-      real(MODEL_SAMPLE_SIZE, kind=writeRK)
+    meanTime = sum/real(sampleSize, kind=writeRK)
+    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2) / &
+      real(sampleSize, kind=writeRK)
 
     ! Print timing statistics.
     if (printProgress) then
       ! Print elapsed time.
-      if (MODEL_SAMPLE_SIZE > 1) then
+      if (sampleSize > 1) then
         print "(a, f12.3, a)", "Average time: ", meanTime, " ms"
       else
         print "(a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
       end if
 
       ! Print the standard deviation.
-      if (MODEL_SAMPLE_SIZE > 1) &
+      if (sampleSize > 1) &
         print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
     end if
 
     ! Record mean time and std deviation.
-    if (PROG_RECORD_TIME) then
+    if (recordTime) then
       call constructAvailableWriter(timeWriter, [timeFlag], .true.)
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
@@ -277,14 +298,37 @@ contains
            "average time (ms)   ", &
            "std deviation (ms)  "])
       call timeWriter % write(timeFlag, &
-          [real(MODEL_TIME_STEPS, kind=writeRK), &
-           real(MODEL_N0, kind=writeRK), &
+          [real(maxTimeStep, kind=writeRK), &
+           real(startPopSize, kind=writeRK), &
            meanTime, &
            stdDevTime])
       call timeWriter % close()
     end if
 
     if (printProgress) print "(*(a))", PRINT_SEPARATOR
+  end subroutine runMultipleInstance
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: run
+  !>  Run the Penna model simulation. This is a wrapper subroutine to the
+  !!  subroutine `runMultipleInstance`.
+  ! -------------------------------------------------------------------------- !
+  subroutine run()
+    use ModelParam
+
+    logical :: printProgress
+    printProgress = PROG_PRINT_STATE /= SILENT_PRINT
+
+    call runMultipleInstance( &
+        MODEL_TIME_STEPS,     &
+        MODEL_N0,             &
+        MODEL_MTTN_COUNT,     &
+        MODEL_REC_FLAG,       &
+        MODEL_SAMPLE_SIZE,    &
+        PROG_RECORD_TIME,     &
+        printProgress         &
+        )
   end subroutine run
 
 

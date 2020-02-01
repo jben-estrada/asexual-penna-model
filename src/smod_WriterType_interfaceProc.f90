@@ -8,7 +8,23 @@ submodule (WriterType) interfaceProcedures
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
   implicit none
-  contains
+contains
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: declareAvailableFiles
+  !>  Declare the available data and the corresponding output files to save 
+  !!  into.
+  ! -------------------------------------------------------------------------- !
+  subroutine declareAvailableFiles(files)
+    type(OutputFile), intent(in) :: files(:)
+      !! Available output files.
+  
+    if (allocated(outputFiles)) deallocate(outputFiles)
+
+    allocate(outputFiles(size(files)))
+    outputFiles(:) = files(:)
+  end subroutine declareAvailableFiles  
 
 
   ! -------------------------------------------------------------------------- !
@@ -58,24 +74,26 @@ submodule (WriterType) interfaceProcedures
       !! Initialize `new` with all its available output files set to active.
 
     if (allocated(outputFiles)) then
-    ! Check for redundant record flags first.
-      if (any(outputFiles % flag == file % flag)) then
-        print "(a, i0)", "***ERROR. Cannot construct a 'Writer' object, " // &
-            "redundanct record flag: ", file % flag
-        stop
+      ! Check for redundant flags first.
+      if (allocated(new % availableFiles)) then
+        if (any(new % availableFiles % flag == file % flag)) then
+          print "(a, i0)", "***ERROR. Initializing a 'Writer' object with " // &
+              "redundant file flags: ", file % flag
+          stop
+        end if
       end if
-    end if
 
-    ! Add the new file to the new `Writer` object and to the module list of
-    ! all defined output files.
-    call appendOutputFile(new % availableFiles, file)
-    call appendOutputFile(outputFiles, file)
+      ! Add the new file to the new `Writer` object.
+      call appendOutputFile(new % availableFiles, file)
 
-    ! Activate all available flags. False by default.
-    if (present(initialize)) then
-      if (initialize) then
-        call new % initialize()
+      ! Activate all available flags. False by default.
+      if (present(initialize)) then
+        if (initialize) call new % initialize()
       end if
+    else
+
+      print "(a)", "***ERROR. Available output files are not yet declared."
+      stop
     end if
   end subroutine constructWriter_scalar
 

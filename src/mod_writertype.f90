@@ -175,6 +175,10 @@ module WriterType
 
 
   interface
+    module subroutine declareAvailableFiles(files)
+      type(OutputFile),  intent(in) :: files(:)
+    end subroutine
+
     module subroutine constructWriter_array(new, files, initialize)
       type(Writer),      intent(inout) :: new
       type(OutputFile),  intent(in)    :: files(:)
@@ -221,6 +225,7 @@ module WriterType
   end interface constructWriter
   ! -------------------------------------------------------------------------- !
 
+  public :: declareAvailableFiles
   public :: constructWriter
   public :: deallocWriterTypeAlloctbl
 end module WriterType

@@ -97,6 +97,9 @@ contains
     ! Time statistics file.
     timeFile = OutputFile(timeFilename, timeFormat, timePosition, timeUnit, &
         timeFlag)
+    
+    call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
+        timeFile])
   end subroutine initializeWriterObjects
 
 
