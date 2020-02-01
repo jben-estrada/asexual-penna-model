@@ -31,17 +31,15 @@ contains
     
     integer :: index = 0
     real    :: random = 0
-    integer :: L
     integer :: i
 
-    indices(:) = 0
-    L = size(indices)
-    do i = 1, L
+    indices(:) = lower - 1
+    do i = 1, size(indices)
       do
         call getRandNumber(random)
         index = floor(random*(upper - lower + 1)) + lower
 
-        if (all(indices(1:i) /= index) .or. L > (upper - lower + 1)) then
+        if (all(indices(1:i) /= index)) then
           indices(i) = index
           exit
         end if
