@@ -16,49 +16,4 @@ module Gene
   integer(kind=personIK), parameter :: GENE_GENES(2) = &
       [GENE_HEALTHY, GENE_UNHEALTHY]
     !! Array of 'gene' integers. Used for getting random genes.
-contains
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION:  Gene_randomGene
-  !>  Generate a random gene. There is (should be) 1/2 probability of
-  !!  giving a healthy or an unhealthy gene.
-  ! -------------------------------------------------------------------------- !
-  function Gene_randomGene() result(gene)
-    integer(kind=personIK) :: gene
-    integer :: randIndex
-    real    :: rand
-    
-    ! NOTE: Other PRNG could be used in instrinsic PRNG's stead.
-    call random_number(rand)
-
-    randIndex = floor(rand*2) + 1
-    gene = GENE_GENES(randIndex)
-  end function Gene_randomGene
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION:  gene_MutatedGene
-  !>  Generate a mutated gene. As of now, it only returns unhealthy genes.
-  ! -------------------------------------------------------------------------- !
-  pure function gene_MutatedGene() result(gene)
-    integer :: gene
-
-    gene = GENE_UNHEALTHY
-  end function Gene_MutatedGene
-
-  
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION:  gene_generateGenome
-  !>  Generate an array of genes of length `L`.
-  ! -------------------------------------------------------------------------- !
-  pure function gene_generateGenome(L)
-    integer, intent(in) :: L
-      !! Length of the genome to be generated.
-
-    integer(kind=personIK) :: gene_generateGenome(L)
-    integer :: i
-
-    gene_generateGenome = [(GENE_HEALTHY, i = 1, L)]
-  end function gene_generateGenome
 end module Gene
