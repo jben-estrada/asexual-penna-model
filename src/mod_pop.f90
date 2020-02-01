@@ -82,14 +82,16 @@ contains
   ! FUNCTION: constructPersonList
   !>  Initialize a `PersonList` object.
   ! -------------------------------------------------------------------------- !
-  function constructPersonList(startPopSize) result(newLL)
+  function constructPersonList(startPopSize, initMttnCount) result(newLL)
     integer, intent(in) :: startPopSize
       !! Starting population size.
+    integer, intent(in) :: initMttnCount
+      !! Initial mutation count.
 
     type(PersonList)    :: newLL
     
     allocate(newLL % head_ptr)
-    call generatePopulation(newLL, startPopSize)
+    call generatePopulation(newLL, startPopSize, initMttnCount)
     newLL % newTail_ptr => newLL % tail_ptr
     newLL % current_ptr => newLL % head_ptr
   end function constructPersonList
@@ -148,18 +150,55 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
-  !>  Initialize the `Person` object `indiv_ptr` is pointing to with 
-  !!  a healthy genome.
+  !>  Initialize the `Person` object `indiv_ptr` is pointing to `Person` with 
+  !!  a healthy genome by default. Can be made to have the `Person` object to
+  !!  have initial number of bad genes.
   ! -------------------------------------------------------------------------- !
-  subroutine initializeHealthyIndiv(indiv_ptr)
+  subroutine initializeHealthyIndiv(indiv_ptr, mutationCount)
     type(Person), pointer, intent(inout) :: indiv_ptr
       !! The pointer to the individual or the `Person` object to be initialized.
+    integer,               intent(in)    :: mutationCount
+      !! Initial number of mutations.
 
+    ! Initialize genome and mutation count.
     indiv_ptr % genome = GENE_HEALTHY
-    indiv_ptr % age = 0_personIK
-    indiv_ptr % mutationCount = 0
+    indiv_ptr % mutationCount = mutationCount
+    call applyInitialMutations(indiv_ptr, mutationCount)
+
+    indiv_ptr % age = 0
     indiv_ptr % deathIndex = ALIVE
   end subroutine initializeHealthyIndiv
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: applyInitialMutations
+  !>  Apply a set number of mutation to a `Person` object to be initialized.
+  ! -------------------------------------------------------------------------- !
+  subroutine applyInitialMutations(indiv_ptr, mutationCount)
+    use RandInd, only: generateIndices
+
+    type(Person), pointer, intent(inout) :: indiv_ptr
+      !! The pointer to the individual or the `Person` object to be initialized.
+    integer,               intent(in)    :: mutationCount
+      !! Number of mutations to apply onto `indiv_ptr`.
+
+    integer, allocatable :: mutationIndcs(:)
+    integer :: i
+
+    if (mutationCount > 0) then
+      ! Get random indices of genes to mutate.
+      allocate(mutationIndcs(mutationCount))
+      call generateIndices(0, MODEL_L - 1, mutationIndcs)
+
+      ! Apply mutations.
+      do i = 1, mutationCount
+        indiv_ptr % genome = ior(indiv_ptr % genome, &
+            int(shiftl(1, mutationIndcs(i)), kind=personIK))
+      end do
+
+      deallocate(mutationIndcs)
+    end if
+  end subroutine applyInitialMutations
 
 
   ! -------------------------------------------------------------------------- !
@@ -179,17 +218,17 @@ contains
     integer :: i
 
     mutations(:) = 0  ! Initialize `mutations`
-    call generateIndices(1, MODEL_L, mutations)
+    call generateIndices(0, MODEL_L - 1, mutations)
 
     indiv_ptr % genome = genome
     do i = 1, size(mutations)
       if (getBinDigit(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
         indiv_ptr % genome = ior(indiv_ptr % genome, &
-            int(shiftl(1, mutations(i) - 1), kind=personIK))
+            int(shiftl(1, mutations(i)), kind=personIK))
       end if
     end do
 
-    indiv_ptr % age = 0_personIK
+    indiv_ptr % age = 0
     indiv_ptr % mutationCount = 0
     indiv_ptr % deathIndex = ALIVE
   end subroutine initializeIndiv
@@ -199,17 +238,20 @@ contains
   ! SUBROUTINE: generatePopulation
   !>  Generate a list of population of `startPopSize` size.
   ! -------------------------------------------------------------------------- !
-  subroutine generatePopulation(popList, startPopSize)
+  subroutine generatePopulation(popList, startPopSize, initMttnCount)
     type(PersonList), intent(inout) :: popList
       !! The list of `Person` objects to be initialized.
     integer,          intent(in)    :: startPopSize
       !! Starting population size.
+    integer,          intent(in)    :: initMttnCount
+      !! Initial mutation count.
 
     type(Person), pointer :: newIndiv_ptr
     type(Person), pointer :: oldIndiv_ptr
     integer :: i
 
-    call initializeHealthyIndiv(popList % head_ptr)
+
+    call initializeHealthyIndiv(popList % head_ptr, initMttnCount)
     oldIndiv_ptr => popList % head_ptr
     newIndiv_ptr => null()
 
@@ -221,7 +263,7 @@ contains
         oldIndiv_ptr % next => newIndiv_ptr
         oldIndiv_ptr => newIndiv_ptr
         
-        call initializeHealthyIndiv(newIndiv_ptr)
+        call initializeHealthyIndiv(newIndiv_ptr, initMttnCount)
       end do
       
       popList % tail_ptr => newIndiv_ptr

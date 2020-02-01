@@ -37,13 +37,15 @@ contains
   ! SUBROUTINE: runOneInstance
   !>  Run the Penna model simulation once.
   ! -------------------------------------------------------------------------- !
-  subroutine runOneInstance(maxTimestep, startPopSize, recordFlag)
+  subroutine runOneInstance(maxTimestep, startPopSize, initMttnCount,recordFlag)
     use Demographics
 
     integer, intent(in) :: maxTimestep
       !! Maximum (total) time step.
     integer, intent(in) :: startPopSize
       !! Starting population size.
+    integer, intent(in) :: initMttnCount
+      !! Initial mutation count of each individuals.
     integer, intent(in) :: recordFlag
       !! Record flag. Valid values are found in the `WriterOptions` module.
 
@@ -58,7 +60,7 @@ contains
     integer, pointer :: deathByVerhulst
 
     ! Initialize variables
-    population = constructPersonList(startPopSize)
+    population = constructPersonList(startPopSize, initMttnCount)
     popSize = startPopSize
     deathCount(:) = 0
     call resetAgeDstrb()
@@ -227,7 +229,8 @@ contains
       startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
 
       ! Run the actual simulation.
-      call runOneInstance(MODEL_TIME_STEPS, MODEL_N0, MODEL_REC_FLAG)
+      call runOneInstance(MODEL_TIME_STEPS, MODEL_N0, MODEL_MTTN_COUNT, &
+          MODEL_REC_FLAG)
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
