@@ -64,19 +64,19 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeCmdOptions()
     ! Assign command char of flag options.
-    call initializeCmdOption(versionPrintFlag, "-V", "--version")
-    call initializeCmdOption(verbosePrintFlag, "-v", "--verbose")
-    call initializeCmdOption(showHelpMsgFlag, "-h", "--help")
-    call initializeCmdOption(recordTimeFlag, "-t", "--record-time")
-    call initializeCmdOption(silentPrintFlag, "-q", "--quiet")
+    call initializeCmdOption(versionPrintFlag, "--version", "-V")
+    call initializeCmdOption(verbosePrintFlag, "--verbose", "-v")
+    call initializeCmdOption(showHelpMsgFlag, "--help", "-h")
+    call initializeCmdOption(recordTimeFlag, "--record-time", "-t")
+    call initializeCmdOption(silentPrintFlag, "--quiet", "-q")
   
     ! Assign command char of key-value options.
-    call initializeCmdOption(maxTimeStepArg, "--time-step")
-    call initializeCmdOption(sampleSizeArg, "--sample-size")
-    call initializeCmdOption(startPopSizeArg, "--pop-size")
-    call initializeCmdOption(recordFlagArg, "--rec-flag")
-    call initializeCmdOption(rngChoiceArg, "--rng")
-    call initializeCmdOption(rngSeedArg, "--seed")
+    call initializeCmdOption(maxTimeStepArg, "--time-step", "-T")
+    call initializeCmdOption(sampleSizeArg, "--sample-size", "-s")
+    call initializeCmdOption(startPopSizeArg, "--pop-size", "-p")
+    call initializeCmdOption(recordFlagArg, "--record", "-r")
+    call initializeCmdOption(rngChoiceArg, "--rng", "-R")
+    call initializeCmdOption(rngSeedArg, "--seed", "-S")
 
     ! Assign command char and position of position arguments.
     call initializeCmdOption(configDirPosArg, "model-param-path")

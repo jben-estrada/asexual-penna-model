@@ -31,8 +31,8 @@ module CmdOptionType
     private
     character(len=MAX_LEN)      :: command
       !! Character which this command-line option is invoked with. 
-    character(len=MAX_LEN)      :: altCommand
-      !! Alternative to the `command` attribute.
+    character(len=MAX_LEN)      :: shortCommand
+      !! Short alternative to the `command` attribute.
     character(len=LONG_MAX_LEN) :: usageMsg
       !! The help message for this command-line option.
     character(len=LONG_MAX_LEN) :: value = ""
@@ -48,7 +48,7 @@ module CmdOptionType
     procedure :: getCommand
       !! Get the `command` character.
     procedure :: getAltCommand
-      !! Get the alternative character to `command`, `altCommand`.
+      !! Get the alternative character to `command`, `shortCommand`.
     procedure :: getUsageMsg
       !! Get the usage message of the this command-line option.
     procedure :: getValue
@@ -163,10 +163,10 @@ module CmdOptionType
 
   ! Interface procedures.
   interface
-    module subroutine initializeCmdOption(cmdOption, command, altCommand)
+    module subroutine initializeCmdOption(cmdOption, command, shortCommand)
       class(BaseCmdOption),       intent(out) :: cmdOption
       character(len=*),           intent(in)  :: command
-      character(len=*), optional, intent(in)  :: altCommand
+      character(len=*), optional, intent(in)  :: shortCommand
     end subroutine
 
     module subroutine parsePassedCmdArgs(cmdFlags, cmdKeyVal, cmdPosArgs, &

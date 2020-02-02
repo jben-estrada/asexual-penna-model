@@ -15,19 +15,19 @@ contains
   ! SUBROUTINE: initializeCmdOption
   !>  Initialize a command-line option.
   ! -------------------------------------------------------------------------- !
-  subroutine initializeCmdOption(cmdOption, command, altCommand)
+  subroutine initializeCmdOption(cmdOption, command, shortCommand)
     class(BaseCmdOption),       intent(out) :: cmdOption
       !! Command-line option to initialize.
     character(len=*),           intent(in)  :: command
       !! Command character to assign to `command` attribute of `cmdOption`.
-    character(len=*), optional, intent(in)  :: altCommand
-    !! Alternat command to assign to `altCommand` attribute of `cmdOption`.
+    character(len=*), optional, intent(in)  :: shortCommand
+      !! Alternate command to assign to `shortCommand` attribute of `cmdOption`.
 
     cmdOption % command = command
-    if (present(altCommand)) then
-      cmdOption % altCommand = altCommand
+    if (present(shortCommand)) then
+      cmdOption % shortCommand = shortCommand
     else
-      cmdOption % altCommand = NULL_CHAR  
+      cmdOption % shortCommand = NULL_CHAR  
     end if
   end subroutine initializeCmdOption
 
@@ -52,20 +52,36 @@ contains
       !! Read and assign passed positional arguments.
 
     integer :: argCount
+    integer :: maxArgCount
     integer :: status
     character(len=MAX_LEN) :: cmdArg
 
-    do argCount = 1, command_argument_count()
+    argCount = 0
+    maxArgCount = command_argument_count()
+    if (maxArgCount == 0) return
+
+    do
+      ! Exit condition.
+      if (argCount > maxArgCount) then
+        exit
+      else
+        argCount = argCount + 1
+      end if
+
       call get_command_argument(argCount, cmdArg, status=status)
 
+      ! Filter out empty characters.
       if (cmdArg == NULL_CHAR) cycle
 
+      ! Check the command-line flags if there is a match.
       call toggleFlagOptions(cmdFlags, cmdArg, status, readFlag)
       if (status == 0) cycle
 
-      call assignKeyValOption(cmdKeyVal, cmdArg, status, readKeyVal)
+      ! Then check the key-value command-line options.
+      call assignKeyValOption(cmdKeyVal, cmdArg, status, argCount, readKeyVal)
       if (status == 0) cycle
 
+      ! Finally, check the positional command-line options.
       call assignPositionalArg(cmdPosArgs, cmdArg, status, readPosArg)
       if (status /= 0) then
         print "(3a)", "***ERROR. '", trim(cmdArg), "' is not a valid option."
@@ -91,7 +107,7 @@ contains
       !! Command character to be compared with `cmdOption`.
 
     compareCommand = cmdOption % command == cmdArg &
-        .or. cmdOption % altCommand == cmdArg
+        .or. cmdOption % shortCommand == cmdArg
   end function compareCommand
 
 
@@ -154,7 +170,7 @@ contains
   ! SUBROUTINE: assignKeyValOption
   !>  Assign the value for the matching key-value option.
   ! -------------------------------------------------------------------------- !
-  subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, toRead)
+  subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, argCount, toRead)
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal(:)
       !! Command-line key-value options to be modified.
     character(len=*),       intent(in)    :: cmdArg
@@ -162,6 +178,9 @@ contains
     integer,                intent(out)   :: status
       !! Status of this routine. Return non-zero value to signify failure.
       !! Return `0` if reading and assigning succeeds.
+    integer,                intent(inout)  :: argCount
+      !! Current count of command-line arguments that have been parsed.
+      !! This would index if a short key-value argument is passed.
     logical,                intent(in)    :: toRead
       !! Check validity of passed argument but do not read and assign.
 
@@ -169,22 +188,39 @@ contains
     character(len=MAX_LEN) :: value
     integer :: i
 
-    ! Get key and value from 'cmdArg' char.
-    call getKeyVal(cmdArg, key, value, status)
-    if (status /= 0) return
-    
     status = 1
     do i = 1, size(cmdKeyVal)
-      if (compareCommand(cmdKeyVal(i), key)) then
-        ! Mark the routine to be successful in finding a syntactically-valid
-        ! value.
-        status = 0
+      ! Check the short command first.
+      if (cmdKeyVal(i) % shortCommand == cmdArg) then
+        ! Proceed to the next command-line argument to get the corresponding
+        ! value. If obtaining the `value` somehow fails, mark this routine as
+        ! failed.
+        argCount = argCount + 1
+        call get_command_argument(argCount, value, status=status)
+        if (status /= 0) exit
 
+        ! Finally assign the obtained value if `get_command_argument` succeeds.
+        status = 0
         if (toRead) then
           cmdKeyVal(i) % value = value
           cmdKeyVal(i) % hasValue = .true.
         end if
         exit
+      ! Check the full command.
+      else
+        ! Get key and value from 'cmdArg' char.
+        call getKeyVal(cmdArg, key, value, status)
+        if (status /= 0) cycle
+
+        if (cmdKeyVal(i) % command == key) then
+          status = 0
+
+          if (toRead) then
+            cmdKeyVal(i) % value = value
+            cmdKeyVal(i) % hasValue = .true.
+          end if
+          exit
+        end if
       end if
     end do
   end subroutine assignKeyValOption
@@ -313,7 +349,6 @@ contains
       !! Positional command-line options.
 
     character(len=:), allocatable :: tempChar
-    integer :: tempCharLen
     integer :: i
 
     ! Print the header.
@@ -327,31 +362,30 @@ contains
     print "(//a)", "options:"
     ! Print the usage message for flags.
     do i = 1, size(cmdFlags)
-      tempChar = trim(cmdFlags(i) % command) // " " // &
-          trim(cmdFlags(i) % altCommand)
-
-      tempCharLen = 25*(1 + len(tempChar)/25)
-      print "(4(' '), 2a)", [character(len=tempCharLen) :: tempChar], &
-          trim(cmdFlags(i) % usageMsg)
+      print "(4(' '), a10, a20, a)", cmdFlags(i) % shortCommand, &
+          cmdFlags(i) % command, trim(cmdFlags(i) % usageMsg)
     end do
 
     ! Print the usage message for key-value options.
     do i = 1, size(cmdKeyVal)
-      tempChar = trim(cmdKeyVal(i) % command) // &
-          "=" // trim(cmdKeyVal(i) % valueMsg)
-        
-      if (cmdKeyVal(i) % altCommand /= NULL_CHAR) then
-        tempChar = tempChar // " " // trim(cmdKeyVal(i) % altCommand) // &
-            "=" // trim(cmdKeyVal(i) % valueMsg)
+      ! Print the short command.
+      if (cmdKeyVal(i) % shortCommand == NULL_CHAR) then
+        tempChar = ""
+      else
+        tempChar = trim(cmdKeyVal(i) % shortCommand) // " " // &
+             trim(cmdKeyVal(i) % valueMsg)
       end if
-
-      tempCharLen = 25*(1 + len(tempChar)/25)
-      write(*, "(4(' '), 2a)", advance="no") &
-          [character(len=tempCharLen) :: tempChar], &
+      write(*, "(4(' '), a10)", advance="no") [character(len=10) :: tempChar]
+      
+      ! Print the full command plus the usage text.
+      tempChar = trim(cmdKeyVal(i) % command) // "=" // &
+          trim(cmdKeyVal(i) % valueMsg)
+      write (*, "(a20, a)", advance="no") [character(len=20) :: tempChar], &
           trim(cmdKeyVal(i) % usageMsg)
       
+      ! Print the default value if the command is optional.
       if (cmdKeyVal(i) % isOptional) then
-        print "(*(a))", " [", trim(adjustl(cmdKeyVal(i) % value)), "]"
+        print "(' [default: ', a, ']')", trim(adjustl(cmdKeyVal(i) % value))
       else
         print *, ""
       end if
@@ -359,16 +393,11 @@ contains
 
     ! Print the positional arguments.
     do i = 1, size(cmdPosArgs)
-      tempChar = trim(cmdPosArgs(i) % command) // " " // &
-          trim(cmdPosArgs(i) % altCommand)
-
-      tempCharLen = 25*(1 + len(tempChar)/25)
-      write(*, "(4(' '), 2a)", advance="no") &
-          [character(len=tempCharLen) :: tempChar], &
+      write(*, "(4(' '), a30, a)", advance="no") cmdPosArgs(i) % command, &
           trim(cmdPosArgs(i) % usageMsg)
-      
+
       if (cmdPosArgs(i) % isOptional) then
-        print "(3a)", " [", trim(cmdPosArgs(i) % value), "]"
+        print "(' [default: ', a, ']')", trim(adjustl(cmdPosArgs(i) % value))
       else
         print *, ""
       end if

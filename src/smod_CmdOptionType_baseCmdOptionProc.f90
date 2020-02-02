@@ -43,12 +43,12 @@ contains
   ! FUNCTION: getAltCommand
   !>  Get the alternate command character of the given command-line option.
   ! -------------------------------------------------------------------------- !
-  pure function getAltCommand(self) result(altCommand)
+  pure function getAltCommand(self) result(shortCommand)
     class(BaseCmdOption), intent(in) :: self
       !! Command-line option.
-    character(len=MAX_LEN)           :: altCommand
+    character(len=MAX_LEN)           :: shortCommand
 
-    altCommand = self % altCommand
+    shortCommand = self % shortCommand
   end function getAltCommand
 
 
