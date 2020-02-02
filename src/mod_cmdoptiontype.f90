@@ -76,8 +76,6 @@ module CmdOptionType
   type, public, extends(BaseCmdOption) :: PositionalCmdOption
     ! Positional command-line option type.
     private
-    ! character(len=LONG_MAX_LEN) :: value
-      !! The value of this positional command-line option.
     integer :: position = -1
       !! The position of this command-line option.
   contains
