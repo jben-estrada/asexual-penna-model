@@ -107,7 +107,7 @@ contains
 
       ! MT19937 PRNG
       case (RNG_MERSENNE_TWISTER)
-        randnum = int(grnd()) ! Cast from real(8) to real(4) for compatibility.
+        randnum = real(grnd()) ! Cast from real(8) to real(4) for compatibility.
 
       case default
         print "(a)", "***ERROR. No RNG has yet been chosen."
