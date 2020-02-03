@@ -69,11 +69,11 @@ contains
     values(:) = NULL_VALUE
 
     ! Read file.
-    open(unit=MODEL_UNIT, file=MODEL_FILE_NAME, status='old', iostat=fileStatus)
+    open(unit=MODEL_UNIT, file=FILE_NAME_MODEL, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
-      print "(a)", "***ERROR. Cannot read '", trim(MODEL_FILE_NAME),&
+      print "(a)", "***ERROR. Cannot read '", trim(FILE_NAME_MODEL),&
           "'."
       stop
     end if
@@ -117,7 +117,7 @@ contains
     ! Check for unassigned values.
     if (any(values == NULL_VALUE)) then
       print "(3a, /a)", "***ERROR. There is a missing model parameter in '", &
-          trim(MODEL_FILE_NAME), "'.", "Check if the following " // &
+          trim(FILE_NAME_MODEL), "'.", "Check if the following " // &
           "parameters are all present:"
 
       ! Print the model parameter keys.
@@ -165,7 +165,7 @@ contains
       ! NULL_VALUE: Invalid key was passed.
       case (NULL_VALUE)
         print "(5a)", "***ERROR. '", key, "' in '", &
-            trim(MODEL_FILE_NAME), "' is not a valid parameter."
+            trim(FILE_NAME_MODEL), "' is not a valid parameter."
         stop
 
       ! ***Defaut case: The given key is valid.
@@ -284,14 +284,14 @@ contains
 
     ! Read file.
     allocate(character(len=0) :: strippedFile)
-    open(unit=VWEIGHT_UNIT, file=VWEIGHT_FILE_NAME, status='old', &
+    open(unit=VWEIGHT_UNIT, file=FILE_NAME_VWEIGHT, status='old', &
         iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
     if (fileStatus /= 0) then
       print "(a/, 3(a))", "***", &
           "WARNING. Cannot read '", & 
-          trim(VWEIGHT_FILE_NAME), &
+          trim(FILE_NAME_VWEIGHT), &
           "'. Using the following default value:"
       print "(/a, i0, /a, f4.2)", "age:    1-", MODEL_L, "weight: ", &
           VWEIGHT_DEFAULT

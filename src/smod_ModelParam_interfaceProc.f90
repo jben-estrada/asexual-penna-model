@@ -19,20 +19,20 @@ contains
     logical :: exist
 
     ! Assign the default config file paths.
-    call assignOptionalPosTypeVal(configDirPosArg, MODEL_FILE_NAME)
-    call assignOptionalPosTypeVal(vWeightDirPosArg, VWEIGHT_FILE_NAME)
+    call assignOptionalPosTypeVal(configDirPosArg, FILE_NAME_MODEL)
+    call assignOptionalPosTypeVal(vWeightDirPosArg, FILE_NAME_VWEIGHT)
     
     ! Get the positional command-line arguments.
     call parseCmdArgs(.false., .false., .true.)
 
     ! Get the config file paths from command-line arguments.
-    MODEL_FILE_NAME = configDirPosArg % getValue()
-    VWEIGHT_FILE_NAME = vWeightDirPosArg % getValue()
+    FILE_NAME_MODEL = configDirPosArg % getValue()
+    FILE_NAME_VWEIGHT = vWeightDirPosArg % getValue()
 
     ! Inquire the existence of the config file for model paramters.
-    inquire(file=MODEL_FILE_NAME, exist=exist)
+    inquire(file=FILE_NAME_MODEL, exist=exist)
     if (.not. exist) then
-      print "(3a)", "***ERROR. The file '", trim(MODEL_FILE_NAME), &
+      print "(3a)", "***ERROR. The file '", trim(FILE_NAME_MODEL), &
           "' cannot be opened or does not exist."
       print "(a)", "   Try 'penna.out -h' for more info " // &
           "if this does not intend to be a file or directory."
@@ -40,9 +40,9 @@ contains
     end if
 
     ! Inquire the existence of the config file for Verhulst weights.
-    inquire(file=VWEIGHT_FILE_NAME, exist=exist)
+    inquire(file=FILE_NAME_VWEIGHT, exist=exist)
     if (.not. exist) then
-      print "(3a)", "***ERROR. The file '", trim(VWEIGHT_FILE_NAME), &
+      print "(3a)", "***ERROR. The file '", trim(FILE_NAME_VWEIGHT), &
           "' cannot be opened or does not exist." 
       print "(a)", "   Try 'penna.out -h' for more info " // &
           "if this does not intend to be a file or directory."
