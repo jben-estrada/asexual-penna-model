@@ -16,7 +16,13 @@ contains
   !>  Get paths for configuration files.
   ! -------------------------------------------------------------------------- !
   subroutine assignConfigFilePaths()
+    character(len=MAX_LEN) :: filePathExec
     logical :: exist
+
+    ! Get the paths of config files relative to the executable.
+    call get_command_argument(0, filePathExec)
+    call getRelFilePath(filePathExec, FILE_NAME_MODEL)
+    call getRelFilePath(filePathExec, FILE_NAME_VWEIGHT)
 
     ! Assign the default config file paths.
     call assignOptionalPosTypeVal(configDirPosArg, FILE_NAME_MODEL)
@@ -34,8 +40,6 @@ contains
     if (.not. exist) then
       print "(3a)", "***ERROR. The file '", trim(FILE_NAME_MODEL), &
           "' cannot be opened or does not exist."
-      print "(a)", "   Try 'penna.out -h' for more info " // &
-          "if this does not intend to be a file or directory."
       stop
     end if
 
@@ -44,11 +48,37 @@ contains
     if (.not. exist) then
       print "(3a)", "***ERROR. The file '", trim(FILE_NAME_VWEIGHT), &
           "' cannot be opened or does not exist." 
-      print "(a)", "   Try 'penna.out -h' for more info " // &
-          "if this does not intend to be a file or directory."
       stop
     end if
   end subroutine assignConfigFilePaths
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: getRelFilePath
+  !>  Get paths of `replacement` relative to `source`. 
+  ! -------------------------------------------------------------------------- !
+  subroutine getRelFilePath(source, replacement)
+    character(len=*),       intent(in)    :: source
+    character(len=*),       intent(inout) :: replacement
+
+    integer :: i
+
+    do i = len(source), 1, -1
+      ! Find the last file path delimiter, i.e. the delimeter before the file
+      ! name of the executable.
+      if (source(i:i) == "/") then
+        ! Concatenate the relative path to the executable and the replacement
+        ! file name.
+        replacement = source(1:i) // trim(replacement)
+        return
+      end if
+    end do
+
+    ! Raise an error if no file path delimiter was found.
+    ! NOTE: The delimiter used is `/`. This may differ in other shells.
+    print "(3a)", "***ERROR. '", trim(source), "' is not a valid path."
+    stop
+  end subroutine getRelFilePath
 
 
   ! -------------------------------------------------------------------------- !
