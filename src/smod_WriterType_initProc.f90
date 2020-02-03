@@ -56,7 +56,7 @@ submodule (WriterType) WriterTypeInitProc
   subroutine writer_initialize(self, flag)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
-    integer, intent(in)          :: flag
+    character, intent(in)        :: flag
       !! Flag corresponding to the output file to be written.
 
     type(OutputFile), allocatable :: foundFile
@@ -79,8 +79,8 @@ submodule (WriterType) WriterTypeInitProc
 
       deallocate(foundFile)
     else
-      print "(a, i0, a)", "***ERROR. File with flag (", flag, &
-          ") is not available."
+      print "(3a)", "***ERROR. File with flag ('", flag, &
+          "') is not available."
       stop
     end if
   end subroutine writer_initialize
@@ -89,7 +89,7 @@ submodule (WriterType) WriterTypeInitProc
   subroutine writer_listInitialize(self, flags)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
-    integer,       intent(in)    :: flags(:)
+    character,     intent(in)    :: flags(:)
       !! Array of flags corresponding to the output files to be written.
 
     type(OutputFile), allocatable :: foundFile

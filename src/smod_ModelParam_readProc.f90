@@ -10,7 +10,7 @@ submodule (ModelParam) ReadProcedures
 
   ! -------------------------------------------------------------------------- !
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
-  character(len=*), parameter :: MODEL_PARAM_KEYS(MODEL_PARAM_COUNT) = &
+  character(len=*), parameter :: PARAM_KEYS(PARAM_COUNT) = &
     ["L          ", &
      "T          ", &
      "B          ", &
@@ -26,13 +26,15 @@ submodule (ModelParam) ReadProcedures
      "seed       ", &
      "mttn_count "]
 
+  logical :: PARAM_ASSIGNED(PARAM_COUNT) = .false.
+
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.
   integer, parameter :: MODEL_UNIT = 99
   integer, parameter :: VWEIGHT_UNIT = 98
 
 
-  ! NON-LITERAL CHARACTERS.
+  ! RESERVED CHARACTERS.
   ! -------------------------------------------------------------------------- !
   ! Comment character.
   character, parameter :: COMMENT = ";"
@@ -54,19 +56,14 @@ contains
   !>  Read the scalar model parameters from an external file.
   ! -------------------------------------------------------------------------- !
   subroutine readScalarModelParamCfg()
-    integer :: values(MODEL_PARAM_COUNT)
-    integer :: fileStatus
-
+    
     character(len=:), allocatable :: strippedFile
     character(len=:), allocatable :: key
     character(len=:), allocatable :: valChar
     character :: currChar
-    integer   :: charNum
     logical   :: isReadingKey
-    integer   :: i
-    
-    ! Initialize the array of scalar model parameters.
-    values(:) = NULL_VALUE
+    integer   :: charNum
+    integer   :: fileStatus
 
     ! Read file.
     open(unit=MODEL_UNIT, file=FILE_NAME_MODEL, status='old', iostat=fileStatus)
@@ -101,7 +98,7 @@ contains
         ! Assign value and proceed to the next line.
         case (EOL)
           isReadingKey = .true.
-          call interpretKeyVal(key, valChar, values)
+          call interpretKeyVal(key, valChar)
 
         ! ***Default case.
         case default
@@ -115,22 +112,8 @@ contains
     end do
 
     ! Check for unassigned values.
-    if (any(values == NULL_VALUE)) then
-      print "(3a, /a)", "***ERROR. There is a missing model parameter in '", &
-          trim(FILE_NAME_MODEL), "'.", "Check if the following " // &
-          "parameters are all present:"
+    call checkParamAssignedStatus()
 
-      ! Print the model parameter keys.
-      write(*, "(a)", advance="no") "    "
-      do i = 1, MODEL_PARAM_COUNT - 1
-        write(*, "(a, ', ')", advance="no") trim(MODEL_PARAM_KEYS(i))
-      end do
-      print "(a)", trim(MODEL_PARAM_KEYS(MODEL_PARAM_COUNT))
-
-      stop
-    end if
-
-    modelParams(:) = values(:)
     deallocate(strippedFile)
     deallocate(key)
     deallocate(valChar)
@@ -142,16 +125,11 @@ contains
   !>  Interpret and assign the key-value pairs with the corresponding model
   !!  parameter. 
   ! -------------------------------------------------------------------------- !
-  subroutine interpretKeyVal(key, valChar, values)
-    use CastProcedures, only: castCharToInt
-
+  subroutine interpretKeyVal(key, valChar)
     character(len=:), allocatable, intent(inout) :: key
     character(len=:), allocatable, intent(inout) :: valChar
-    integer,                       intent(inout) :: values(:)
 
     integer :: keyIdx
-    integer :: val
-    integer :: castStatus
     
     ! Read the obtained key and value.
     keyIdx = getCharArrayIndex(key)
@@ -170,22 +148,122 @@ contains
 
       ! ***Defaut case: The given key is valid.
       case default
-        ! Cast the value character to integer.
-        val = castCharToInt(valChar, castStatus)
-
-        ! Check if casting succeeds.
-        if (castStatus == 0) then
-          values(keyIdx) = val
-        else
-          print "(5a)", "***ERROR. '", valChar, "' is not a valid" // &
-              " value for '", key, "'."
-          stop
-        end if
-
-        ! Reset `key` for the next line to read.
+        call assignValue(valChar, keyIdx)
         key = ""
     end select
   end subroutine interpretKeyVal
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignValue
+  !>  Assign parameter obtained from the config files.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignValue(valChar, keyIdx)
+    use CastProcedures, only: castCharToInt
+
+    character(len=:), allocatable, intent(inout) :: valChar
+    integer,                       intent(in)    :: keyIdx
+
+    integer :: status
+
+    status = 0
+    select case (keyIdx)
+      case (1)
+        MODEL_L = castCharToInt(valChar, status)
+      case (2)
+        MODEL_T = castCharToInt(valChar, status)
+      case (3)
+        MODEL_B = castCharToInt(valChar, status)
+      case (4)
+        MODEL_M = castCharToInt(valChar, status)
+      case (5)
+        MODEL_R = castCharToInt(valChar, status)
+      case (6)
+        MODEL_R_MAX = castCharToInt(valChar, status)
+      case (7)
+        MODEL_K = castCharToInt(valChar, status)
+      case (8)
+        MODEL_START_POP_SIZE = castCharToInt(valChar, status)
+      case (9)
+        MODEL_TIME_STEPS = castCharToInt(valChar, status)
+      case (10)
+        PROG_SAMPLE_SIZE = castCharToInt(valChar, status)
+      case (11)
+        PROG_REC_FLAG = valChar
+      case (12)
+        PROG_RNG = castCharToInt(valChar, status)
+      case (13)
+        PROG_RNG_SEED = castCharToInt(valChar, status)
+      case (14)
+        MODEL_MTTN_COUNT = castCharToInt(valChar, status)
+    end select
+
+    if (status /= 0) then
+      print "(*(a))", "***ERROR. The value assigned to '", &
+          trim(PARAM_KEYS(keyIdx)), "' in ", &
+          trim(FILE_NAME_MODEL), "is not valid."
+      stop
+    end if
+
+    PARAM_ASSIGNED(keyIdx) = .true.
+  end subroutine assignValue
+  
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getCharArrayIndex
+  !>  Get the corresponding index of `elem` in a rank-1 array of characters 
+  !!  `elem`. If `elem` is not found in `array`, it returns `NULL_VALUE`.
+  ! -------------------------------------------------------------------------- !
+  pure function getCharArrayIndex(elem) result(i)
+    character(len=:), allocatable, intent(in) :: elem
+      !! Character whose corresponding index is to be obtained.
+
+    integer :: i
+
+    do i = 1, PARAM_COUNT
+      if (PARAM_KEYS(i) == elem) return
+    end do
+
+    if (elem == "") then
+      i = IGNORE_VALUE
+    else
+      i = NULL_VALUE
+    end if
+  end function getCharArrayIndex
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkParamAssignedStatus
+  !>  Check fi all parameters are assigned or not.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkParamAssignedStatus()
+    integer :: i
+    logical :: isFirstMissing
+
+    if (.not. all(PARAM_ASSIGNED)) then
+      write(*, "(3a)", advance="no") "***ERROR. In '", trim(FILE_NAME_MODEL), &
+          "', the following parameters are absent: "
+      
+      ! Search for the missing parameters.
+      isFirstMissing = .true.
+      do i = 1, PARAM_COUNT
+        if (.not. PARAM_ASSIGNED(i)) then
+          ! Print delimiter.
+          if (isFirstMissing) then
+            isFirstMissing = .false.
+          else
+            write(*, "(a)", advance="no") ", "
+          end if
+
+          write(*, "(a)", advance="no") trim(PARAM_KEYS(i))
+        end if
+      end do
+
+      ! Print new line.
+      print *, ""
+      stop
+    end if
+  end subroutine checkParamAssignedStatus
 
 
   ! -------------------------------------------------------------------------- !
@@ -236,31 +314,6 @@ contains
 
     deallocate(line)
   end subroutine stripFile
-
-
-  
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCharArrayIndex
-  !>  Get the corresponding index of `elem` in a rank-1 array of characters 
-  !!  `elem`. If `elem` is not found in `array`, it returns `NULL_VALUE`.
-  ! -------------------------------------------------------------------------- !
-  pure function getCharArrayIndex(elem) result(i)
-    character(len=:), allocatable, intent(in) :: elem
-      !! Character whose corresponding index is to be obtained.
-
-    integer :: i
-
-    do i = 1, MODEL_PARAM_COUNT
-      if (MODEL_PARAM_KEYS(i) == elem) return
-    end do
-
-    if (elem == "") then
-      i = IGNORE_VALUE
-    else
-      i = NULL_VALUE
-    end if
-  end function getCharArrayIndex
-
 
 
   ! -------------------------------------------------------------------------- !

@@ -17,7 +17,7 @@ submodule (WriterType) WriterTypeWrHdrProc
   subroutine writer_writeHeader(self, flag, header)
     class(Writer),    intent(in) :: self
       !! `Writer` object.
-    integer,          intent(in) :: flag
+    character,        intent(in) :: flag
       !! Flag corresponding to an output file to be written on.
     character(len=*), intent(in) :: header(:)
       !! Headers to describe sets of data.
@@ -39,8 +39,8 @@ submodule (WriterType) WriterTypeWrHdrProc
     end do
 
     if (.not. flagFound) then
-      print "(a, i0, a)", "***ERROR. Cannot write header, flag (", flag, &
-          ") not found."
+      print "(3a)", "***ERROR. Cannot write header, flag ('", flag, &
+          "') not found."
       stop
     end if
   end subroutine writer_writeHeader

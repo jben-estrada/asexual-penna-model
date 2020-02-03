@@ -26,8 +26,8 @@ module WriterType
     character(MAX_LEN) :: filename
     character(MAX_LEN) :: format
     character(MAX_LEN) :: position
-    integer :: unit
-    integer :: flag
+    character :: flag
+    integer   :: unit
   end type
 
   ! All defined `OutputFile` objects.
@@ -95,25 +95,25 @@ module WriterType
     module subroutine writer_write_int(self, flag, arg)
       class(Writer),         intent(inout) :: self
       integer(kind=writeIK), intent(in)    :: arg
-      integer,               intent(in)    :: flag
+      character,             intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_real(self, flag, arg)
       class(Writer),       intent(inout) :: self
-      real(kind=writeRK), intent(in)    :: arg
-      integer,             intent(in)    :: flag
+      real(kind=writeRK),  intent(in)    :: arg
+      character,           intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_intArray(self, flag, arg)
       class(Writer),         intent(inout) :: self
       integer(kind=writeIK), intent(in)    :: arg(:)
-      integer,               intent(in)    :: flag
+      character,             intent(in)    :: flag
     end subroutine
 
     module subroutine writer_write_realArray(self, flag, arg)
       class(Writer),       intent(inout) :: self
-      real(kind=writeRK), intent(in)    :: arg(:)
-      integer,             intent(in)    :: flag
+      real(kind=writeRK),  intent(in)    :: arg(:)
+      character,           intent(in)    :: flag
     end subroutine
   end interface
 
@@ -130,12 +130,12 @@ module WriterType
 
     module subroutine writer_initialize(self, flag)
       class(Writer), intent(inout) :: self
-      integer,       intent(in)    :: flag
+      character,     intent(in)    :: flag
     end subroutine
 
     module subroutine writer_listInitialize(self, flags)
       class(Writer), intent(inout) :: self
-      integer,       intent(in)    :: flags(:)
+      character,     intent(in)    :: flags(:)
     end subroutine
   end interface
 
@@ -152,12 +152,12 @@ module WriterType
 
     module subroutine writer_close(self, flag)
       class(Writer), intent(inout) :: self
-      integer,       intent(in)    :: flag
+      character,     intent(in)    :: flag
     end subroutine
 
     module subroutine writer_listclose(self, flags)
       class(Writer), intent(inout) :: self
-      integer,       intent(in)    :: flags(:)
+      character,     intent(in)    :: flags(:)
     end subroutine
   end interface
 
@@ -168,7 +168,7 @@ module WriterType
   interface
     module subroutine writer_writeHeader(self, flag, header)
       class(Writer),    intent(in) :: self
-      integer,          intent(in) :: flag
+      character,        intent(in) :: flag
       character(len=*), intent(in) :: header(:)
     end subroutine
   end interface
@@ -194,12 +194,12 @@ module WriterType
     module subroutine findFileByFlag(array, flag, foundFile)
       type(OutputFile), allocatable, intent(in)    :: array(:)
       type(OutputFile), allocatable, intent(inout) :: foundFile
-      integer, intent(in) :: flag
+      character, intent(in) :: flag
     end subroutine
 
     module subroutine removeFilebyFlag(array, flag)
       type(OutputFile), allocatable, intent(inout) :: array(:)
-      integer,                       intent(in)    :: flag
+      character,                     intent(in)    :: flag
     end subroutine
 
     module subroutine appendOutputFile(array, file)

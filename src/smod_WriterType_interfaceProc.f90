@@ -77,8 +77,8 @@ contains
       ! Check for redundant flags first.
       if (allocated(new % availableFiles)) then
         if (any(new % availableFiles % flag == file % flag)) then
-          print "(a, i0)", "***ERROR. Initializing a 'Writer' object with " // &
-              "redundant file flags: ", file % flag
+          print "(3a)", "***ERROR. Initializing a 'Writer' object with " // &
+              "redundant file flags: '", file % flag, "'"
           stop
         end if
       end if
@@ -105,7 +105,7 @@ contains
   subroutine removeFilebyFlag(array, flag)
     type(OutputFile), allocatable, intent(inout) :: array(:)
       !! Array of `OutputfFiles` to be modified.
-    integer,                       intent(in)    :: flag
+    character,                     intent(in)    :: flag
       !! Flags the corresponding flag of which is to be removed.
   
     type(OutputFile), allocatable :: tempArray(:)
@@ -190,7 +190,7 @@ contains
     type(OutputFile), allocatable, intent(inout) :: foundFile
       !! The sought file. Unallocaeted if no file with the given `flag` is
       !! found. 
-    integer, intent(in) :: flag
+    character, intent(in) :: flag
       !! Flag of the corresponding sought file.
 
     integer :: i

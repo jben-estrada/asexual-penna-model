@@ -58,20 +58,20 @@ module WriterOptions
 
   ! -------------------------------------------------------------------------- !
   ! Record flags. Corresponds to the data to be recorded.
-  integer, public, parameter :: nullFlag = 0
+  character, public, parameter :: nullFlag = "0"
     !! Nothing (do not record).
-  integer, public, parameter :: popFlag = 1
+  character, public, parameter :: popFlag = "1"
     !! Population size per time step.
-  integer, public, parameter :: ageDstrbFlag = 2
+  character, public, parameter :: ageDstrbFlag = "2"
     !! Age distribution in the last 300 time steps
-  integer, public, parameter :: deathFlag = 3
+  character, public, parameter :: deathFlag = "3"
     !! Death counts (death by age, by mutation, by Verhulst factor) 
     !! per time step.
-  integer, public, parameter :: divIdxFlag = 4
+  character, public, parameter :: divIdxFlag = "4"
     !! Shannon diversity index per time step.
-  integer, public, parameter :: badGeneFlag = 5
+  character, public, parameter :: badGeneFlag = "5"
     !! Bad gene distribution per time step.
-  integer, public, parameter :: timeFlag = 6
+  character, public, parameter :: timeFlag = "6"
     !! Timing statistics.
   ! -------------------------------------------------------------------------- !
 
@@ -93,22 +93,22 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeWriterObjects()
     ! Population size per time step file.
-    popFile = OutputFile(popFilename, popFormat, popPosition, popUnit, popFlag)
+    popFile = OutputFile(popFilename, popFormat, popPosition, popFlag, popUnit)
     ! Final age distribution file.
     ageDstrbFile = OutputFile(ageDstrbFilename, ageDstrbFormat, &
-        ageDstrbPosition, ageDstrbUnit, ageDstrbFlag)
+        ageDstrbPosition, ageDstrbFlag, ageDstrbUnit)
     ! Death counts per time step file.
     deathFile = OutputFile(deathFilename, deathFormat, deathPosition, &
-        deathUnit, deathFlag)
+        deathFlag, deathUnit)
     ! Diversity index per time step file.
     divIdxFile = OutputFile(divIdxFilename, divIdxFormat, divIdxPosition, &
-        divIdxUnit, divIdxFlag)
+        divIdxFlag, divIdxUnit)
     ! Bad gene distribution per time step.
     badGeneDstrbFile = OutputFile(badGeneDstrbFilename, badGeneDstrbFormat, &
-        badGeneDstrbPosition, badGeneDstrbUnit, badGeneFlag)
+        badGeneDstrbPosition, badGeneFlag, badGeneDstrbUnit)
     ! Time statistics file.
-    timeFile = OutputFile(timeFilename, timeFormat, timePosition, timeUnit, &
-        timeFlag)
+    timeFile = OutputFile(timeFilename, timeFormat, timePosition, timeFlag, &
+        timeUnit)
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
         badGeneDstrbFile, timeFile])
@@ -121,7 +121,7 @@ contains
   !!  This object contains the necessary information about the output file.
   ! -------------------------------------------------------------------------- !
   function getOutputFile(flag) result(out)
-    integer, intent(in) :: flag
+    character, intent(in) :: flag
       !! Flag to compare
     type(OutputFile)    :: out
 
@@ -140,7 +140,7 @@ contains
         out = timeFile
 
       case default
-        print "(a, i0, a)", "***ERROR. No file with flag (", flag, ") found."
+        print "(3a)", "***ERROR. No file with flag ('", flag, "') found."
         stop
     end select
   end function getOutputFile
@@ -155,7 +155,7 @@ contains
   subroutine constructAvailableWriter(out, flags, initialize)
     type(Writer),      intent(out) :: out
       !! New `Writer` object.
-    integer,           intent(in)  :: flags(:)
+    character,         intent(in)  :: flags(:)
       !! Record flags.
     logical, optional, intent(in)  :: initialize
       !! Initialize `new` immediately. Default is `.false.`

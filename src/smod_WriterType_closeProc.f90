@@ -45,7 +45,7 @@ submodule (WriterType) WriterTypeCloseProc
   subroutine writer_close(self, flag)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
-    integer,       intent(in)    :: flag
+    character,     intent(in)    :: flag
       !! Integer flag whose corresponding output file is to be closed if active.
 
     type(OutputFile), allocatable :: foundFile
@@ -63,7 +63,7 @@ submodule (WriterType) WriterTypeCloseProc
   subroutine writer_listclose(self, flags)
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
-    integer,       intent(in)    :: flags(:)
+    character,     intent(in)    :: flags(:)
       !! Array of integer flags whose corresponding output files are to be 
       !! closed if active.
 

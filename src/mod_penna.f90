@@ -46,7 +46,7 @@ contains
       !! Starting population size.
     integer, intent(in) :: initMttnCount
       !! Initial mutation count of each individuals.
-    integer, intent(in) :: recordFlag
+    character, intent(in) :: recordFlag
       !! Record flag. Valid values are found in the `WriterOptions` module.
 
     type(PersonList) :: population    ! Population list
@@ -132,7 +132,7 @@ contains
   ! SUBROUTINE: evalPopulation
   !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(population, popSize, countdown, recFlag, &
+  subroutine evalPopulation(population, popSize, countdown, recordFlag, &
         deathByAge, deathByMutation, deathByVerhulst)
     use Demographics
     use ModelParam, only: MODEL_B
@@ -143,7 +143,7 @@ contains
     integer, pointer, intent(inout) :: deathByMutation  !! Death by mutation.
     integer, pointer, intent(inout) :: deathByVerhulst  !! Random death.
     integer,          intent(in)    :: countdown        !! Count from max time.
-    integer,          intent(in)    :: recFlag          !! Record flag.
+    character,        intent(in)    :: recordFlag       !! Record flag.
 
     integer :: popSizeChange
     integer :: listStatus
@@ -168,12 +168,12 @@ contains
         call population % updateCurrIndivAge()
 
         ! Update genome distribution.
-        if (recFlag == divIdxFlag .or. recFlag == badGeneFlag) &
+        if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
             call updateGenomeDstrb(population % getCurrIndivGenome())
 
         ! Check for birth events.
         if (population % isCurrIndivMature()) then
-          call population % reproduceCurrIndiv(recFlag == divIdxFlag)
+          call population % reproduceCurrIndiv(recordFlag == divIdxFlag)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
@@ -208,19 +208,19 @@ contains
     )
     use ProgBarType
 
-    integer, intent(in) :: maxTimeStep
+    integer,   intent(in) :: maxTimeStep
       !! Maximum (total) time step.
-    integer, intent(in) :: startPopSize
+    integer,   intent(in) :: startPopSize
       !! Starting population size.
-    integer, intent(in) :: initMttnCount
+    integer,   intent(in) :: initMttnCount
       !! Initial mutation count of each individuals.
-    integer, intent(in) :: recordFlag
+    character, intent(in) :: recordFlag
       !! Record flag. Valid values are found in the `WriterOptions` module.
-    integer, intent(in) :: sampleSize
+    integer,   intent(in) :: sampleSize
       !! Sample size. Number of times the simulation is run.
-    logical, intent(in) :: recordTime
+    logical,   intent(in) :: recordTime
       !! Record mean elapsed time and the corresponding standard deviation.
-    logical, intent(in) :: printProgress
+    logical,   intent(in) :: printProgress
       !! Print the progress with a progress bar.
 
     real(kind=writeRK)    :: meanTime
@@ -327,10 +327,10 @@ contains
 
     call runMultipleInstance( &
         MODEL_TIME_STEPS,     &
-        MODEL_N0,             &
+        MODEL_START_POP_SIZE, &
         MODEL_MTTN_COUNT,     &
-        MODEL_REC_FLAG,       &
-        MODEL_SAMPLE_SIZE,    &
+        PROG_REC_FLAG,        &
+        PROG_SAMPLE_SIZE,     &
         PROG_RECORD_TIME,     &
         printProgress         &
         )
@@ -347,7 +347,7 @@ contains
 
     type(Writer), intent(inout) :: runWriter
       !! The `Writer` object to be initialized.
-    integer,      intent(in)    :: recordFlag
+    character,    intent(in)    :: recordFlag
       !! Record flag. Values can be found in `WriterOptions`.
 
     if (recordFlag == nullFlag) return
@@ -378,7 +378,7 @@ contains
         call runWriter % writeHeader(badGeneFlag, ["age =>"])
 
       case default
-        print "(a, i0, a)", "***ERROR. '", recordFlag, &
+        print "(3a)", "***ERROR. '", trim(recordFlag), &
             "' is an invalid record flag"
         stop
     end select

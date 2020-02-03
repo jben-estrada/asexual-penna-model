@@ -66,23 +66,24 @@ contains
 
     ! Assign optional values to key-value options.
     call assignOptionalKVVal(maxTimeStepArg, castIntToChar(MODEL_TIME_STEPS))
-    call assignOptionalKVVal(sampleSizeArg, castIntToChar(MODEL_SAMPLE_SIZE))
-    call assignOptionalKVVal(startPopSizeArg, castIntToChar(MODEL_N0))
-    call assignOptionalKVVal(recordFlagArg, castIntToChar(MODEL_REC_FLAG))
-    call assignOptionalKVVal(rngChoiceArg, castIntToChar(MODEL_RNG))
-    call assignOptionalKVVal(rngSeedArg, castIntToChar(MODEL_RNG_SEED))
+    call assignOptionalKVVal(sampleSizeArg, castIntToChar(PROG_SAMPLE_SIZE))
+    call assignOptionalKVVal(startPopSizeArg, &
+        castIntToChar(MODEL_START_POP_SIZE))
+    call assignOptionalKVVal(recordFlagArg, PROG_REC_FLAG)
+    call assignOptionalKVVal(rngChoiceArg, castIntToChar(PROG_RNG))
+    call assignOptionalKVVal(rngSeedArg, castIntToChar(PROG_RNG_SEED))
 
     ! Get key-value command-line arguments w/c so happens to only contain
     ! model parameters.
     call parseCmdArgs(.false., .true., .false.)
-
+    
     ! Assign model parameters from the command-line arguments.
     MODEL_TIME_STEPS = castCharToInt(maxTimeStepArg % getValue())
-    MODEL_SAMPLE_SIZE = castCharToInt(sampleSizeArg % getValue())
-    MODEL_N0 = castCharToInt(startPopSizeArg % getValue())
-    MODEL_REC_FLAG = castCharToInt(recordFlagArg % getValue())
-    MODEL_RNG = castCharToInt(rngChoiceArg % getValue())
-    MODEL_RNG_SEED = castCharToInt(rngSeedArg % getValue())
+    PROG_SAMPLE_SIZE = castCharToInt(sampleSizeArg % getValue())
+    MODEL_START_POP_SIZE = castCharToInt(startPopSizeArg % getValue())
+    PROG_REC_FLAG = adjustl(recordFlagArg % getValue())
+    PROG_RNG = castCharToInt(rngChoiceArg % getValue())
+    PROG_RNG_SEED = castCharToInt(rngSeedArg % getValue())
 
     ! Get the flag command-line arguments.
     call parseCmdArgs(.true., .false., .false.)
@@ -109,14 +110,6 @@ contains
   !>  Check the assigned model parameters for invalid values.
   ! -------------------------------------------------------------------------- !
   subroutine checkValidModelParams()
-    character(len=*), parameter :: MODIFYABLE_PARAM_CHAR(*) = &
-      ["maximum time step       ", &
-      "sample size             ", &
-      "starting population size"]
-    integer, parameter :: MODIFYABLE_PARAM_IDX(size(MODIFYABLE_PARAM_CHAR)) = &
-      [9, 10, 8]
-    integer :: i
-
     ! Check invalid combination of flags.
     if (silentPrintFlag % getFlagState() .and. &
         verbosePrintFlag % getFlagState()) then
@@ -126,16 +119,6 @@ contains
           "' or '", trim(silentPrintFlag % getAltCommand()), "'."
       stop
     end if
-
-    ! Check for non-positive model parameters; all numerical model parameters
-    ! must be positive as of now.
-    do i = 1, size(MODIFYABLE_PARAM_CHAR)
-      if (modelParams(MODIFYABLE_PARAM_IDX(i)) <= 0) then
-        print "(3a)", "***ERROR. The '", trim(MODIFYABLE_PARAM_CHAR(i)), &
-            "' must be a positive integer."
-        stop
-      end if
-    end do
   end subroutine checkValidModelParams
 
 
@@ -194,9 +177,9 @@ contains
     ! ***Body
     write(*, "(*(a20, i9/))", advance="no") &
       "Number of time steps", MODEL_TIME_STEPS, &
-      "Sample size",          MODEL_SAMPLE_SIZE,  &
-      "Starting pop size",    MODEL_N0
-    print "(a20, L9)", "Record result", MODEL_REC_FLAG /= nullFlag
+      "Sample size",          PROG_SAMPLE_SIZE,  &
+      "Starting pop size",    MODEL_START_POP_SIZE
+    print "(a20, L9)", "Record result", PROG_REC_FLAG /= nullFlag
 
     ! ***End
     print "(*(a))", PRINT_SEPARATOR

@@ -21,7 +21,7 @@ contains
       !! `Writer` object.
     integer(kind=writeIK), intent(in)    :: arg
       !! A data point to be written on the output file.
-    integer,               intent(in)    :: flag
+    character,               intent(in)  :: flag
       !! Flag corresponding to the output file to be written on.
 
     type(OutputFile), allocatable :: foundFile
@@ -31,8 +31,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
-          ") not found."
+      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
+          "') not found."
       stop
     end if
   end subroutine writer_write_int
@@ -48,7 +48,7 @@ contains
       !! `Writer` object.
     real(kind=writeRK), intent(in)    :: arg
       !! A data point to be written on the output file.
-    integer,            intent(in)    :: flag
+    character,          intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
     type(OutputFile), allocatable :: foundFile
@@ -58,8 +58,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
-          ") not found."
+      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
+          "') not found."
       stop
     end if
   end subroutine writer_write_real
@@ -75,7 +75,7 @@ contains
       !! `Writer` object.
     integer(kind=writeIK), intent(in)    :: arg(:)
       !! Data to be written on the output file.
-    integer,               intent(in)    :: flag
+    character,             intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
     type(OutputFile), allocatable :: foundFile
@@ -85,8 +85,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
-          ") not found."
+      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
+          "') not found."
       stop
     end if
   end subroutine writer_write_intArray
@@ -102,7 +102,7 @@ contains
       !! `Writer` object.
     real(kind=writeRK), intent(in)    :: arg(:)
       !! Data to be written on the output file.
-    integer,            intent(in)    :: flag
+    character,          intent(in)    :: flag
       !! Flag corresponding to the output file to be written on.
 
     type(OutputFile), allocatable :: foundFile
@@ -112,8 +112,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(a, i0, a)", "***ERROR. Cannot write file, flag (", flag, &
-          ") not found."  
+      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
+          "') not found."  
       stop
     end if
   end subroutine writer_write_realArray

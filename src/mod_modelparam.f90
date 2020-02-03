@@ -39,13 +39,14 @@ module ModelParam
   implicit none
   private
 
-  ! PROGRAM DETAILS
+  ! EXTRANEOUS VARIABLES
   ! -------------------------------------------------------------------------- !
-  character(len=*), public, parameter :: PROG_NAME = &
-      "Asexual Penna model simulation"
-  character(len=*), public, parameter :: PROG_VERSION = ""
+  integer, parameter :: PARAM_COUNT = 14
+    !! Number of model parameters.
+  integer, parameter :: MAX_LEN = 256
+  !! Maximum character length for buffer characters.
 
-    ! Print states.
+  ! Print states.
   integer, public, parameter :: NORMAL_PRINT = 0
     !! Flag corresponding to default printing of model parameters.
   integer, public, parameter :: VERBOSE_PRINT = 1
@@ -54,63 +55,57 @@ module ModelParam
     !! Flag corresponding to supressed printing.
   integer, public, parameter :: VERSION_PRINT = 3
     !! Flag corresponding to printing of the program version.
+
+  ! PROGRAM DETAILS
+  ! -------------------------------------------------------------------------- !
+  character(len=*), public, parameter :: PROG_NAME = &
+      "Asexual Penna model simulation"
+  character(len=*), public, parameter :: PROG_VERSION = ""
+
   integer, public, protected :: PROG_PRINT_STATE = NORMAL_PRINT
     !! Printing state. 
-
   logical, public, protected :: PROG_RECORD_TIME = .false.
     !! Record-time state.
+  integer, public, protected :: PROG_SAMPLE_SIZE
+    !! Number of times the simulation will run.
+  integer, public, protected :: PROG_RNG
+    !! RNG flag. Corresponds to a random number generator.
+  integer, public, protected :: PROG_RNG_SEED
+    !! RNG seed.
+  character(len=MAX_LEN), public, protected :: PROG_REC_FLAG
+    !! List of record flags.
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
-  integer, target :: modelParams(14) = 0
-    !! Array of model parameters.
-
-  integer, parameter :: MODEL_PARAM_COUNT = size(modelParams)
-    !! Number of model parameters.
-
   ! Parameters whose values are from an external config file.
-  integer, protected, pointer, public :: MODEL_L => &
-    modelParams(1) !! Genome length
-  integer, protected, pointer, public :: MODEL_T => &
-    modelParams(2) !! Mutation threshold
-  integer, protected, pointer, public :: MODEL_B => &
-    modelParams(3) !! Birth rate
-  integer, protected, pointer, public :: MODEL_M => &
-    modelParams(4) !! Mutation rate
-  integer, protected, pointer, public :: MODEL_R => &
-    modelParams(5) !! Reproduction age
-  integer, protected, pointer, public :: MODEL_R_MAX => &
-    modelParams(6) !! Maximum reproduction age
-  integer, protected, pointer, public :: MODEL_K => &
-    modelParams(7) !! Carrying capacity
+  integer, public, protected :: MODEL_L
+    !! Genome length
+  integer, public, protected :: MODEL_T
+    !! Mutation threshold
+  integer, public, protected :: MODEL_B
+    !! Birth rate
+  integer, public, protected :: MODEL_M
+    !! Mutation rate
+  integer, public, protected :: MODEL_R
+    !! Reproduction age
+  integer, public, protected :: MODEL_R_MAX
+    !! Maximum reproduction age
+  integer, public, protected :: MODEL_K
+    !! Carrying capacity
+  integer, public, protected :: MODEL_START_POP_SIZE
+    !! Starting pop size
+  integer, public, protected :: MODEL_TIME_STEPS
+    !! Total time steps
+  integer, public, protected :: MODEL_MTTN_COUNT
+    !! Initial mutation count of individuals in starting pop.
 
   real, allocatable, protected, public :: MODEL_VERHULST_W(:)
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
 
-  ! Parameters whose values can be changed by command line arguments.
-  integer, protected, pointer, public :: MODEL_N0 => &
-    modelParams(8)   !! Starting pop size
-  integer, protected, pointer, public :: MODEL_TIME_STEPS => &
-    modelParams(9)   !! Total time steps
-  integer, protected, pointer, public :: MODEL_SAMPLE_SIZE => &
-    modelParams(10)  !! Sample size
-  integer, protected, pointer, public :: MODEL_REC_FLAG => &
-    modelParams(11)  !! Record flag. Corresponds to data to be recorded.
-  integer, protected, pointer, public :: MODEL_RNG => &
-    modelParams(12)  !! RNG flag. Corresponds to a random number generator.
-  integer, protected, pointer, public :: MODEL_RNG_SEED => &
-    modelParams(13)  !! RNG seed.
-  integer, protected, pointer, public :: MODEL_MTTN_COUNT => &
-    modelParams(14)  !! Initial mutation count of individuals in starting pop.
-
   ! CONFIGURATION FILE PATHS
   ! -------------------------------------------------------------------------- !
-  ! Buffer character length.
-  integer, parameter :: MAX_LEN = 256
-    !! Maximum character length for buffer characters.
-
   ! Filenames from which model parameters are obtained.
   character(len=MAX_LEN), protected, public :: FILE_NAME_MODEL = &
       "./bin/model.cfg" !! Path for file containing scalar model parameters.
