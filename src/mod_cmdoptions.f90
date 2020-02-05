@@ -120,9 +120,9 @@ contains
     call setValueMsg(rngSeedArg, "<int>")
 
     ! Set usage messages of positional arguments.
-    call setUsageMsg(configDirPosArg, "Path of text (.cfg) file of " // &
+    call setUsageMsg(configDirPosArg, "Path of text file of " // &
         "model parameters.")
-    call setUsageMsg(vWeightDirPosArg, "Path of text (.cfg) file of " // &
+    call setUsageMsg(vWeightDirPosArg, "Path of text file of " // &
         "Verhulst weights.")
   end subroutine setCmdOptionUsageMsgs
 
@@ -146,6 +146,8 @@ contains
   !>  Show the help message together with notes with regards to integer flags.
   ! -------------------------------------------------------------------------- !
   subroutine showHelpMsgAndNotes()
+    use WriterOptions
+
     if (showHelpMsgFlag % getFlagState()) then
       call showHelpMsg(cmdFlags, cmdKeyVal, cmdPosArgs)
 
@@ -153,15 +155,15 @@ contains
       print "(/a)", "notes:"
       write(*, "(4(' '), a/, 6(8(' '), a/))", advance="no") &
           "There are 5 record flags: ", &
-          "0 - record nothing", &
-          "1 - population count per time step", &
-          "2 - age distribution", &
-          "3 - death count", &
-          "4 - Shannon diversity index per time step", &
-          "5 - Bad gene distribution per time step"
+          nullFlag     // " - record nothing", &
+          popFlag      // " - population count per time step", &
+          ageDstrbFlag // " - age distribution", &
+          deathFlag    // " - death count", &
+          divIdxFlag   // " - Shannon diversity index per time step", &
+          badGeneFlag  // " - Bad gene distribution per time step"
       write(*, "(4(' '), a/, 2(8(' '), a/))", advance="no") &
           "The RNG flags are as follows: ", &
-          "0 - a KISS pseudo-RNG (the intrinsic RNG)", &
+          "0 - xoshiro256** pseudo-RNG (the intrinsic RNG)", &
           "1 - Mersenne twister (MT19937) pseudo-RNG"
       stop
     end if
