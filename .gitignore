@@ -2,6 +2,7 @@
 /results
 /test
 /plot
+/.vscode
 plot.sh
 *.csv
 *.mod
