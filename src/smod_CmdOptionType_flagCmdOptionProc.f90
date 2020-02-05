@@ -38,7 +38,7 @@ contains
     if (cmdFlag % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdFlag % command), &
           "' its default value again."
-      stop
+      error stop
     end if
 
     if (state) then

@@ -380,7 +380,7 @@ contains
       case default
         print "(3a)", "***ERROR. '", trim(recordFlag), &
             "' is an invalid record flag"
-        stop
+        error stop
     end select
   end subroutine initializeRunWriter
 end module Penna

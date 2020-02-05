@@ -37,7 +37,7 @@ submodule (WriterType) WriterTypeInitProc
       if (size(self % availableFiles) == 0) return
     else
       print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
-      stop
+      error stop
     end if
     
     ! Initialize all available files in `self`.
@@ -66,7 +66,7 @@ submodule (WriterType) WriterTypeInitProc
       call findFileByFlag(self % availableFiles, flag, foundFile)
     else
       print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
-      stop
+      error stop
     end if
 
     if (allocated(foundFile)) then
@@ -81,7 +81,7 @@ submodule (WriterType) WriterTypeInitProc
     else
       print "(3a)", "***ERROR. File with flag ('", flag, &
           "') is not available."
-      stop
+      error stop
     end if
   end subroutine writer_initialize
 

@@ -72,7 +72,7 @@ contains
     if (fileStatus /= 0) then
       print "(a)", "***ERROR. Cannot read '", trim(FILE_NAME_MODEL),&
           "'."
-      stop
+      error stop
     end if
 
     ! Clean model config file.
@@ -144,7 +144,7 @@ contains
       case (NULL_VALUE)
         print "(5a)", "***ERROR. '", key, "' in '", &
             trim(FILE_NAME_MODEL), "' is not a valid parameter."
-        stop
+        error stop
 
       ! ***Defaut case: The given key is valid.
       case default
@@ -202,7 +202,7 @@ contains
       print "(*(a))", "***ERROR. The value assigned to '", &
           trim(PARAM_KEYS(keyIdx)), "' in ", &
           trim(FILE_NAME_MODEL), "is not valid."
-      stop
+      error stop
     end if
 
     PARAM_ASSIGNED(keyIdx) = .true.
@@ -234,7 +234,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: checkParamAssignedStatus
-  !>  Check fi all parameters are assigned or not.
+  !>  Check if all parameters are assigned or not.
   ! -------------------------------------------------------------------------- !
   subroutine checkParamAssignedStatus()
     integer :: i
@@ -261,7 +261,7 @@ contains
 
       ! Print new line.
       print *, ""
-      stop
+      error stop
     end if
   end subroutine checkParamAssignedStatus
 
@@ -393,7 +393,8 @@ contains
 
           ! ***Unknown error.
           else
-            stop "***ERROR. Unknown error when reading Verhulst weights."
+            print "(a)", "***ERROR. Unknown error when reading Verhulst weights."
+            error stop
           end if AssignWeight
           ! <<<
           ! ==============================================================

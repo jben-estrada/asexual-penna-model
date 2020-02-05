@@ -141,7 +141,7 @@ contains
 
       case default
         print "(3a)", "***ERROR. No file with flag ('", flag, "') found."
-        stop
+        error stop
     end select
   end function getOutputFile
 

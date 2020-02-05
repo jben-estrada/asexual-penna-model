@@ -50,7 +50,7 @@ contains
       rngChoice = choice
     else
       print "(a)", "***ERROR. Invalid RNG choice."
-      stop
+      error stop
     end if
   end subroutine chooseRNG
 
@@ -83,7 +83,7 @@ contains
       
       case default
         print "(a)", "***ERROR. No RNG has yet been chosen."
-        stop
+        error stop
     end select
 
     if (allocated(intrscSeed)) deallocate(intrscSeed)
@@ -111,7 +111,7 @@ contains
 
       case default
         print "(a)", "***ERROR. No RNG has yet been chosen."
-        stop
+        error stop
     end select
   end subroutine getRandNumber
 end module RNG

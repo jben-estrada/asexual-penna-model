@@ -79,7 +79,7 @@ contains
         if (any(new % availableFiles % flag == file % flag)) then
           print "(3a)", "***ERROR. Initializing a 'Writer' object with " // &
               "redundant file flags: '", file % flag, "'"
-          stop
+          error stop
         end if
       end if
 
@@ -93,7 +93,7 @@ contains
     else
 
       print "(a)", "***ERROR. Available output files are not yet declared."
-      stop
+      error stop
     end if
   end subroutine constructWriter_scalar
 
@@ -140,7 +140,7 @@ contains
       ! Error handling.
       if (.not. fileRemoved) then
         print "(a)", "***ERROR. File to remove not found."
-        stop
+        error stop
       end if
     end if
   end subroutine removeFilebyFlag
@@ -207,7 +207,7 @@ contains
     else
       print "(a)", "***ERROR. Provided array to find flags with " // &
         "is not yet allocated."
-      stop
+      error stop
     end if
   end subroutine findFileByFlag
 

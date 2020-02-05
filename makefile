@@ -14,7 +14,7 @@ LIBDIR :=$(SRCDIR)/third-party
 VAR_FILE :=makefile.variables
 
 # Default build (release build).
-default_build: FFLAGS += -Ofast
+default_build: FFLAGS += -g -Ofast
 default_build: build
 
 # Debug build.

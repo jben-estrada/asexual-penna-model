@@ -25,7 +25,7 @@ contains
     if (cmdKeyVal % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdKeyVal % command), &
           "' its default value again."
-      stop
+      error stop
     else
       cmdKeyVal % hasValue = .true.
       cmdKeyVal % isOptional = .true.

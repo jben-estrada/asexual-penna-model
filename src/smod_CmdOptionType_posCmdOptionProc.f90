@@ -51,7 +51,7 @@ contains
     if (cmdPosArg % isOptional) then
       print "(3a)", "***ERROR. Cannot assign '", trim(cmdPosArg % command), &
           "' its default value again."
-      stop
+      error stop
     end if
 
     cmdPosArg % hasValue = .true.

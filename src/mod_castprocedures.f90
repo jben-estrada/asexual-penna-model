@@ -39,7 +39,7 @@ contains
       ! Handle casting error in this function.
       if (status /= 0) then
         print "(*(a))", "***ERROR. '", trim(adjustl(char)), "' is not numeric."
-        stop
+        error stop
       end if
     end if
   end function castCharToInt
@@ -71,7 +71,7 @@ contains
       if (status /= 0) then
         print "(a, i0, a)", "***ERROR. '", int, &
             "' cannot be casted to character."
-        stop
+        error stop
       end if
     end if
   end function castIntToChar
@@ -97,7 +97,7 @@ contains
     else
       print "(a)", "***ERROR. The 'int' dummy argument is not associated " // &
           "with any target."
-      stop  
+      error stop  
     end if
 
     ! Handle casting error in other procedures/program.
@@ -109,7 +109,7 @@ contains
       if (status /= 0) then
         print "(a, i0, a)", "***ERROR. '", intPtr, &
             "' cannot be casted to character."
-        stop
+        error stop
       end if
     end if
   end function castIntPtrToChar

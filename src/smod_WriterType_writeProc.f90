@@ -60,7 +60,7 @@ contains
     else
       print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
           "') not found."
-      stop
+      error stop
     end if
   end subroutine writer_write_real
 
@@ -87,7 +87,7 @@ contains
     else
       print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
           "') not found."
-      stop
+      error stop
     end if
   end subroutine writer_write_intArray
 
@@ -114,7 +114,7 @@ contains
     else
       print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
           "') not found."  
-      stop
+      error stop
     end if
   end subroutine writer_write_realArray
 end submodule WriterTypeWriteProc

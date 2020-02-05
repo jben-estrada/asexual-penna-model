@@ -127,7 +127,7 @@ contains
       case default
         print "(a)", "***ERROR. The current individual is not dead " // &
             "or has an invalid death index."
-        stop
+        error stop
     end select
   end subroutine determineDeathType
 
@@ -385,7 +385,7 @@ contains
     else
       print "(a)", "***ERROR. The current pointer of a linked list is " // &
           "disassociated."
-      stop
+      error stop
     end if
   end function getCurrIndivAge
 
@@ -406,7 +406,7 @@ contains
     else
       print "(a)", "***ERROR. The current pointer of a linked list is " // &
           " disassociated."
-      stop
+      error stop
     end if
   end function getCurrIndivGenome
 

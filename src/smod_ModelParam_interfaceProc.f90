@@ -40,7 +40,7 @@ contains
     if (.not. exist) then
       print "(3a)", "***ERROR. The file '", trim(FILE_NAME_MODEL), &
           "' cannot be opened or does not exist."
-      stop
+      error stop
     end if
 
     ! Inquire the existence of the config file for Verhulst weights.
@@ -48,7 +48,7 @@ contains
     if (.not. exist) then
       print "(3a)", "***ERROR. The file '", trim(FILE_NAME_VWEIGHT), &
           "' cannot be opened or does not exist." 
-      stop
+      error stop
     end if
   end subroutine assignConfigFilePaths
 
@@ -77,7 +77,7 @@ contains
     ! Raise an error if no file path delimiter was found.
     ! NOTE: The delimiter used is `/`. This may differ in other shells.
     print "(3a)", "***ERROR. '", trim(source), "' is not a valid path."
-    stop
+    error stop
   end subroutine getRelFilePath
 
 
@@ -147,7 +147,7 @@ contains
           "' or '", trim(verbosePrintFlag % getAltCommand()), &
           "' cannot be passed with '", trim(silentPrintFlag % getCommand()), &
           "' or '", trim(silentPrintFlag % getAltCommand()), "'."
-      stop
+      error stop
     end if
   end subroutine checkValidModelParams
 
@@ -170,7 +170,7 @@ contains
 
       case default
         print "(a)", "***ERROR. Invalid 'PROG_PRINT_STATE' value."
-        stop
+        error stop
       end select
   end subroutine printProgDetails
 

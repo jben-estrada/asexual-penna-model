@@ -85,7 +85,7 @@ contains
       call assignPositionalArg(cmdPosArgs, cmdArg, status, readPosArg)
       if (status /= 0) then
         print "(3a)", "***ERROR. '", trim(cmdArg), "' is not a valid option."
-        stop
+        error stop
       end if
     end do
 
@@ -330,7 +330,7 @@ contains
       if (.not. cmdOptions(i) % hasValue) then
         print "(3a)", "***ERROR. The command '", trim(cmdOptions(i) % command),&
             "' requires a value." 
-        stop
+        error stop
       end if
     end do
   end subroutine checkUninitializedValues
