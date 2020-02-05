@@ -58,20 +58,20 @@ module WriterOptions
 
   ! -------------------------------------------------------------------------- !
   ! Record flags. Corresponds to the data to be recorded.
-  character, public, parameter :: nullFlag = "0"
+  character, public, parameter :: nullFlag = "x"
     !! Nothing (do not record).
-  character, public, parameter :: popFlag = "1"
+  character, public, parameter :: popFlag = "p"
     !! Population size per time step.
-  character, public, parameter :: ageDstrbFlag = "2"
+  character, public, parameter :: ageDstrbFlag = "a"
     !! Age distribution in the last 300 time steps
-  character, public, parameter :: deathFlag = "3"
+  character, public, parameter :: deathFlag = "d"
     !! Death counts (death by age, by mutation, by Verhulst factor) 
     !! per time step.
-  character, public, parameter :: divIdxFlag = "4"
+  character, public, parameter :: divIdxFlag = "s"
     !! Shannon diversity index per time step.
-  character, public, parameter :: badGeneFlag = "5"
+  character, public, parameter :: badGeneFlag = "b"
     !! Bad gene distribution per time step.
-  character, public, parameter :: timeFlag = "6"
+  character, public, parameter :: timeFlag = "t"
     !! Timing statistics.
   ! -------------------------------------------------------------------------- !
 

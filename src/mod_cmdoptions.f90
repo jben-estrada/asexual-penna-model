@@ -105,17 +105,17 @@ contains
     call setUsageMsg(maxTimeStepArg, "Maximum time step.")
     call setUsageMsg(sampleSizeArg, "Sample size.")
     call setUsageMsg(startPopSizeArg, "Starting population size.")
-    call setUsageMsg(recordFlagArg, "Record data specified by the " // &
-        "given integer flag.")
+    call setUsageMsg(recordFlagArg, "Record data as specified by the " // &
+        "given character value.")
     call setUsageMsg(rngChoiceArg, "Choose an RNG to be used as specified " // &
-        "by the given integer flag.")
+        "by integer flag.")
     call setUsageMsg(rngSeedArg, "Set the seed for the RNG.")
 
     ! Set the message for the value in key-value options.
     call setValueMsg(maxTimeStepArg, "<int>")
     call setValueMsg(sampleSizeArg, "<int>")
     call setValueMsg(startPopSizeArg, "<int>")
-    call setValueMsg(recordFlagArg, "<int>")
+    call setValueMsg(recordFlagArg, "<str>")
     call setValueMsg(rngChoiceArg, "<int>")
     call setValueMsg(rngSeedArg, "<int>")
 
@@ -143,7 +143,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: showHelpMsgAndNotes
-  !>  Show the help message together with notes with regards to integer flags.
+  !>  Show the help message together with notes with regards to char/int flags.
   ! -------------------------------------------------------------------------- !
   subroutine showHelpMsgAndNotes()
     use WriterOptions
@@ -154,7 +154,7 @@ contains
       ! Print notes:
       print "(/a)", "notes:"
       write(*, "(4(' '), a/, 6(8(' '), a/))", advance="no") &
-          "There are 5 record flags: ", &
+          "Valid char values for '--record' or '-r': ", &
           nullFlag     // " - record nothing", &
           popFlag      // " - population count per time step", &
           ageDstrbFlag // " - age distribution", &
@@ -162,7 +162,7 @@ contains
           divIdxFlag   // " - Shannon diversity index per time step", &
           badGeneFlag  // " - Bad gene distribution per time step"
       write(*, "(4(' '), a/, 2(8(' '), a/))", advance="no") &
-          "The RNG flags are as follows: ", &
+          "Valid integer flags for '--rng' or '-R': ", &
           "0 - xoshiro256** pseudo-RNG (the intrinsic RNG)", &
           "1 - Mersenne twister (MT19937) pseudo-RNG"
       stop
