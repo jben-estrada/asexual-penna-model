@@ -17,7 +17,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine assignConfigFilePaths()
     character(len=MAX_LEN) :: filePathExec
-    logical :: exist
 
     ! Get the paths of config files relative to the executable.
     call get_command_argument(0, filePathExec)
@@ -31,26 +30,53 @@ contains
     ! Get the positional command-line arguments.
     call parseCmdArgs(.false., .false., .true.)
 
-    ! Get the config file paths from command-line arguments.
-    FILE_NAME_MODEL = configDirPosArg % getValue()
-    FILE_NAME_VWEIGHT = vWeightDirPosArg % getValue()
-
-    ! Inquire the existence of the config file for model paramters.
-    inquire(file=FILE_NAME_MODEL, exist=exist)
-    if (.not. exist) then
-      print "(3a)", "***ERROR. The file '", trim(FILE_NAME_MODEL), &
-          "' cannot be opened or does not exist."
-      error stop
-    end if
-
-    ! Inquire the existence of the config file for Verhulst weights.
-    inquire(file=FILE_NAME_VWEIGHT, exist=exist)
-    if (.not. exist) then
-      print "(3a)", "***ERROR. The file '", trim(FILE_NAME_VWEIGHT), &
-          "' cannot be opened or does not exist." 
-      error stop
-    end if
+    call checkConfigFile(FILE_NAME_MODEL, configDirPosArg % getValue())
+    call checkConfigFile(FILE_NAME_VWEIGHT, vWeightDirPosArg % getValue())
   end subroutine assignConfigFilePaths
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkConfigFile
+  !>  Check the existence of the file path and the provided one. Change the
+  !!  given file path into the user-provided one if the latter exist.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkConfigFile(filePath, newFilePath)
+    character(len=*), intent(inout) :: filePath
+      !! The file path to check and update.
+    character(len=*), intent(in)    :: newFilePath
+      !! The file path provided by the user via command-line arguments.
+
+    logical :: defaultExist
+    logical :: altExist
+
+    ! Check the existance of both the default file path and the provided one.
+    inquire(file=filePath, exist=defaultExist)
+    inquire(file=newFilePath, exist=altExist)
+
+    if (altExist .and. defaultExist) then
+      ! Update the file path.
+      filePath = trim(newFilePath)
+    else
+
+      if (defaultExist) then
+        print "(3a)", "***ERROR. The file '", trim(newFilePath), &
+        "' cannot be opened or does not exist."
+
+        ! Suggest the user options to troubleshoot.
+        print "(10(' '), a)", "Run with '-h' for more information if it " // &
+            "is not intended to be a file path."
+        print "(10(' '), 5a)", "If it is, run the program without passing '", &
+            trim(newFilePath), "' to use the default one ('", trim(filePath), &
+            "')."
+      else
+        print "(3a)", "***ERROR. The file '", trim(filePath), &
+            "' cannot be opened or does not exist."
+      end if
+
+      error stop
+    end if
+
+  end subroutine checkConfigFile
 
 
   ! -------------------------------------------------------------------------- !
@@ -69,7 +95,7 @@ contains
       if (source(i:i) == "/") then
         ! Concatenate the relative path to the executable and the replacement
         ! file name.
-        replacement = source(1:i) // trim(replacement)
+        replacement = "./" // trim(source(1:i)) // trim(replacement)
         return
       end if
     end do
