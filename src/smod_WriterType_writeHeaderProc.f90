@@ -39,8 +39,8 @@ submodule (WriterType) WriterTypeWrHdrProc
     end do
 
     if (.not. flagFound) then
-      print "(3a)", "***ERROR. Cannot write header, flag ('", flag, &
-          "') not found."
+      print "(3a)", "***ERROR. Cannot write header, flag '", flag, &
+          "' does not correspond to any recordable data."
       error stop
     end if
   end subroutine writer_writeHeader

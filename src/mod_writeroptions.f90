@@ -140,7 +140,7 @@ contains
         out = timeFile
 
       case default
-        print "(3a)", "***ERROR. No file with flag ('", flag, "') found."
+        print "(3a)", "***ERROR. No file with flag '", flag, "' found."
         error stop
     end select
   end function getOutputFile

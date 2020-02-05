@@ -31,8 +31,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
-          "') not found."
+      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
+          "' does not correspond to any recordable data."
       stop
     end if
   end subroutine writer_write_int
@@ -58,8 +58,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
-          "') not found."
+      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
+          "' does not correspond to any recordable data."
       error stop
     end if
   end subroutine writer_write_real
@@ -85,8 +85,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
-          "') not found."
+      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
+          "' does not correspond to any recordable data."
       error stop
     end if
   end subroutine writer_write_intArray
@@ -112,8 +112,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, flag ('", flag, &
-          "') not found."  
+      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
+          "' does not correspond to any recordable data."
       error stop
     end if
   end subroutine writer_write_realArray

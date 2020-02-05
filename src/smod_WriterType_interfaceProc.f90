@@ -139,7 +139,8 @@ contains
 
       ! Error handling.
       if (.not. fileRemoved) then
-        print "(a)", "***ERROR. File to remove not found."
+        print "(3a)", "***ERROR. 'OutputFile' object to remove as " // &
+            "specified by the flag '", flag, "' is not found."
         error stop
       end if
     end if
@@ -205,7 +206,7 @@ contains
         end if
       end do
     else
-      print "(a)", "***ERROR. Provided array to find flags with " // &
+      print "(a)", "***ERROR. The provided array to find flags with " // &
         "is not yet allocated."
       error stop
     end if

@@ -79,8 +79,8 @@ submodule (WriterType) WriterTypeInitProc
 
       deallocate(foundFile)
     else
-      print "(3a)", "***ERROR. File with flag ('", flag, &
-          "') is not available."
+      print "(3a)", "***ERROR. The flag '", flag, &
+          "' does not correspond to any recordable data set."
       error stop
     end if
   end subroutine writer_initialize
