@@ -586,7 +586,7 @@ contains
     integer :: i
 
     ! Print the header.
-    write(*, "(a)", advance="no") "usage: penna.out [options]"
+    write(*, "(a)", advance="no") "usage: penna.out [options...]"
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % isOptional) write(*, "(a)", advance="no") " ["
       write(*, "(a)", advance="no") trim(cmdPosArgs(i) % command)
