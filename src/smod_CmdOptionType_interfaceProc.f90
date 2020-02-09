@@ -8,6 +8,9 @@ submodule (CmdOptionType) interfaceProcedures
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
   implicit none
+
+  character(len=*), parameter :: shortCommDelim = "-"
+  character(len=*), parameter :: longCommDelim  = "--"
 contains
 
 
@@ -51,10 +54,12 @@ contains
     logical,                    intent(in)    :: readPosArg
       !! Read and assign passed positional arguments.
 
+    character(len=MAX_LEN) :: cmdArg
+    character(len=MAX_LEN) :: remainingArg
+
     integer :: argCount
     integer :: maxArgCount
     integer :: status
-    character(len=MAX_LEN) :: cmdArg
 
     argCount = 0
     maxArgCount = command_argument_count()
@@ -62,95 +67,384 @@ contains
 
     do
       ! Exit condition.
-      if (argCount > maxArgCount) then
+      if (argCount == maxArgCount) then
         exit
       else
         argCount = argCount + 1
       end if
-
+      
       call get_command_argument(argCount, cmdArg, status=status)
-
+      
       ! Filter out empty characters.
       if (cmdArg == NULL_CHAR) cycle
 
-      ! Check the command-line flags if there is a match.
-      call toggleFlagOptions(cmdFlags, cmdArg, status, readFlag)
-      if (status == 0) cycle
+      status = 1
+      ! Parse full command, i.e. commands starting with '--'.
+      if (len(trim(cmdArg)) > len(longCommDelim)) then
+        if (cmdArg(1:len(longCommDelim)) == longCommDelim) then
+          ! Check long flag options.
+          call parseLongCommand(cmdFlags, cmdArg(len(longCommDelim) + 1:), &
+              readFlag, status)
+          ! Go to the next argument if parsing succeeds, else evaluate
+          ! argument as a key-value command and not a flag.
+          if (status == 0) cycle
 
-      ! Then check the key-value command-line options.
-      call assignKeyValOption(cmdKeyVal, cmdArg, status, argCount, readKeyVal)
-      if (status == 0) cycle
+          ! Check full key-value command.
+          call parseLongCommand(cmdKeyVal, cmdArg(len(longCommDelim) + 1:), &
+              readKeyVal, status)
 
-      ! Finally, check the positional command-line options.
+          ! Go to the next argument if parsing succeeds.
+          if (status == 0) then
+            cycle
+
+          ! Raise error if no match was found.
+          else
+            print "(3a)", "***ERROR. '", trim(cmdArg), &
+                "' is an invalid command."
+            error stop
+          end if
+        end if
+      end if
+
+      ! Parse short command, i.e. commands starting with a single '-' char.
+      if (len(trim(cmdArg)) > len(shortCommDelim)) then
+        if (cmdArg(1:len(shortCommDelim)) == shortCommDelim) then
+          ! Check short flag options.
+          call parseShortCommand(cmdFlags, cmdArg(len(shortCommDelim) + 1:), &
+              remainingArg, argCount, readFlag)
+
+          ! Check short key-value command-line options.
+          ! NOTE: We use `cmdArg` here to hold the remaining unremoved char.
+          !       Declaring another char variable would just be a waste of time
+          !       and space.
+          call parseShortCommand(cmdKeyVal, remainingArg, &
+              cmdArg, argCount, readKeyVal)
+
+          ! Go to the next argument if parsing succeeds.
+          ! NOTE: `cmdArg` holds the last remaining unmatched char.
+          if (len(trim(cmdArg)) == 0) then
+            cycle
+          else
+            ! Raise an error if there is at least one non-matching character in 
+            ! `cmdArg`.
+            print "(3a)", "***ERROR. '", shortCommDelim // remainingArg(1:1), &
+                "' is an invalid command."
+            error stop
+          end if
+        end if
+      end if
+
+      ! Parse argument as a positional argument.
       call assignPositionalArg(cmdPosArgs, cmdArg, status, readPosArg)
+
+      ! Raise an error if the passed argument failed to match any defined
+      ! command-line options.
       if (status /= 0) then
-        print "(3a)", "***ERROR. '", trim(cmdArg), "' is not a valid option."
+        print "(3a)", "***ERROR. '", trim(cmdArg), "' is an invalid command."
         error stop
       end if
     end do
 
-    ! Check for missing values.
+    ! Check for missing values. Raise an error if at least one has no value.
+    ! NOTE: Optional commands already have default values.
     if (readKeyVal) call checkUninitializedValues(cmdKeyVal)
     if (readPosArg) call checkUninitializedValues(cmdPosArgs)
   end subroutine parsePassedCmdArgs
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: compareCommand
-  !>  Compare command and alternative command with the passed command-line
-  !!  argument.
+  ! SUBROUTINE: parseShortCommand
+  !>  Parse `cmdArg` as either a short flag command or a key-value command.
   ! -------------------------------------------------------------------------- !
-  logical pure function compareCommand(cmdOption, cmdArg)
-    class(BaseCmdOption), intent(in) :: cmdOption
-      !! Command-line option whose `command` attribute is to compared with.
-    character(len=*),     intent(in) :: cmdArg
-      !! Command character to be compared with `cmdOption`.
-
-    compareCommand = cmdOption % command == cmdArg &
-        .or. cmdOption % shortCommand == cmdArg
-  end function compareCommand
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: toggleFlagOptions
-  !>  Toggle the flag option matching with the passed command-line argument.
-  ! -------------------------------------------------------------------------- !
-  subroutine toggleFlagOptions(cmdFlags, cmdArg, status, toRead)
-    class(FlagCmdOption), intent(inout) :: cmdFlags(:)
-      !! Command-line flags to be modified.
-    character(len=*),     intent(in)    :: cmdArg
+  subroutine parseShortCommand(cmdOptions, cmdArg, remainingArg, argCount, &
+        toRead)
+    class(BaseCmdOption),   intent(inout) :: cmdOptions(:)
+      !! Command-line options to be modified.
+    character(len=*),       intent(in)    :: cmdArg
       !! Passed command-line argument.
-    integer,              intent(out)   :: status
-      !! Status of this routine. Return non-zero value to signify failure.
-      !! Return `0` if reading and assigning succeeds.
-    logical,              intent(in)    :: toRead
-      !! Check validity of passed argument but do not read and assign.
+    character(len=MAX_LEN), intent(out)   :: remainingArg
+      !! Characters in `cmdArg` with matching substrings removed.
+    integer,                intent(inout) :: argCount
+      !! Current count of command-line arguments that have been parsed.
+      !! This would index if a short key-value argument is passed.
+    logical,                intent(in)    :: toRead  
+      !! Evaluate and assign command-line flags. If false, evaluate only but
+      !! do not assign values.
 
-    integer :: i
+    character(len=:), allocatable :: mangledArg
+    character(len=:), allocatable :: currChar
 
-    ! NOTE: Non-zero values for 'status' mean the routine failed.
-    status = 1
+    integer, parameter :: FLAG_TYPE = 0
+    integer, parameter :: KV_TYPE = 1
 
-    do i = 1, size(cmdFlags)
-      if (compareCommand(cmdFlags(i), cmdArg)) then
-        ! Mark the routine to be successful in finding a syntactically-valid
-        ! value.
-        status = 0
+    integer :: cmdOptionType
+    integer :: cmdArgLen
+    integer :: commCount
+    integer :: charCount
+    integer :: idxOffset
+    logical :: matchFound
 
-        ! Check if the current flag option has already been toggled.
-        if (toRead .and. .not. cmdFlags(i) % isToggled) then
-          cmdFlags(i) % value = invertFlagChar(cmdFlags(i) % value)
-          cmdFlags(i) % hasValue = .true.
-          cmdFlags(i) % isToggled = .true.
+    ! Get the class of `cmdOptions`.
+    select type(cmdOptions)
+      class is (FlagCmdOption)
+        cmdOptionType = FLAG_TYPE
+
+      class is (KeyValCmdOption)
+        cmdOptionType = KV_TYPE
+
+      class default
+        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'."
+        error stop 
+    end select
+    
+    ! Initialize local variables.
+    allocate(character(len=0) :: currChar)
+    allocate(character(len=0) :: mangledArg)
+    cmdArgLen = len(trim(cmdArg))
+    charCount = 1
+    idxOffset = 0
+
+    ! Find matches in command-line options.
+    do
+      if (charCount > cmdArgLen) exit
+
+      matchFound = .false.
+      ! Loop through command-line options to look for a match.
+      do commCount = 1, size(cmdOptions)
+        ! Get substring the same length as with the current flag.
+        idxOffset = len(trim(cmdOptions(commCount) % shortCommand)) - 1
+
+        ! Check length before checking the current command for a match.
+        ! It's a shame Fortran 2008 does not have short-circuit evaluation.
+        if (charCount + idxOffset <= cmdArgLen) then
+          ! Get substring for convenience.
+          currChar = cmdArg(charCount: charCount + idxOffset)
+
+          ! Assign value to matching command if `toRead` is true.
+          if (cmdOptions(commCount) % shortCommand == currChar) then
+            matchFound = .true.
+
+            ! Run type-specific procedures in assigning values to matching
+            ! commands. This is ignored if explicitly specified not to read
+            ! assign values.
+            select case (cmdOptionType)
+              case (FLAG_TYPE)
+                if (toRead) call toggleFlagOption(cmdOptions(commCount))
+
+              case (KV_TYPE)
+                ! Increment `argCount` to get the value for the matching
+                ! key-value command.
+                argCount = argCount + 1
+                if (toRead) &
+                    call assignShortKVOption(cmdOptions(commCount), argCount)
+
+              case default
+                print "(a)", &
+                    "***ERROR. Unknown 'BaseCmdOption' type extension."
+                error stop
+            end select
+
+            ! Exit out of the inner loop to ignore potentially redundant
+            ! commands.
+            exit
+          end if
+        else
+          cycle
         end if
-        exit
+
+      end do
+      ! Go to the next substring.
+      if (matchFound) then
+        charCount = charCount + idxOffset + 1
+
+      ! If no match was found for the current substring, append it to
+      ! `remainingArg`.
+      else
+        mangledArg = mangledArg // cmdArg(charCount: charCount)
+        charCount = charCount + 1
       end if
     end do
-  end subroutine toggleFlagOptions
+
+    remainingArg = adjustl(mangledArg)
+
+    ! Deallocate allocatables just to be sure.
+    if (allocated(mangledArg)) deallocate(mangledArg)
+    if (allocated(currChar)) deallocate(currChar)
+  end subroutine parseShortCommand
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: incertFlagChar
+  ! SUBROUTINE: toggleFlagOption
+  !>  Toggle the provided flag command, i.e. invert the default boolean value.
+  ! -------------------------------------------------------------------------- !
+  subroutine toggleFlagOption(cmdOption)
+    class(BaseCmdOption), intent(inout) :: cmdOption
+      !! Flag option to toggle.
+
+    ! Filter out `cmdOption` of unwanted type.
+    select type(cmdOption)
+      class is (FlagCmdOption)
+        ! Prevent multiple toggling.
+        if (.not. cmdOption % isToggled) then
+          cmdOption % value = invertFlagChar(cmdOption % value)
+          cmdOption % hasValue = .true.
+          cmdOption % isToggled = .true.
+        end if
+
+      class default
+        print "(a)", "***ERROR. Only 'FlagCmdOption' objects can be toggled."
+        error stop
+    end select
+  end subroutine toggleFlagOption
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignShortKVOption
+  !>  Parse and assign value of the matching command obtained from the passed
+  !!  argument. This assumes that the matching command is the short command.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignShortKVOption(cmdOption, valIdx)
+    class(BaseCmdOption), intent(inout) :: cmdOption
+      !! Key-value option whose value is to be modified.
+    integer, optional,    intent(inout) :: valIdx
+      !! Index of command-line argument for the value.
+
+    character(len=MAX_LEN) :: value
+    integer :: status
+  
+    ! Filter out `cmdOption` of unwanted type.
+    select type(cmdOption)
+      class is (KeyValCmdOption)
+        ! Get the value for `cmdOption`.
+        call get_command_argument(valIdx, value, status=status)
+
+        ! Assign value to `cmdOption` if getting succeeds.
+        if (status == 0) then
+          cmdOption % value = adjustl(value)
+          cmdOption % hasValue = .true.
+        else
+          print "(3a)", "***ERROR. Value for the command '", shortCommDelim // &
+              trim(cmdOption % shortCommand), "' cannot be obtained."
+          error stop
+        end if
+
+      class default
+        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'."
+        error stop
+    end select
+  end subroutine assignShortKVOption
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: assignLongKVOption
+  !>  Parse and assign value of the matching command obtained from the passed
+  !!  argument. This assumes that the matching command is the full command.
+  ! -------------------------------------------------------------------------- !
+  subroutine assignLongKVOption(cmdOption, cmdArg, toRead, status)
+    class(BaseCmdOption), intent(inout) :: cmdOption
+      !! Key-value option whose value is to be modified.
+    character(len=*),     intent(in)    :: cmdArg
+    logical,              intent(in)    :: toRead
+    integer,              intent(out)   :: status
+      !! Status of this routine.
+
+    character(len=MAX_LEN) :: key
+    character(len=MAX_LEN) :: value
+
+    ! Filter out `cmdOption` of unwanted type.
+    select type(cmdOption)
+      class is (KeyValCmdOption)
+      ! Separate the key part and value part of the command-line argument.
+      call getKeyVal(cmdArg, key, value, status)
+
+      ! Check if parsing succeeds.
+      if (status == 0) then
+        ! Check if the successfully parsed argument does match `cmdOption`.
+        if (cmdOption % command == key) then
+          if (toRead) then
+            cmdOption % value = value
+            cmdOption % hasValue = .true.
+          end if
+        else
+          status = 1
+        end if
+      end if
+
+      class default
+        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'."
+        error stop
+    end select
+  end subroutine assignLongKVOption
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: parseLongCommand
+  !>  Parse `cmdArg` as either a full flag command or a key-value command.
+  ! -------------------------------------------------------------------------- !
+  subroutine parseLongCommand(cmdOptions, cmdArg, toRead, status)
+    class(BaseCmdOption),   intent(inout) :: cmdOptions(:)
+      !! Command-line options to be modified.
+    character(len=*),       intent(in)    :: cmdArg
+      !! Command-line argument
+    logical,                intent(in)    :: toRead
+      !! Evaluate and assign command-line flags. If false, evaluate only but
+      !! do not assign values.
+    integer,                intent(out)   :: status
+      !! Status of this routine. A value of 0 signifies that this routine has
+      !! found a matching command in `cmdOptions`. Other values mean it has
+      !! failed.
+
+    integer, parameter :: FLAG_TYPE = 0
+    integer, parameter :: KV_TYPE = 1
+
+    integer :: cmdOptionType
+    integer :: commCount
+  
+    ! Get the class of `cmdOptions`.
+    select type(cmdOptions)
+      class is (FlagCmdOption)
+        cmdOptionType = FLAG_TYPE
+
+      class is (KeyValCmdOption)
+        cmdOptionType = KV_TYPE
+
+      class default
+        print "(a)", "***ERROR. Invalid 'BaseCmdOption' class. It must be " // &
+            "either 'FlagCmdOption' or 'KeyValCmdOption'."
+        error stop 
+    end select
+
+    ! Pessimistically initialize `status` to 1.
+    ! NOTE: Non-zero value for `status` means the routine failed to find a match
+    status = 1
+    do commCount = 1, size(cmdOptions)
+      ! Select the procedure for the approprirate type.
+      select case (cmdOptionType)
+        case (FLAG_TYPE)
+          if (cmdOptions(commCount) % command == cmdArg) then
+            status = 0
+            if (toRead) call toggleFlagOption(cmdOptions(commCount))
+            exit
+          end if
+
+        case (KV_TYPE)
+          call assignLongKVOption(cmdOptions(commCount), cmdArg, toRead, status)
+          ! Value for `status` is determined in `assignLongKVOption`.
+          if (status == 0) exit
+
+        case default
+          print "(a)", "***ERROR. Unknown 'BaseCmdOption' type extension."
+          error stop
+      end select
+    end do
+  end subroutine parseLongCommand
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: invertFlagChar
   !>  Invert the given `flagChar` character. More precisely "T" -> "F" and
   !!  "F" -> "T".
   ! -------------------------------------------------------------------------- !
@@ -167,66 +461,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: assignKeyValOption
-  !>  Assign the value for the matching key-value option.
-  ! -------------------------------------------------------------------------- !
-  subroutine assignKeyValOption(cmdKeyVal, cmdArg, status, argCount, toRead)
-    class(KeyValCmdOption), intent(inout) :: cmdKeyVal(:)
-      !! Command-line key-value options to be modified.
-    character(len=*),       intent(in)    :: cmdArg
-      !! Passed command-line argument.
-    integer,                intent(out)   :: status
-      !! Status of this routine. Return non-zero value to signify failure.
-      !! Return `0` if reading and assigning succeeds.
-    integer,                intent(inout)  :: argCount
-      !! Current count of command-line arguments that have been parsed.
-      !! This would index if a short key-value argument is passed.
-    logical,                intent(in)    :: toRead
-      !! Check validity of passed argument but do not read and assign.
-
-    character(len=MAX_LEN) :: key
-    character(len=MAX_LEN) :: value
-    integer :: i
-
-    status = 1
-    do i = 1, size(cmdKeyVal)
-      ! Check the short command first.
-      if (cmdKeyVal(i) % shortCommand == cmdArg) then
-        ! Proceed to the next command-line argument to get the corresponding
-        ! value. If obtaining the `value` somehow fails, mark this routine as
-        ! failed.
-        argCount = argCount + 1
-        call get_command_argument(argCount, value, status=status)
-        if (status /= 0) exit
-
-        ! Finally assign the obtained value if `get_command_argument` succeeds.
-        status = 0
-        if (toRead) then
-          cmdKeyVal(i) % value = value
-          cmdKeyVal(i) % hasValue = .true.
-        end if
-        exit
-      ! Check the full command.
-      else
-        ! Get key and value from 'cmdArg' char.
-        call getKeyVal(cmdArg, key, value, status)
-        if (status /= 0) cycle
-
-        if (cmdKeyVal(i) % command == key) then
-          status = 0
-
-          if (toRead) then
-            cmdKeyVal(i) % value = value
-            cmdKeyVal(i) % hasValue = .true.
-          end if
-          exit
-        end if
-      end if
-    end do
-  end subroutine assignKeyValOption
-
-
-  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: assignPositionalArg
   !>  Assign positional arguments.
   ! -------------------------------------------------------------------------- !
@@ -235,7 +469,7 @@ contains
       !! Positional command-line option.
     character(len=*),           intent(in)    :: cmdArg
       !! Passed command-line argument.
-    integer,                    intent(out)   :: status
+    integer,                    intent(inout) :: status
       !! Status of this routine. Return non-zero value to signify failure.
       !! Return `0` if reading and assigning succeeds.
     logical,                    intent(in)    :: toRead
@@ -244,7 +478,6 @@ contains
     integer, save :: posCount = 1
     integer :: i
 
-    status = 1
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % position == posCount) then
         ! Mark the routine to be successful in finding a syntactically-valid
@@ -296,6 +529,7 @@ contains
     do i = 1, len(cmdArg)
       currChar = cmdArg(i:i)
 
+      ! Switch from LHS to RHS once "=" is encountered.
       if (currChar == KEY_VAL_SEP) then
         isReadingKey = .false.
         key = tempStr
@@ -362,8 +596,9 @@ contains
     print "(//a)", "options:"
     ! Print the usage message for flags.
     do i = 1, size(cmdFlags)
-      print "(4(' '), a10, a20, a)", cmdFlags(i) % shortCommand, &
-          cmdFlags(i) % command, trim(cmdFlags(i) % usageMsg)
+      print "(4(' '), a10, a20, a)", shortCommDelim // &
+          cmdFlags(i) % shortCommand, longCommDelim // cmdFlags(i) % command, &
+          trim(cmdFlags(i) % usageMsg)
     end do
 
     ! Print the usage message for key-value options.
@@ -372,13 +607,13 @@ contains
       if (cmdKeyVal(i) % shortCommand == NULL_CHAR) then
         tempChar = ""
       else
-        tempChar = trim(cmdKeyVal(i) % shortCommand) // " " // &
-             trim(cmdKeyVal(i) % valueMsg)
+        tempChar = shortCommDelim // trim(cmdKeyVal(i) % shortCommand) // &
+            " " // trim(cmdKeyVal(i) % valueMsg)
       end if
       write(*, "(4(' '), a10)", advance="no") [character(len=10) :: tempChar]
       
       ! Print the full command plus the usage text.
-      tempChar = trim(cmdKeyVal(i) % command) // "=" // &
+      tempChar = longCommDelim // trim(cmdKeyVal(i) % command) // "=" // &
           trim(cmdKeyVal(i) % valueMsg)
       write (*, "(a20, a)", advance="no") [character(len=20) :: tempChar], &
           trim(cmdKeyVal(i) % usageMsg)
