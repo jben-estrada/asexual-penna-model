@@ -533,7 +533,10 @@ contains
       if (currChar == KEY_VAL_SEP) then
         isReadingKey = .false.
         key = tempStr
-        tempStr = NULL_CHAR
+
+        ! Reallocate `tempStr` with empty character.
+        deallocate(tempStr)
+        allocate(character(len=0) :: tempStr)
       else
         tempStr = tempStr // currChar
       end if
