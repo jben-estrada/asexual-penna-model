@@ -13,14 +13,12 @@ module WriterOptions
   ! -------------------------------------------------------------------------- !
   ! Population size/count per time step record.
   integer, parameter :: popUnit = 100
-  character(len=MAX_LEN), parameter :: popFilename = "pop_size_f08.csv"
   character(len=MAX_LEN), parameter :: popFormat = "(i6)"
   character(len=MAX_LEN), parameter :: popPosition = "asis"
   type(OutputFile) :: popFile
 
   ! Age demographics of the last 300 time steps record.
   integer, parameter :: ageDstrbUnit = 101
-  character(len=MAX_LEN), parameter :: ageDstrbFilename = "ageDstrb_f08.csv"
   character(len=MAX_LEN), parameter :: ageDstrbFormat = "(*(i6, ','))"
   character(len=MAX_LEN), parameter :: ageDstrbPosition = "asis"
   type(OutputFile) :: ageDstrbFile
@@ -29,21 +27,18 @@ module WriterOptions
   ! step record.
   ! Format: <death by old age> <death by mutation> <death by Verhulst factor>
   integer, parameter :: deathUnit = 102
-  character(len=MAX_LEN), parameter :: deathFilename = "death_f08.csv"
   character(len=MAX_LEN), parameter :: deathFormat = "(*(i6, ','))"
   character(len=MAX_LEN), parameter :: deathPosition = "asis"
   type(OutputFile) :: deathFile
 
   ! Shannon diversity index of genomes per time step record.
   integer, parameter :: divIdxUnit = 103
-  character(len=MAX_LEN), parameter :: divIdxFilename = "divIdx_f08.csv"
   character(len=MAX_LEN), parameter :: divIdxFormat = "(f15.10)"
   character(len=MAX_LEN), parameter :: divIdxPosition = "asis"
   type(OutputFile) :: divIdxFile
 
   ! Bad gene distribution per time step.
   integer, parameter :: badGeneDstrbUnit = 104
-  character(len=MAX_LEN), parameter :: badGeneDstrbFilename = "badGeneDstrb.csv"
   character(len=MAX_LEN), parameter :: badGeneDstrbFormat = "(*(i6, ','))"
   character(len=MAX_LEN), parameter :: badGeneDstrbPosition = "asis"
   type(OutputFile) :: badGeneDstrbFile
@@ -51,7 +46,6 @@ module WriterOptions
   ! Timing statistics record.
   ! Format: <no. of time step> <no. of population> <wall time>
   integer, parameter :: timeUnit = 105
-  character(len=MAX_LEN), parameter :: timeFilename = "time_f08.csv"
   character(len=MAX_LEN), parameter :: timeFormat = "(*(f10.5, ','))"
   character(len=MAX_LEN), parameter :: timePosition = "append"
   type(OutputFile) :: timeFile
@@ -92,23 +86,26 @@ contains
   !>  Assign all defined `OutputFile` object in `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
   subroutine initializeWriterObjects()
+    use ModelParam, only: PROG_OUT_FILE_NAME
+
     ! Population size per time step file.
-    popFile = OutputFile(popFilename, popFormat, popPosition, popFlag, popUnit)
+    popFile = OutputFile(PROG_OUT_FILE_NAME, popFormat, popPosition, popFlag, &
+        popUnit)
     ! Final age distribution file.
-    ageDstrbFile = OutputFile(ageDstrbFilename, ageDstrbFormat, &
+    ageDstrbFile = OutputFile(PROG_OUT_FILE_NAME, ageDstrbFormat, &
         ageDstrbPosition, ageDstrbFlag, ageDstrbUnit)
     ! Death counts per time step file.
-    deathFile = OutputFile(deathFilename, deathFormat, deathPosition, &
+    deathFile = OutputFile(PROG_OUT_FILE_NAME, deathFormat, deathPosition, &
         deathFlag, deathUnit)
     ! Diversity index per time step file.
-    divIdxFile = OutputFile(divIdxFilename, divIdxFormat, divIdxPosition, &
+    divIdxFile = OutputFile(PROG_OUT_FILE_NAME, divIdxFormat, divIdxPosition, &
         divIdxFlag, divIdxUnit)
     ! Bad gene distribution per time step.
-    badGeneDstrbFile = OutputFile(badGeneDstrbFilename, badGeneDstrbFormat, &
+    badGeneDstrbFile = OutputFile(PROG_OUT_FILE_NAME, badGeneDstrbFormat, &
         badGeneDstrbPosition, badGeneFlag, badGeneDstrbUnit)
     ! Time statistics file.
-    timeFile = OutputFile(timeFilename, timeFormat, timePosition, timeFlag, &
-        timeUnit)
+    timeFile = OutputFile(PROG_OUT_FILE_NAME, timeFormat, timePosition, &
+        timeFlag, timeUnit)
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
         badGeneDstrbFile, timeFile])

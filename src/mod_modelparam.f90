@@ -35,14 +35,11 @@ module ModelParam
   !               K    : The carrying capacity.
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
-  use CmdOptions
   implicit none
   private
 
   ! EXTRANEOUS VARIABLES
   ! -------------------------------------------------------------------------- !
-  integer, parameter :: PARAM_COUNT = 14
-    !! Number of model parameters.
   integer, parameter :: MAX_LEN = 256
   !! Maximum character length for buffer characters.
 
@@ -60,7 +57,11 @@ module ModelParam
   ! -------------------------------------------------------------------------- !
   character(len=*), public, parameter :: PROG_NAME = &
       "Asexual Penna model simulation"
+    !! Name of the program
   character(len=*), public, parameter :: PROG_VERSION = ""
+    !! Program version. 
+    !! NOTE: Temporarily set to none as I still have to work out the appropriate
+    !! versioning scheme.
 
   integer, public, protected :: PROG_PRINT_STATE = NORMAL_PRINT
     !! Printing state. 
@@ -68,16 +69,23 @@ module ModelParam
     !! Record-time state.
   integer, public, protected :: PROG_SAMPLE_SIZE
     !! Number of times the simulation will run.
+    !! NOTE: Default value is obtained from config files.
   integer, public, protected :: PROG_RNG
     !! RNG flag. Corresponds to a random number generator.
+    !! NOTE: Default value is obtained from config files.
   integer, public, protected :: PROG_RNG_SEED
     !! RNG seed.
+    !! NOTE: Default value is obtained from config files.
   character(len=MAX_LEN), public, protected :: PROG_REC_FLAG
     !! List of record flags.
+    !! NOTE: Default value is obtained from config files.
+  character(len=MAX_LEN), public, protected :: PROG_OUT_FILE_NAME = "./out.txt"
+    !! Name of the file to which output of data to be recorded is to be written.
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
   ! Parameters whose values are from an external config file.
+  ! NOTE: Default values are obtained from config files.
   integer, public, protected :: MODEL_L
     !! Genome length
   integer, public, protected :: MODEL_T

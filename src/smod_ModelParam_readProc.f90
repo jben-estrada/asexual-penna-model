@@ -10,7 +10,7 @@ submodule (ModelParam) ReadProcedures
 
   ! -------------------------------------------------------------------------- !
   ! Parameter keys. NOTE: Padded with spaces to accept initializer.
-  character(len=*), parameter :: PARAM_KEYS(PARAM_COUNT) = &
+  character(len=*), parameter :: PARAM_KEYS(*) = &
     ["L          ", &
      "T          ", &
      "B          ", &
@@ -26,7 +26,12 @@ submodule (ModelParam) ReadProcedures
      "seed       ", &
      "mttn_count "]
 
+  integer, parameter :: PARAM_COUNT = size(PARAM_KEYS)
+    !! Number of model parameters to be obtained from external files.
+
   logical :: PARAM_ASSIGNED(PARAM_COUNT) = .false.
+    !! Array of logical values of whether the model parameters to which the
+    !! indices of the elements of this array correspond is initialized or not.
 
   ! -------------------------------------------------------------------------- !
   ! Units for writing on files.

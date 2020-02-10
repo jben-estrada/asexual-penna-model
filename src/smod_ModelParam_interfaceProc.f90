@@ -7,6 +7,7 @@ submodule (ModelParam) InterfaceProcedures
   !!  private "helper" procedures for interfacing with other modules, program,
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
+  use CmdOptions
   implicit none
 contains
 
@@ -126,6 +127,7 @@ contains
     call assignOptionalKVVal(startPopSizeArg, &
         castIntToChar(MODEL_START_POP_SIZE))
     call assignOptionalKVVal(recordFlagArg, PROG_REC_FLAG)
+    call assignOptionalKVVal(outFileNameArg, PROG_OUT_FILE_NAME)
     call assignOptionalKVVal(rngChoiceArg, castIntToChar(PROG_RNG))
     call assignOptionalKVVal(rngSeedArg, castIntToChar(PROG_RNG_SEED))
 
@@ -135,9 +137,10 @@ contains
     
     ! Assign model parameters from the command-line arguments.
     MODEL_TIME_STEPS = castCharToInt(maxTimeStepArg % getValue())
-    PROG_SAMPLE_SIZE = castCharToInt(sampleSizeArg % getValue())
     MODEL_START_POP_SIZE = castCharToInt(startPopSizeArg % getValue())
+    PROG_SAMPLE_SIZE = castCharToInt(sampleSizeArg % getValue())
     PROG_REC_FLAG = adjustl(recordFlagArg % getValue())
+    PROG_OUT_FILE_NAME = outFileNameArg % getValue()
     PROG_RNG = castCharToInt(rngChoiceArg % getValue())
     PROG_RNG_SEED = castCharToInt(rngSeedArg % getValue())
 

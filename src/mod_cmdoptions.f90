@@ -24,7 +24,7 @@ module CmdOptions
     cmdFlags(5)
 
   ! Key-value arguments: Model parameters.
-  type(KeyValCmdOption), target :: cmdKeyVal(6)
+  type(KeyValCmdOption), target :: cmdKeyVal(7)
   type(KeyValCmdOption), pointer, protected, public :: maxTimeStepArg => &
     cmdKeyVal(1)
   type(KeyValCmdOption), pointer, protected, public :: sampleSizeArg => &
@@ -35,10 +35,12 @@ module CmdOptions
   ! Key-value arguments: Other program parameters.
   type(KeyValCmdOption), pointer, protected, public :: recordFlagArg => &
     cmdKeyVal(4)
-  type(KeyValCmdOption), pointer, protected, public :: rngChoiceArg => &
+  type(KeyValCmdOption), pointer, protected, public :: outFileNameArg => &
     cmdKeyVal(5)
-  type(KeyValCmdOption), pointer, protected, public :: rngSeedArg => &
+  type(KeyValCmdOption), pointer, protected, public :: rngChoiceArg => &
     cmdKeyVal(6)
+  type(KeyValCmdOption), pointer, protected, public :: rngSeedArg => &
+    cmdKeyVal(7)
 
   ! Positional arguments.
   type(PositionalCmdOption), target :: cmdPosArgs(2)
@@ -75,6 +77,7 @@ contains
     call initializeCmdOption(sampleSizeArg, "sample-size", "s")
     call initializeCmdOption(startPopSizeArg, "pop-size", "p")
     call initializeCmdOption(recordFlagArg, "record", "r")
+    call initializeCmdOption(outFileNameArg, "output", "o")
     call initializeCmdOption(rngChoiceArg, "rng", "R")
     call initializeCmdOption(rngSeedArg, "seed", "S")
 
@@ -107,6 +110,8 @@ contains
     call setUsageMsg(startPopSizeArg, "Starting population size.")
     call setUsageMsg(recordFlagArg, "Record data as specified by the " // &
         "given character value.")
+    call setUsageMsg(outFileNameArg, "Name of the file to which recorded "// &
+        "data is written.")
     call setUsageMsg(rngChoiceArg, "Choose an RNG to be used as specified " // &
         "by integer flag.")
     call setUsageMsg(rngSeedArg, "Set the seed for the RNG.")
@@ -116,6 +121,7 @@ contains
     call setValueMsg(sampleSizeArg, "<int>")
     call setValueMsg(startPopSizeArg, "<int>")
     call setValueMsg(recordFlagArg, "<str>")
+    call setValueMsg(outFileNameArg, "<str>")
     call setValueMsg(rngChoiceArg, "<int>")
     call setValueMsg(rngSeedArg, "<int>")
 
