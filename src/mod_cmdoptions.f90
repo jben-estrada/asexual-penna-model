@@ -157,8 +157,8 @@ contains
           "Valid char values for '--record' or '-r': ", &
           nullFlag     // " - record nothing", &
           popFlag      // " - population count per time step", &
-          ageDstrbFlag // " - age distribution", &
-          deathFlag    // " - death count", &
+          ageDstrbFlag // " - age distribution per time step", &
+          deathFlag    // " - death count per time step", &
           divIdxFlag   // " - Shannon diversity index per time step", &
           badGeneFlag  // " - Bad gene distribution per time step"
       write(*, "(4(' '), a/, 2(8(' '), a/))", advance="no") &
