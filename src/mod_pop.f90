@@ -348,6 +348,7 @@ contains
       call initializeIndiv(newIndiv_ptr, self % current_ptr % genome)
 
       oldIndiv_ptr % next => newIndiv_ptr
+      oldIndiv_ptr => newIndiv_ptr
 
       ! Update genome.
       if (updateGenome) call updateGenomeDstrb(newIndiv_ptr % genome)
