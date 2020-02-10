@@ -29,28 +29,14 @@
 
 
 program Main
-  use ModelParam, only: assignConfigFilePaths, assignModelParams, &
-      printProgDetails
-  use Penna, only: run, deallocAllocatables
-  use RNG, only: assignRNGParams
-  use CmdOptions, only: initializeCmdOptions, showHelpMsgAndNotes
+  use Penna
   implicit none
 
   ! Initialize the command-line options.
-  call initializeCmdOptions()
+  call initializeProgram()
 
-  ! Initialize the model parameters.
-  call assignConfigFilePaths()
-  call assignModelParams()
-
-  ! Initialize the RNG with the provided command-line arguments.
-  call assignRNGParams()
-
-  ! Print the help message and stop the program if '-h' or '--help' is passed.
-  call showHelpMsgAndNotes()
-
-  ! Print the welcome text.
-  call printProgDetails()
+  ! Print the program parameters or the help text.
+  call printInitialProgDetails()
 
   ! Run the Penna model simulation.
   call run()

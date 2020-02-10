@@ -12,8 +12,51 @@ module Penna
   private
 
   public :: run
+  public :: initializeProgram
   public :: deallocAllocatables
+  public :: printInitialProgDetails
 contains
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initializeProgram
+  !>  A wrapper subroutine to initialize various module variables.
+  ! -------------------------------------------------------------------------- !
+  subroutine initializeProgram()
+    use CmdOptions, only: initializeCmdOptions
+    use ModelParam, only: assignConfigFilePaths, assignModelParams
+    use RNG, only: assignRNGParams
+
+    ! Initialize the command-line options.
+    call initializeCmdOptions()
+
+    ! Get the model parameters.
+    call assignConfigFilePaths()
+    call assignModelParams()
+
+    ! Get the chosen RNG and RNG seed.
+    call assignRNGParams()
+
+    ! Initialize the writer objects.
+    call initializeWriterObjects()
+  end subroutine initializeProgram
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: printInitialProgDetails
+  !>  A wrapper subroutine to print the initial details of the program or
+  !!  the help text if the user wishes so.
+  ! -------------------------------------------------------------------------- !
+  subroutine printInitialProgDetails()
+    use ModelParam, only: printProgDetails
+    use CmdOptions, only: showHelpMsgAndNotes
+
+    ! Print the help message and stop the program if '-h' or '--help' is passed.
+    call showHelpMsgAndNotes()
+
+    ! Print the welcome text.
+    call printProgDetails()
+  end subroutine printInitialProgDetails
 
 
   ! -------------------------------------------------------------------------- !
@@ -239,9 +282,6 @@ contains
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
-
-    ! Initialize the writer objects.
-    call initializeWriterObjects()
 
     ! Initialize the progress bar.
     call initProgressBar(progBar, 20, sampleSize)
