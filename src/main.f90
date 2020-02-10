@@ -1,33 +1,30 @@
-!------------------------------------------------------------------------------
+!----------------------------------------------------------------------------- !
 ! PROGRAM: Asexual Penna model
-!------------------------------------------------------------------------------
-!
-!> @author
-!> John Benedick A. Estrada
+!----------------------------------------------------------------------------- !
+! AUTHOR: John Benedick A. Estrada
+!----------------------------------------------------------------------------- !
 !
 ! DESCRIPTION: 
 !>  Implementation of the asexual Penna model based on the
-!!  description of S. Oliveira [1]. The difference between her
-!!  implementation of the model and mine is that the model used
-!!  here generalizes the Verhulst factor by allowing it to change
-!!  with the age of the individuals.
+!!  description of S. Oliveira [1].
+!!
+!!  However, there are differences in the implementation used in this 
+!!  program and Oliveira's:
+!!
+!!    1.) Verhulst factor can change with age of the individuals.
+!!        This can be used to model "survivability" by allowing
+!!        the Verhulst factor to change such that individuals
+!!        would have a lesser chance of dying randomly as they
+!!        grow older.
+!!    2.) Number of mutations per individual in the starting
+!!        population can be selected.
+!!
 !!
 !!  Reference:
 !!  [1]  S. Oliveira. "Evolution, ageing and speciation: Monte Carlo
 !!       simulations of biological systems", In: Brazilian Journal of
 !!       Physics 34.3B (2004), pp. 1066-1076
-!
-! MAJOR REVISION:
-!   11-Nov-2019 - First complete version of the program.
-!   23-Nov-2019 - Major change to population handling.
-!   06-Dec-2019 - Enhanced the population handling (via OO approach).
-!   17-Jan-2020 - Major improvements to the command-line interface.
-!
-! TODO:
-!	- Implement multiple allowed record flag.
-!------------------------------------------------------------------------------
-
-
+!----------------------------------------------------------------------------- !
 program Main
   use Penna
   implicit none
@@ -38,7 +35,7 @@ program Main
   ! Print the program parameters or the help text.
   call printInitialProgDetails()
 
-  ! Run the Penna model simulation.
+  ! Simulate the Penna model.
   call run()
 
   ! Wrap up.
