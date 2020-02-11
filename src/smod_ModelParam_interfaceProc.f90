@@ -96,7 +96,10 @@ contains
       if (source(i:i) == "/") then
         ! Concatenate the relative path to the executable and the replacement
         ! file name.
-        replacement = "./" // trim(source(1:i)) // trim(replacement)
+        replacement = trim(source(1:i)) // trim(replacement)
+
+        if (.not.(source(1:1) == "/" .or. source(1:2) == "./")) &
+            replacement = "./" // replacement
         return
       end if
     end do
