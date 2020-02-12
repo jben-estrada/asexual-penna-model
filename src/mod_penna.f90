@@ -121,6 +121,11 @@ contains
       DEMOG_LAST_STEPS = -1
     end if
 
+    ! Record data of the initial state of the population.
+    ! The data that would be obtained at this point in the program
+    ! represent the data at t = 0.
+    call recordData()
+
     ! Run the model.
     mainLoop: do timeStep = 1, maxTimestep
       ! Catch case when pop size exceeds the carrying capacity.
@@ -132,11 +137,33 @@ contains
         exit
       end if
 
-      ! Evaluate population
+      ! Evaluate population.
       call evalPopulation(population, popSize, maxTimestep - timeStep, &
-        recordFlag, deathByAge, deathByMutation, deathByVerhulst)
+          recordFlag, deathByAge, deathByMutation, deathByVerhulst)
 
-      ! Record result.
+      ! Record data.
+      call recordData()
+
+      ! Reset variables for the next time step.
+      deathCount(:) = 0
+      call population % resetReadPtrs()
+      if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
+      if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
+          call freeGenomeDstrbList()
+    end do mainLoop
+
+    ! Wrap up.
+    call population % freePtr(popSize)
+    call runWriter % close()
+  contains
+
+
+    ! ------------------------------------------------------------------------ !
+    ! SUBROUTINE: recordData
+    !>  Record data obtained in the subroutine `runOneInstance`. This is a
+    !!  subroutine only within the scope of `runOneInstance`.
+    ! ------------------------------------------------------------------------ !
+    subroutine recordData()
       select case (recordFlag)
         case (popFlag)
           call runWriter % write(popFlag, int(popSize, kind=writeIK))
@@ -156,18 +183,7 @@ contains
           call runWriter % write(badGeneFlag, &
               int(getBadGeneDstrb(), kind=writeIK))
       end select
-
-      ! Reset variables for the next time step.
-      deathCount(:) = 0
-      call population % resetReadPtrs()
-      if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
-      if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
-          call freeGenomeDstrbList()
-    end do mainLoop
-
-    ! Wrap up.
-    call population % freePtr(popSize)
-    call runWriter % close()
+    end subroutine recordData
   end subroutine runOneInstance
 
 
