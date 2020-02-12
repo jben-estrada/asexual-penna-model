@@ -173,12 +173,12 @@ contains
     if (mutationCount > 0) then
       ! Get random indices of genes to mutate.
       allocate(mutationIndcs(mutationCount))
-      call generateIndices(0, MODEL_L - 1, mutationIndcs)
+      call generateIndices(1, MODEL_L, mutationIndcs)
 
       ! Apply mutations.
       do i = 1, mutationCount
         indiv_ptr % genome = ior(indiv_ptr % genome, &
-            int(shiftl(1, mutationIndcs(i)), kind=personIK))
+            int(shiftl(1, mutationIndcs(i) - 1), kind=personIK))
       end do
 
       deallocate(mutationIndcs)
@@ -203,13 +203,13 @@ contains
     integer :: i
 
     mutations(:) = 0  ! Initialize `mutations`
-    call generateIndices(0, MODEL_L - 1, mutations)
+    call generateIndices(1, MODEL_L, mutations)
 
     indiv_ptr % genome = genome
     do i = 1, size(mutations)
       if (getGene(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
         indiv_ptr % genome = ior(indiv_ptr % genome, &
-            int(shiftl(1, mutations(i)), kind=personIK))
+            int(shiftl(1, mutations(i) - 1), kind=personIK))
       end if
     end do
 
