@@ -49,6 +49,7 @@ module Pop
     procedure :: getCurrIndivAge
     procedure :: getCurrIndivGenome
     procedure :: determineDeathType
+    procedure :: elemCount
 
     ! Transformational procedures.
     procedure :: killCurrentIndiv
@@ -562,4 +563,33 @@ contains
         self % current_ptr % deathIndex = DEAD_VERHULST
     end if
   end subroutine checkCurrIndivDeath
+
+
+  ! -------------------------------------------------------------------------- !
+  ! BOUND SUBROUTINE: [PersonList % ]elemCount
+  !>  Count the number of elements of the linked-list. This is usually used
+  !!  for debugging.
+  ! -------------------------------------------------------------------------- !
+  integer function elemCount(self)
+    class(PersonList), intent(in) :: self
+      !! The linked-list of individuals represented as `Person` objects.
+    
+    type(Person), pointer :: reader
+
+    ! Initialize local variables.
+    reader => self % head_ptr
+    elemCount = 0
+    do
+      ! Count the associated pointers.
+      if (associated(reader)) then
+        elemCount = elemCount + 1
+        ! Get to the next element of the list.
+        reader => reader % next
+
+      ! Exit out of the loop if the pointer is out of bounds.
+      else
+        exit
+      end if
+    end do
+  end function elemCount
 end module Pop
