@@ -136,8 +136,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initializeHealthyIndiv
   !>  Initialize the `Person` object `indiv_ptr` is pointing to `Person` with 
-  !!  a healthy genome by default. Can be made to have the `Person` object to
-  !!  have initial number of bad genes.
+  !!  a healthy genome by default.
   ! -------------------------------------------------------------------------- !
   subroutine initializeHealthyIndiv(indiv_ptr, mutationCount)
     type(Person), pointer, intent(inout) :: indiv_ptr
@@ -147,7 +146,7 @@ contains
 
     ! Initialize genome and mutation count.
     indiv_ptr % genome = GENE_HEALTHY
-    indiv_ptr % mutationCount = mutationCount
+    indiv_ptr % mutationCount = 0
     call applyInitialMutations(indiv_ptr, mutationCount)
 
     indiv_ptr % age = 0
@@ -206,7 +205,7 @@ contains
     do i = 1, size(mutations)
       if (getGene(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
         indiv_ptr % genome = ior(indiv_ptr % genome, &
-            int(shiftl(1, mutations(i) - 1), kind=personIK))
+            shiftl(1_personIK, mutations(i) - 1))
       end if
     end do
 
