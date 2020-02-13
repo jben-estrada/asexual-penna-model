@@ -167,12 +167,11 @@ contains
     integer,               intent(in)    :: mutationCount
       !! Number of mutations to apply onto `indiv_ptr`.
 
-    integer, allocatable :: mutationIndcs(:)
+    integer :: mutationIndcs(mutationCount)
     integer :: i
 
     if (mutationCount > 0) then
       ! Get random indices of genes to mutate.
-      allocate(mutationIndcs(mutationCount))
       call generateIndices(1, MODEL_L, mutationIndcs)
 
       ! Apply mutations.
@@ -180,8 +179,6 @@ contains
         indiv_ptr % genome = ior(indiv_ptr % genome, &
             int(shiftl(1, mutationIndcs(i) - 1), kind=personIK))
       end do
-
-      deallocate(mutationIndcs)
     end if
   end subroutine applyInitialMutations
 
