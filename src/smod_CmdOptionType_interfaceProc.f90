@@ -57,11 +57,14 @@ contains
     character(len=MAX_LEN) :: cmdArg
     character(len=MAX_LEN) :: remainingArg
 
-    integer :: argCount
-    integer :: maxArgCount
-    integer :: status
+    integer :: argCount     ! Integer for indexing command-line arguments.
+    integer :: posCount     ! Integer for indexing positional arguments.
+    integer :: maxArgCount  ! Total command-line argument count.
+    integer :: status       ! Read and assign status.
 
-    argCount = 0
+    ! Initialize local variables.
+    argCount = 0  ! NOTE: Initialized with 0 since it is used in 'do while'
+    posCount = 1
     maxArgCount = command_argument_count()
     if (maxArgCount == 0) return
 
@@ -135,7 +138,7 @@ contains
       end if
 
       ! Parse argument as a positional argument.
-      call assignPositionalArg(cmdPosArgs, cmdArg, status, readPosArg)
+      call assignPositionalArg(cmdPosArgs, cmdArg, status, posCount, readPosArg)
 
       ! Raise an error if the passed argument failed to match any defined
       ! command-line options.
@@ -464,7 +467,7 @@ contains
   ! SUBROUTINE: assignPositionalArg
   !>  Assign positional arguments.
   ! -------------------------------------------------------------------------- !
-  subroutine assignPositionalArg(cmdPosArgs, cmdArg, status, toRead)
+  subroutine assignPositionalArg(cmdPosArgs, cmdArg, status, posCount, toRead)
     class(PositionalCmdOption), intent(inout) :: cmdPosArgs(:)
       !! Positional command-line option.
     character(len=*),           intent(in)    :: cmdArg
@@ -472,12 +475,14 @@ contains
     integer,                    intent(inout) :: status
       !! Status of this routine. Return non-zero value to signify failure.
       !! Return `0` if reading and assigning succeeds.
+    integer,                    intent(inout) :: posCount
+      !! Valid position argument count.
     logical,                    intent(in)    :: toRead
       !! Check validity of passed argument but do not read and assign.
 
-    integer, save :: posCount = 1
     integer :: i
 
+    ! Pessimistically set `status` as failed.
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % position == posCount) then
         ! Mark the routine to be successful in finding a syntactically-valid
@@ -487,9 +492,9 @@ contains
         if (toRead) then
           cmdPosArgs(i) % value = cmdArg
           cmdPosArgs(i) % hasValue = .true.
-          posCount = posCount + 1
         end if
 
+        posCount = posCount + 1
         exit
       end if
     end do
