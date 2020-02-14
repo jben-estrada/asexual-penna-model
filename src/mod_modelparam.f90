@@ -79,7 +79,7 @@ module ModelParam
   character(len=MAX_LEN), public, protected :: PROG_REC_FLAG
     !! List of record flags.
     !! NOTE: Default value is obtained from config files.
-  character(len=MAX_LEN), public, protected :: PROG_OUT_FILE_NAME = "./out.txt"
+  character(len=MAX_LEN), public, protected :: PROG_OUT_FILE_NAME = "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
 
   ! MODEL PARAMETERS
