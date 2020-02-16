@@ -83,13 +83,13 @@ contains
     use Demographics
     use ModelParam, only: MODEL_K
 
-    integer, intent(in) :: maxTimestep
+    integer,          intent(in) :: maxTimestep
       !! Maximum (total) time step.
-    integer, intent(in) :: startPopSize
+    integer,          intent(in) :: startPopSize
       !! Starting population size.
-    integer, intent(in) :: initMttnCount
+    integer,          intent(in) :: initMttnCount
       !! Initial mutation count of each individuals.
-    character, intent(in) :: recordFlag
+    character(len=*), intent(in) :: recordFlag
       !! Record flag. Valid values are found in the `WriterOptions` module.
 
     type(PersonList) :: population    ! Population list
@@ -124,7 +124,7 @@ contains
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
     ! represent the data at t = 0.
-    call recordData()
+    call recordData(recordFlag)
 
     ! Run the model.
     mainLoop: do timeStep = 1, maxTimestep
@@ -142,7 +142,7 @@ contains
           recordFlag, deathByAge, deathByMutation, deathByVerhulst)
 
       ! Record data.
-      call recordData()
+      call recordData(recordFlag)
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
@@ -163,8 +163,11 @@ contains
     !>  Record data obtained in the subroutine `runOneInstance`. This is a
     !!  subroutine only within the scope of `runOneInstance`.
     ! ------------------------------------------------------------------------ !
-    subroutine recordData()
-      select case (recordFlag)
+    subroutine recordData(charFlag)
+      character(len=*), intent(in) :: charFlag
+        !! Record flag.
+
+      select case (charFlag)
         case (popFlag)
           call runWriter % write(popFlag, int(popSize, kind=writeIK))
 
