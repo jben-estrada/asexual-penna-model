@@ -67,6 +67,9 @@ module WriterOptions
     !! Bad gene distribution per time step.
   character, public, parameter :: timeFlag = "t"
     !! Timing statistics.
+
+  character(len=*), parameter  :: FILE_NAME_TIME = "time_stat.csv"
+    !! File name of time statisttics.
   ! -------------------------------------------------------------------------- !
 
   ! Initialization procedures. 
@@ -104,7 +107,7 @@ contains
     badGeneDstrbFile = OutputFile(PROG_OUT_FILE_NAME, badGeneDstrbFormat, &
         badGeneDstrbPosition, badGeneFlag, badGeneDstrbUnit)
     ! Time statistics file.
-    timeFile = OutputFile(PROG_OUT_FILE_NAME, timeFormat, timePosition, &
+    timeFile = OutputFile(FILE_NAME_TIME, timeFormat, timePosition, &
         timeFlag, timeUnit)
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &

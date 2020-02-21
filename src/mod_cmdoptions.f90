@@ -69,11 +69,11 @@ contains
     call initializeCmdOption(versionPrintFlag, "version", "V")
     call initializeCmdOption(verbosePrintFlag, "verbose", "v")
     call initializeCmdOption(showHelpMsgFlag, "help", "h")
-    call initializeCmdOption(recordTimeFlag, "record-time", "t")
+    call initializeCmdOption(recordTimeFlag, "record-time", "rt")
     call initializeCmdOption(silentPrintFlag, "quiet", "q")
   
     ! Assign command char of key-value options.
-    call initializeCmdOption(maxTimeStepArg, "time-step", "T")
+    call initializeCmdOption(maxTimeStepArg, "time-step", "t")
     call initializeCmdOption(sampleSizeArg, "sample-size", "s")
     call initializeCmdOption(startPopSizeArg, "pop-size", "p")
     call initializeCmdOption(recordFlagArg, "record", "r")
