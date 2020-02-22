@@ -120,8 +120,8 @@ contains
           ! NOTE: We use `cmdArg` here to hold the remaining unremoved char.
           !       Declaring another char variable would just be a waste of time
           !       and space.
-          call parseShortCommand(cmdKeyVal, remainingArg, &
-              cmdArg, argCount, readKeyVal)
+          call parseShortCommand(cmdKeyVal, remainingArg, cmdArg, argCount, &
+              readKeyVal)
 
           ! Go to the next argument if parsing succeeds.
           ! NOTE: `cmdArg` holds the last remaining unmatched char.
@@ -233,14 +233,11 @@ contains
             ! assign values.
             select case (cmdOptionType)
               case (FLAG_TYPE)
-                if (toRead) call toggleFlagOption(cmdOptions(commCount))
+                call toggleFlagOption(cmdOptions(commCount), toRead)
 
               case (KV_TYPE)
-                ! Increment `argCount` to get the value for the matching
-                ! key-value command.
-                argCount = argCount + 1
-                if (toRead) &
-                    call assignShortKVOption(cmdOptions(commCount), argCount)
+                call assignShortKVOption(cmdOptions(commCount), argCount, &
+                    toRead)
 
               case default
                 print "(a)", &
@@ -281,15 +278,17 @@ contains
   ! SUBROUTINE: toggleFlagOption
   !>  Toggle the provided flag command, i.e. invert the default boolean value.
   ! -------------------------------------------------------------------------- !
-  subroutine toggleFlagOption(cmdOption)
+  subroutine toggleFlagOption(cmdOption, toRead)
     class(BaseCmdOption), intent(inout) :: cmdOption
       !! Flag option to toggle.
+    logical,              intent(in)    :: toRead
+      !! Assign the obtained command-line argument.
 
     ! Filter out `cmdOption` of unwanted type.
     select type(cmdOption)
       class is (FlagCmdOption)
         ! Prevent multiple toggling.
-        if (.not. cmdOption % isToggled) then
+        if (.not. cmdOption % isToggled .and. toRead) then
           cmdOption % value = invertFlagChar(cmdOption % value)
           cmdOption % hasValue = .true.
           cmdOption % isToggled = .true.
@@ -307,11 +306,13 @@ contains
   !>  Parse and assign value of the matching command obtained from the passed
   !!  argument. This assumes that the matching command is the short command.
   ! -------------------------------------------------------------------------- !
-  subroutine assignShortKVOption(cmdOption, valIdx)
+  subroutine assignShortKVOption(cmdOption, valIdx, toRead)
     class(BaseCmdOption), intent(inout) :: cmdOption
       !! Key-value option whose value is to be modified.
-    integer, optional,    intent(inout) :: valIdx
+    integer,              intent(inout) :: valIdx
       !! Index of command-line argument for the value.
+    logical,              intent(in)    :: toRead
+      !! Assign the obtained command-line argument.
 
     character(len=MAX_LEN) :: value
     integer :: status
@@ -319,13 +320,19 @@ contains
     ! Filter out `cmdOption` of unwanted type.
     select type(cmdOption)
       class is (KeyValCmdOption)
+        ! Go to the next command-line argument.
+        valIdx = valIdx + 1
+
         ! Get the value for `cmdOption`.
         call get_command_argument(valIdx, value, status=status)
 
-        ! Assign value to `cmdOption` if getting succeeds.
+        ! Accept value if getting succeeds.
         if (status == 0) then
-          cmdOption % value = adjustl(value)
-          cmdOption % hasValue = .true.
+          ! Assign value.
+          if (toRead) then
+            cmdOption % value = adjustl(value)
+            cmdOption % hasValue = .true.
+          end if
         else
           print "(3a)", "***ERROR. Value for the command '", shortCommDelim // &
               trim(cmdOption % shortCommand), "' cannot be obtained."
@@ -429,7 +436,7 @@ contains
         case (FLAG_TYPE)
           if (cmdOptions(commCount) % command == cmdArg) then
             status = 0
-            if (toRead) call toggleFlagOption(cmdOptions(commCount))
+            call toggleFlagOption(cmdOptions(commCount), toRead)
             exit
           end if
 
