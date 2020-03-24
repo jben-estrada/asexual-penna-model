@@ -4,7 +4,7 @@ module CastProcedures
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing procedures for casting values from one data type 
-  !   to another.
+  !!  to another.
   ! -------------------------------------------------------------------------- !
   implicit none
   private
