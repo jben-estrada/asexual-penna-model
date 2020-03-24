@@ -1,10 +1,11 @@
-module ANSISGRCodes
+module ANSIEscCodes
   ! -------------------------------------------------------------------------- !
-  ! MODULE: ANSISGRCodes
+  ! MODULE: ANSIEscCodes
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing procedures for the formatting of text attributes of 
-  !!  characters to be displayed on screen.
+  !!  characters to be displayed on screen with ANSI escape codes
+  !!  (SGR, specifically)
   ! -------------------------------------------------------------------------- !
   implicit none
   private
@@ -149,4 +150,4 @@ contains
     ! Append the character to format and the reset formatting ANSI code.
     formatted = formatted // ESC_CODE_END // char // resetCode()
   end function formatChar
-end module ANSISGRCodes
+end module ANSIEscCodes
