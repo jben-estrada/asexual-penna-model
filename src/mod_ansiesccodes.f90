@@ -102,11 +102,14 @@ contains
       case(escCodeHide)
         code = ESC_CODE_HIDE
       case default
-        print "(*(a))", formatChar("***ERROR.", escCodeBold // escCodeRed), &
-            formatChar(" '"// trim(flag) // &
-            "' is an invalid flag for an ANSI escape code.", escCodeRed)
+        print "(4a)", &
+            formatChar("***", escCodeRed), &
+            formatChar("ERROR", escCodeRed // escCodeBold), &
+            formatChar("*** ", escCodeRed), &
+            formatChar("'"// trim(flag) // &
+                "' is an invalid flag for an ANSI escape code.", escCodeRed)
         error stop
-  end select
+    end select
   end function getCodeNum
 
 
