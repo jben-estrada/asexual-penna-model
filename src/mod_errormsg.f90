@@ -29,7 +29,7 @@ contains
       !! Stop the program with the `error stop` statement when true.
   
     ! Print the error message in red.
-    print "(/3a)", formatChar("***", escCodeRed), &
+    print "(3a)", formatChar("***", escCodeRed), &
         formatChar("ERROR", escCodeRed // escCodeBold), &
         formatChar("*** " // msg, escCodeRed)
 
@@ -56,14 +56,14 @@ contains
 
     ! Print "***WARNING***" to signify the warning.
     if (present(withWarningTxt)) then
-      if (withWarningTxt) write(*, "(/4a)", advance="no") &
+      if (withWarningTxt) write(*, "(4a)", advance="no") &
           formatChar("***", escCodeYellow), &
           formatChar("WARNING", escCodeYellow // escCodeBold), &
           formatChar("*** ", escCodeYellow), &
           formatChar(msg, escCodeYellow)
     else      
       ! Print only the warning message.
-      print "(/a)", formatChar(msg, escCodeYellow)
+      print "(a)", formatChar(msg, escCodeYellow)
     end if
 
     ! Stop the program.
