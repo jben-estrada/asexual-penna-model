@@ -378,6 +378,9 @@ contains
     class(PersonList), intent(in) :: self
       !! The linked-list of individuals represented as `Person` objects.
 
+    ! Initialize output with 0.
+    getCurrIndivAge = 0
+
     if (associated(self % current_ptr)) then
       getCurrIndivAge = self % current_ptr % age
     else
@@ -396,6 +399,9 @@ contains
       !! The linked-list of individuals represented as `Person` objects.
 
     integer(kind=personIK) :: genome
+
+    ! Initialize the output with 0.
+    genome = 0_personIK
 
     if (associated(self % current_ptr)) then
       genome = self % current_ptr % genome

@@ -183,6 +183,9 @@ contains
     integer :: idxOffset
     logical :: matchFound
 
+    ! Initialize with value not 0 or 1.
+    cmdOptionType = -1
+
     ! Get the class of `cmdOptions`.
     select type(cmdOptions)
       class is (FlagCmdOption)
@@ -402,6 +405,8 @@ contains
     integer :: cmdOptionType
     integer :: commCount
   
+    cmdOptionType = -1 ! Initialize with some value not 0 or 1.
+    
     ! Get the class of `cmdOptions`.
     select type(cmdOptions)
       class is (FlagCmdOption)
