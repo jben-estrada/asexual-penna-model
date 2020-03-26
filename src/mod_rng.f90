@@ -6,6 +6,7 @@ module RNG
   !>  Module containing procedures for setting and using various RNGs.
   ! -------------------------------------------------------------------------- !
   use mtmod
+  use ErrorMSG, only: raiseError
   implicit none
   private
 
@@ -49,8 +50,7 @@ contains
     if (any(RNG_FLAGS == choice)) then
       rngChoice = choice
     else
-      print "(a)", "***ERROR. Invalid RNG choice."
-      error stop
+      call raiseError("Invalid RNG choice.")
     end if
   end subroutine chooseRNG
 
@@ -82,8 +82,7 @@ contains
         call sgrnd(seed)
       
       case default
-        print "(a)", "***ERROR. No RNG has yet been chosen."
-        error stop
+        call raiseError("No RNG has yet been chosen.")
     end select
 
     if (allocated(intrscSeed)) deallocate(intrscSeed)
@@ -110,8 +109,7 @@ contains
         randnum = real(grnd()) ! Cast from real(8) to real(4) for compatibility.
 
       case default
-        print "(a)", "***ERROR. No RNG has yet been chosen."
-        error stop
+        call raiseError("No RNG has yet been chosen.")
     end select
   end subroutine getRandNumber
 end module RNG

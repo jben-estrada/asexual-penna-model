@@ -17,6 +17,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
     use CastProcedures, only: castIntToChar  
+    use ErrorMSG, only: raiseError
 
     type(Writer), intent(inout) :: runWriter
       !! The `Writer` object to be initialized.
@@ -51,9 +52,7 @@ contains
         call runWriter % writeHeader(badGeneFlag, ["age =>"])
 
       case default
-        print "(3a)", "***ERROR. '", trim(recordFlag), &
-            "' is an invalid record flag"
-        error stop
+        call raiseError("'" // trim(recordFlag) //"' is an invalid record flag")
     end select
   end subroutine initializeRunWriter
 end submodule RunWriterHandling

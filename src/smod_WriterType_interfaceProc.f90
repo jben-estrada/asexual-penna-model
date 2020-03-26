@@ -7,6 +7,7 @@ submodule (WriterType) interfaceProcedures
   !!  private "helper" procedures for interfacing with other modules, program,
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError
   implicit none
 contains
 
@@ -77,9 +78,8 @@ contains
       ! Check for redundant flags first.
       if (allocated(new % availableFiles)) then
         if (any(new % availableFiles % flag == file % flag)) then
-          print "(3a)", "***ERROR. Initializing a 'Writer' object with " // &
-              "redundant file flags: '", file % flag, "'"
-          error stop
+          call raiseError("Initializing a 'Writer' object with " // &
+              "redundant file flags: '" //  file % flag // "'")
         end if
       end if
 
@@ -91,9 +91,7 @@ contains
         if (initialize) call new % initialize()
       end if
     else
-
-      print "(a)", "***ERROR. Available output files are not yet declared."
-      error stop
+      call raiseError("Available output files are not yet declared.")
     end if
   end subroutine constructWriter_scalar
 
@@ -139,9 +137,8 @@ contains
 
       ! Error handling.
       if (.not. fileRemoved) then
-        print "(3a)", "***ERROR. 'OutputFile' object to remove as " // &
-            "specified by the flag '", flag, "' is not found."
-        error stop
+        call raiseError("'OutputFile' object to remove as " // &
+            "specified by the flag '" //  flag // "' is not found.")
       end if
     end if
   end subroutine removeFilebyFlag
@@ -206,9 +203,8 @@ contains
         end if
       end do
     else
-      print "(a)", "***ERROR. The provided array to find flags with " // &
-        "is not yet allocated."
-      error stop
+      call raiseError("The provided array to find flags with " // &
+          "is not yet allocated.")
     end if
   end subroutine findFileByFlag
 

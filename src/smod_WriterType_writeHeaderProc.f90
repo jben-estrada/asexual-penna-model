@@ -15,6 +15,8 @@ submodule (WriterType) WriterTypeWrHdrProc
   !>  Write the header of the active file specified by the integer `flag`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_writeHeader(self, flag, header)
+    use ErrorMSG, only: raiseError
+
     class(Writer),    intent(in) :: self
       !! `Writer` object.
     character,        intent(in) :: flag
@@ -39,9 +41,8 @@ submodule (WriterType) WriterTypeWrHdrProc
     end do
 
     if (.not. flagFound) then
-      print "(3a)", "***ERROR. Cannot write header, flag '", flag, &
-          "' does not correspond to any recordable data."
-      error stop
+      call raiseError("Cannot write header, flag '" // flag // &
+          "' does not correspond to any recordable data.")
     end if
   end subroutine writer_writeHeader
 end submodule

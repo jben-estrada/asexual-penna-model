@@ -43,16 +43,16 @@ contains
   !!  This also marks the command-line option as optional.
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalPosTypeVal(cmdPosArg, value)
+    use ErrorMSG, only: raiseError
+
     class(PositionalCmdOption),  intent(inout) :: cmdPosArg
       !! Positional command-line option to be modified.
     character(len=LONG_MAX_LEN), intent(in)    :: value
       !! Default value of `cmdPosArg` to be assigned to its `value` attribute.
 
-    if (cmdPosArg % isOptional) then
-      print "(3a)", "***ERROR. Cannot assign '", trim(cmdPosArg % command), &
-          "' its default value again."
-      error stop
-    end if
+    if (cmdPosArg % isOptional) &
+      call raiseError("Cannot assign '" // trim(cmdPosArg % command) // &
+          "' its default value again.")
 
     cmdPosArg % hasValue = .true.
     cmdPosArg % isOptional = .true.

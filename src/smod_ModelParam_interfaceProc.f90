@@ -8,6 +8,7 @@ submodule (ModelParam) InterfaceProcedures
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
   use CmdOptions
+  use ErrorMSG, only: raiseError
   implicit none
 contains
 
@@ -60,23 +61,23 @@ contains
     else
 
       if (defaultExist) then
-        print "(3a)", "***ERROR. The file '", trim(newFilePath), &
-        "' cannot be opened or does not exist."
+        call raiseError("The file '" // trim(newFilePath) // &
+            "' cannot be opened or does not exist.", stopProgram=.false.)
 
-        ! Suggest the user options to troubleshoot.
+        ! Suggest the user options for troubleshooting.
         print "(10(' '), a)", "Run with '-h' for more information if it " // &
             "is not intended to be a file path."
         print "(10(' '), 5a)", "If it is, run the program without passing '", &
             trim(newFilePath), "' to use the default one ('", trim(filePath), &
             "')."
+
+        ! Finally stop the program.
+        error stop
       else
-        print "(3a)", "***ERROR. The file '", trim(filePath), &
-            "' cannot be opened or does not exist."
+        call raiseError("The file '" // trim(filePath) // &
+            "' cannot be opened or does not exist.")
       end if
-
-      error stop
     end if
-
   end subroutine checkConfigFile
 
 
@@ -106,8 +107,7 @@ contains
 
     ! Raise an error if no file path delimiter was found.
     ! NOTE: The delimiter used is `/`. This may differ in other shells.
-    print "(3a)", "***ERROR. '", trim(source), "' is not a valid path."
-    error stop
+    call raiseError("'" // trim(source) // "' is not a valid path.")
   end subroutine getRelFilePath
 
 
@@ -175,11 +175,11 @@ contains
     ! Check invalid combination of flags.
     if (silentPrintFlag % getFlagState() .and. &
         verbosePrintFlag % getFlagState()) then
-      print "(*(a))", "***ERROR. '", trim(verbosePrintFlag % getCommand()), &
-          "' or '", trim(verbosePrintFlag % getAltCommand()), &
-          "' cannot be passed with '", trim(silentPrintFlag % getCommand()), &
-          "' or '", trim(silentPrintFlag % getAltCommand()), "'."
-      error stop
+
+      call raiseError("'" // trim(verbosePrintFlag % getCommand()) // &
+        "' or '" // trim(verbosePrintFlag % getAltCommand()) // &
+        "' cannot be passed with '" // trim(silentPrintFlag % getCommand()) // &
+        "' or '" // trim(silentPrintFlag % getAltCommand()) // "'.")
     end if
   end subroutine checkValidModelParams
 
@@ -201,8 +201,7 @@ contains
         ! Do nothing
 
       case default
-        print "(a)", "***ERROR. Invalid 'PROG_PRINT_STATE' value."
-        error stop
+        call raiseError("Invalid 'PROG_PRINT_STATE' value.")
       end select
   end subroutine printProgDetails
 
@@ -214,6 +213,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printModelParams()
     use WriterOptions, only: nullFlag
+    use ANSIEscCodes, only: formatChar, escCodeBold
 
     ! Pretty print separator.
     integer :: k
@@ -221,7 +221,7 @@ contains
 
     ! ***Header
     print "(*(a))", PRINT_SEPARATOR 
-    print "(a)", "Asexual Penna model"
+    print "(a)", formatChar("Asexual Penna model", escCodeBold)
     print "(*(a))", PRINT_SEPARATOR
 
     ! ***Body (Extended model parameters)

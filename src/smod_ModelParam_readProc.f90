@@ -6,6 +6,7 @@ submodule (ModelParam) ReadProcedures
   !>  Submodule of `ModelParam` containing procedures for reading files of
   !!  model parameters and "Verhulst weight".
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError, raiseWarning
   implicit none
 
   ! -------------------------------------------------------------------------- !
@@ -74,11 +75,8 @@ contains
     open(unit=MODEL_UNIT, file=FILE_NAME_MODEL, status='old', iostat=fileStatus)
 
     ! Warn missing file. TODO: Make better warning messages.
-    if (fileStatus /= 0) then
-      print "(a)", "***ERROR. Cannot read '", trim(FILE_NAME_MODEL),&
-          "'."
-      error stop
-    end if
+    if (fileStatus /= 0) &
+      call raiseError("Cannot read '" // trim(FILE_NAME_MODEL) // "'.")
 
     ! Clean model config file.
     call stripFile(strippedFile, MODEL_UNIT)    
@@ -147,9 +145,8 @@ contains
 
       ! NULL_VALUE: Invalid key was passed.
       case (NULL_VALUE)
-        print "(5a)", "***ERROR. '", key, "' in '", &
-            trim(FILE_NAME_MODEL), "' is not a valid parameter."
-        error stop
+        call raiseError("'" // key // "' in '" // &
+            trim(FILE_NAME_MODEL) // "' is not a valid parameter.")
 
       ! ***Defaut case: The given key is valid.
       case default
@@ -203,12 +200,10 @@ contains
         MODEL_MTTN_COUNT = castCharToInt(valChar, status)
     end select
 
-    if (status /= 0) then
-      print "(*(a))", "***ERROR. The value assigned to '", &
-          trim(PARAM_KEYS(keyIdx)), "' in ", &
-          trim(FILE_NAME_MODEL), "is not valid."
-      error stop
-    end if
+    if (status /= 0) &
+      call raiseError("The value assigned to '" // &
+        trim(PARAM_KEYS(keyIdx)) // "' in " // &
+        trim(FILE_NAME_MODEL) // "is not valid.")
 
     PARAM_ASSIGNED(keyIdx) = .true.
   end subroutine assignValue
@@ -245,10 +240,10 @@ contains
     integer :: i
     logical :: isFirstMissing
 
+    character(len=:), allocatable :: missingParams
+    allocate(character(len=0) :: missingParams)
+
     if (.not. all(PARAM_ASSIGNED)) then
-      write(*, "(3a)", advance="no") "***ERROR. In '", trim(FILE_NAME_MODEL), &
-          "', the following parameters are absent: "
-      
       ! Search for the missing parameters.
       isFirstMissing = .true.
       do i = 1, PARAM_COUNT
@@ -257,16 +252,15 @@ contains
           if (isFirstMissing) then
             isFirstMissing = .false.
           else
-            write(*, "(a)", advance="no") ", "
+            missingParams = missingParams // ", "
           end if
 
-          write(*, "(a)", advance="no") trim(PARAM_KEYS(i))
+          missingParams = missingParams // trim(PARAM_KEYS(i))
         end if
       end do
 
-      ! Print new line.
-      print *, ""
-      error stop
+      call raiseError("In '" // trim(FILE_NAME_MODEL) // &
+          "', the following parameters are absent: " // missingParams)
     end if
   end subroutine checkParamAssignedStatus
 
@@ -345,17 +339,10 @@ contains
     open(unit=VWEIGHT_UNIT, file=FILE_NAME_VWEIGHT, status='old', &
         iostat=fileStatus)
 
-    ! Warn missing file. TODO: Make better warning messages.
+    ! Warn missing file.
     if (fileStatus /= 0) then
-      print "(a/, 3(a))", "***", &
-          "WARNING. Cannot read '", & 
-          trim(FILE_NAME_VWEIGHT), &
-          "'. Using the following default value:"
-      print "(/a, i0, /a, f4.2)", "age:    1-", MODEL_L, "weight: ", &
-          VWEIGHT_DEFAULT
-
-      ! Print separator.
-      print "(a)", "***"
+      call raiseWarning("Cannot read '" // trim(FILE_NAME_VWEIGHT) // &
+          "'. Disabling death by Verhulst.")
       return
     end if
     
@@ -387,28 +374,56 @@ contains
 
           ! ***WARNING. Invalid number of weights.
           else if (vWeightIdx > MODEL_L) then
-            print "(a)", "***WARNING. Given Verhulst weights exceeded the " // &
-                "maximum number of allowed number of weights."
+            call raiseWarning("Given Verhulst weights exceeded the " // &
+                "maximum number of allowed number of weights.")
 
           ! ***WARNING. Invalid range.
           else if (vWeight > 1) then
-            print "(a, f5.3, a)", "***WARNING. Given Verhulst weight" // &
-                "is outside the allowed range [0, 1]. Using the " // &
-                "default value (", VWEIGHT_DEFAULT, ")."
+            ! NOTE: This block is temporary. Type casting will be moved to
+            ! 'CastProcedures' module.
+            block
+              character(len=MAX_LEN) :: realChar
+              integer                :: status
+
+              ! Cast `VWEIGHT_DEFAULT` into characters.
+              write(realChar, "(f5.3)", iostat=status) VWEIGHT_DEFAULT
+
+              ! Check if casting succeeded.
+              if (status /= 0) &
+                  call raiseError("Casting from real to char failed.")
+
+              call raiseWarning("Given Verhulst weight" // &
+                  "is outside the allowed range [0, 1]. Using the " // &
+                  "default value (" // trim(realChar) // ").")
+            end block
 
           ! ***Unknown error.
           else
-            print "(a)", "***ERROR. Unknown error when reading Verhulst weights."
-            error stop
+            call raiseError("Unknown error when reading Verhulst weights.")
           end if AssignWeight
           ! <<<
           ! ==============================================================
 
         ! ***WARNING. Invalid input.
         else
-          print "(3(a), f5.3, a)", "***WARNING. '", vWeightStr , &
-              "' is not a valid value for a Verhulst factor. " // &
-              "Using the default value (", VWEIGHT_DEFAULT, ")."
+          ! NOTE: This block is temporary. Type casting will be moved to
+          ! 'CastProcedures' module.
+          block
+            character(len=MAX_LEN) :: realChar
+            integer                :: status
+            write(realChar, "(f5.3)") VWEIGHT_DEFAULT
+
+            ! Cast `VWEIGHT_DEFAULT` into characters.
+            write(realChar, "(f5.3)", iostat=status) VWEIGHT_DEFAULT
+
+            ! Check if casting succeeded.
+            if (status /= 0) &
+                call raiseError("Casting from real to char failed.")
+
+            call raiseWarning("'" // vWeightStr // &
+                "' is not a valid value for a Verhulst factor. " // &
+                "Using the default value (" // trim(realChar) // ").")
+          end block
         end if CastCheck
         ! <<
         ! ===========================================

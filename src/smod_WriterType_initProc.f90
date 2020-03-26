@@ -7,8 +7,9 @@ submodule (WriterType) WriterTypeInitProc
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % initialize`.
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError
   implicit none
-  contains
+contains
 
 
   subroutine initializeFile(file)
@@ -36,8 +37,7 @@ submodule (WriterType) WriterTypeInitProc
     if (allocated(self % availableFiles)) then
       if (size(self % availableFiles) == 0) return
     else
-      print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
-      error stop
+      call raiseError("'availableFiles' attribute is not yet allocated.")
     end if
     
     ! Initialize all available files in `self`.
@@ -65,8 +65,7 @@ submodule (WriterType) WriterTypeInitProc
       ! Search for the file corresponding to the given flag.
       call findFileByFlag(self % availableFiles, flag, foundFile)
     else
-      print "(a)", "***ERROR. 'availableFiles' attribute is not yet allocated."
-      error stop
+      call raiseError("'availableFiles' attribute is not yet allocated.")
     end if
 
     if (allocated(foundFile)) then
@@ -79,9 +78,8 @@ submodule (WriterType) WriterTypeInitProc
 
       deallocate(foundFile)
     else
-      print "(3a)", "***ERROR. The flag '", flag, &
-          "' does not correspond to any recordable data set."
-      error stop
+      call raiseError("The flag '" //  flag // &
+          "' does not correspond to any recordable data set.")
     end if
   end subroutine writer_initialize
 

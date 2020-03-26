@@ -7,6 +7,7 @@ submodule (CmdOptionType) interfaceProcedures
   !!  private "helper" procedures for interfacing with other modules, program,
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError
   implicit none
 
   character(len=*), parameter :: shortCommDelim = "-"
@@ -102,9 +103,7 @@ contains
 
           ! Raise error if no match was found.
           else
-            print "(3a)", "***ERROR. '", trim(cmdArg), &
-                "' is an invalid command."
-            error stop
+            call raiseError("'" // trim(cmdArg) // "' is an invalid command.")
           end if
         end if
       end if
@@ -130,9 +129,8 @@ contains
           else
             ! Raise an error if there is at least one non-matching character in 
             ! `cmdArg`.
-            print "(3a)", "***ERROR. '", shortCommDelim // remainingArg(1:1), &
-                "' is an invalid command."
-            error stop
+            call raiseError("'" // shortCommDelim // remainingArg(1:1) // &
+                "' is an invalid command.")
           end if
         end if
       end if
@@ -142,10 +140,8 @@ contains
 
       ! Raise an error if the passed argument failed to match any defined
       ! command-line options.
-      if (status /= 0) then
-        print "(3a)", "***ERROR. '", trim(cmdArg), "' is an invalid command."
-        error stop
-      end if
+      if (status /= 0) &
+        call raiseError("'" // trim(cmdArg) // "' is an invalid command.")
     end do
 
     ! Check for missing values. Raise an error if at least one has no value.
@@ -196,9 +192,8 @@ contains
         cmdOptionType = KV_TYPE
 
       class default
-        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
-            " It must be 'KeyValCmdOption'."
-        error stop 
+        call raiseError("Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'.")
     end select
     
     ! Initialize local variables.
@@ -240,9 +235,7 @@ contains
                     toRead)
 
               case default
-                print "(a)", &
-                    "***ERROR. Unknown 'BaseCmdOption' type extension."
-                error stop
+                call raiseError("Unknown 'BaseCmdOption' type extension.")
             end select
 
             ! Exit out of the inner loop to ignore potentially redundant
@@ -295,8 +288,7 @@ contains
         end if
 
       class default
-        print "(a)", "***ERROR. Only 'FlagCmdOption' objects can be toggled."
-        error stop
+        call raiseError("Only 'FlagCmdOption' objects can be toggled.")
     end select
   end subroutine toggleFlagOption
 
@@ -334,15 +326,13 @@ contains
             cmdOption % hasValue = .true.
           end if
         else
-          print "(3a)", "***ERROR. Value for the command '", shortCommDelim // &
-              trim(cmdOption % shortCommand), "' cannot be obtained."
-          error stop
+          call raiseError("Value for the command '" // shortCommDelim // &
+              trim(cmdOption % shortCommand) // "' cannot be obtained.")
         end if
 
       class default
-        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
-            " It must be 'KeyValCmdOption'."
-        error stop
+        call raiseError("Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'.")
     end select
   end subroutine assignShortKVOption
 
@@ -383,9 +373,8 @@ contains
       end if
 
       class default
-        print "(a)", "***ERROR. Invalid 'BaseCmdOption' type extension." // &
-            " It must be 'KeyValCmdOption'."
-        error stop
+        call raiseError("Invalid 'BaseCmdOption' type extension." // &
+            " It must be 'KeyValCmdOption'.")
     end select
   end subroutine assignLongKVOption
 
@@ -422,9 +411,8 @@ contains
         cmdOptionType = KV_TYPE
 
       class default
-        print "(a)", "***ERROR. Invalid 'BaseCmdOption' class. It must be " // &
-            "either 'FlagCmdOption' or 'KeyValCmdOption'."
-        error stop 
+        call raiseError("Invalid 'BaseCmdOption' class. It must be " // &
+            "either 'FlagCmdOption' or 'KeyValCmdOption'.")
     end select
 
     ! Pessimistically initialize `status` to 1.
@@ -446,8 +434,7 @@ contains
           if (status == 0) exit
 
         case default
-          print "(a)", "***ERROR. Unknown 'BaseCmdOption' type extension."
-          error stop
+          call raiseError("Unknown 'BaseCmdOption' type extension.")
       end select
     end do
   end subroutine parseLongCommand
@@ -576,11 +563,9 @@ contains
     integer :: i
 
     do i =  1, size(cmdOptions)
-      if (.not. cmdOptions(i) % hasValue) then
-        print "(3a)", "***ERROR. The command '", trim(cmdOptions(i) % command),&
-            "' requires a value." 
-        error stop
-      end if
+      if (.not. cmdOptions(i) % hasValue) &
+        call raiseError("The command '" // trim(cmdOptions(i) % command) // &
+        "' requires a value.")
     end do
   end subroutine checkUninitializedValues
 

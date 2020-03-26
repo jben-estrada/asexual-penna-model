@@ -92,6 +92,7 @@ contains
   subroutine runOneInstance(maxTimestep, startPopSize, initMttnCount,recordFlag)
     use Demographics
     use ModelParam, only: MODEL_K
+    use ErrorMSG, only: raiseWarning
 
     integer,          intent(in) :: maxTimestep
       !! Maximum (total) time step.
@@ -142,8 +143,8 @@ contains
       ! For this given set of model parameters, pop size might explode.
       ! As such, we halt the run once this case is reached.
       if (popSize > MODEL_K) then
-        print "(/a)", "The population has exceeded the carrying capacity!" // &
-            " Stopping the current run."
+        call raiseWarning("The population has exceeded the carrying" // &
+        " capacity! Stopping the current run.")
         exit
       end if
 

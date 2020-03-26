@@ -30,16 +30,16 @@ contains
   !!  This also marks the flag as optiona.
   ! -------------------------------------------------------------------------- !
   subroutine assignInitialFlagState(cmdFlag, state)
+    use ErrorMSG, only: raiseError
+
     class(FlagCmdOption), intent(inout) :: cmdFlag
       !! Command-line flag to modify its `state` attribute.
     logical,              intent(in)    :: state
       !! New state to replace `state` of `cmdFlag`.
 
-    if (cmdFlag % isOptional) then
-      print "(3a)", "***ERROR. Cannot assign '", trim(cmdFlag % command), &
-          "' its default value again."
-      error stop
-    end if
+    if (cmdFlag % isOptional) &
+      call raiseError("Cannot assign '" // trim(cmdFlag % command) // &
+          "' its default value again.")
 
     if (state) then
       cmdFlag % value = TRUE_FLAG

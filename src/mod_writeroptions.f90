@@ -121,6 +121,8 @@ contains
   !!  This object contains the necessary information about the output file.
   ! -------------------------------------------------------------------------- !
   function getOutputFile(flag) result(out)
+    use ErrorMSG, only: raiseError
+
     character, intent(in) :: flag
       !! Flag to compare
     type(OutputFile)    :: out
@@ -140,8 +142,7 @@ contains
         out = timeFile
 
       case default
-        print "(3a)", "***ERROR. No file with flag '", flag, "' found."
-        error stop
+        call raiseError("No file with flag '" // flag // "' found.")
     end select
   end function getOutputFile
 

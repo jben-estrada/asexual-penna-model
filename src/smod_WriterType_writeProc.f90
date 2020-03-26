@@ -7,6 +7,7 @@ submodule (WriterType) WriterTypeWriteProc
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % write`.
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError
   implicit none
 contains
 
@@ -31,9 +32,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
-          "' does not correspond to any recordable data."
-      stop
+      call raiseError("Cannot write file, The flag '" // flag // &
+        "' does not correspond to any recordable data.")
     end if
   end subroutine writer_write_int
 
@@ -58,9 +58,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
-          "' does not correspond to any recordable data."
-      error stop
+      call raiseError("Cannot write file, The flag '" // flag // &
+        "' does not correspond to any recordable data.")
     end if
   end subroutine writer_write_real
 
@@ -85,9 +84,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
-          "' does not correspond to any recordable data."
-      error stop
+      call raiseError("Cannot write file, The flag '" // flag // &
+        "' does not correspond to any recordable data.")
     end if
   end subroutine writer_write_intArray
 
@@ -112,9 +110,8 @@ contains
     if (allocated(foundFile)) then
       write(foundFile % unit, foundFile % format) arg
     else
-      print "(3a)", "***ERROR. Cannot write file, The flag '", flag, &
-          "' does not correspond to any recordable data."
-      error stop
+      call raiseError("Cannot write file, The flag '" // flag // &
+        "' does not correspond to any recordable data.")
     end if
   end subroutine writer_write_realArray
 end submodule WriterTypeWriteProc

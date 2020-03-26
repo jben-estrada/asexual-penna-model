@@ -6,6 +6,7 @@ module CastProcedures
   !>  Module containing procedures for casting values from one data type 
   !!  to another.
   ! -------------------------------------------------------------------------- !
+  use ErrorMSG, only: raiseError
   implicit none
   private
   
@@ -37,10 +38,8 @@ contains
     else
 
       ! Handle casting error in this function.
-      if (status /= 0) then
-        print "(*(a))", "***ERROR. '", trim(adjustl(char)), "' is not numeric."
-        error stop
-      end if
+      if (status /= 0) &
+        call raiseError("'" // trim(adjustl(char)) // "' is not numeric.")
     end if
   end function castCharToInt
 
@@ -66,13 +65,8 @@ contains
     if (present(castStat)) then
       castStat = status
     else
-      
       ! Handle casting error in this function.
-      if (status /= 0) then
-        print "(a, i0, a)", "***ERROR. '", int, &
-            "' cannot be casted to character."
-        error stop
-      end if
+      if (status /= 0) call raiseError("Casting from int to char failed.")
     end if
   end function castIntToChar
 
@@ -95,9 +89,8 @@ contains
 
       write(castIntPtrToChar, *, iostat=status) intPtr
     else
-      print "(a)", "***ERROR. The 'int' dummy argument is not associated " // &
-          "with any target."
-      error stop  
+      call raiseError("The 'int' dummy argument is not associated " // &
+          "with any target.")
     end if
 
     ! Handle casting error in other procedures/program.
@@ -107,9 +100,7 @@ contains
       
       ! Handle casting error in this function.
       if (status /= 0) then
-        print "(a, i0, a)", "***ERROR. '", intPtr, &
-            "' cannot be casted to character."
-        error stop
+        call raiseError("Casting from int pointer to char failed.")
       end if
     end if
   end function castIntPtrToChar

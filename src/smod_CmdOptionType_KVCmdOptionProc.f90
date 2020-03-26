@@ -17,15 +17,16 @@ contains
   !!  This also marks the command-line option optional.
   ! -------------------------------------------------------------------------- !
   subroutine assignOptionalKVVal(cmdKeyVal, value)
+    use ErrorMSG, only: raiseError
+
     class(KeyValCmdOption), intent(inout) :: cmdKeyVal
       !! Command-line key-value options.
     character(len=*),       intent(in)    :: value
       !! Default value to be assigned to `value` attribute of `self`.
 
     if (cmdKeyVal % isOptional) then
-      print "(3a)", "***ERROR. Cannot assign '", trim(cmdKeyVal % command), &
-          "' its default value again."
-      error stop
+      call raiseError("Cannot assign '" // trim(cmdKeyVal % command) // &
+          "' its default value again.")
     else
       cmdKeyVal % hasValue = .true.
       cmdKeyVal % isOptional = .true.

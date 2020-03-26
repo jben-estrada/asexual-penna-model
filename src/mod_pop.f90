@@ -7,6 +7,7 @@ module Pop
   ! -------------------------------------------------------------------------- !
   use Gene
   use ModelParam
+  use ErrorMSG, only: raiseError
   implicit none
   private
 
@@ -126,9 +127,8 @@ contains
         deathByVerhulst = deathByVerhulst + 1
 
       case default
-        print "(a)", "***ERROR. The current individual is not dead " // &
-            "or has an invalid death index."
-        error stop
+        call raiseError("The current individual is not dead or has an" // &
+            " invalid death index.")
     end select
   end subroutine determineDeathType
 
@@ -381,9 +381,7 @@ contains
     if (associated(self % current_ptr)) then
       getCurrIndivAge = self % current_ptr % age
     else
-      print "(a)", "***ERROR. The current pointer of a linked list is " // &
-          "disassociated."
-      error stop
+      call raiseError("The current pointer of a linked list is disassociated.")
     end if
   end function getCurrIndivAge
 
@@ -402,9 +400,7 @@ contains
     if (associated(self % current_ptr)) then
       genome = self % current_ptr % genome
     else
-      print "(a)", "***ERROR. The current pointer of a linked list is " // &
-          " disassociated."
-      error stop
+      call raiseError("The current pointer of a linked list is disassociated.")
     end if
   end function getCurrIndivGenome
 
