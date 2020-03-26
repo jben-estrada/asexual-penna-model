@@ -6,6 +6,9 @@ module ANSIEscCodes
   !>  Module containing procedures for the formatting of text attributes of 
   !!  characters to be displayed on screen with ANSI escape codes
   !!  (SGR, specifically)
+  !!
+  !!  Based from the `ansi_colors` module by Jason Blevins in
+  !!  http://fortranwiki.org/fortran/show/ansi_colors
   ! -------------------------------------------------------------------------- !
   implicit none
   private
