@@ -19,17 +19,26 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: raiseError
-  !>  Print the error message `msg` and stop the program.
+  !>  Print the error message `msg` and stop the program if one so chooses.
+  !!  By default, this subroutine stops the program when it is called.
   ! -------------------------------------------------------------------------- !
-  subroutine raiseError(msg)
+  subroutine raiseError(msg, stopProgram)
     character(len=*), intent(in) :: msg
       !! Accompanying error message.
+    logical, optional, intent(in) :: stopProgram
+      !! Stop the program with the `error stop` statement when true.
   
     ! Print the error message in red.
     print "(/3a)", formatChar("***", escCodeRed), &
         formatChar("ERROR", escCodeRed // escCodeBold), &
         formatChar("*** " // msg, escCodeRed)
-    error stop
+
+    ! Stop the program.
+    if (present(stopProgram)) then
+      if (stopProgram) error stop
+    else
+      error stop
+    end if
   end subroutine raiseError
 
 
