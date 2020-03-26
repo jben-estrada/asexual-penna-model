@@ -26,7 +26,7 @@ contains
       !! Accompanying error message.
   
     ! Print the error message in red.
-    print "(3a)", formatChar("***", escCodeRed), &
+    print "(/3a)", formatChar("***", escCodeRed), &
         formatChar("ERROR", escCodeRed // escCodeBold), &
         formatChar("*** " // msg, escCodeRed)
     error stop
@@ -47,15 +47,16 @@ contains
 
     ! Print "***WARNING***" to signify the warning.
     if (present(withWarningTxt)) then
-      if (withWarningTxt) write(*, "(3a)", advance="no") &
+      if (withWarningTxt) write(*, "(/4a)", advance="no") &
           formatChar("***", escCodeYellow), &
           formatChar("WARNING", escCodeYellow // escCodeBold), &
-          formatChar("*** ", escCodeYellow)
+          formatChar("*** ", escCodeYellow), &
+          formatChar(msg, escCodeYellow)
+    else      
+      ! Print only the warning message.
+      print "(/a)", formatChar(msg, escCodeYellow)
     end if
 
-    ! Print the warning message in yellow.
-    print "(a)", formatChar(msg, escCodeYellow)
-  
     ! Stop the program.
     if (present(stopProgram)) then
       if (stopProgram) error stop
