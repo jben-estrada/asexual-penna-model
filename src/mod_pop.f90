@@ -126,6 +126,7 @@ contains
 
     ! Initialize the reader pointer.
     current_ptr => head_ptr
+    old_ptr => null()
   end subroutine initializePersonList
 
 
