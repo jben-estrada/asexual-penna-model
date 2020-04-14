@@ -6,7 +6,6 @@ module Penna
   !>  Module containing one of the core procedures for the simulation of the
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
-  use Pop
   use WriterOptions
   implicit none
   private
@@ -93,6 +92,7 @@ contains
     use Demographics
     use ModelParam, only: MODEL_K
     use ErrorMSG, only: raiseWarning
+    use Pop, only: initializePersonList, resetPersonReadPtrs, freePersonPtrs
 
     integer,          intent(in) :: maxTimestep
       !! Maximum (total) time step.
@@ -103,7 +103,6 @@ contains
     character(len=*), intent(in) :: recordFlag
       !! Record flag. Valid values are found in the `WriterOptions` module.
 
-    type(PersonList) :: population    ! Population list
     type(Writer)     :: runWriter     ! `Writer` object for recording data 
     integer, target  :: deathCount(3) ! Death count 
     integer :: timeStep               ! Time step
@@ -113,12 +112,12 @@ contains
     integer, pointer :: deathByMutation
     integer, pointer :: deathByVerhulst
 
-    ! Initialize variables
-    population = constructPersonList(startPopSize, initMttnCount)
+    ! Initialization
     popSize = startPopSize
     deathCount(:) = 0
     call resetAgeDstrb()
     call initializeRunWriter(runWriter, recordFlag)
+    call initializePersonList(startPopSize, initMttnCount)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
@@ -149,7 +148,7 @@ contains
       end if
 
       ! Evaluate population.
-      call evalPopulation(population, popSize, maxTimestep - timeStep, &
+      call evalPopulation(popSize, maxTimestep - timeStep, &
           recordFlag, deathByAge, deathByMutation, deathByVerhulst)
 
       ! Record data.
@@ -157,14 +156,14 @@ contains
 
       ! Reset variables for the next time step.
       deathCount(:) = 0
-      call population % resetReadPtrs()
+      call resetPersonReadPtrs()
       if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
       if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
           call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
-    call population % freePtr(popSize)
+    call freePersonPtrs(popSize)
     call runWriter % close()
   contains
 
@@ -207,7 +206,6 @@ contains
   !>  Evaluate the population.
   ! -------------------------------------------------------------------------- !
   subroutine evalPopulation(&
-      population,       &
       popSize,          &
       countdown,        &
       recordFlag,       &
@@ -215,10 +213,10 @@ contains
       deathByMutation,  &
       deathByVerhulst   &
       )
+    use Pop  
     use Demographics
     use ModelParam, only: MODEL_B
 
-    type(PersonList), intent(inout) :: population       !! Population object.
     integer,          intent(inout) :: popSize          !! Population size.
     integer, pointer, intent(inout) :: deathByAge       !! Death by age count.
     integer, pointer, intent(inout) :: deathByMutation  !! Death by mutation.
@@ -236,35 +234,33 @@ contains
       if (popSize == 0) exit
 
       ! Evaluate the current individual. 
-      call population % checkCurrIndivDeath(popSize)
-
-      if (population % isCurrIndivDead()) then
+      call checkCurrIndivDeath(popSize)
+      if (isCurrIndivDead()) then
         ! Get the cause of death of the current dead individual.
-        call population % determineDeathType(deathByAge, deathByMutation, &
-            deathByVerhulst)
+        call determineDeathType(deathByAge, deathByMutation, deathByVerhulst)
 
         popSizeChange = popSizeChange - 1
       else
         ! Update age of the alive individuals.
-        call population % updateCurrIndivAge()
+        call updateCurrIndivAge()
 
         ! Update genome distribution.
         if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
-            call updateGenomeDstrb(population % getCurrIndivGenome())
+            call updateGenomeDstrb(getCurrIndivGenome())
 
         ! Check for birth events.
-        if (population % isCurrIndivMature()) then
-          call population % reproduceCurrIndiv(recordFlag == divIdxFlag)
+        if (isCurrIndivMature()) then
+          call reproduceCurrIndiv(recordFlag == divIdxFlag)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
 
       ! Record demographics.
       if (countdown <= DEMOG_LAST_STEPS) &
-          call updateAgeDstrb(population % getCurrIndivAge(), ageDistribution)
+          call updateAgeDstrb(getCurrIndivAge(), ageDistribution)
 
       ! Proceed to the next element of the linked list.
-      call population % nextElem(listStatus)
+      call nextElem(listStatus)
       ! Exit condition.
       if (listStatus /= 0) exit
     end do evalPop
