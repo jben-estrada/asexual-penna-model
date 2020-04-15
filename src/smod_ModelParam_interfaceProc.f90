@@ -8,7 +8,7 @@ submodule (ModelParam) InterfaceProcedures
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
   use CmdOptions
-  use ErrorMSG, only: raiseError
+  use ErrorMSG, only: raiseError, raiseWarning
   implicit none
 contains
 
@@ -65,14 +65,11 @@ contains
             "' cannot be opened or does not exist.", stopProgram=.false.)
 
         ! Suggest the user options for troubleshooting.
-        print "(10(' '), a)", "Run with '-h' for more information if it " // &
-            "is not intended to be a file path."
-        print "(10(' '), 5a)", "If it is, run the program without passing '", &
-            trim(newFilePath), "' to use the default one ('", trim(filePath), &
-            "')."
-
-        ! Finally stop the program.
-        error stop
+        call raiseWarning("Run with '-h' for more information if it is " // &
+            "not intended to be a file path.", .false., stopProgram=.false.)
+        call raiseWarning("If it is, run the program without passing '" // &
+          trim(newFilePath) // "' to use the default one ('" // &
+          trim(filePath) // "').", .false., stopProgram=.true.)
       else
         call raiseError("The file '" // trim(filePath) // &
             "' cannot be opened or does not exist.")
