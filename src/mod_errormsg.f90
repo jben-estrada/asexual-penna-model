@@ -29,9 +29,9 @@ contains
       !! Stop the program with the `error stop` statement when true.
   
     ! Print the error message in red.
-    print "(3a)", formatChar("***", escCodeRed), &
-        formatChar("ERROR", escCodeRed // escCodeBold), &
-        formatChar("*** " // msg, escCodeRed)
+    print "(2a)", &
+        formatChar("***ERROR*** ", escCodeRed // escCodeBold), &
+        formatChar(msg, escCodeRed)
 
     ! Stop the program.
     if (present(stopProgram)) then
@@ -56,15 +56,12 @@ contains
 
     ! Print "***WARNING***" to signify the warning.
     if (present(withWarningTxt)) then
-      if (withWarningTxt) write(*, "(4a)", advance="no") &
-          formatChar("***", escCodeYellow), &
-          formatChar("WARNING", escCodeYellow // escCodeBold), &
-          formatChar("*** ", escCodeYellow), &
-          formatChar(msg, escCodeYellow)
-    else      
-      ! Print only the warning message.
-      print "(a)", formatChar(msg, escCodeYellow)
+      if (withWarningTxt) write(*, "(a)", advance="no") &
+          formatChar("***WARNING*** ", escCodeYellow // escCodeBold)
     end if
+    
+    ! Print only the warning message.
+    print "(a)", formatChar(msg, escCodeYellow)
 
     ! Stop the program.
     if (present(stopProgram)) then
