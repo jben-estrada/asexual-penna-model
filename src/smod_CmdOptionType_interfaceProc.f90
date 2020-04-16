@@ -591,7 +591,7 @@ contains
     integer :: i
 
     ! Print the header.
-    write(*, "(a)", advance="no") "usage: penna.out [options...]"
+    write(*, "(3a)", advance="no") "usage: ", progFileName() ," [options...]"
     do i = 1, size(cmdPosArgs)
       if (cmdPosArgs(i) % isOptional) write(*, "(a)", advance="no") " ["
       write(*, "(a)", advance="no") trim(cmdPosArgs(i) % command)
@@ -645,4 +645,46 @@ contains
 
     deallocate(tempChar)
   end subroutine showHelpMsg
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: progFileName
+  !>  Get the name of the program.
+  ! -------------------------------------------------------------------------- !
+  function progFileName() result(filename)
+    character(len=:), allocatable :: filename
+    
+    character(len=MAX_LEN) :: progRelPath
+    integer                :: status
+
+    character :: currChar
+    integer   :: i
+
+    ! Initialize output.
+    allocate(character(len=0) :: filename)
+
+    ! Get the relative path of the program.
+    call get_command_argument(0, progRelPath, status=status)
+    if (status /= 0) call raiseError("Cannot get the path of the executable.")
+
+    ! Read the obtained path.
+    do i = len(progRelPath), 1, -1
+      currChar = progRelPath(i:i)
+      select case(currChar)
+        ! Ignore whitespaces.
+        case(" ")
+          cycle
+        
+        ! Halt reading once the delimiter '/' is reached.
+        ! NOTE: Since we expect this program to be run on Linux (not Windows),
+        ! we use this delimiter. Windows use either '/' or '\'
+        case("/")
+          exit
+
+        ! Append characters.
+        case default
+          filename = currChar // filename
+      end select
+    end do
+  end function progFileName
 end submodule
