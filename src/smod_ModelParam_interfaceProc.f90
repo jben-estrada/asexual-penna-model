@@ -221,27 +221,30 @@ contains
     print "(a)", formatChar("Asexual Penna model", escCodeBold)
     print "(*(a))", PRINT_SEPARATOR
 
-    ! ***Body (Extended model parameters)
+    ! ***Model and program parameters.
     if (PROG_PRINT_STATE == VERBOSE_PRINT) then
       write(*, "(*(a20, i9/))", advance="no") &
-      "Genome length",        MODEL_L, &
-      "Mutation threshold",   MODEL_T, &
-      "Birth rate",           MODEL_B, &
-      "Mutation rate",        MODEL_M, &
-      "Min reproduciton age", MODEL_R, &
-      "Max reproduction age", MODEL_R_MAX, &
-      "Carrying capacity",    MODEL_K
+          "Genome length",        MODEL_L, &
+          "Mutation threshold",   MODEL_T, &
+          "Birth rate",           MODEL_B, &
+          "Mutation rate",        MODEL_M, &
+          "Min reproduciton age", MODEL_R, &
+          "Max reproduction age", MODEL_R_MAX, &
+          "Carrying capacity",    MODEL_K, &
+          "Number of time steps", MODEL_TIME_STEPS, &
+          "Sample size",          PROG_SAMPLE_SIZE,  &
+          "Starting pop size",    MODEL_START_POP_SIZE
+
+      ! Print the record flag.
+      write(*, "(a20)", advance="no") "Record result"
+      if (PROG_REC_FLAG == nullFlag) then        
+        print "(L9)", .false.
+      else
+        print "(L5, ' (', a1, ')')", .true., trim(PROG_REC_FLAG)
+      end if
+
+      print "(*(a))", PRINT_SEPARATOR
     end if
-
-    ! ***Body
-    write(*, "(*(a20, i9/))", advance="no") &
-      "Number of time steps", MODEL_TIME_STEPS, &
-      "Sample size",          PROG_SAMPLE_SIZE,  &
-      "Starting pop size",    MODEL_START_POP_SIZE
-    print "(a20, L9)", "Record result", PROG_REC_FLAG /= nullFlag
-
-    ! ***End
-    print "(*(a))", PRINT_SEPARATOR
   end subroutine printModelParams
 
 
