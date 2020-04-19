@@ -320,6 +320,8 @@ contains
   !>  Read the Verhulst weights values from a .ini file.
   ! -------------------------------------------------------------------------- !
   subroutine readVerhulstWeightsCfg()
+    use CastProcedures, only: castRealToChar, castCharToReal
+
     integer :: fileStatus
     integer :: readStatus
     integer :: charNum
@@ -361,69 +363,21 @@ contains
       ReadCheck: if (currChar == VWEIGHT_SEP &
                      .or. charNum == len(strippedFile)) then
         ! Cast string to real.
-        read(vWeightStr, *, iostat=readStatus) vWeight
+        vWeight = castCharToReal(vWeightStr, readStatus)
 
         ! >> Check if the char-to-real casting succeeds.
         ! ===========================================
         CastCheck: if (readStatus == 0) then
+          ! NOTE: Failed assignment will raise an error and stop the program.
+          call checkVWeight(vWeight)
+          call checkVWeightIdx(vWeightIdx)
 
-          ! >>> Check all possible errors.
-          ! ==============================================================
-          AssignWeight: if (vWeightIdx <= MODEL_L .and. vWeight <= 1) then
-            MODEL_VERHULST_W(vWeightIdx) = vWeight
-
-          ! ***WARNING. Invalid number of weights.
-          else if (vWeightIdx > MODEL_L) then
-            call raiseWarning("Given Verhulst weights exceeded the " // &
-                "maximum number of allowed number of weights.")
-
-          ! ***WARNING. Invalid range.
-          else if (vWeight > 1) then
-            ! NOTE: This block is temporary. Type casting will be moved to
-            ! 'CastProcedures' module.
-            block
-              character(len=MAX_LEN) :: realChar
-              integer                :: status
-
-              ! Cast `VWEIGHT_DEFAULT` into characters.
-              write(realChar, "(f5.3)", iostat=status) VWEIGHT_DEFAULT
-
-              ! Check if casting succeeded.
-              if (status /= 0) &
-                  call raiseError("Casting from real to char failed.")
-
-              call raiseWarning("Given Verhulst weight" // &
-                  "is outside the allowed range [0, 1]. Using the " // &
-                  "default value (" // trim(realChar) // ").")
-            end block
-
-          ! ***Unknown error.
-          else
-            call raiseError("Unknown error when reading Verhulst weights.")
-          end if AssignWeight
-          ! <<<
-          ! ==============================================================
-
-        ! ***WARNING. Invalid input.
+          ! Finally assign the obtained Verhulst weight.
+          MODEL_VERHULST_W(vWeightIdx) = vWeight
         else
-          ! NOTE: This block is temporary. Type casting will be moved to
-          ! 'CastProcedures' module.
-          block
-            character(len=MAX_LEN) :: realChar
-            integer                :: status
-            write(realChar, "(f5.3)") VWEIGHT_DEFAULT
-
-            ! Cast `VWEIGHT_DEFAULT` into characters.
-            write(realChar, "(f5.3)", iostat=status) VWEIGHT_DEFAULT
-
-            ! Check if casting succeeded.
-            if (status /= 0) &
-                call raiseError("Casting from real to char failed.")
-
-            call raiseWarning("'" // vWeightStr // &
-                "' is not a valid value for a Verhulst factor. " // &
-                "Using the default value (" // trim(realChar) // ").")
-          end block
+          call raiseWarning("'" // vWeightStr // "' is not a valid value " // &
+              "for a Verhulst weight. Using the default value (" // &
+              trim(castRealToChar(VWEIGHT_DEFAULT)) // ").")
         end if CastCheck
         ! <<
         ! ===========================================
@@ -441,6 +395,33 @@ contains
 
     deallocate(vWeightStr)
   end subroutine readVerhulstWeightsCfg
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkVWeight
+  !>  Check the validity of the value of the Verhulst weight `vWeight`.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkVWeight(vWeight)
+    real, intent(in) :: vWeight
+      !! Verhulst weight.
+    
+    if (vWeight > 1 .or. vWeight < 0) &
+        call raiseError("Verhulst weight out of the range [0, 1].")
+  end subroutine checkVWeight
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkVWeightIdx
+  !>  Check the validity of the value of the Verhulst weight index `vWeightIdx`.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkVWeightIdx(vWeightIdx)
+    integer, intent(in) :: vWeightIdx
+      !! Verhulst weight index.
+    
+    if (vWeightIdx > MODEL_L .or. vWeightIdx < 1) &
+        call raiseError("Given number of Verhulst weights exceeded the " // &
+            "allowed number of weights")
+  end subroutine checkVWeightIdx
 
 
   ! -------------------------------------------------------------------------- !
