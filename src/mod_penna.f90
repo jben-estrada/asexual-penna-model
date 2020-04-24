@@ -318,7 +318,7 @@ contains
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
 
     ! Initialize the progress bar.
-    call initProgressBar(progBar, 20, sampleSize)
+    call progBar % init(20, sampleSize)
 
     ! Call and time the `run` subroutine.
     sum = 0.
@@ -342,7 +342,7 @@ contains
 
       ! Print the progress bar.
       if (printProgress .and. sampleSize > 1) then
-        call progBar % incrementCounter(show=.true.)
+        call progBar % incrCounter(show=.true.)
       end if
     end do
 

@@ -27,53 +27,53 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCommand
+  ! FUNCTION: basecmdtype_getCommand
   !>  Get the command character of the given command-line option.
   ! -------------------------------------------------------------------------- !
-  pure function getCommand(self) result(command)
+  pure function basecmdtype_getCommand(self) result(command)
     class(BaseCmdOption), intent(in) :: self
       !! Command-line option.
     character(len=LONG_MAX_LEN)      :: command
 
     command = self % command
-  end function getCommand
+  end function basecmdtype_getCommand
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getAltCommand
+  ! FUNCTION: basecmdtype_getAltCommand
   !>  Get the alternate command character of the given command-line option.
   ! -------------------------------------------------------------------------- !
-  pure function getAltCommand(self) result(shortCommand)
+  pure function basecmdtype_getAltCommand(self) result(shortCommand)
     class(BaseCmdOption), intent(in) :: self
       !! Command-line option.
     character(len=MAX_LEN)           :: shortCommand
 
     shortCommand = self % shortCommand
-  end function getAltCommand
+  end function basecmdtype_getAltCommand
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getUsageMsg
+  ! FUNCTION: basecmdtype_getUsageMsg
   !>  Get the message on the usage of the given command-line option.
   ! -------------------------------------------------------------------------- !
-  pure function getUsageMsg(self) result(usageMsg)
+  pure function basecmdtype_getUsageMsg(self) result(usageMsg)
     class(BaseCmdOption), intent(in) :: self
       !! Command-line option.
     character(len=LONG_MAX_LEN)  :: usageMsg
 
     usageMsg = self % usageMsg
-  end function getUsageMsg
+  end function basecmdtype_getUsageMsg
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getValue
+  ! FUNCTION: basecmdtype_getValue
   !>  Get the assigned value of the given `BaseCmdOption` object.
   ! -------------------------------------------------------------------------- !
-  pure function getValue(self) result(value)
+  pure function basecmdtype_getValue(self) result(value)
     class(BaseCmdOption), intent(in) :: self
 
     character(len=LONG_MAX_LEN) :: value
 
     value = self % value
-  end function getValue
+  end function basecmdtype_getValue
 end submodule baseOptionProcedure

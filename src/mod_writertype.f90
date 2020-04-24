@@ -11,17 +11,10 @@ module WriterType
   implicit none
   private
 
-  ! Note: Can be changed when this module is to be reused in other projects. 
-  public :: writeIK
-    !! Integer kind for integer arguments of procedures in this module.
-  public :: writeRK
-    !! Real kind for integer arguments of procedures in this module.
-
-  integer, parameter, public :: MAX_LEN = 32
+  integer, parameter :: MAX_LEN = 32
     !! Max character length.
-
   ! -------------------------------------------------------------------------- !
-  type, public :: OutputFile
+  type :: OutputFile
     !! Output file structure. A convenient container of classes.
     character(MAX_LEN) :: filename
     character(MAX_LEN) :: format
@@ -31,11 +24,11 @@ module WriterType
   end type
 
   ! All defined `OutputFile` objects.
-  type(OutputFile), allocatable, protected, public :: outputFiles(:)
+  type(OutputFile), allocatable, protected :: outputFiles(:)
 
   ! -------------------------------------------------------------------------- !
   ! `Writer` derived type. A reusable unified interface for writing files.
-  type, public :: Writer
+  type :: Writer
     private
     type(OutputFile), allocatable :: availableFiles(:)
     type(OutputFile), allocatable :: activeFiles(:)
@@ -224,6 +217,15 @@ module WriterType
     procedure :: constructWriter_scalar
   end interface constructWriter
   ! -------------------------------------------------------------------------- !
+  ! Note: Kinds can be changed if this were to be used in other programs. 
+  public :: writeIK
+  public :: writeRK
+
+  public :: Writer
+  public :: OutputFile
+
+  public :: outputFiles
+  public :: MAX_LEN
 
   public :: declareAvailableFiles
   public :: constructWriter

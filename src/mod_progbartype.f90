@@ -8,7 +8,7 @@ module ProgBarType
   implicit none
   private
 
-  type, public :: ProgressBar
+  type :: ProgressBar
     !! A derived type for displaying progress bars.
     private
     integer   :: partition  !! Number at which `counter` is partitioned.
@@ -16,23 +16,28 @@ module ProgBarType
     integer   :: counter    !! Number representing progress.
     character :: charBit    !! Character to be displayed to denote progress.
   contains
-    procedure :: showProgBar
-    procedure :: incrementCounter
+    procedure :: init => progressbar_init
+      !! Initialize the `ProgressBar` object.
+    procedure :: showProgBar => progressbar_showProgBar
+      !! Print the progress bar.
+    procedure :: incrCounter => progressbar_incrCounter
+      !! Increment the progress counter. The increment value, which defaults to
+      !! 1, can be optionally changed.
   end type ProgressBar
 
   character, parameter :: DEFAULT_CHAR_BIT = ">"
     !! Default character bit.
 
-  public :: initProgressBar
+  public :: ProgressBar
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initProgressBar
+  ! SUBROUTINE: progressbar_init
   !>  Initialize a `ProgressBar` object.
   ! -------------------------------------------------------------------------- !
-  subroutine initProgressBar(new, partition, totalTicks, charBit)
-    type(ProgressBar), intent(out) :: new
+  subroutine progressbar_init(new, partition, totalTicks, charBit)
+    class(ProgressBar), intent(out) :: new
       !! `ProgressBar` object to be initialized.
     integer,           intent(in)  :: partition
       !! The `partition` for the `partition` attribute of `new`. 
@@ -53,16 +58,16 @@ contains
     new % counter = 0
     new % partition = partition
     new % totalTicks = totalTicks
-  end subroutine initProgressBar
+  end subroutine progressbar_init
 
 
   ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [ProgressBar % ]incrementTick
+  ! SUBROUTINE: progressbar_incrCounter
   !>  Increment `counter` attribute of a `ProgressBar` object. The increment
   !!  value can be optionally changed. It can optionally show the
   !!  progress bar as well.
   ! -------------------------------------------------------------------------- !
-  subroutine incrementCounter(self, increment, show)
+  subroutine progressbar_incrCounter(self, increment, show)
     class(ProgressBar), intent(inout) :: self
       !! `ProgressBar` object to be updated.
     integer, optional :: increment
@@ -83,17 +88,17 @@ contains
     ! Optionally show the progress bar.
     if (present(show)) then
       if (show) then
-        call self % showProgBar
+        call self % showProgBar()
       end if
     end if
-  end subroutine incrementCounter
+  end subroutine progressbar_incrCounter
 
 
   ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [ProgressBar % ]showProgBar
+  !  SUBROUTINE: progressbar_showProgBar
   !>  Print the progress bar.
   ! -------------------------------------------------------------------------- !
-  subroutine showProgBar(self)
+  subroutine progressbar_showProgBar(self)
     class(ProgressBar), intent(in) :: self
       !! `ProgressBar` object to be shown.
 
@@ -121,5 +126,5 @@ contains
         real(self % totalTicks), "%"
 
     deallocate(tickArr)
-  end subroutine showProgBar
+  end subroutine progressbar_showProgBar
 end module ProgBarType

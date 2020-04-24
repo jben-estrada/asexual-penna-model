@@ -26,7 +26,7 @@ module CmdOptionType
 
   ! DERIVED TYPE DEFINITIONS.
   ! -------------------------------------------------------------------------- !
-  type, public, abstract :: BaseCmdOption
+  type, abstract :: BaseCmdOption
     !! Base type for all command-line argument type.
     private
     character(len=MAX_LEN)      :: command
@@ -45,17 +45,18 @@ module CmdOptionType
       !! Mark whether this option has assigned value or not. Defaults to
       !! `.false.`.
   contains
-    procedure :: getCommand
+    procedure :: getCommand => basecmdtype_getCommand
       !! Get the `command` character.
-    procedure :: getAltCommand
+    procedure :: getAltCommand => basecmdtype_getAltCommand
       !! Get the alternative character to `command`, `shortCommand`.
-    procedure :: getUsageMsg
+    procedure :: getUsageMsg => basecmdtype_getUsageMsg
       !! Get the usage message of the this command-line option.
-    procedure :: getValue
+    procedure :: getValue => basecmdtype_getValue
+      !! Get the value obtained for this command-line option.
   end type BaseCmdOption
   ! -------------------------------------------------------------------------- !
 
-  type, public, extends(BaseCmdOption) :: KeyValCmdOption
+  type, extends(BaseCmdOption) :: KeyValCmdOption
     !! Key-value command-line option type.
     private
     character(len=MAX_LEN) :: valueMsg
@@ -63,7 +64,7 @@ module CmdOptionType
   end type KeyValCmdOption
   ! -------------------------------------------------------------------------- !
 
-  type, public, extends(BaseCmdOption) :: FlagCmdOption
+  type, extends(BaseCmdOption) :: FlagCmdOption
     !! Flag command-line option.
     private  
     logical :: isToggled = .false.
@@ -73,7 +74,7 @@ module CmdOptionType
   end type FlagCmdOption
   ! -------------------------------------------------------------------------- !
 
-  type, public, extends(BaseCmdOption) :: PositionalCmdOption
+  type, extends(BaseCmdOption) :: PositionalCmdOption
     ! Positional command-line option type.
     private
     integer :: position = -1
@@ -96,22 +97,22 @@ module CmdOptionType
       character(len=*),     intent(in)    :: usageMsg
     end subroutine
 
-    module pure function getCommand(self)
+    module pure function basecmdtype_getCommand(self)
       class(BaseCmdOption), intent(in) :: self
       character(len=LONG_MAX_LEN) :: getCommand
     end function
 
-    module pure function getAltCommand(self)
+    module pure function basecmdtype_getAltCommand(self)
       class(BaseCmdOption), intent(in) :: self
       character(len=MAX_LEN) :: getAltCommand
     end function
 
-    module pure function getUsageMsg(self)
+    module pure function basecmdtype_getUsageMsg(self)
       class(BaseCmdOption), intent(in) :: self
       character(len=LONG_MAX_LEN) :: getUsageMsg
     end function
 
-    module pure function getValue(self)
+    module pure function basecmdtype_getValue(self)
       class(BaseCmdOption), intent(in) :: self
       character(len=LONG_MAX_LEN)      :: getValue
     end function
@@ -186,6 +187,11 @@ module CmdOptionType
     end subroutine
   end interface
   ! -------------------------------------------------------------------------- !
+
+  public :: BaseCmdOption
+  public :: KeyValCmdOption
+  public :: FlagCmdOption
+  public :: PositionalCmdOption
 
   public :: parsePassedCmdArgs
   public :: initializeCmdOption
