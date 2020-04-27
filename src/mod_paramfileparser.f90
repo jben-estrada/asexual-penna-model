@@ -1,5 +1,12 @@
 module ParamFileParserType
-  use HashTableType, only: HashTable
+  ! -------------------------------------------------------------------------- !
+  ! MODULE: ParamFileParserType
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Module containing a derived type for reading parameter values from
+  !!  external files.
+  ! -------------------------------------------------------------------------- !
+  use HashTableType, only: HashTable, HSHTBL_STAT_OK => STAT_OK
   use ErrorMSG, only: raiseError
   implicit none
   private
@@ -18,10 +25,22 @@ module ParamFileParserType
       !! Initialize the `ParamFileParser`.
     procedure :: readFile => paramfileparser_readFile
       !! Read the file and store the obtained parameter values.
-    procedure :: getValue => paramfileparser_getValue
+    generic   :: getValue => &
+        paramfileparser_getScalarValue_char, &
+        paramfileparser_getScalarValue_int, &
+        paramfileparser_getScalarValue_real, &
+        paramfileparser_getArrValue_int, &
+        paramfileparser_getArrValue_real
       !! Get parameter values.
     procedure :: free => paramfileparser_free
       !! Free allocated memory.
+
+    ! Specific procedures for generic ones.
+    procedure, private :: paramfileparser_getScalarValue_char
+    procedure, private :: paramfileparser_getScalarValue_int
+    procedure, private :: paramfileparser_getScalarValue_real
+    procedure, private :: paramfileparser_getArrValue_int
+    procedure, private :: paramfileparser_getArrValue_real
   end type
 
   ! RESERVED CHARACTERS.
@@ -31,9 +50,38 @@ module ParamFileParserType
   ! Key-value separator.
   character, parameter :: KEYVAL_SEP = "="
   ! End of line character.
-  character, parameter :: EOL = "/"
+  character, parameter :: EOL = achar(0)
   ! -------------------------------------------------------------------------- !
 
+  ! Interface for submodule procedures.
+  interface
+    module logical function isWhiteSpace(char)
+      character, intent(in) :: char
+        !! Character to be inspected.
+    end function isWhiteSpace
+
+    module logical function isAlphanumeric(char)
+      character, intent(in) :: char
+        !! Character to be inspected.
+    end function isAlphanumeric
+
+    module subroutine paramScalar(paramVal, scalar)
+      character(len=*), intent(in)  :: paramVal
+        !! Character to be inspected and casted to either integer or real.
+      class(*),         intent(out) :: scalar
+        !! Output scalar value.
+    end subroutine paramScalar
+
+    module subroutine paramArray(paramVal, arrSize, array)
+      character(len=*), intent(in)  :: paramVal
+        !! Character to be inspected and casted to integer array.
+      integer,          intent(in)  :: arrSize
+        !! Size of the array output.
+      class(*),         intent(out) :: array(arrSize)
+        !! Array output. Its type must be either integer or real.
+    end subroutine paramArray
+  end interface
+  ! -------------------------------------------------------------------------- !
   ! Standard unit in this module for opening and reading files.
   integer, parameter :: STD_UNIT = 50
   ! Maximum length of one line.
@@ -53,42 +101,17 @@ contains
     character(len=*),      intent(in)  :: filePath
       !! Path to the file to be opened and read.
   
+    integer :: fileStat
+
     call new % keyValTable % init()
-    new % filePath = filePath  ! NOTE: Automatic allocation
+    ! Check if the file exits.
+    inquire(file=filePath, iostat=fileStat)
+    if (fileStat /= 0) call raiseError("'" // trim(filePath) // &
+        "' cannot be opened or does not exit.")
+
+    new % filePath = trim(filePath)  ! NOTE: Automatic allocation
     new % isInit = .true.
   end subroutine paramfileparser_init
-  
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isWhiteSpace
-  !>  Check the character `char` if it is a whitespace character or not.
-  ! -------------------------------------------------------------------------- !
-  logical function isWhiteSpace(char)
-    character, intent(in) :: char
-      !! Character to be inspected.
-
-    integer :: asciiCode
-    asciiCode = iachar(char)
-
-    isWhiteSpace = (8 <= asciiCode .and. asciiCode <= 13) .or. asciiCode == 32
-  end function isWhiteSpace
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isAlphanumeric
-  !>  Check the character `char` if it is an alphanumeric character or not.
-  ! -------------------------------------------------------------------------- !
-  logical function isAlphanumeric(char)
-    character, intent(in) :: char
-      !! Character to be inspected.
-
-    integer :: asciiCode
-    asciiCode = iachar(char)
-
-    isAlphanumeric = (48 <= asciiCode .and. asciiCode <= 57) .or. &
-                     (65 <= asciiCode .and. asciiCode <= 90) .or. &
-                     (97 <= asciiCode .and. asciiCode <= 122)
-  end function isAlphanumeric
 
 
   ! -------------------------------------------------------------------------- !
@@ -121,9 +144,6 @@ contains
 
       do i = 1, len(trim(bufferChar))
         currChar = bufferChar(i:i)
-        
-        ! Ignore whitespace characters.
-        if (isWhiteSpace(currChar)) cycle
 
         ! Ignore the characters from here on.
         if (currChar == COMMENT) exit
@@ -168,15 +188,15 @@ contains
 
       ! Evaluate the first character of the the `keyValChar` character.
       if (isAtStart) then
+        ! Ignore initial whitespace characters.
+        if (isWhiteSpace(currChar)) cycle
+
         ! Check for invalid initial characters.
         if (.not. isAlphanumeric(currChar)) then
           call raiseError("Invalid syntax in '" // self % filePath // &
               "'. Assignment statements must not start with '"     // &
               currChar // "'.")
         end if
-
-        ! Ignore initial whitespace characters.
-        if (isWhiteSpace(currChar)) cycle
 
         ! Initial char check passed.
         isAtStart = .false.
@@ -190,9 +210,6 @@ contains
         end if
       end if
 
-      ! Ignore whitespace characters.
-      if (isWhiteSpace(currChar)) cycle
-
       ! Append current character to appropriate character variables.
       if (isReadingKey) then
         key = key // currChar
@@ -203,7 +220,7 @@ contains
 
     ! Check if a value was actually obtained.
     if (isReadingKey .or. len(value) == 0) then
-      call raiseError("No value obtained for the key '" // key // "' in " // &
+      call raiseError("No value obtained for the key '" // key // "' in '" // &
           self % filePath // "'.")
     end if
 
@@ -242,7 +259,7 @@ contains
       ! Finish reading the current line.
       if (currChar == EOL) then
         ! Separate key and value pairs.
-        if (len(currChar) /= 0) call storeKeyValuePair(self, keyValChar)
+        if (len(keyValChar) > 0) call storeKeyValuePair(self, keyValChar)
 
         ! Clear temporary char.
         deallocate(keyValChar)
@@ -255,19 +272,160 @@ contains
   end subroutine paramfileparser_readFile
 
 
+  subroutine paramfileparser_getScalarValue_char(self, key, scalarVal)
+    class(ParamFileParser),        intent(inout) :: self
+      !! `ParamFileParser` object to be searched.
+    character(len=*),              intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    character(len=:), allocatable, intent(out)   :: scalarVal
+      !! Scalar output.
+
+    integer :: getStat
+
+    allocate(character(len=0) :: scalarVal)
+    scalarVal = self % keyValTable % get(key, getStat)
+
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      call raiseError( &
+        "The key '" &
+        // trim(key) // &
+        "' is not found in the parameter listing." &
+        )
+    end if
+  end subroutine paramfileparser_getScalarValue_char
+
+
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: paramfileparser_getValue
-  !>  Get the parameter value associated with the character `key`.
+  ! SUBROUTINE: paramfileparser_getScalarValue_int
+  !>  Get the scalar integer value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  function paramfileparser_getValue(self, key) result(value)
+  subroutine paramfileparser_getScalarValue_int(self, key, scalarVal)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
       !! Key with which its corresponding value is obtained.
+    integer,                intent(out)   :: scalarVal
+      !! Scalar output.
 
-    character(len=:), allocatable :: value
-    value = self % keyValTable % get(key)
-  end function paramfileparser_getValue
+    integer :: getStat
+
+    character(len=:), allocatable :: valueChar
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+    
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      call raiseError( &
+        "The key '" &
+        // trim(key) // &
+        "' is not found in the parameter listing." &
+        )
+    end if
+
+    ! Finally convert character to the desired type.
+    call paramScalar(valueChar, scalarVal)
+  end subroutine paramfileparser_getScalarValue_int
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: paramfileparser_getScalarValue_real
+  !>  Get the scalar real value associated with the character `key`.
+  ! -------------------------------------------------------------------------- !
+  subroutine paramfileparser_getScalarValue_real(self, key, scalarVal)
+    class(ParamFileParser), intent(inout) :: self
+      !! `ParamFileParser` object to be searched.
+    character(len=*),       intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    real,                   intent(out)   :: scalarVal
+      !! Scalar output.
+
+    integer :: getStat
+
+    character(len=:), allocatable :: valueChar
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      call raiseError( &
+        "The key '" &
+        // trim(key) // &
+        "' is not found in the parameter listing." &
+        )
+    end if
+
+    ! Finally convert character to the desired type.
+    call paramScalar(valueChar, scalarVal)
+  end subroutine paramfileparser_getScalarValue_real
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: paramfileparser_getArrValue_int
+  !>  Get the integer array value associated with the character `key`.
+  ! -------------------------------------------------------------------------- !
+  subroutine paramfileparser_getArrValue_int(self, key, arrSize, arrVal)
+    class(ParamFileParser), intent(inout) :: self
+      !! `ParamFileParser` object to be searched.
+    character(len=*),       intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    integer,                intent(in)    :: arrSize
+      !! Output array size.
+    integer,                intent(out)   :: arrVal(arrSize)
+      !! Output array.
+
+    character(len=:), allocatable :: valueChar
+    integer :: getStat
+
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+    
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      call raiseError( &
+        "The key '" &
+        // trim(key) // &
+        "' is not found in the parameter listing." &
+        )
+    end if
+    
+    ! Finally convert character to the desired type.
+    call paramArray(valueChar, arrSize, arrVal)
+  end subroutine paramfileparser_getArrValue_int
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: paramfileparser_getArrValue_real
+  !>  Get the real array value associated with the character `key`.
+  ! -------------------------------------------------------------------------- !
+  subroutine paramfileparser_getArrValue_real(self, key, arrSize, arrVal)
+    class(ParamFileParser), intent(inout) :: self
+      !! `ParamFileParser` object to be searched.
+    character(len=*),       intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    integer,                intent(in)    :: arrSize
+      !! Output array size.
+    real,                   intent(out)   :: arrVal(arrSize)
+      !! Output array.
+
+    character(len=:), allocatable :: valueChar
+    integer :: getStat
+
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      call raiseError( &
+        "The key '" &
+        // trim(key) // &
+        "' is not found in the parameter listing." &
+        )
+    end if
+    
+    ! Finally convert character to the desired type.
+    call paramArray(valueChar, arrSize, arrVal)
+  end subroutine paramfileparser_getArrValue_real
 
 
   ! -------------------------------------------------------------------------- !
