@@ -24,6 +24,8 @@ module ModelParam
   !         Starting population count.
   !     K : integer
   !         Carrying capacity.
+  !     init_mttn_count: integer
+  !         Initial mutation count per individual.
   !     Verhulst weight : array[real]
   !         Weights of the Verhulst factor per age.
   !         NOTE: Verhulst factor is defined as so
