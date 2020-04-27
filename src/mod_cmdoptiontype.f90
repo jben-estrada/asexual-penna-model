@@ -99,22 +99,22 @@ module CmdOptionType
 
     module pure function basecmdtype_getCommand(self)
       class(BaseCmdOption), intent(in) :: self
-      character(len=LONG_MAX_LEN) :: getCommand
+      character(len=LONG_MAX_LEN)      :: basecmdtype_getCommand
     end function
 
     module pure function basecmdtype_getAltCommand(self)
       class(BaseCmdOption), intent(in) :: self
-      character(len=MAX_LEN) :: getAltCommand
+      character(len=MAX_LEN)            :: basecmdtype_getAltCommand
     end function
 
     module pure function basecmdtype_getUsageMsg(self)
       class(BaseCmdOption), intent(in) :: self
-      character(len=LONG_MAX_LEN) :: getUsageMsg
+      character(len=LONG_MAX_LEN)      :: basecmdtype_getUsageMsg
     end function
 
     module pure function basecmdtype_getValue(self)
       class(BaseCmdOption), intent(in) :: self
-      character(len=LONG_MAX_LEN)      :: getValue
+      character(len=LONG_MAX_LEN)      :: basecmdtype_getValue
     end function
   end interface
 
