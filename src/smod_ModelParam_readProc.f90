@@ -377,7 +377,7 @@ contains
         else
           call raiseWarning("'" // vWeightStr // "' is not a valid value " // &
               "for a Verhulst weight. Using the default value (" // &
-              trim(castRealToChar(VWEIGHT_DEFAULT)) // ").")
+              castRealToChar(VWEIGHT_DEFAULT) // ").")
         end if CastCheck
         ! <<
         ! ===========================================

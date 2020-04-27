@@ -36,7 +36,7 @@ contains
     !! Casting status.
 
     integer :: status
-    read(char, DEF_INT_FORMAT, iostat=status) castCharToInt
+    read(char, *, iostat=status) castCharToInt
 
     ! Let other routines to handle casting errors.
     if (present(castStat)) then
@@ -53,18 +53,24 @@ contains
   ! FUNCTION: castIntToChar
   !>  Cast the integer `int` into a 64 long character.
   ! -------------------------------------------------------------------------- !
-  character(len=MAX_LEN) function castIntToChar(int, castStat)
+  function castIntToChar(int, castStat) result(charInt)
     integer,           intent(in) :: int
       !! Integer to cast to character.
     integer, optional, intent(out) :: castStat
       !! Casting status.
 
+    character(len=:), allocatable :: charInt
+    character(len=MAX_LEN) :: rawCharInt
+
     integer :: status
 
-    ! Initialize the output.
-    castIntToChar = ""
+    ! Initialize output.
+    allocate(character(len=0) :: charInt)
 
-    write(castIntToChar, DEF_INT_FORMAT, iostat=status) int
+    write(rawCharInt, DEF_INT_FORMAT, iostat=status) int
+
+    ! Trim whitespaces and adjust character to the left.
+    if (status == 0) charInt = trim(adjustl(rawCharInt))
 
     ! Let other routines to handle casting errors.
     if (present(castStat)) then
@@ -89,10 +95,11 @@ contains
     integer :: status
 
     if (associated(intPtr)) then
-      ! Initialize the output.
-      castIntPtrToChar = ""
 
       write(castIntPtrToChar, DEF_INT_FORMAT, iostat=status) intPtr
+
+      ! Adjust character to the left.
+      if (status == 0)  castIntPtrToChar = adjustl(castIntPtrToChar)
     else
       call raiseError("The 'int' dummy argument is not associated " // &
           "with any target.")
@@ -120,14 +127,14 @@ contains
       !! Casting status.
     
     integer :: status
-    read(char, DEF_REAL_FORMAT, iostat=status) castCharToReal
+    read(char, *, iostat=status) castCharToReal
 
     ! Let other routines to handle casting errors.
     if (present(castStat)) then
       castStat = status
     else
       ! By default, stop the program if casting failed.
-      if (castStat /= 0) &
+      if (status /= 0) &
           call raiseError("'" // trim(char) // "' is not numeric.")
     end if
   end function castCharToReal
@@ -137,13 +144,23 @@ contains
   ! FUNCTION: castRealToChar
   !>  Cast the real number `realNum` into a 64 long character.
   ! -------------------------------------------------------------------------- !
-  character(len=MAX_LEN) function castRealToChar(realNum, castStat)
+  function castRealToChar(realNum, castStat) result(charReal)
     real,              intent(in) :: realNum
       !! Real number to cast to character.
     integer, optional, intent(out) :: castStat
+
+    character(len=:), allocatable :: charReal
+    character(len=MAX_LEN) :: rawCharReal
     
     integer :: status
-    write(castRealToChar, DEF_REAL_FORMAT, iostat=status) realNum
+
+    ! Initialize output.
+    allocate(character(len=0) :: charReal)
+
+    write(rawCharReal, DEF_REAL_FORMAT, iostat=status) realNum
+    
+    ! Trim whitespaces and adjust character to the left.
+    if (status == 0)  charReal = trim(adjustl(rawCharReal))
 
     ! Let other routines to handle casting errors.
     if (present(castStat)) then
