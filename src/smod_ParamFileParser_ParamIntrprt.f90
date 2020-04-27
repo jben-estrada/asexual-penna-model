@@ -374,16 +374,16 @@ contains
 
     ! ----------------------------------------------------------------------- !
     ! SUBROUTINE: assignToArray
-    !>  Cast `charNum` to either integer or real, and assign it to the
+    !>  Cast `elemChar` to integer, real or character, and assign it to the
     !!  slice of range [lowIdx, hiIdx] of non-local variable `array`.
     ! ----------------------------------------------------------------------- !
-    subroutine assignToArray(charNum, lowIdx, hiIdx)
-      character(len=*), intent(in)    :: charNum
+    subroutine assignToArray(elemChar, lowIdx, hiIdx)
+      character(len=*), intent(in)    :: elemChar
         !! Character to be casted to real.
       integer,          intent(in)    :: lowIdx
-        !! The lower index of the range in which `charNum` is to be stored.
+        !! The lower index of the range in which `elemChar` is to be stored.
       integer,          intent(in)    :: hiIdx
-        !! The higher index of the range in which `charNum` is to be stored.
+        !! The higher index of the range in which `elemChar` is to be stored.
 
       ! Check first all invalid index choices.
       if (1 > lowIdx .or. hiIdx > arrSize) then
@@ -402,9 +402,11 @@ contains
 
       select type(array)
         type is (integer)
-          array(lowIdx: hiIdx) = paramInt(charNum)
+          array(lowIdx: hiIdx) = paramInt(elemChar)
         type is (real)
-          array(lowIdx: hiIdx) = paramReal(charNum)
+          array(lowIdx: hiIdx) = paramReal(elemChar)
+        type is (character(len=*))
+          array(lowIdx: hiIdx) = elemChar
         class default
           call raiseError("Invalid array type. Must be either integer or real.")
       end select
