@@ -101,22 +101,27 @@ contains
   !!  function implements the formula found in this website:
   !!  https://cp-algorithms.com/string/string-hashing.html
   ! ------------------------------------------------------------------------- !
-  integer(kind=int64) function hash(char)
-    character(len=*), intent(in) :: char
+  integer(kind=int64) function hash(char, slotSize)
+    character(len=*),    intent(in) :: char
       !! Character to be hashed.
+    integer(kind=int64), intent(in) :: slotSize
+      !! Size of slot array ergo size of hash table.
     integer :: i
 
     ! The values for `p` and `m` are found here:
     ! https://cp-algorithms.com/string/string-hashing.html
     integer(kind=int64), parameter :: p = 53_int64
-    integer(kind=int64), parameter :: m = int(10**9 + 9, kind=int64)
+    integer(kind=int64) :: p_term
 
     hash = 0
+    p_term = 1
     do i = 1, len(char)
-      hash = hash + iachar(char(i:i))*(p**(i - 1))
-    end do
+      hash = hash + (iachar(char(i:i)))*(p_term**(i - 1))
+      hash = mod(hash, slotSize)
 
-    hash = mod(hash, m)
+      ! Update the current term in the polynomial.
+      p_term = mod(p_term*p, slotSize)
+    end do
   end function hash
 
 
@@ -153,8 +158,8 @@ contains
     allocate(character(len=0) :: value)
 
     ! Find the slot which contains the mapping we seek.
-    ! NOTE: We do some int kind conversion here.
-    slotIdx = mod(hash(trim(key)), int(self % slotArrSize, kind=int64)) + 1
+    ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
+    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64)) + 1
     currMapping_ptr => self % slotArray(slotIdx) % headMapping_ptr
 
     ! Search through the list of mappings.
@@ -220,8 +225,8 @@ contains
     end if
 
     ! Find the slot containing the mapping we seek.
-    ! NOTE: We do some int kind conversion here.
-    slotIdx = mod(hash(trim(key)), int(self % slotArrSize, kind=int64)) + 1
+    ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
+    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64)) + 1
     currMapping_ptr => self % slotArray(slotIdx) % headMapping_ptr
 
     ! Search through the list of mappings.
@@ -340,8 +345,8 @@ contains
     end if
 
     ! Find the slot containing the mapping we seek.
-    ! NOTE: We do some int kind conversion here.
-    slotIdx = mod(hash(trim(key)), int(self % slotArrSize, kind=int64)) + 1
+    ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
+    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64)) + 1
     currMapping_ptr => self % slotArray(slotIdx) % headMapping_ptr
     prevMapping_ptr => null()
 
