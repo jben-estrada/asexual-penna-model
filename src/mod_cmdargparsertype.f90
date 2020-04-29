@@ -406,13 +406,14 @@ contains
   ! SUBROUTINE: cmdargparser_getCmdValue
   !>  Get the value of the given command.
   ! -------------------------------------------------------------------------- !
-  function cmdargparser_getCmdValue(self, cmdName, status) result(cmdValue)
+  function cmdargparser_getCmdValue(self, cmdName, isOptional) &
+      result(cmdValue)
     class(CmdArgParser), intent(inout) :: self
       !! `CmdArgParser` object to be searched.
     character(len=*),    intent(in)    :: cmdName
       !! Name of the command whose value is to be searched.
-    integer, optional,   intent(out)   :: status
-    !! Get status.
+    logical, optional,   intent(in)    :: isOptional
+      !! No value will not stop the program. Applicable only for key-value cmds.
 
     character(len=:), allocatable :: cmdValue
       !! Output value.
@@ -441,13 +442,14 @@ contains
     if (cmdValue == VOID_CHAR .and. &
         (cmdType /= CMD_TYPE_FLAG_S .and. cmdType /= CMD_TYPE_FLAG_L)) then
   
-      if (present(status)) then
-        status = 1
-      else
-        call raiseError( &
-          "No value obtained for the command '(" &
-          // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" // trim(cmdName) // "'."&
-          )
+      if (present(isOptional)) then
+        if (.not. isOptional) then
+          call raiseError( &
+            "No value obtained for the command '(" &
+            // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" &
+            // trim(cmdName) // "'."&
+            )
+        end if
       end if
     end if
   end function cmdargparser_getCmdValue
