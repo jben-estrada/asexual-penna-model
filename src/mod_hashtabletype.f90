@@ -56,6 +56,28 @@ module HashTableType
       !! 'uninitialized'.
   end type HashTable
 
+
+  type :: HashTableIterator
+    !! `HashTable` iterator.
+    private
+    type(HashTable), pointer :: iteratee_ptr => null()
+      !! Pointer to the `HashTable` to be iterated over.
+    integer                  :: currSlotIdx = 1
+      !! Current `Slot` array index.
+    type(Mapping),   pointer :: currMapping_ptr => null()
+      !! Current `Mapping` object in the current `Slot` object.
+    logical                  :: isInit = .false.
+      !! Initialization state.
+  contains
+    procedure :: init => hashtableiterator_init
+      !! Initialize the hash table iterator.
+    procedure :: getKey => hashtableiterator_getKey
+      !! Get key and proceed to the next key-value pair.
+    procedure :: free => hashtableiterator_free
+      !! Free allocated attributes.
+  end type  HashTableIterator
+
+
   ! Default hash table size.
   integer, parameter :: DEF_HASHTBL_SIZE = 50
 
@@ -69,6 +91,7 @@ module HashTableType
   integer, public, parameter :: STAT_NOT_INIT = 2   ! Hash table uninitialized.
 
   public :: HashTable
+  public :: HashTableIterator
   public :: hash
 contains
 
@@ -150,7 +173,9 @@ contains
         value = CHAR_VOID
         return
       else
-        call raiseError("Cannot get values. Hash table is uninitialized.")
+        call raiseError( &
+          "Cannot get values. `HashTable` object is uninitialized." &
+          )
       end if
     end if
     
@@ -187,7 +212,7 @@ contains
     end do
 
     ! Signify that the function succeeded in getting a value.
-    if (present(status)) status = 0
+    if (present(status)) status = STAT_OK
 
     ! Nullify local pointers.
     currMapping_ptr => null()
@@ -220,7 +245,9 @@ contains
         status = STAT_NOT_INIT
         return
       else
-        call raiseError("Cannot set an element. hash table is uninitialized.")
+        call raiseError( &
+          "Cannot set an element. `HashTable` object is uninitialized." &
+          )
       end if
     end if
 
@@ -296,7 +323,7 @@ contains
     integer :: i
 
     if (.not. self % isInit) then
-      call raiseWarning("Hash table is unitialized. Freeing nothing.")
+      call raiseWarning("`HashTable` object is uninitialized. Freeing nothing.")
       return
     end if
 
@@ -320,11 +347,11 @@ contains
   !!  table.
   ! ------------------------------------------------------------------------- !
   subroutine hashtable_delete(self, key, status)
-    class(HashTable), intent(inout)  :: self
+    class(HashTable), intent(inout) :: self
       !! `HashTable` object to be modified.
-    character(len=*), intent(in)     :: key
+    character(len=*), intent(in)    :: key
       !! Key whose mapping is to be removed.
-    integer, optional, intent(out)   :: status
+    integer, optional, intent(out) :: status
       !! Status of this function. Presence of this argument prevents this
       !! function from raising an error and stopping the program.
 
@@ -340,7 +367,7 @@ contains
         return
       else
         call raiseError("Cannot delete an element. " // &
-            "Hash table is uninitialized.")
+            "`HashTable` object is uninitialized.")
       end if
     end if
 
@@ -361,7 +388,7 @@ contains
           ! Update the head of the slot if the matching mapping is the head.
           if (associated(currMapping_ptr, &
               self % slotArray(slotIdx) % headMapping_ptr)) then
-            self % slotArray(slotIdx) % headMapping_ptr => currMapping_ptr % next
+            self % slotArray(slotIdx) % headMapping_ptr => currMapping_ptr %next
           end if
 
           ! Remove the matching mapping.
@@ -423,4 +450,104 @@ contains
     currMapping_ptr => null()
     toBeDealloc_ptr => null()
   end subroutine freeSlot
+
+
+  ! ------------------------------------------------------------------------- !
+  ! HASH TABLE ITERATOR PROCEDURES.
+  ! ------------------------------------------------------------------------- !
+
+
+  ! ------------------------------------------------------------------------- !
+  ! SUBROUTINE: hashtableiterator_init
+  !>  Initialize the `HashTableIterator` object with the `HashTable` object
+  !!  iteratee_ptr.
+  ! ------------------------------------------------------------------------- !
+  subroutine hashtableiterator_init(self, iteratee_ptr)
+    class(HashTableIterator), intent(inout) :: self
+      !! `HashTableIterator` to be initialized.
+    type(HashTable), pointer, intent(in)    :: iteratee_ptr
+      !! `HashTable` object to be iterated over.
+  
+    ! Check initialization state of `iteratee_ptr`.
+    if (.not. iteratee_ptr % isInit) then
+      call raiseError("`HashTable` iteratee_ptr is uninitialized.")
+    end if
+
+    self % iteratee_ptr => iteratee_ptr
+    self % currSlotIdx = 1
+    self % currMapping_ptr => iteratee_ptr % slotArray(1) % headMapping_ptr
+    self % isInit = .true.
+  end subroutine hashtableiterator_init
+
+
+  ! ------------------------------------------------------------------------- !
+  ! FUNCTION: hashtableiterator_getKey
+  !>  Iterate over the iteratee_ptr of `self` and get the next key.
+  ! ------------------------------------------------------------------------- !
+  function hashtableiterator_getKey(self, status) result(key)
+    class(HashTableIterator), intent(inout) :: self
+      !! `HashTableIterator` to be iterated over.
+    integer, optional,        intent(out)   :: status
+      !! Iteration status.
+
+    character(len=:), allocatable :: key
+    
+    ! Initialize output.
+    allocate(character(len=0) :: key)
+    if (present(status)) status = 0
+
+    ! Check initialization.
+    if (.not. self % isInit) then
+      call raiseError("`HashTableIterator` object is uninitialized.")
+    end if
+
+    ! Find the next mapping.
+    do
+      if (associated(self % currMapping_ptr)) then
+        key = self % currMapping_ptr % key
+
+        ! Go to the next `Mapping` object in the current slot.
+        self % currMapping_ptr => self % currMapping_ptr % next
+        exit
+
+      else if (self % currSlotIdx < size(self % iteratee_ptr % slotArray)) then
+        ! Go to the next slot.
+        self % currSlotIdx = self % currSlotIdx + 1
+
+        ! Start with the head of the new slot.
+        self % currMapping_ptr => &
+          self % iteratee_ptr % slotArray(self % currSlotIdx) % headMapping_ptr
+      
+      else
+        ! End of iterator.
+        if (present(status)) then
+          status = -1
+          exit
+        else
+          call raiseError("End of hash table iterator.")
+        end if
+      end if
+    end do
+  end function hashtableiterator_getKey
+
+
+  ! ------------------------------------------------------------------------- !
+  ! SUBROUTINE: hashtableiterator_free
+  !>  Free allocated attributes of `self` and their own attributes.
+  ! ------------------------------------------------------------------------- !
+  subroutine hashtableiterator_free(self, freeIteratee)
+    class(HashTableIterator), intent(inout) :: self
+      !! `HashTableIterator` to be modified.
+    logical, optional,        intent(in)    :: freeIteratee
+      !! Free the hash table iteratee. Defaults to false.
+    
+    ! Free the iteratee if the user so chooses.
+    if (present(freeIteratee)) then
+      if (freeIteratee) call self % iteratee_ptr % free()
+    end if
+
+    self % currMapping_ptr => null()
+    self % currSlotIdx = 1
+    self % isInit = .false.
+  end subroutine hashtableiterator_free
 end module HashTableType
