@@ -107,6 +107,15 @@ contains
     integer, optional, intent(in)    :: tableSize
       !! Size of the hash table.
 
+    if (self % isInit) then
+      call raiseWarning( &
+        "Initializing an already initialized 'HashTable' object." &
+        )
+
+      ! Free allocated memory first.
+      call self % free()
+    end if
+
     if (present(tableSize)) then
       allocate(self % slotArray(tableSize))
     else
@@ -467,6 +476,15 @@ contains
       !! `HashTableIterator` to be initialized.
     type(HashTable), pointer, intent(in)    :: iteratee_ptr
       !! `HashTable` object to be iterated over.
+
+    if (self % isInit) then
+      call raiseWarning( &
+          "Initializing an already initialized 'HashTableIterator' object." &
+        )
+
+      ! Free allocated memory first.
+      call self % free()
+    end if
   
     ! Check initialization state of `iteratee_ptr`.
     if (.not. iteratee_ptr % isInit) then
@@ -540,6 +558,12 @@ contains
       !! `HashTableIterator` to be modified.
     logical, optional,        intent(in)    :: freeIteratee
       !! Free the hash table iteratee. Defaults to false.
+
+    if (.not. self % isInit) then
+      call raiseWarning( &
+          "F" &
+        )
+    end if
     
     ! Free the iteratee if the user so chooses.
     if (present(freeIteratee)) then
