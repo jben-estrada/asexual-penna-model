@@ -90,7 +90,7 @@ contains
       ! Set the value for the obtained command.
       select case(cmdType)
         case(CMD_TYPE_FLAG_S)
-          call parserObj % cmdValueTable % set(cmdArg, FLAG_TOGGLED)
+          call parserObj % cmdValueTable % set(currChar, FLAG_TOGGLED)
           call setValToAlias(parserObj, currChar, FLAG_TOGGLED)
 
         case(CMD_TYPE_KEYVAL_S)
@@ -107,7 +107,7 @@ contains
           end if
 
           ! Finally set value to the key-value command.
-          call parserObj % cmdValueTable % set(cmdArg, trim(KVCmdValue))
+          call parserObj % cmdValueTable % set(currChar, trim(KVCmdValue))
           call setValToAlias(parserObj, currChar, KVCmdValue)
 
         case(CMD_TYPE_FLAG_L)
