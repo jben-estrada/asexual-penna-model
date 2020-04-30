@@ -104,6 +104,15 @@ contains
       !! target for pointers for its hash tables to be iteratable by
       !! hash table iterators.
 
+    ! Check initialization state of `self`.
+    if (self % isInit) then
+      call raiseWarning( &
+          "Initializing an already initialized 'CmdArgParser' object." &
+        )
+      ! Free allocated memory first.
+      call self % free()
+    end if
+
     ! Initialize the hash table attributes.
     call self % cmdTypeTable % init()
     call self % cmdValueTable % init()
@@ -140,7 +149,7 @@ contains
     character :: dummyChar 
     integer   :: getStat
   
-    ! Check initialization state.
+    ! Check initialization state of `self`.
     if (.not. self % isInit) then
       call raiseError( &
         "Cannot set commands. `CmdArgParser` is not yet initialized." &
@@ -301,10 +310,10 @@ contains
     type(HashTable), pointer :: usageTable_ptr
     type(HashTableIterator)  :: usageTableIter
 
-    ! Check initialization state.
+    ! Check initialization state of `self`.
     if (.not. self % isInit) then
       call raiseError( &
-        "Cannot print commands. `CmdArgParser` is not yet initialized." &
+        "Cannot show the help message. `CmdArgParser` is not yet initialized." &
         )
     end if
 
@@ -422,6 +431,13 @@ contains
     character :: cmdType
     integer   :: getStat
 
+    ! Check initialization state of `self`.
+    if (.not. self % isInit) then
+      call raiseError(& 
+        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
+      )
+    end if
+
     ! Initialize output.
     allocate(character(len=0) :: cmdValue)
 
@@ -468,6 +484,13 @@ contains
     character :: dummyChar
     integer   :: getStat
 
+    ! Check initialization state of `self`.
+    if (.not. self % isInit) then
+      call raiseError(& 
+        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
+      )
+    end if
+
     dummyChar = self % cmdValueTable % get(cmdName, getStat)
     if (getStat /= HSHTBLE_STAT_OK) then
       call raiseError("Unknown command name '" // trim(cmdName) // "'.")
@@ -489,6 +512,13 @@ contains
     
     character :: cmdType
     integer   :: getStat
+
+    ! Check initialization state of `self`.
+    if (.not. self % isInit) then
+      call raiseError(& 
+        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
+      )
+    end if
 
     cmdType = self % cmdTypeTable % get(cmdName, getStat)
     if (getStat /= HSHTBLE_STAT_OK) then
@@ -515,6 +545,14 @@ contains
   subroutine cmdargparser_free(self)
     class(CmdArgParser), intent(inout) :: self
       !! `CmdArgParser` object whose allocated attributes are to be freed.
+
+    ! Check initialization state of `self`.
+    if (.not. self % isInit) then
+      call raiseWarning( &
+      "'CmdArgParser' object is uninitialized. Freeing nothing." &
+      )
+      return
+    end if
   
     ! Free all hash table attributes.
     call self % cmdTypeTable % free()
