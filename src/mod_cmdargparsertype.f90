@@ -60,7 +60,7 @@ module CmdArgParserType
       !! be set.
     procedure :: readCmdArgs => cmdargparser_readCmdArgs
       !! Read and parse the command-line arguments.
-    procedure :: hasValue => cmdargparser_isFlagToggled
+    procedure :: hasValue => cmdargparser_hasValue
       !! Determine if a command is passed and has a value.
     procedure :: printHelp => cmdargparser_printhelp
       !! Print the help message.
@@ -528,7 +528,7 @@ contains
     ! Check type of the command.
     if (cmdType /= CMD_TYPE_FLAG_S .and. cmdType /= CMD_TYPE_FLAG_L) then
       call raiseError( &
-        "'(" // SHORT_CMD_ID // LONG_CMD_ID // ")" // trim(cmdName) // &
+        "'(" // SHORT_CMD_ID // "/" //LONG_CMD_ID // ")" // trim(cmdName) // &
         "' is not a flag command." &
         )
     end if
