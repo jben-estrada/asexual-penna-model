@@ -183,7 +183,7 @@ contains
         return
       else
         call raiseError( &
-          "Cannot get values. `HashTable` object is uninitialized." &
+          "Cannot get values. 'HashTable' object is uninitialized." &
           )
       end if
     end if
@@ -255,7 +255,7 @@ contains
         return
       else
         call raiseError( &
-          "Cannot set an element. `HashTable` object is uninitialized." &
+          "Cannot set an element. 'HashTable' object is uninitialized." &
           )
       end if
     end if
@@ -332,7 +332,7 @@ contains
     integer :: i
 
     if (.not. self % isInit) then
-      call raiseWarning("`HashTable` object is uninitialized. Freeing nothing.")
+      call raiseWarning("'HashTable' object is uninitialized. Freeing nothing.")
       return
     end if
 
@@ -376,7 +376,7 @@ contains
         return
       else
         call raiseError("Cannot delete an element. " // &
-            "`HashTable` object is uninitialized.")
+            "'HashTable' object is uninitialized.")
       end if
     end if
 
@@ -488,7 +488,7 @@ contains
   
     ! Check initialization state of `iteratee_ptr`.
     if (.not. iteratee_ptr % isInit) then
-      call raiseError("`HashTable` iteratee_ptr is uninitialized.")
+      call raiseError("'HashTable' iteratee_ptr is uninitialized.")
     end if
 
     self % iteratee_ptr => iteratee_ptr
@@ -516,7 +516,7 @@ contains
 
     ! Check initialization.
     if (.not. self % isInit) then
-      call raiseError("`HashTableIterator` object is uninitialized.")
+      call raiseError("'HashTableIterator' object is uninitialized.")
     end if
 
     ! Find the next mapping.
