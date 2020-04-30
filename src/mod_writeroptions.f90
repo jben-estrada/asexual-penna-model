@@ -89,7 +89,7 @@ contains
   !>  Assign all defined `OutputFile` object in `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
   subroutine initializeWriterObjects()
-    use ModelParam, only: PROG_OUT_FILE_NAME
+    use Parameters, only: PROG_OUT_FILE_NAME
 
     ! Population size per time step file.
     popFile = OutputFile(PROG_OUT_FILE_NAME, popFormat, popPosition, popFlag, &

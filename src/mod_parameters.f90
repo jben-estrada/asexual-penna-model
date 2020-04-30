@@ -1,6 +1,6 @@
-module ModelParam
+module Parameters
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  ModelParam
+  ! MODULE:  Parameters
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing the Penna model parameters and other common data.
@@ -43,7 +43,9 @@ module ModelParam
   ! EXTRANEOUS VARIABLES
   ! -------------------------------------------------------------------------- !
   integer, parameter :: MAX_LEN = 256
-  !! Maximum character length for buffer characters.
+    !! Maximum character length for buffer characters.
+  integer, parameter :: VOID_INT = -1
+    !! Placeholder integer value.
 
   ! Print states.
   integer, public, parameter :: NORMAL_PRINT = 0
@@ -60,86 +62,81 @@ module ModelParam
   character(len=*), public, parameter :: PROG_NAME = &
       "Asexual Penna model simulation"
     !! Name of the program
+  character(len=*), public, parameter :: PROG_DESC = &
+      "A simulation for the 'Penna model', a biological aging model."
+    !! Description of the program
   character(len=*), public, parameter :: PROG_VERSION = ""
     !! Program version. 
     !! NOTE: Temporarily set to none as I still have to work out the appropriate
     !! versioning scheme.
 
-  integer, public, protected :: PROG_PRINT_STATE = NORMAL_PRINT
+  integer, public, target, protected :: PROG_PRINT_STATE = NORMAL_PRINT
     !! Printing state. 
-  logical, public, protected :: PROG_RECORD_TIME = .false.
+  logical, public,         protected :: PROG_RECORD_TIME = .false.
     !! Record-time state.
-  integer, public, protected :: PROG_SAMPLE_SIZE
+  integer, public, target, protected :: PROG_SAMPLE_SIZE = VOID_INT
     !! Number of times the simulation will run.
     !! NOTE: Default value is obtained from config files.
-  integer, public, protected :: PROG_RNG
+  integer, public, target, protected :: PROG_RNG = VOID_INT
     !! RNG flag. Corresponds to a random number generator.
     !! NOTE: Default value is obtained from config files.
-  integer, public, protected :: PROG_RNG_SEED
+  integer, public, target, protected :: PROG_RNG_SEED = VOID_INT
     !! RNG seed.
     !! NOTE: Default value is obtained from config files.
-  character(len=MAX_LEN), public, protected :: PROG_REC_FLAG
+  character(len=MAX_LEN), public, target, protected :: PROG_REC_FLAG
     !! List of record flags.
     !! NOTE: Default value is obtained from config files.
-  character(len=MAX_LEN), public, protected :: PROG_OUT_FILE_NAME = "./out.csv"
+  character(len=MAX_LEN), public, target, protected :: PROG_OUT_FILE_NAME = &
+      "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
   ! Parameters whose values are from an external config file.
   ! NOTE: Default values are obtained from config files.
-  integer, public, protected :: MODEL_L
+  integer, public, target, protected :: MODEL_L = VOID_INT
     !! Genome length
-  integer, public, protected :: MODEL_T
+  integer, public, target, protected :: MODEL_T = VOID_INT
     !! Mutation threshold
-  integer, public, protected :: MODEL_B
+  integer, public, target, protected :: MODEL_B = VOID_INT
     !! Birth rate
-  integer, public, protected :: MODEL_M
+  integer, public, target, protected :: MODEL_M = VOID_INT
     !! Mutation rate
-  integer, public, protected :: MODEL_R
+  integer, public, target, protected :: MODEL_R = VOID_INT
     !! Reproduction age
-  integer, public, protected :: MODEL_R_MAX
+  integer, public, target, protected :: MODEL_R_MAX = VOID_INT
     !! Maximum reproduction age
-  integer, public, protected :: MODEL_K
+  integer, public, target, protected :: MODEL_K = VOID_INT
     !! Carrying capacity
-  integer, public, protected :: MODEL_START_POP_SIZE
+  integer, public, target, protected :: MODEL_START_POP_SIZE = VOID_INT
     !! Starting pop size
-  integer, public, protected :: MODEL_TIME_STEPS
+  integer, public, target, protected :: MODEL_TIME_STEPS = VOID_INT
     !! Total time steps
-  integer, public, protected :: MODEL_MTTN_COUNT
+  integer, public, target, protected :: MODEL_MTTN_COUNT = VOID_INT
     !! Initial mutation count of individuals in starting pop.
 
-  real, allocatable, protected, public :: MODEL_VERHULST_W(:)
+  real, allocatable, protected, public :: MODEL_V_WEIGHT(:)
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
 
-  ! CONFIGURATION FILE PATHS
+  ! PARAMETER LISTING FILE PATHS
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
-  character(len=MAX_LEN), protected, public :: FILE_NAME_MODEL = &
+  character(len=MAX_LEN), protected, target, public :: FILE_PARAM_LIST = &
       "model.cfg" !! Path for file containing scalar model parameters.
-  character(len=MAX_LEN), protected, public :: FILE_NAME_VWEIGHT = &
-      "v_weight.cfg" !! Path for file with Verhulst weights.
-
 
   ! SUBMODULE INTERFACE
   ! -------------------------------------------------------------------------- !
   ! Config read subroutines.
   interface
-    module subroutine readScalarModelParamCfg()
-    end subroutine
-
-    module subroutine readVerhulstWeightsCfg()
+    module subroutine readDefaultParamVal()
     end subroutine
   end interface
 
   ! Public subroutines.
   interface
-    module subroutine assignModelParams()
-    end subroutine
-
-    module subroutine assignConfigFilePaths()
+    module subroutine setParams()
     end subroutine
 
     module subroutine printProgDetails()
@@ -152,11 +149,10 @@ module ModelParam
 
 
   ! Initialization routines.
-  public :: assignModelParams
-  public :: assignConfigFilePaths
+  public :: setParams
 
   ! Routine for memory management.
   public :: deallocVerhulstWeights
   ! Other routines.
   public :: printProgDetails
-end module ModelParam
+end module Parameters

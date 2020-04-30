@@ -30,11 +30,10 @@ contains
   !>  Initialize the chosen random number generator
   ! -------------------------------------------------------------------------- !
   subroutine assignRNGParams()
-    use CmdOptions, only: rngChoiceArg, rngSeedArg
-    use CastProcedures, only: castCharToInt
+    use Parameters, only: PROG_RNG, PROG_RNG_SEED
 
-    call chooseRNG(castCharToInt(rngChoiceArg % getValue()))
-    call setSeed(castCharToInt(rngSeedArg % getValue()))
+    call chooseRNG(PROG_RNG)
+    call setSeed(PROG_RNG_SEED)
   end subroutine assignRNGParams
 
 

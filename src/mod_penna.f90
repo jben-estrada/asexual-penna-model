@@ -32,16 +32,11 @@ contains
   !>  A wrapper subroutine to initialize various module variables.
   ! -------------------------------------------------------------------------- !
   subroutine initializeProgram()
-    use CmdOptions, only: initializeCmdOptions
-    use ModelParam, only: assignConfigFilePaths, assignModelParams
+    use Parameters, only: setParams
     use RNG, only: assignRNGParams
 
-    ! Initialize the command-line options.
-    call initializeCmdOptions()
-
-    ! Get the model parameters.
-    call assignConfigFilePaths()
-    call assignModelParams()
+    ! Get the model and program parameters.
+    call setParams()
 
     ! Get the chosen RNG and RNG seed.
     call assignRNGParams()
@@ -57,13 +52,7 @@ contains
   !!  the help text if the user wishes so.
   ! -------------------------------------------------------------------------- !
   subroutine printInitialProgDetails()
-    use ModelParam, only: printProgDetails
-    use CmdOptions, only: showHelpMsgAndNotes
-
-    ! Print the help message and stop the program if '-h' or '--help' is passed.
-    call showHelpMsgAndNotes()
-
-    ! Print the welcome text.
+    use Parameters, only: printProgDetails
     call printProgDetails()
   end subroutine printInitialProgDetails
 
@@ -74,7 +63,7 @@ contains
   !!  module.
   ! -------------------------------------------------------------------------- !
   subroutine deallocAllocatables()
-    use ModelParam, only: deallocVerhulstWeights
+    use Parameters, only: deallocVerhulstWeights
     use WriterOptions, only: deallocWriterTypeAlloctbl
     use Demographics, only: deallocAgeDstrb
   
@@ -90,7 +79,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine runOneInstance(maxTimestep, startPopSize, initMttnCount,recordFlag)
     use Demographics
-    use ModelParam, only: MODEL_K
+    use Parameters, only: MODEL_K
     use ErrorMSG, only: raiseWarning
     use Pop, only: initializePersonList, resetPersonReadPtrs, freePersonPtrs
 
@@ -215,7 +204,7 @@ contains
       )
     use Pop  
     use Demographics
-    use ModelParam, only: MODEL_B
+    use Parameters, only: MODEL_B
 
     integer,          intent(inout) :: popSize          !! Population size.
     integer, pointer, intent(inout) :: deathByAge       !! Death by age count.
@@ -394,7 +383,7 @@ contains
   !!  subroutine `runMultipleInstance`.
   ! -------------------------------------------------------------------------- !
   subroutine run()
-    use ModelParam
+    use Parameters
 
     logical :: printProgress
     printProgress = PROG_PRINT_STATE /= SILENT_PRINT

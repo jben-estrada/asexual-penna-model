@@ -6,7 +6,7 @@ module Pop
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
   use Gene
-  use ModelParam
+  use Parameters
   use ErrorMSG, only: raiseError
   implicit none
   private
@@ -496,7 +496,7 @@ contains
     real    :: random
 
     nextAge = current_ptr % age + 1             ! Hypothetical age
-    verhulstWeight = MODEL_VERHULST_W(nextAge)  ! Verhulst weight per age
+    verhulstWeight = MODEL_V_WEIGHT(nextAge)  ! Verhulst weight per age
 
     ! ***Death check: Old age
     if (nextAge >= MODEL_L) then

@@ -172,7 +172,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function getBadGeneDstrb() result(badGeneDstrb)
     use Gene, only: getGene, GENE_UNHEALTHY
-    use ModelParam, only: MODEL_L
+    use Parameters, only: MODEL_L
 
     integer :: badGeneDstrb(MODEL_L)
 
@@ -224,7 +224,7 @@ contains
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
   subroutine resetAgeDstrb()
-    use ModelParam, only: MODEL_L
+    use Parameters, only: MODEL_L
 
     if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
     ageDistribution(:) = 0
