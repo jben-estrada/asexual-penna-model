@@ -145,11 +145,11 @@ contains
     integer(kind=int64), parameter :: p = 53_int64
     integer(kind=int64) :: p_term
 
-    hash = 0
+    hash = 1
     p_term = 1
     do i = 1, len(char)
       hash = hash + (iachar(char(i:i)))*(p_term**(i - 1))
-      hash = mod(hash, slotSize)
+      hash = mod(hash, slotSize) + 1
 
       ! Update the current term in the polynomial.
       p_term = mod(p_term*p, slotSize)
@@ -193,7 +193,7 @@ contains
 
     ! Find the slot which contains the mapping we seek.
     ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
-    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64)) + 1
+    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64))
     currMapping_ptr => self % slotArray(slotIdx) % headMapping_ptr
 
     ! Search through the list of mappings.
@@ -262,7 +262,7 @@ contains
 
     ! Find the slot containing the mapping we seek.
     ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
-    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64)) + 1
+    slotIdx = hash(trim(key), int(self % slotArrSize, kind=int64))
     currMapping_ptr => self % slotArray(slotIdx) % headMapping_ptr
 
     ! Search through the list of mappings.
