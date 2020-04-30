@@ -60,10 +60,14 @@ module CmdArgParserType
       !! be set.
     procedure :: readCmdArgs => cmdargparser_readCmdArgs
       !! Read and parse the command-line arguments.
+    procedure :: hasValue => cmdargparser_isFlagToggled
+      !! Determine if a command is passed and has a value.
     procedure :: printHelp => cmdargparser_printhelp
       !! Print the help message.
     procedure :: getCmdValue => cmdargparser_getCmdValue
-      !! Get the value of the given command.
+      !! Get the value of the given key-value command.
+    procedure :: isFlagToggled => cmdargparser_isFlagToggled
+      !! Determine if a flag command is passed.
     procedure :: free => cmdargparser_free
       !! Free allocated attributes of this `CmdArgParser` object.
   end type
@@ -404,55 +408,104 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: cmdargparser_getCmdValue
-  !>  Get the value of the given command.
+  !>  Get the value of the key-value command `cmdName`.
   ! -------------------------------------------------------------------------- !
-  function cmdargparser_getCmdValue(self, cmdName, isOptional) &
-      result(cmdValue)
+  function cmdargparser_getCmdValue(self, cmdName) result(cmdValue)
     class(CmdArgParser), intent(inout) :: self
       !! `CmdArgParser` object to be searched.
     character(len=*),    intent(in)    :: cmdName
       !! Name of the command whose value is to be searched.
-    logical, optional,   intent(in)    :: isOptional
-      !! No value will not stop the program. Applicable only for key-value cmds.
 
     character(len=:), allocatable :: cmdValue
       !! Output value.
 
     character :: cmdType
-    integer   :: localStat
+    integer   :: getStat
 
     ! Initialize output.
     allocate(character(len=0) :: cmdValue)
 
-    ! Get the value.
-    cmdValue = self % cmdValueTable % get(cmdName, localStat)
-    if (localStat /= HSHTBLE_STAT_OK) then
-      ! NOTE: If `cmdName` does not exist, it should not even have an alias.
-      !       So here, we don't get the alias for `cmdName`.
+    ! Get the type of `cmdName` to check its type and its existence as well.
+    cmdType = self % cmdTypeTable % get(cmdName, getStat)
+
+    ! Check the type of the command.
+    if (cmdType /= CMD_TYPE_KEYVAL_L .and. cmdType /= CMD_TYPE_KEYVAL_S) then
+      call raiseError( &
+        "'(" // SHORT_CMD_ID // LONG_CMD_ID // ")" // trim(cmdName) // &
+        "' is not a key-value command." &
+        )
+    end if
+
+    if (getStat /= HSHTBLE_STAT_OK) then
       call raiseError("Unknown command name '" // trim(cmdName) // "'.")
     end if
 
-    cmdType = self % cmdTypeTable % get(cmdName, localStat)
-    if (localStat /= HSHTBLE_STAT_OK) then
-      call raiseError("Unknown internal error encountered.")
-    end if
-
+    ! Get the value.
+    cmdValue = self % cmdValueTable % get(cmdName)
+    
     ! Check if a value is obtained for the command `cmdName`.
-    ! NOTE: No check needed for flag commands. No value means 'untoggled'.
-    if (cmdValue == VOID_CHAR .and. &
-        (cmdType /= CMD_TYPE_FLAG_S .and. cmdType /= CMD_TYPE_FLAG_L)) then
+    if (cmdValue == VOID_CHAR) then
   
-      if (present(isOptional)) then
-        if (.not. isOptional) then
-          call raiseError( &
-            "No value obtained for the command '(" &
-            // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" &
-            // trim(cmdName) // "'."&
-            )
-        end if
-      end if
+      call raiseError( &
+        "No value obtained for the command '(" &
+        // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" &
+        // trim(cmdName) // "'."&
+        )
     end if
   end function cmdargparser_getCmdValue
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: cmdargparser_hasValue
+  !>  Check if `cmdName` has a value or not.
+  ! -------------------------------------------------------------------------- !
+  logical function cmdargparser_hasValue(self, cmdName)
+    class(CmdArgParser), intent(inout) :: self
+      !! `CmdArgParser` object to be searched for
+    character(len=*),    intent(in)    :: cmdName
+      !! Name of the command to be inspected.
+
+    character :: dummyChar
+    integer   :: getStat
+
+    dummyChar = self % cmdValueTable % get(cmdName, getStat)
+    if (getStat /= HSHTBLE_STAT_OK) then
+      call raiseError("Unknown command name '" // trim(cmdName) // "'.")
+    end if
+
+    cmdargparser_hasValue = (dummyChar /= VOID_CHAR)
+  end function cmdargparser_hasValue
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: cmdargparser_isFlagToggled
+  !>  Check if the flag command `cmdName` is toggled or not.
+  ! -------------------------------------------------------------------------- !
+  logical function cmdargparser_isFlagToggled(self, cmdName)
+    class(CmdArgParser), intent(inout) :: self
+      !! `CmdArgParser` object to be searched for
+    character(len=*),    intent(in)    :: cmdName
+      !! Name of the command to be inspected.
+    
+    character :: cmdType
+    integer   :: getStat
+
+    cmdType = self % cmdTypeTable % get(cmdName, getStat)
+    if (getStat /= HSHTBLE_STAT_OK) then
+      call raiseError("Unknown command name '" // trim(cmdName) // "'.")
+    end if
+
+    ! Check type of the command.
+    if (cmdType /= CMD_TYPE_FLAG_S .and. cmdType /= CMD_TYPE_FLAG_L) then
+      call raiseError( &
+        "'(" // SHORT_CMD_ID // LONG_CMD_ID // ")" // trim(cmdName) // &
+        "' is not a flag command." &
+        )
+    end if
+
+    cmdargparser_isFlagToggled = &
+      (self % cmdValueTable % get(cmdName) == FLAG_TOGGLED)
+  end function cmdargparser_isFlagToggled
 
 
   ! -------------------------------------------------------------------------- !
