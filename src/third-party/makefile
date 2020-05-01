@@ -16,4 +16,4 @@ copy_lib: $(LIB_SRCS)
 
 # Remove third-party library into the main source directory
 remove_lib: $(addprefix ../,$(LIB_SRCS))
-	@$(foreach file,$^, rm $(file);)
+	@$(foreach file,$^, $(RM) $(file);)

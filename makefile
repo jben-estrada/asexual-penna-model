@@ -13,7 +13,9 @@ LIBDIR :=$(SRCDIR)/third-party
 # Variable file name
 VAR_FILE :=makefile.variables
 
-# Default build (release build).
+.PHONY: default_build static_build dep move_lib remove_lib clean clean_mod
+
+# Default build.
 default_build: FFLAGS += -g -Ofast
 default_build: build
 
@@ -21,20 +23,27 @@ default_build: build
 debug_build: FFLAGS += -g -O0
 debug_build: build
 
+# Static build.
 static_build: FFLAGS += -O3 -static
 static_build: build
 
-# Get 
-dep: compile_var
+# Get dependencies.
+dep: compile_var move_lib
 	@echo Obtaining only the dependency files.
 	@$(MAKE) dep -C $(SRCDIR) --no-print-directory
-	@echo Removing build files.
+	@echo Removing .variable file.
 	@$(RM) $(SRCDIR)/$(VAR_FILE)
 
-# Build (default).
-build: compile_var
+# Move library source code to ./src/
+move_lib:
 	@echo Moving third-party library source code into $(SRCDIR).
 	@$(MAKE) copy_lib -C $(LIBDIR) --no-print-directory
+
+remove_lib:
+	@$(MAKE) remove_lib -C $(LIBDIR) --no-print-directory
+
+# Build (default).
+build: compile_var move_lib
 	@echo Compiling source code.
 	@$(MAKE) -C $(SRCDIR) --no-print-directory
 	@echo Removing third-party library source code in $(SRCDIR).
@@ -42,15 +51,15 @@ build: compile_var
 
 # Create external variable file to share variables.
 compile_var:
-	@printf "FC :=$(FC)\nFFLAGS = $(FFLAGS)\nFSYNTCHK := $(FSYNTCHK)\nFDEP := $(FDEP)"\
-		 > $(SRCDIR)/$(VAR_FILE)
+	@echo "FC :=$(FC)" >> $(SRCDIR)/$(VAR_FILE)
+	@echo "FFLAGS = $(FFLAGS)" >> $(SRCDIR)/$(VAR_FILE)
+	@echo "FSYNTCHK := $(FSYNTCHK)" >> $(SRCDIR)/$(VAR_FILE)
+	@echo "FDEP := $(FDEP)" >> $(SRCDIR)/$(VAR_FILE)
 
 # Clean dependency and object files.
-.PHONY: clean
 clean:
 	@$(RM) -f $(SRCDIR)/*.d $(SRCDIR)/*.o $(SRCDIR)/$(VAR_FILE)
 
 # Clean module and submodule files.
-.PHONY: clean_mod
 clean_mod:
 	@$(RM) -f $(SRCDIR)/*.mod $(SRCDIR)/*.smod
