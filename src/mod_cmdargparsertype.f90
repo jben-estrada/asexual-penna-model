@@ -79,6 +79,10 @@ module CmdArgParserType
       class(CmdArgParser), intent(inout) :: parserObj
         !! `CmdArgParser` object.
     end subroutine parseCmdArgs
+
+    module subroutine sortCharArr(charArr)
+      character(len=*), intent(inout) :: charArr(:)
+    end subroutine sortCharArr
   end interface
 
   ! Public elements in this module.
@@ -306,7 +310,6 @@ contains
     character(len=MAX_CMD_LEN)    :: shortCmd
     character(len=MAX_CMD_LEN)    :: longCmd
 
-
     type(HashTable), pointer :: usageTable_ptr
     type(HashTableIterator)  :: usageTableIter
 
@@ -328,6 +331,9 @@ contains
     do i = 1, self % cmdCount
       cmdNames(i) = usageTableIter % getKey()
     end do
+
+    ! Sort the command names.
+    call sortCharArr(cmdNames)
 
     ! Print the header of the help message.
     print "(3a/)", "Usage: ", trim(progName), " [options]"
