@@ -412,11 +412,12 @@ contains
           "Mutation threshold",   MODEL_T, &
           "Birth rate",           MODEL_B, &
           "Mutation rate",        MODEL_M, &
-          "Min reproduciton age", MODEL_R, &
+          "Min reproduction age", MODEL_R, &
           "Max reproduction age", MODEL_R_MAX, &
           "Carrying capacity",    MODEL_K, &
           "Number of time steps", MODEL_TIME_STEPS, &
-          "Sample size",          PROG_SAMPLE_SIZE,  &
+          "Init mutation count",  MODEL_MTTN_COUNT, &
+          "Sample size",          PROG_SAMPLE_SIZE, &
           "Starting pop size",    MODEL_START_POP_SIZE
 
       write(*, "(*(a20, 8(' '), a1/))", advance="no") &
