@@ -6,8 +6,6 @@ submodule (Parameters) ReadExtFile
   !>  Submodule of `Parameters` containing procedures for reading files of
   !!  model parameters and "Verhulst weight".
   ! -------------------------------------------------------------------------- !
-  use ErrorMSG, only: raiseError
-  use ParamFileParserType, only: ParamFileParser
   implicit none
 
   ! -------------------------------------------------------------------------- !

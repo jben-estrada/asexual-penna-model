@@ -7,7 +7,6 @@ submodule (WriterType) interfaceProcedures
   !!  private "helper" procedures for interfacing with other modules, program,
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
-  use ErrorMSG, only: raiseError
   implicit none
 contains
 

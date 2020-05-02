@@ -7,15 +7,6 @@ submodule (Parameters) CmdArgAssignProcs
   !!  private "helper" procedures for interfacing with other modules, program,
   !!  or other procedures.
   ! -------------------------------------------------------------------------- !
-  use CmdArgParserType, only: &
-    CmdArgParser, &
-    FLAG_S => CMD_TYPE_FLAG_S, &
-    FLAG_L => CMD_TYPE_FLAG_L, &
-    KV_S => CMD_TYPE_KEYVAL_S, &
-    KV_L => CMD_TYPE_KEYVAL_L, &
-    FLAG_TOGGLED
-  use ErrorMSG, only: raiseError, raiseWarning
-  use CastProcedures, only: castCharToInt
   implicit none
 
   type(CmdArgParser), target :: pennaCmdArgs

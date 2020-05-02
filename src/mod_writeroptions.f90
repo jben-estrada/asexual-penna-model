@@ -5,7 +5,17 @@ module WriterOptions
   ! DESCRIPTION:
   !>  Module containing format of the text files to be saved. 
   ! -------------------------------------------------------------------------- !
-  use WriterType
+  use ErrorMSG, only: raiseError
+  use Parameters, only: PROG_OUT_FILE_NAME
+  use WriterType, only: &
+    Writer,     &
+    MAX_LEN,    &
+    OutputFile, &
+    writeIK,    &
+    writeRK,    &
+    deallocWriterTypeAlloctbl, &
+    constructWriter, &
+    declareAvailableFiles
   implicit none
   private
 
@@ -89,8 +99,6 @@ contains
   !>  Assign all defined `OutputFile` object in `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
   subroutine initializeWriterObjects()
-    use Parameters, only: PROG_OUT_FILE_NAME
-
     ! Population size per time step file.
     popFile = OutputFile(PROG_OUT_FILE_NAME, popFormat, popPosition, popFlag, &
         popUnit)
@@ -121,8 +129,6 @@ contains
   !!  This object contains the necessary information about the output file.
   ! -------------------------------------------------------------------------- !
   function getOutputFile(flag) result(out)
-    use ErrorMSG, only: raiseError
-
     character, intent(in) :: flag
       !! Flag to compare
     type(OutputFile)    :: out

@@ -5,7 +5,7 @@ module HashTableType
   ! DESCRIPTION:
   !>  Module containing an implementation of hash table.
   ! ------------------------------------------------------------------------- !
-  use iso_fortran_env, only: int64
+  use, intrinsic :: iso_fortran_env, only: int64
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
   private

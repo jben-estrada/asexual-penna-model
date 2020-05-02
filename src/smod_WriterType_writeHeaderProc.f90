@@ -15,8 +15,6 @@ submodule (WriterType) WriterTypeWrHdrProc
   !>  Write the header of the active file specified by the integer `flag`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_writeHeader(self, flag, header)
-    use ErrorMSG, only: raiseError
-
     class(Writer),    intent(in) :: self
       !! `Writer` object.
     character,        intent(in) :: flag

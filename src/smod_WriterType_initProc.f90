@@ -7,7 +7,6 @@ submodule (WriterType) WriterTypeInitProc
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % initialize`.
   ! -------------------------------------------------------------------------- !
-  use ErrorMSG, only: raiseError
   implicit none
 contains
 

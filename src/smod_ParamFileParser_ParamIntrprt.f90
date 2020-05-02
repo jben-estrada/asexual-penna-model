@@ -1,5 +1,4 @@
 submodule (ParamFileParserType) ParamIntrprt
-  use CastProcedures, only: castCharToInt, castCharToReal, castIntToChar
   implicit none
 
   character, parameter :: ARR_DELIM = ","

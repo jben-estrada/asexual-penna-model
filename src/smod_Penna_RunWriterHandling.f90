@@ -16,9 +16,6 @@ contains
   !!  passed. The flags are defined in the `SaveFormat` module.
   ! -------------------------------------------------------------------------- !
   subroutine initializeRunWriter(runWriter, recordFlag)
-    use CastProcedures, only: castIntToChar  
-    use ErrorMSG, only: raiseError
-
     type(Writer), intent(inout) :: runWriter
       !! The `Writer` object to be initialized.
     character,    intent(in)    :: recordFlag

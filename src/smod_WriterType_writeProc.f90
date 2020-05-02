@@ -7,7 +7,6 @@ submodule (WriterType) WriterTypeWriteProc
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % write`.
   ! -------------------------------------------------------------------------- !
-  use ErrorMSG, only: raiseError
   implicit none
 contains
 

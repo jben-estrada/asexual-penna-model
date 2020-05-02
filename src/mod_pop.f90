@@ -5,9 +5,17 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
-  use Gene
-  use Parameters
   use ErrorMSG, only: raiseError
+  use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
+  use Parameters, only: &
+    MODEL_L,        &
+    MODEL_M,        &
+    MODEL_R,        &
+    MODEL_R_MAX,    &
+    MODEL_B,        &
+    MODEL_V_WEIGHT, &
+    MODEL_T,        &
+    MODEL_K
   implicit none
   private
 

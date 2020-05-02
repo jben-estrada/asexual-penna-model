@@ -6,6 +6,28 @@ module Penna
   !>  Module containing one of the core procedures for the simulation of the
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
+  use Parameters, only:   &
+    MODEL_B,              &
+    MODEL_K,              &
+    MODEL_TIME_STEPS,     &
+    MODEL_MTTN_COUNT,     &
+    MODEL_START_POP_SIZE, &
+    PROG_REC_FLAG,        &
+    PROG_SAMPLE_SIZE,     &
+    PROG_RECORD_TIME,     &
+    PROG_PRINT_STATE,     &
+    SILENT_PRINT,         &
+    setParams,            &
+    printProgDetails,     &
+    deallocVerhulstWeights
+  use RNG, only: assignRNGParams
+  use ProgBarType, only: ProgressBar
+  use CastProcedures, only: castIntToChar  
+  use ErrorMSG, only: raiseError, raiseWarning
+  
+  ! WARNING: Implicit import. This module needs all its public components.
+  use Pop
+  use Demographics
   use WriterOptions
   implicit none
   private
@@ -32,8 +54,6 @@ contains
   !>  A wrapper subroutine to initialize various module variables.
   ! -------------------------------------------------------------------------- !
   subroutine initializeProgram()
-    use Parameters, only: setParams
-    use RNG, only: assignRNGParams
 
     ! Get the model and program parameters.
     call setParams()
@@ -52,7 +72,6 @@ contains
   !!  the help text if the user wishes so.
   ! -------------------------------------------------------------------------- !
   subroutine printInitialProgDetails()
-    use Parameters, only: printProgDetails
     call printProgDetails()
   end subroutine printInitialProgDetails
 
@@ -63,10 +82,6 @@ contains
   !!  module.
   ! -------------------------------------------------------------------------- !
   subroutine deallocAllocatables()
-    use Parameters, only: deallocVerhulstWeights
-    use WriterOptions, only: deallocWriterTypeAlloctbl
-    use Demographics, only: deallocAgeDstrb
-  
     call deallocVerhulstWeights()
     call deallocWriterTypeAlloctbl()
     call deallocAgeDstrb()
@@ -78,11 +93,6 @@ contains
   !>  Run the Penna model simulation once.
   ! -------------------------------------------------------------------------- !
   subroutine runOneInstance(maxTimestep, startPopSize, initMttnCount,recordFlag)
-    use Demographics
-    use Parameters, only: MODEL_K
-    use ErrorMSG, only: raiseWarning
-    use Pop, only: initializePersonList, resetPersonReadPtrs, freePersonPtrs
-
     integer,          intent(in) :: maxTimestep
       !! Maximum (total) time step.
     integer,          intent(in) :: startPopSize
@@ -202,9 +212,6 @@ contains
       deathByMutation,  &
       deathByVerhulst   &
       )
-    use Pop  
-    use Demographics
-    use Parameters, only: MODEL_B
 
     integer,          intent(inout) :: popSize          !! Population size.
     integer, pointer, intent(inout) :: deathByAge       !! Death by age count.
@@ -272,7 +279,6 @@ contains
       recordTime,     &
       printProgress   &
     )
-    use ProgBarType
 
     integer,   intent(in) :: maxTimeStep
       !! Maximum (total) time step.
@@ -383,8 +389,6 @@ contains
   !!  subroutine `runMultipleInstance`.
   ! -------------------------------------------------------------------------- !
   subroutine run()
-    use Parameters
-
     logical :: printProgress
     printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 

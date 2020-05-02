@@ -37,6 +37,16 @@ module Parameters
   !               K    : The carrying capacity.
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
+  use CmdArgParserType, only: &
+    CmdArgParser, &
+    FLAG_S => CMD_TYPE_FLAG_S, &
+    FLAG_L => CMD_TYPE_FLAG_L, &
+    KV_S => CMD_TYPE_KEYVAL_S, &
+    KV_L => CMD_TYPE_KEYVAL_L, &
+    FLAG_TOGGLED
+  use ParamFileParserType, only: ParamFileParser
+  use ErrorMSG, only: raiseError, raiseWarning
+  use CastProcedures, only: castCharToInt
   implicit none
   private
 
