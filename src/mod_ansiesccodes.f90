@@ -102,10 +102,8 @@ contains
       case(escCodeHide)
         code = ESC_CODE_HIDE
       case default
-        print "(4a)", &
-            formatChar("***", escCodeRed), &
-            formatChar("ERROR", escCodeRed // escCodeBold), &
-            formatChar("*** ", escCodeRed), &
+        print "(2a)", &
+            formatChar("***ERROR***", escCodeRed // escCodeBold), &
             formatChar("'"// trim(flag) // &
                 "' is an invalid flag for an ANSI escape code.", escCodeRed)
         error stop
