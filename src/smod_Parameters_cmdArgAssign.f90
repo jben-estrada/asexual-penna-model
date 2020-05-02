@@ -343,7 +343,7 @@ contains
     print "(' ', *(a))", &
       "Valid character values for -", recordData_kv % cmdName, &
       " or --", recordData_kv % cmdAlias
-    print "(*(2(' '), a/))",  &
+    write(*, "(6(2(' '), a/))", advance="no") &
       "x - Record nothing.", &
       "p - Population size per time step", &
       "a - Age demographics in the last 300 time step.", &
@@ -353,10 +353,14 @@ contains
     print "(' ', *(a))", &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias
-    print "(*(2(' '), a/))", &
+    write(*, "(2(2(' '), a/))", advance="no") &
       "0 - xoshiro256** pseudo-RNG (Fortran intrinsic RNG)", &
       "1 - Mersenne twister (MT19937) pseudo-RNG"
 
+    print "(/' ', *(a))", &
+      "Default values of all key-value options above are, " // &
+      "by default, listed in '", trim(FILE_PARAM_LIST), &
+      "'.", new_line("")
     stop
   end subroutine printHelpAndNotesMsgs
   
