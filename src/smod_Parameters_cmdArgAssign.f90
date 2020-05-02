@@ -75,9 +75,9 @@ contains
       "Birth rate.")
     mttnRate_kv      = CmdArgRecord("M", "mttn-rate", KV_S, KV_L, &
       "Mutation rate.")
-    reprAgeMin_kv    = CmdArgRecord("r", "repr-min", KV_S, KV_L, &
+    reprAgeMin_kv    = CmdArgRecord("r", "r-age-min", KV_S, KV_L, &
       "Minimum reproduction age.")
-    reprAgeMax_kv    = CmdArgRecord("R", "repr-max", KV_S, KV_L, &
+    reprAgeMax_kv    = CmdArgRecord("R", "r-age-max", KV_S, KV_L, &
       "Maximum reproduction age.")
     carryingCap_kv   = CmdArgRecord("K", "pop-cap", KV_S, KV_L, &
       "Carrying capacity.")
@@ -95,7 +95,7 @@ contains
       "Sample size.")
     recordData_kv    = CmdArgRecord("d", "record-data", KV_S, KV_L, &
       "Record data. See 'notes' below for recordable data set.")
-    rngChoice_kv     = CmdArgRecord("c", "rng-choice", KV_S, KV_L, &
+    rngChoice_kv     = CmdArgRecord("g", "rng-choice", KV_S, KV_L, &
       "Choice of pseduo-RNG. See 'notes' below for available RNGs.")
     rngSeed_kv       = CmdArgRecord("S", "rng-seed", KV_S, KV_L, &
       "RNG seed. Must be integer.")
