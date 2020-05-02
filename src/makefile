@@ -17,15 +17,17 @@ TARGET :=penna.out
 $(shell mkdir -p $(BINDIR))
 
 # Build (release build).
+.PHONY: build
 build: $(BINDIR)/$(TARGET) clean
 
 # Depedencies only
+.PHONY: dep
 dep: $(DEPS)
 	
 
 # Link together object files.
 $(BINDIR)/$(TARGET): $(OBJS)
-	@printf "\n\tLinking together object files.\n"
+	@echo "Assembling object to binary."
 	@$(FC) $(SPEC_FFLAGS) $^ -o $(BINDIR)/$(TARGET)
 
 -include $(DEPS)
@@ -35,8 +37,7 @@ $(BINDIR)/$(TARGET): $(OBJS)
 	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@
 
 %.d: %.f90
-	@printf "\tGetting the dependencies of $<\n"
-	@$(FC) $(FFLAGS) $(FDEP) -fsyntax-only -S $<
+	@$(FC) $(FFLAGS) $(FDEP) $(FSYNTCHK) -S $<
 
 # Remove unneeded files for building.
 .PHONY: clean
