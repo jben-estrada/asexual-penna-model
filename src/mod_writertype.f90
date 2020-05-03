@@ -202,7 +202,7 @@ module WriterType
       type(OutputFile),              intent(in)    :: file
     end subroutine
 
-    module subroutine deallocWriterTypeAlloctbl()
+    module subroutine freeWriterModAlloctbls()
     end subroutine
 
     module subroutine destroy(self)
@@ -231,5 +231,5 @@ module WriterType
 
   public :: declareAvailableFiles
   public :: constructWriter
-  public :: deallocWriterTypeAlloctbl
+  public :: freeWriterModAlloctbls
 end module WriterType

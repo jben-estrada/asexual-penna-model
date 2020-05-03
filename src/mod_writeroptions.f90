@@ -13,7 +13,7 @@ module WriterOptions
     OutputFile, &
     writeIK,    &
     writeRK,    &
-    deallocWriterTypeAlloctbl, &
+    freeWriterModAlloctbls, &
     constructWriter, &
     declareAvailableFiles
   implicit none
@@ -83,22 +83,22 @@ module WriterOptions
   ! -------------------------------------------------------------------------- !
 
   ! Initialization procedures. 
-  public :: initializeWriterObjects
+  public :: initWriterObjs
   public :: constructAvailableWriter
   
   ! Public `WriterType` procedures and derived types. 
   public :: Writer
   public :: writeIK
   public :: writeRK
-  public :: deallocWriterTypeAlloctbl
+  public :: freeWriterModAlloctbls
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializeWriterObjects
+  ! SUBROUTINE: initWriterObjs
   !>  Assign all defined `OutputFile` object in `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
-  subroutine initializeWriterObjects()
+  subroutine initWriterObjs()
     ! Population size per time step file.
     popFile = OutputFile(PROG_OUT_FILE_NAME, popFormat, popPosition, popFlag, &
         popUnit)
@@ -120,7 +120,7 @@ contains
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
         badGeneDstrbFile, timeFile])
-  end subroutine initializeWriterObjects
+  end subroutine initWriterObjs
 
 
   ! -------------------------------------------------------------------------- !

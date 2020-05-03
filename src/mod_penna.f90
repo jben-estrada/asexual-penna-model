@@ -52,7 +52,7 @@ contains
     call assignRNGParams()
 
     ! Initialize the writer objects.
-    call initializeWriterObjects()
+    call initWriterObjs()
   end subroutine initProgram
 
 
@@ -63,7 +63,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine freeAlloctbls()
     call deallocVerhulstWeights()
-    call deallocWriterTypeAlloctbl()
+    call freeWriterModAlloctbls()
     call deallocAgeDstrb()
   end subroutine freeAlloctbls
 

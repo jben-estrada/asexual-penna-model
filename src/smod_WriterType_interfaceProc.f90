@@ -209,12 +209,12 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: deallocWriterTypeAlloctbl
+  ! SUBROUTINE: freeWriterModAlloctbls
   !>  Deallocate any module allocatable variables.
   ! -------------------------------------------------------------------------- !
-  subroutine deallocWriterTypeAlloctbl()
+  subroutine freeWriterModAlloctbls()
     if (allocated(outputFiles)) deallocate(outputFiles)
-  end subroutine deallocWriterTypeAlloctbl
+  end subroutine freeWriterModAlloctbls
 
 
   ! -------------------------------------------------------------------------- !
