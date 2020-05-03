@@ -3,6 +3,8 @@
 /test
 /plot
 /.vscode
+/mod
+/obj
 plot.sh
 *.csv
 *.mod
