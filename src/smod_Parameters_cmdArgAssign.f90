@@ -147,14 +147,20 @@ contains
 
     call pennaCmdArgs % readCmdArgs()
 
-    ! Get the flle path first for the parameter listing file.
+    ! Prefix to file name the relative path to the program executable.
+    ! The default parameter file is in the same directory as the executable.
+    FILE_PARAM_LIST = prefixRelFilePath(FILE_PARAM_LIST)
+
+    ! Check if the help message is to be printed. Printing the help message has
+    ! precendence over initialization of program to help first-time users to
+    ! troubleshoot problems.
+    if (pennaCmdArgs % isFlagToggled("help")) call printHelpAndNotesMsgs()
+
+    ! Get the flle path for the parameter listing file.
     if (pennaCmdArgs % hasValue(paramFilePath_kv % cmdName)) then
-      outFilePath_kv % charValue_ptr = &
+      paramFilePath_kv % charValue_ptr = &
         pennaCmdArgs % getCmdValue(paramFilePath_kv % cmdName)
     end if
-
-    ! Append the relative path to the parameter listing file.
-    FILE_PARAM_LIST = getRelFilePath(FILE_PARAM_LIST)
 
     ! Read the model parameters from the config files.
     call readDefaultParamVal()
@@ -165,10 +171,10 @@ contains
 
   
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getRelFilePath
+  ! FUNCTION: prefixRelFilePath
   !>  Get relative path to `source`. 
   ! -------------------------------------------------------------------------- !
-  function getRelFilePath(source) result(relPath)
+  function prefixRelFilePath(source) result(relPath)
     character(len=*), intent(in) :: source
 
     character(len=:), allocatable :: relPath
@@ -196,7 +202,7 @@ contains
     ! Raise an error if no file path delimiter was found.
     ! NOTE: The delimiter used is `/`. This may differ in other shells.
     call raiseError("'" // trim(progPath) // "' is not a valid path.")
-  end function getRelFilePath
+  end function prefixRelFilePath
 
 
   ! -------------------------------------------------------------------------- !
@@ -297,9 +303,6 @@ contains
   !!  if need be.
   ! -------------------------------------------------------------------------- !
   subroutine printProgDetails()
-    ! Check if the help message is to be printed.
-    if (pennaCmdArgs % isFlagToggled("help")) call printHelpAndNotesMsgs()
-
     select case (PROG_PRINT_STATE)
       case (NORMAL_PRINT, VERBOSE_PRINT)
         call printParams()

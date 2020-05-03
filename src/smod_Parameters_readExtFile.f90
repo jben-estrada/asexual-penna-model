@@ -85,7 +85,8 @@ contains
     inquire(file=FILE_PARAM_LIST, exist=extant)
     if (.not. extant) then
       call raiseError( &
-        "The parameter listing file '" // FILE_PARAM_LIST // "' cannot be read"&
+        "The parameter listing file '" &
+        // trim(FILE_PARAM_LIST) // "' cannot be read" &
         )
     end if
   end subroutine checkParamFilePath
