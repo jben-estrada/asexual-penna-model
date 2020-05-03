@@ -561,7 +561,7 @@ contains
 
     if (.not. self % isInit) then
       call raiseWarning( &
-          "F" &
+          "'HashTableIterator' object is already uninitialized." &
         )
     end if
     
