@@ -8,8 +8,6 @@ submodule (Parameters) ReadExtFile
   ! -------------------------------------------------------------------------- !
   implicit none
 
-  ! -------------------------------------------------------------------------- !
-  ! Parameter keys. NOTE: Padded with spaces to accept initializer.
   character(len=*), parameter :: PARAM_KEYS(*) = &
     ["L          ", &
      "T          ", &
@@ -26,6 +24,7 @@ submodule (Parameters) ReadExtFile
      "rng        ", &
      "seed       ", &
      "v_weight   " ]
+    !! Parameter keys in the parameter listing file.
 contains
 
 

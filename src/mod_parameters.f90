@@ -146,12 +146,17 @@ module Parameters
   ! Public subroutines.
   interface
     module subroutine setParams()
+      !! Assign parameters from external file and command arguments.
     end subroutine
 
     module subroutine printProgDetails()
+      !! Pretty print the model parameters. Can print verbosely or print nothing
+      !! if need be.
     end subroutine
 
     module subroutine freeParamAlloctbls()
+      !! Free all allocatable objects and objects with allocatable attributes in
+      !! the 'Parameter' module.
     end subroutine
   end interface
 

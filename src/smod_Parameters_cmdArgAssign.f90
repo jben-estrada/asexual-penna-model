@@ -16,14 +16,21 @@ submodule (Parameters) CmdArgAssignProcs
   type :: CmdArgRecord
     !! A handy derived type for collecting command option attributes.
     character(len=:), allocatable :: cmdName
+      !! Name of the command.
     character(len=:), allocatable :: cmdAlias
+      !! Alias for `cmdName`.
     character :: cmdType
+      !! Command type of `cmdName`.
     character :: cmdAliasType
+      !! Command type of `cmdAlias`.
 
     character(len=:), allocatable :: usageTxt
+      !! Usage text to be displayed in the help message.
 
     character(len=MAX_LEN), pointer :: charValue_ptr => null()
+      !! Pointer to the character parameter `cmdName` modifies.
     integer,                pointer :: intValue_ptr => null()
+      !! Pointer to the integer parameter `cmdName` modifies.
   end type
 
 
@@ -56,6 +63,10 @@ submodule (Parameters) CmdArgAssignProcs
 contains
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initCmdArgRecs
+  !>  Initialize `CmdArgRecord` objects in the `cmdArgArr` array.
+  ! -------------------------------------------------------------------------- !
   subroutine initCmdArgRecs()
     integer :: i
 
