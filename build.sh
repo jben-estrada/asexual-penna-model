@@ -27,26 +27,26 @@ FOBIS="FoBiS.py"
 function build() {
   # Choose build type.
   case "$1" in
-    "default") BLD_SPEC_FLAGS="-O3 -g";;
+    "default") BLD_SPEC_FLAGS="-Ofast -g";;
     "debug")   BLD_SPEC_FLAGS="-O0 -g";;
     "static")  BLD_SPEC_FLAGS="-O3 -g -static";;
-    *)         BLD_SPEC_FLAGS="-O3 -g";;
+    *)         BLD_SPEC_FLAGS="-Ofast -g";;
   esac
 
   $FOBIS build -fc $FC -o $BIN_DIR/$OUT $DIRFLAGS -compiler $COMP -cflags \
-  "$FCFLAGS $BLD_SPEC_FLAGS"
+  "$FCFLAGS $BLD_SPEC_FLAGS" -colors
 }
 
 function clean() {
   # Choose build type.
   case "$1" in
-    "all")      CLEAN_SPEC_FLAGS="";;
-    "obj_only") CLEAN_SPEC_FLAGS="-only_obj";;
-    "obj_trgt") CLEAN_SPEC_FLAGS="-only_target";;
-    *)          CLEAN_SPEC_FLAGS="-only_obj";;
+    "all")      CLEAN_SPEC_FLAGS="$OBJ_DIR/*.o $MOD_DIR/*.mod $MOD_DIR/*.smod";;
+    "obj_only") CLEAN_SPEC_FLAGS="$MOD_DIR/*.mod $MOD_DIR/*.smod";;
+    "mod_only") CLEAN_SPEC_FLAGS="$OBJ_DIR/*.o";;
+    *)          CLEAN_SPEC_FLAGS="$OBJ_DIR/*.o";;
   esac
 
-  $FOBIS clean -dobj $OBJ_DIR -dmod $MOD_DIR "$CLEAN_SPEC_FLAGS"
+  rm -f $CLEAN_SPEC_FLAGS
 }
 
 function test() {
@@ -73,7 +73,6 @@ function help_txt() {
 case "$1" in
   "build")
     build $2
-    echo ""
     clean
     ;;
 
