@@ -4,7 +4,7 @@ submodule (Parameters) ReadExtFile
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `Parameters` containing procedures for reading files of
-  !!  model parameters and "Verhulst weight".
+  !!  model and program parameters and "Verhulst weight".
   ! -------------------------------------------------------------------------- !
   implicit none
 

@@ -1,4 +1,19 @@
 submodule (CmdArgParserType) SortCmds
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: SortCmds
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdArgParserType` containing procedures for sorting
+  !!  character arrays.
+  !!
+  !!  The character precedence are outlined as follows:
+  !!    i.) Shorter characters always have greater precendence over longer ones.
+  !!    ii.) For characters with equal lengths, the precendence is determined
+  !!         by their ASCII code. Needless to say, the character array to be
+  !!         sorted must only contain ASCII characters. As for letters with
+  !!         differing cases, the comparison is case-insensitive (e.g. "a" is
+  !!         equal to "A").
+  ! -------------------------------------------------------------------------- !
   implicit none
 contains
 

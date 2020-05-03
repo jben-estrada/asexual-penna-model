@@ -1,4 +1,11 @@
 submodule (CmdArgParserType) parserProcedures
+! -------------------------------------------------------------------------- !
+  ! SUBMODULE: parserProcedures
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `CmdArgParserType` containing procedures for parsing
+  !!  command arguments.
+  ! -------------------------------------------------------------------------- !
   implicit none
   
   integer, parameter :: MAX_ARG_LEN = 64

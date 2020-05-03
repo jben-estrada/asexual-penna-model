@@ -1,4 +1,11 @@
 submodule (ParamFileParserType) ParamIntrprt
+  ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: ParamIntrprt
+  ! -------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Submodule of `ParamFileParserType` containing procedures for parsing
+  !!  external files to obtain parameters.
+  ! -------------------------------------------------------------------------- !
   implicit none
 
   character, parameter :: ARR_DELIM = ","
