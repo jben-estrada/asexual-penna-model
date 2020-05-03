@@ -70,8 +70,9 @@ contains
     MODEL_V_WEIGHT(:) = -1
     call paramReader % getValue(PARAM_KEYS(15), MODEL_L, MODEL_V_WEIGHT)
 
-    ! Free temporary character variable.
+    ! Free all local allocatable variables.
     deallocate(tempRecFlag)
+    call paramReader % free()
   end subroutine readDefaultParamVal
 
 

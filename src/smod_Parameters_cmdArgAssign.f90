@@ -437,10 +437,29 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: deallocVerhulstWeights
-  !>  Deallocate `MODEL_V_WEIGHT` array.
+  ! SUBROUTINE: freeParamAlloctbls
+  !>  Free all allocatable objects and objects with allocatable attributes in
+  !!  the 'Parameter' module.
   ! -------------------------------------------------------------------------- !
-  subroutine deallocVerhulstWeights()
+  subroutine freeParamAlloctbls()
+    integer :: i
+
+    ! Free Verhulst weight array.
     if (allocated(MODEL_V_WEIGHT)) deallocate(MODEL_V_WEIGHT)
-  end subroutine deallocVerhulstWeights
-end submodule
+
+    ! Free the attributes of command argument parser.
+    call pennaCmdArgs % free()
+
+    ! Free all allocatable attributes of all `CmdArgRecord` objects.
+    do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
+      ! Free allocatable character attributes.
+      if (allocated(cmdArgArr(i) % cmdName)) deallocate(cmdArgArr(i) % cmdName)
+      if (allocated(cmdArgArr(i) % cmdAlias)) deallocate(cmdArgArr(i) %cmdAlias)
+      if (allocated(cmdArgArr(i) % usageTxt)) deallocate(cmdArgArr(i) %usageTxt)
+
+      ! Nullify pointer attributes.
+      cmdArgArr(i) % charValue_ptr => null()
+      cmdArgArr(i) % intValue_ptr => null()
+    end do
+  end subroutine freeParamAlloctbls
+end submodule CmdArgAssignProcs

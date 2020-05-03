@@ -19,7 +19,7 @@ module Penna
     SILENT_PRINT,         &
     setParams,            &
     printProgDetails,     &
-    deallocVerhulstWeights
+    freeParamAlloctbls
   use RNG, only: assignRNGParams
   use ProgBarType, only: ProgressBar
   use CastProcedures, only: castIntToChar  
@@ -62,9 +62,9 @@ contains
   !!  module.
   ! -------------------------------------------------------------------------- !
   subroutine freeAlloctbls()
-    call deallocVerhulstWeights()
     call freeWriterModAlloctbls()
     call deallocAgeDstrb()
+    call freeParamAlloctbls()
   end subroutine freeAlloctbls
 
 

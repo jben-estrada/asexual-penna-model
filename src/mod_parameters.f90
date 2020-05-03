@@ -151,7 +151,7 @@ module Parameters
     module subroutine printProgDetails()
     end subroutine
 
-    module subroutine deallocVerhulstWeights()
+    module subroutine freeParamAlloctbls()
     end subroutine
   end interface
 
@@ -194,7 +194,7 @@ module Parameters
   public :: setParams
 
   ! Routine for memory management.
-  public :: deallocVerhulstWeights
+  public :: freeParamAlloctbls
   ! Other routines.
   public :: printProgDetails
 end module Parameters
