@@ -32,28 +32,18 @@ module Penna
   implicit none
   private
 
-  ! Interface for submodule procedures.
-  interface
-    module subroutine initializeRunWriter(runWriter, recordFlag)
-      type(Writer), intent(inout) :: runWriter
-        !! The `Writer` object to be initialized.
-      character,    intent(in)    :: recordFlag
-        !! Record flag. Values can be found in `WriterOptions`.
-    end subroutine
-  end interface
-
   public :: run
-  public :: initializeProgram
-  public :: deallocAllocatables
-  public :: printInitialProgDetails
+  public :: initProgram
+  public :: freeAlloctbls
+  public :: printProgDetails
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializeProgram
+  ! SUBROUTINE: initProgram
   !>  A wrapper subroutine to initialize various module variables.
   ! -------------------------------------------------------------------------- !
-  subroutine initializeProgram()
+  subroutine initProgram()
 
     ! Get the model and program parameters.
     call setParams()
@@ -63,29 +53,19 @@ contains
 
     ! Initialize the writer objects.
     call initializeWriterObjects()
-  end subroutine initializeProgram
+  end subroutine initProgram
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: printInitialProgDetails
-  !>  A wrapper subroutine to print the initial details of the program or
-  !!  the help text if the user wishes so.
-  ! -------------------------------------------------------------------------- !
-  subroutine printInitialProgDetails()
-    call printProgDetails()
-  end subroutine printInitialProgDetails
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: deallocAllocatables
+  ! SUBROUTINE: freeAlloctbls
   !>  A wrapper subroutine to deallocate any allocatable variables in other
   !!  module.
   ! -------------------------------------------------------------------------- !
-  subroutine deallocAllocatables()
+  subroutine freeAlloctbls()
     call deallocVerhulstWeights()
     call deallocWriterTypeAlloctbl()
     call deallocAgeDstrb()
-  end subroutine deallocAllocatables
+  end subroutine freeAlloctbls
 
 
   ! -------------------------------------------------------------------------- !
@@ -115,7 +95,7 @@ contains
     popSize = startPopSize
     deathCount(:) = 0
     call resetAgeDstrb()
-    call initializeRunWriter(runWriter, recordFlag)
+    call initRunWriter(runWriter, recordFlag)
     call initializePersonList(startPopSize, initMttnCount)
 
     ! Initialize pointers.
@@ -402,4 +382,48 @@ contains
         printProgress         &
         )
   end subroutine run
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initRunWriter
+  !>  Initialize a `Writer` object based on the integer `recordFlag`
+  !!  passed. The flags are defined in the `CmdOptions` module.
+  ! -------------------------------------------------------------------------- !
+  subroutine initRunWriter(runWriter, recordFlag)
+    type(Writer), intent(inout) :: runWriter
+      !! The `Writer` object to be initialized.
+    character,    intent(in)    :: recordFlag
+      !! Record flag. Values can be found in `WriterOptions`.
+
+    if (recordFlag == nullFlag) return
+
+    ! Construct the `Writer` type.
+    call constructAvailableWriter(runWriter, &
+        [popFlag, ageDstrbFlag, deathFlag, divIdxFlag, badGeneFlag])
+
+    call runWriter % initialize(recordFlag)
+    select case (recordFlag)
+      case (popFlag)
+        call runWriter % writeHeader(popFlag, ["population size"])
+
+      case (ageDstrbFlag)
+        call runWriter % writeHeader(ageDstrbFlag, ["age =>"])
+
+      case (deathFlag)
+        call runWriter % writeHeader(deathFlag, &
+            ["death by old age        ", &
+            "death by mutation       ", &
+            "death by Verhulst factor"])
+
+      case (divIdxFlag)
+        call runWriter % writeHeader(divIdxFlag, &
+            ["Diversity index per time step"])
+      
+      case (badGeneFlag)
+        call runWriter % writeHeader(badGeneFlag, ["age =>"])
+
+      case default
+        call raiseError("'" // trim(recordFlag) //"' is an invalid record flag")
+    end select
+  end subroutine initRunWriter
 end module Penna

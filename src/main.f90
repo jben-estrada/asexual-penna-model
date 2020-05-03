@@ -29,15 +29,15 @@ program Main
   use Penna
   implicit none
 
-  ! Initialize the command-line options.
-  call initializeProgram()
+  ! Initialize the whole program.
+  call initProgram()
 
   ! Print the program parameters or the help text.
-  call printInitialProgDetails()
+  call printProgDetails()
 
   ! Simulate the Penna model.
   call run()
 
   ! Wrap up.
-  call deallocAllocatables()
+  call freeAlloctbls()
 end program Main
