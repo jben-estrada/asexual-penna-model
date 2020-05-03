@@ -9,6 +9,7 @@ FDEP := -cpp -MD
 # Source directory
 SRCDIR :=src
 LIBDIR :=$(SRCDIR)/third-party
+MODDIR :=mod
 
 # Variable file name
 VAR_FILE :=makefile.variables
@@ -55,6 +56,7 @@ compile_var:
 	@echo "FFLAGS = $(FFLAGS)" >> $(SRCDIR)/$(VAR_FILE)
 	@echo "FSYNTCHK := $(FSYNTCHK)" >> $(SRCDIR)/$(VAR_FILE)
 	@echo "FDEP := $(FDEP)" >> $(SRCDIR)/$(VAR_FILE)
+	@echo "MODDIR := ../$(MODDIR)" >> $(SRCDIR)/$(VAR_FILE)
 
 # Clean dependency and object files.
 clean:
@@ -62,4 +64,4 @@ clean:
 
 # Clean module and submodule files.
 clean_mod:
-	@$(RM) -f $(SRCDIR)/*.mod $(SRCDIR)/*.smod
+	@$(RM) -f $(MODDIR)/*.mod $(MODDIR)/*.smod

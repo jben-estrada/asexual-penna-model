@@ -34,10 +34,10 @@ $(BINDIR)/$(TARGET): $(OBJS)
 
 %.o: %.f90 %.d
 	@printf "\tCompiling $<\n"
-	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@
+	@$(FC) $(FFLAGS) $(FDEP) -c $< -o $@ -J$(MODDIR) -I$(MODDIR)
 
 %.d: %.f90
-	@$(FC) $(FFLAGS) $(FDEP) $(FSYNTCHK) -S $<
+	@$(FC) $(FFLAGS) $(FDEP) $(FSYNTCHK) -S $< -J$(MODDIR) -I$(MODDIR)
 
 # Remove unneeded files for building.
 .PHONY: clean
