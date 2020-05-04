@@ -1,6 +1,6 @@
-submodule (CmdArgParserType) ParserProcedures
+submodule (CmdArgParserType) ParserProcs
   ! -------------------------------------------------------------------------- !
-  ! SUBMODULE: ParserProcedures
+  ! SUBMODULE: ParserProcs
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
@@ -265,4 +265,4 @@ contains
       call raiseError("Unknown internal error encountered.")
     end if
   end subroutine setValToAlias
-end submodule ParserProcedures
+end submodule ParserProcs
