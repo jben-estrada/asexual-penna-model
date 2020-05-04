@@ -17,9 +17,8 @@ module Pop
     MODEL_T,        &
     MODEL_K
 
-  use RNG, only: getRandNumber
   use ErrorMSG, only: raiseError
-  use RandInd, only: generateIndices
+  use RNG, only: getRandReal, getRandRange
   use Demographics, only: updateGenomeDstrb
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none
@@ -180,7 +179,7 @@ contains
 
     if (mutationCount > 0) then
       ! Get random indices of genes to mutate.
-      call generateIndices(1, MODEL_L, mutationIndcs)
+      mutationIndcs = getRandRange(1, MODEL_L, mutationCount)
 
       ! Apply mutations.
       do i = 1, mutationCount
@@ -236,7 +235,7 @@ contains
     integer :: i
 
     mutations(:) = 0  ! Initialize `mutations`
-    call generateIndices(1, MODEL_L, mutations)
+    mutations = getRandRange(1, MODEL_L, MODEL_M)
 
     indiv_ptr % genome = genome
     do i = 1, size(mutations)
@@ -499,7 +498,6 @@ contains
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
     integer :: nextAge
-    real    :: random
 
     nextAge = current_ptr % age + 1             ! Hypothetical age
     verhulstWeight = MODEL_V_WEIGHT(nextAge)  ! Verhulst weight per age
@@ -521,10 +519,9 @@ contains
     ! ***Death check: Verhulst factor
     else if (verhulstWeight > 0.0_personIK) then
       ! Get Verhulst factor per age.
-      call getRandNumber(random)
       verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
 
-      if (random > verhulstFactor) &
+      if (getRandReal() > verhulstFactor) &
         current_ptr % deathIndex = DEAD_VERHULST
     end if
   end subroutine checkCurrIndivDeath

@@ -18,6 +18,8 @@ module Penna
     PROG_SAMPLE_SIZE,     &
     PROG_RECORD_TIME,     &
     PROG_PRINT_STATE,     &
+    PROG_RNG,             &
+    PROG_RNG_SEED,        &
     SILENT_PRINT,         &
     setParams,            &
     printProgDetails,     &
@@ -51,7 +53,7 @@ contains
     call setParams()
 
     ! Get the chosen RNG and RNG seed.
-    call assignRNGParams()
+    call assignRNGParams(PROG_RNG, PROG_RNG_SEED)
 
     ! Initialize the writer objects.
     call initWriterObjs()

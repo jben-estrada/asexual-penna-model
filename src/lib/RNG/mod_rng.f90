@@ -5,7 +5,9 @@ module RNG
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
-  !>  Module containing procedures for setting and using various RNGs.
+  !>  Module containing procedures for setting and using various RNGs. This
+  !!  module also contains various procedures for generating random integers
+  !!  and real values.
   ! -------------------------------------------------------------------------- !
   use Mtmod, only: grnd, sgrnd
   use ErrorMSG, only: raiseError
@@ -23,7 +25,9 @@ module RNG
     !! The RNG flag chosen at the beginning of the program.
 
   public :: assignRNGParams
-  public :: getRandNumber
+  public :: getRandInt
+  public :: getRandReal
+  public :: getRandRange
 contains
 
 
@@ -31,11 +35,12 @@ contains
   ! SUBROUTINE: initializeRNG
   !>  Initialize the chosen random number generator
   ! -------------------------------------------------------------------------- !
-  subroutine assignRNGParams()
-    use Parameters, only: PROG_RNG, PROG_RNG_SEED
+  subroutine assignRNGParams(rngFlag, rngSeed)
+    integer, intent(in) :: rngFlag
+    integer, intent(in) :: rngSeed
 
-    call chooseRNG(PROG_RNG)
-    call setSeed(PROG_RNG_SEED)
+    call chooseRNG(rngFlag)
+    call setSeed(rngSeed)
   end subroutine assignRNGParams
 
 
@@ -91,26 +96,77 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: getRandNumber
+  ! SUBROUTINE: getRandReal
   !>  Get a random real number between 0 and 1. The exact range is RNG-
   !!  specific.
   ! -------------------------------------------------------------------------- !
-  subroutine getRandNumber(randnum)
-    real, intent(out) :: randnum
-      !! The generated random number between 0 and 1. The clusivity of bounds
-      !! are RNG-specific.
-    
+  real function getRandReal()
     select case(rngChoice)
       ! KISS PRNG
       case (RNG_INTRINSIC)
-        call random_number(randnum)
+        call random_number(getRandReal)
 
       ! MT19937 PRNG
       case (RNG_MERSENNE_TWISTER)
-        randnum = real(grnd()) ! Cast from real(8) to real(4) for compatibility.
+        ! Cast from real(8) to real(4) for compatibility.
+        getRandReal = real(grnd())
 
       case default
         call raiseError("No RNG has yet been chosen.")
     end select
-  end subroutine getRandNumber
+  end function getRandReal
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: getRandRange
+  !>  Generate a rank-1 array of unique integers in the interval
+  !!  [lower, upper]. The length of the generated array is that of
+  !!  the passed `indices`.
+  ! -------------------------------------------------------------------------- !
+  function getRandRange(lower, upper, size) result(indices)
+    integer, intent(in) :: upper
+      !! The inclusive upper bound of integers to be randomly generated.
+    integer, intent(in) :: lower
+      !! The inclusive lower bound of integers to be randomly generated.
+    integer, intent(in) :: size
+      !! Size of the integer array to be generated.
+
+    integer :: indices(size)
+      !! The array of random integers to be used as randomized indices.
+    
+    integer :: index = 0
+    real    :: random = 0
+    integer :: i
+
+    indices(:) = lower - 1
+    do i = 1, size
+      do
+        random = getRandReal()
+        index = getRandInt(upper, lower)
+
+        if (all(indices(1:i) /= index)) then
+          indices(i) = index
+          exit
+        end if
+
+      end do
+    end do
+  end function getRandRange
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getRandInt
+  !>  Generate a random integer in the interval [a, b].
+  ! -------------------------------------------------------------------------- !
+  integer function getRandInt(a, b)
+    integer, intent(in) :: a
+      !! The inclusive upper bound of the integer to be randomly generated.
+    integer, intent(in) :: b
+      !! The inclusive lower bound of the integer to be randomly generated.
+
+    real :: random
+  
+    random = getRandReal()
+    getRandInt = floor(random*(b - a + 1)) + a
+  end function getRandInt
 end module RNG
