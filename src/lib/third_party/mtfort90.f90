@@ -46,7 +46,7 @@
 ! subroutines added by Richard Woloshyn. (rwww@triumf.ca). June 30, 1999
 !
 !***********************************************************************
-! The `mtmod` module was changed to remove implicitly declared variables;
+! The `Mtmod` module was changed to remove implicitly declared variables;
 ! all of them are now explicitly declared. The driving program was also
 ! removed to be able to use in other programs.
 !
@@ -58,9 +58,15 @@
 ! 
 ! The changes were made by John Benedick Estrada (jestrada@nip.upd.edu.ph)
 ! in December 2019 - January 2020.
+!***********************************************************************
+! Minor change: Changed the module name `mtmod` to `Mtmod` to conform
+! with the style of the whole program.
+!
+! Changes made by John Benedick Estrada (jestrada@nip.upd.edu.ph) on
+! 04 May 2020
 ! 
 
- module mtmod
+ module Mtmod
     private
 ! Default seed
     integer, parameter :: defaultsd = 4357
@@ -265,5 +271,5 @@
     return
   end subroutine mtgetu
 
- end module mtmod
+ end module Mtmod
  
