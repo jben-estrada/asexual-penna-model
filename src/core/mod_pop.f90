@@ -62,16 +62,11 @@ module Pop
 
   ! INDIVIDUAL STATES.
   ! -------------------------------------------------------------------------- !
-  integer, public, parameter :: ALIVE = 1
-  integer, public, parameter :: DEAD_OLD_AGE = 2
-  integer, public, parameter :: DEAD_MUTATION = 3
-  integer, public, parameter :: DEAD_VERHULST = 4
-  integer, public, parameter :: DEATH_REASONS(*) = &
-      [ALIVE,        &
-      DEAD_OLD_AGE,  &
-      DEAD_MUTATION, &
-      DEAD_VERHULST]
-  
+  integer, parameter :: ALIVE = 1
+  integer, parameter :: DEAD_OLD_AGE = 2
+  integer, parameter :: DEAD_MUTATION = 3
+  integer, parameter :: DEAD_VERHULST = 4
+
   ! PUBLIC PROCEDURES
   ! -------------------------------------------------------------------------- !
   ! Inquiry procedures
