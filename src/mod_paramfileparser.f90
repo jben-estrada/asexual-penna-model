@@ -273,26 +273,37 @@ contains
   end subroutine paramfileparser_readFile
 
 
-  subroutine paramfileparser_getScalarValue_char(self, key, scalarVal)
+  subroutine paramfileparser_getScalarValue_char(self, key, scalarVal, status)
     class(ParamFileParser),        intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),              intent(in)    :: key
       !! Key with which its corresponding value is obtained.
     character(len=:), allocatable, intent(out)   :: scalarVal
       !! Scalar output.
+    integer, optional,             intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
 
     integer :: getStat
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
 
     allocate(character(len=0) :: scalarVal)
     scalarVal = self % keyValTable % get(key, getStat)
 
     ! Handle error in this function, not from within the `HashTableType` module
     if (getStat /= HSHTBL_STAT_OK) then
-      call raiseError( &
-        "The key '" &
-        // trim(key) // &
-        "' is not found in the parameter listing." &
-        )
+      if (present(status)) then
+        status = getStat
+        scalarVal = ""   ! Assign some value to the output.
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
     end if
   end subroutine paramfileparser_getScalarValue_char
 
@@ -301,27 +312,39 @@ contains
   ! SUBROUTINE: paramfileparser_getScalarValue_int
   !>  Get the scalar integer value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getScalarValue_int(self, key, scalarVal)
+  subroutine paramfileparser_getScalarValue_int(self, key, scalarVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
       !! Key with which its corresponding value is obtained.
     integer,                intent(out)   :: scalarVal
       !! Scalar output.
-
-    integer :: getStat
+    integer, optional,      intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
 
     character(len=:), allocatable :: valueChar
+    integer :: getStat
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
+
     allocate(character(len=0) :: valueChar)
     valueChar = self % keyValTable % get(key, getStat)
     
     ! Handle error in this function, not from within the `HashTableType` module
     if (getStat /= HSHTBL_STAT_OK) then
-      call raiseError( &
-        "The key '" &
-        // trim(key) // &
-        "' is not found in the parameter listing." &
-        )
+      if (present(status)) then
+        status = getStat
+        scalarVal = -1    ! Assign some value to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
     end if
 
     ! Finally convert character to the desired type.
@@ -333,27 +356,39 @@ contains
   ! SUBROUTINE: paramfileparser_getScalarValue_real
   !>  Get the scalar real value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getScalarValue_real(self, key, scalarVal)
+  subroutine paramfileparser_getScalarValue_real(self, key, scalarVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
       !! Key with which its corresponding value is obtained.
     real,                   intent(out)   :: scalarVal
       !! Scalar output.
+    integer, optional,      intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
 
     integer :: getStat
-
     character(len=:), allocatable :: valueChar
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
+
     allocate(character(len=0) :: valueChar)
     valueChar = self % keyValTable % get(key, getStat)
 
     ! Handle error in this function, not from within the `HashTableType` module
     if (getStat /= HSHTBL_STAT_OK) then
-      call raiseError( &
-        "The key '" &
-        // trim(key) // &
-        "' is not found in the parameter listing." &
-        )
+      if (present(status)) then
+        status = getStat
+        scalarVal = -1    ! Assign some value to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
     end if
 
     ! Finally convert character to the desired type.
@@ -365,7 +400,7 @@ contains
   ! SUBROUTINE: paramfileparser_getArrValue_int
   !>  Get the integer array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getArrValue_int(self, key, arrSize, arrVal)
+  subroutine paramfileparser_getArrValue_int(self, key, arrSize, arrVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
@@ -374,20 +409,32 @@ contains
       !! Output array size.
     integer,                intent(out)   :: arrVal(arrSize)
       !! Output array.
+    integer, optional,      intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
 
     character(len=:), allocatable :: valueChar
     integer :: getStat
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
 
     allocate(character(len=0) :: valueChar)
     valueChar = self % keyValTable % get(key, getStat)
     
     ! Handle error in this function, not from within the `HashTableType` module
     if (getStat /= HSHTBL_STAT_OK) then
-      call raiseError( &
-        "The key '" &
-        // trim(key) // &
-        "' is not found in the parameter listing." &
-        )
+      if (present(status)) then
+        status = getStat
+        arrVal(:) = -1    ! Assign some values to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
     end if
     
     ! Finally convert character to the desired type.
@@ -399,7 +446,7 @@ contains
   ! SUBROUTINE: paramfileparser_getArrValue_real
   !>  Get the real array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getArrValue_real(self, key, arrSize, arrVal)
+  subroutine paramfileparser_getArrValue_real(self, key, arrSize, arrVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
@@ -408,20 +455,32 @@ contains
       !! Output array size.
     real,                   intent(out)   :: arrVal(arrSize)
       !! Output array.
+    integer, optional,      intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
 
     character(len=:), allocatable :: valueChar
     integer :: getStat
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
 
     allocate(character(len=0) :: valueChar)
     valueChar = self % keyValTable % get(key, getStat)
 
     ! Handle error in this function, not from within the `HashTableType` module
     if (getStat /= HSHTBL_STAT_OK) then
-      call raiseError( &
-        "The key '" &
-        // trim(key) // &
-        "' is not found in the parameter listing." &
-        )
+      if (present(status)) then
+        status = getStat
+        arrVal(:) = -1    ! Assign some values to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
     end if
     
     ! Finally convert character to the desired type.
