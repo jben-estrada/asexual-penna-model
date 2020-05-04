@@ -7,8 +7,6 @@ module Pop
   ! DESCRIPTION: 
   !>  Module containing evaluation and generation of population
   ! -------------------------------------------------------------------------- !
-  use ErrorMSG, only: raiseError
-  use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   use Parameters, only: &
     MODEL_L,        &
     MODEL_M,        &
@@ -18,6 +16,12 @@ module Pop
     MODEL_V_WEIGHT, &
     MODEL_T,        &
     MODEL_K
+
+  use RNG, only: getRandNumber
+  use ErrorMSG, only: raiseError
+  use RandInd, only: generateIndices
+  use Demographics, only: updateGenomeDstrb
+  use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none
   private
 
@@ -166,8 +170,6 @@ contains
   !>  Apply a set number of mutation to a `Person` object to be initialized.
   ! -------------------------------------------------------------------------- !
   subroutine applyInitialMutations(indiv_ptr, mutationCount)
-    use RandInd, only: generateIndices
-
     type(Person), pointer, intent(inout) :: indiv_ptr
       !! The pointer to the individual or the `Person` object to be initialized.
     integer,               intent(in)    :: mutationCount
@@ -225,8 +227,6 @@ contains
   !!  object.
   ! -------------------------------------------------------------------------- !
   subroutine initializeIndiv(indiv_ptr, genome)
-    use RandInd, only: generateIndices
-
     type(Person), pointer,  intent(inout) :: indiv_ptr
       !! The pointer to the individual or the `Person` object to be initialized.
     integer(kind=personIK), intent(in)    :: genome
@@ -320,8 +320,6 @@ contains
   !>  Have the `Person` object `current_ptr` is pointing at to reproduce.
   ! -------------------------------------------------------------------------- !
   subroutine reproduceCurrIndiv(updateGenome)
-    use Demographics, only: updateGenomeDstrb
-
     logical, intent(in) :: updateGenome
       !! Update the genome distribution if true.
 
@@ -495,8 +493,6 @@ contains
   !!  pointing at. 
   ! -------------------------------------------------------------------------- !
   subroutine checkCurrIndivDeath(popSize)
-    use RNG, only: getRandNumber
-
     integer,           intent(in)    :: popSize
       !! The current population size for calculating the Verhulst factor.
   

@@ -7,7 +7,8 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Gene, only: personIK
+  use Gene, only: personIK, getGene, GENE_UNHEALTHY
+  use Parameters, only: MODEL_L
   implicit none
   private
   
@@ -173,9 +174,6 @@ contains
   !>  Get the distribution of bad genes in the population's genomes.
   ! -------------------------------------------------------------------------- !
   function getBadGeneDstrb() result(badGeneDstrb)
-    use Gene, only: getGene, GENE_UNHEALTHY
-    use Parameters, only: MODEL_L
-
     integer :: badGeneDstrb(MODEL_L)
 
     type(GenomeDstrbNode), pointer :: reader
@@ -226,8 +224,6 @@ contains
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
   subroutine resetAgeDstrb()
-    use Parameters, only: MODEL_L
-
     if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
     ageDistribution(:) = 0
   end subroutine resetAgeDstrb

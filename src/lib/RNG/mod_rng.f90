@@ -7,7 +7,7 @@ module RNG
   ! DESCRIPTION: 
   !>  Module containing procedures for setting and using various RNGs.
   ! -------------------------------------------------------------------------- !
-  use mtmod, only: grnd, sgrnd
+  use Mtmod, only: grnd, sgrnd
   use ErrorMSG, only: raiseError
   implicit none
   private
