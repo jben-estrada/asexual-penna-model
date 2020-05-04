@@ -14,15 +14,18 @@ module RNG
   implicit none
   private
 
-  integer, public, parameter :: RNG_INTRINSIC = 0
+  integer, parameter :: RNG_INTRINSIC = 0
     !! FLag corresponding to the intrinsic pseudo-RNG of Fortran.
-  integer, public, parameter :: RNG_MERSENNE_TWISTER = 1
+  integer, parameter :: RNG_MERSENNE_TWISTER = 1
     !! Flag corresponding to the Mersenne Twister MT19937 pseudo-RNG.
-  integer, public, parameter :: RNG_FLAGS(2) = &
+  integer, parameter :: RNG_FLAGS(2) = &
       [RNG_INTRINSIC, RNG_MERSENNE_TWISTER] !! Array of RNG flags.
 
   integer :: rngChoice
     !! The RNG flag chosen at the beginning of the program.
+
+  public :: RNG_INTRINSIC
+  public :: RNG_MERSENNE_TWISTER  
 
   public :: assignRNGParams
   public :: getRandInt
