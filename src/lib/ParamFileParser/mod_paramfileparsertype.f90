@@ -9,7 +9,7 @@ module ParamFileParserType
   !!  external files.
   ! -------------------------------------------------------------------------- !
   use HashTableType, only: HashTable, HSHTBL_STAT_OK => STAT_OK
-  use CastProcedures, only: castCharToInt, castCharToReal, castIntToChar
+  use CastProcs, only: castCharToInt, castCharToReal, castIntToChar
   use ErrorMSG, only: raiseError
   implicit none
   private

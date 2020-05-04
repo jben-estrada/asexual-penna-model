@@ -1,4 +1,4 @@
-module CastProcedures
+module CastProcs
   ! -------------------------------------------------------------------------- !
   ! MODULE: CastProcedures
   ! -------------------------------------------------------------------------- !
@@ -172,4 +172,4 @@ contains
       if (status /= 0) call raiseError("Casting real to char failed.")
     end if
   end function castRealToChar
-end module CastProcedures
+end module CastProcs

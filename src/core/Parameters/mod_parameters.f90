@@ -48,7 +48,7 @@ module Parameters
     FLAG_TOGGLED
   use ParamFileParserType, only: ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
-  use CastProcedures, only: castCharToInt
+  use CastProcs, only: castCharToInt
   implicit none
   private
 
