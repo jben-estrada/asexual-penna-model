@@ -37,7 +37,6 @@ module Penna
     divIdxFlag
   use RNG, only: assignRNGParams
   use ProgBarType, only: ProgressBar
-  use CastProcedures, only: castIntToChar  
   use ErrorMSG, only: raiseError, raiseWarning
   
   ! WARNING: Implicit import. This module needs all its public components.
