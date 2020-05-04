@@ -405,15 +405,13 @@ contains
   !>  Pretty print the model and program parameters.
   ! -------------------------------------------------------------------------- !
   subroutine printParams()
-    use ANSIEscCodes, only: formatChar, escCodeBold
-
     ! Pretty print separator.
     integer :: k
     character, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
 
     ! ***Header
     print "(*(a))", PRINT_SEPARATOR 
-    print "(a)", formatChar("Asexual Penna model", escCodeBold)
+    print "(a)", "Asexual Penna model"
     print "(*(a))", PRINT_SEPARATOR
 
     ! ***Model and program parameters.
