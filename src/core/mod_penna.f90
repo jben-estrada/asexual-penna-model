@@ -47,7 +47,7 @@ module Penna
     getDiversityIdx,      &
     getBadGeneDstrb
   
-  use RNG, only: assignRNGParams
+  use RandNumProcs, only: assignRNGParams
   use ProgBarType, only: ProgressBar
   use ErrorMSG, only: raiseError, raiseWarning
   

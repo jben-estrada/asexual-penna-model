@@ -19,7 +19,7 @@ module PopulationList
     MODEL_K
 
   use ErrorMSG, only: raiseError
-  use RNG, only: getRandReal, getRandRange
+  use RandNumProcs, only: getRandReal, getRandRange
   use Demographics, only: updateGenomeDstrb
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none

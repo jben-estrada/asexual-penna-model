@@ -1,6 +1,6 @@
-module RNG
+module RandNumProcs
   ! -------------------------------------------------------------------------- !
-  ! MODULE: RNG
+  ! MODULE: RandNumProcs
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
@@ -172,4 +172,4 @@ contains
     random = getRandReal()
     getRandInt = floor(random*(b - a + 1)) + a
   end function getRandInt
-end module RNG
+end module RandNumProcs
