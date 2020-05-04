@@ -8,7 +8,6 @@ module Demographics
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
   use Gene, only: personIK, getGene, GENE_UNHEALTHY
-  use Parameters, only: MODEL_L
   implicit none
   private
   
@@ -173,8 +172,11 @@ contains
   ! FUNCTION: getBadGeneDstrb
   !>  Get the distribution of bad genes in the population's genomes.
   ! -------------------------------------------------------------------------- !
-  function getBadGeneDstrb() result(badGeneDstrb)
-    integer :: badGeneDstrb(MODEL_L)
+  function getBadGeneDstrb(genomeLen) result(badGeneDstrb)
+    integer, intent(in) :: genomeLen
+      !! Genome length which also corresponds to age demographics range.
+
+    integer :: badGeneDstrb(genomeLen)
 
     type(GenomeDstrbNode), pointer :: reader
     integer :: i
@@ -186,7 +188,7 @@ contains
       if (associated(reader)) then
 
         ! Count the bad genes of the current genome.
-        do i = 1, MODEL_L
+        do i = 1, genomeLen
           if (getGene(reader % genome, i) == GENE_UNHEALTHY) &
             badGeneDstrb(i) = badGeneDstrb(i) + 1
         end do
@@ -223,8 +225,11 @@ contains
   ! SUBROUTINE: resetAgeDstrb
   !>  Reset the demographics.
   ! -------------------------------------------------------------------------- !
-  subroutine resetAgeDstrb()
-    if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
+  subroutine resetAgeDstrb(genomeLen)
+    integer, intent(in) :: genomeLen
+      !! Genome length which also corresponds to age demographics range.
+
+    if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:genomeLen))
     ageDistribution(:) = 0
   end subroutine resetAgeDstrb
 

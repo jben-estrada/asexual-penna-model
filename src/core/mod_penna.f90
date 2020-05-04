@@ -9,6 +9,7 @@ module Penna
   !!  Penna model (along with the `Pop` module)
   ! -------------------------------------------------------------------------- !
   use Parameters, only:   &
+    MODEL_L,              &
     MODEL_B,              &
     MODEL_K,              &
     MODEL_TIME_STEPS,     &
@@ -107,7 +108,7 @@ contains
     ! Initialization
     popSize = startPopSize
     deathCount(:) = 0
-    call resetAgeDstrb()
+    call resetAgeDstrb(MODEL_L)
     call initRunWriter(runWriter, recordFlag)
     call initializePersonList(startPopSize, initMttnCount)
 
@@ -149,7 +150,7 @@ contains
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call resetPersonReadPtrs()
-      if (recordFlag == ageDstrbFlag) call resetAgeDstrb()
+      if (recordFlag == ageDstrbFlag) call resetAgeDstrb(MODEL_L)
       if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
           call freeGenomeDstrbList()
     end do mainLoop
@@ -187,7 +188,7 @@ contains
         
         case (badGeneFlag)
           call runWriter % write(badGeneFlag, &
-              int(getBadGeneDstrb(), kind=writeIK))
+              int(getBadGeneDstrb(MODEL_L), kind=writeIK))
       end select
     end subroutine recordData
   end subroutine runOneInstance
