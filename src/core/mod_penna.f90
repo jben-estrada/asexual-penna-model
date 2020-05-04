@@ -47,8 +47,8 @@ module Penna
     getDiversityIdx,      &
     getBadGeneDstrb
   
+  use ProgressBarType, only: ProgressBar
   use RandNumProcs, only: assignRNGParams
-  use ProgBarType, only: ProgressBar
   use ErrorMSG, only: raiseError, raiseWarning
   
   ! WARNING: Implicit import. This module needs all its public components.

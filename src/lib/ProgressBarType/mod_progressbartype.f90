@@ -1,6 +1,6 @@
-module ProgBarType
+module ProgressBarType
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  ProgBarType
+  ! MODULE:  ProgressBarType
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
@@ -129,4 +129,4 @@ contains
 
     deallocate(tickArr)
   end subroutine progressbar_showProgBar
-end module ProgBarType
+end module ProgressBarType
