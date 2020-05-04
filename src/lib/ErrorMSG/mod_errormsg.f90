@@ -10,7 +10,7 @@ module ErrorMSG
   !!  Based from the `ansi_colors` module by Jason Blevins in
   !!  http://fortranwiki.org/fortran/show/ansi_colors
   ! -------------------------------------------------------------------------- !
-  use ANSIEscCodes, only: formatChar, escCodeRed, escCodeYellow, escCodeBold
+  use ANSIColorCodes, only: formatChar, escCodeRed, escCodeYellow, escCodeBold
   implicit none
   private
 

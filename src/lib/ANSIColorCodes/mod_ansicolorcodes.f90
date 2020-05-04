@@ -1,6 +1,6 @@
-module ANSIEscCodes
+module ANSIColorCodes
   ! -------------------------------------------------------------------------- !
-  ! MODULE: ANSIEscCodes
+  ! MODULE: ANSIColorCodes
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
@@ -156,4 +156,4 @@ contains
     ! Append the character to format and the reset formatting ANSI code.
     formatted = formatted // ESC_CODE_END // char // resetCode()
   end function formatChar
-end module ANSIEscCodes
+end module ANSIColorCodes
