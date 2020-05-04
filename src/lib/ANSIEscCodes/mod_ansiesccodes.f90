@@ -2,6 +2,8 @@ module ANSIEscCodes
   ! -------------------------------------------------------------------------- !
   ! MODULE: ANSIEscCodes
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing procedures for the formatting of text attributes of 
   !!  characters to be displayed on screen with ANSI escape codes

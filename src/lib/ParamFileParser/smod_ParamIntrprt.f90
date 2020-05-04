@@ -2,6 +2,8 @@ submodule (ParamFileParserType) ParamIntrprt
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: ParamIntrprt
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `ParamFileParserType` containing procedures for parsing
   !!  external files to obtain parameters.

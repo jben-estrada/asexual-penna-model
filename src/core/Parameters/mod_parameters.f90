@@ -2,6 +2,8 @@ module Parameters
   ! -------------------------------------------------------------------------- !
   ! MODULE:  Parameters
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing the Penna model parameters and other common data.
   !

@@ -2,6 +2,8 @@ module RandInd
   ! -------------------------------------------------------------------------- !
   ! MODULE:  Module name
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing procedures for generating array of random
   !!  integers.

@@ -2,6 +2,8 @@ submodule (Parameters) CmdArgAssignProcs
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: CmdArgAssignProcs
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `Parameters` containing public procedures with their
   !!  private "helper" procedures for interfacing with other modules, program,

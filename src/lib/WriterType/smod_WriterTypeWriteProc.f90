@@ -3,6 +3,8 @@ submodule (WriterType) WriterTypeWriteProc
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: WriterTypeWriteProc
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % write`.

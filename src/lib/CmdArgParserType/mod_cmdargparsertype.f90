@@ -2,6 +2,8 @@ module CmdArgParserType
   ! ------------------------------------------------------------------------- !
   ! MODULE: CmdArgParserType
   ! ------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing the derived type `CmdArgParser` for parsing command
   !!  arguments.

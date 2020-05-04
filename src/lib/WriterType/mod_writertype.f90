@@ -2,6 +2,8 @@ module WriterType
   ! -------------------------------------------------------------------------- !
   ! MODULE:  WriterType
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing the `Writer` type, a type (class) for creating
   !!  unified interface for writing files.

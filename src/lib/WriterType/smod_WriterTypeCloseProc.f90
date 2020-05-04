@@ -1,9 +1,9 @@
-
-
 submodule (WriterType) WriterTypeCloseProc
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: WriterTypeCloseProc
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `WriterType` containing the specific procedures for the
   !!  generic type-bound procedure `[Writer] % close`.

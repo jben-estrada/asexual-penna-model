@@ -2,6 +2,8 @@ module Gene
   ! -------------------------------------------------------------------------- !
   ! MODULE:  Gene
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing gene parameters and procedures for generating
   !!  genomes.

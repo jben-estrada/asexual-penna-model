@@ -1,7 +1,9 @@
-submodule (CmdArgParserType) parserProcedures
-! -------------------------------------------------------------------------- !
-  ! SUBMODULE: parserProcedures
+submodule (CmdArgParserType) ParserProcedures
   ! -------------------------------------------------------------------------- !
+  ! SUBMODULE: ParserProcedures
+  ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `CmdArgParserType` containing procedures for parsing
   !!  command arguments.
@@ -263,4 +265,4 @@ contains
       call raiseError("Unknown internal error encountered.")
     end if
   end subroutine setValToAlias
-end submodule parserProcedures
+end submodule ParserProcedures

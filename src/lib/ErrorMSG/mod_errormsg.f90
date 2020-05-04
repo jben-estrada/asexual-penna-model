@@ -2,6 +2,8 @@ module ErrorMSG
   ! -------------------------------------------------------------------------- !
   ! MODULE: ErrorMSG
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing procedures for printing error and warning messages.
   !!

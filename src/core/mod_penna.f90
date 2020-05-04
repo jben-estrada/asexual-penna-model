@@ -2,6 +2,8 @@ module Penna
   ! -------------------------------------------------------------------------- !
   ! MODULE:  Penna
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing one of the core procedures for the simulation of the
   !!  Penna model (along with the `Pop` module)

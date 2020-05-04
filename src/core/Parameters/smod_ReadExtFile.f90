@@ -2,6 +2,8 @@ submodule (Parameters) ReadExtFile
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: ReadExtFile
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `Parameters` containing procedures for reading files of
   !!  model and program parameters and "Verhulst weight".

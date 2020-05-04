@@ -2,6 +2,8 @@ module CastProcedures
   ! -------------------------------------------------------------------------- !
   ! MODULE: CastProcedures
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing procedures for casting values from one data type 
   !!  to another.

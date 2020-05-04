@@ -2,6 +2,8 @@ module ParamFileParserType
   ! -------------------------------------------------------------------------- !
   ! MODULE: ParamFileParserType
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Module containing a derived type for reading parameter values from
   !!  external files.

@@ -2,6 +2,8 @@ submodule (WriterType) interfaceProcedures
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: interfaceProcedures
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `WriterType` containing public procedures with their
   !!  private "helper" procedures for interfacing with other modules, program,

@@ -2,6 +2,8 @@ submodule (CmdArgParserType) SortCmds
   ! -------------------------------------------------------------------------- !
   ! SUBMODULE: SortCmds
   ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
   !>  Submodule of `CmdArgParserType` containing procedures for sorting
   !!  character arrays.
