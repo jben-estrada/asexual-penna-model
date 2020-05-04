@@ -8,7 +8,6 @@ module WriterOptions
   !>  Module containing format of the text files to be saved. 
   ! -------------------------------------------------------------------------- !
   use ErrorMSG, only: raiseError
-  use Parameters, only: PROG_OUT_FILE_NAME
   use WriterType, only: &
     Writer,     &
     MAX_LEN,    &
@@ -64,29 +63,37 @@ module WriterOptions
 
   ! -------------------------------------------------------------------------- !
   ! Record flags. Corresponds to the data to be recorded.
-  character, public, parameter :: nullFlag = "x"
+  character, parameter :: nullFlag = "x"
     !! Nothing (do not record).
-  character, public, parameter :: popFlag = "p"
+  character, parameter :: popFlag = "p"
     !! Population size per time step.
-  character, public, parameter :: ageDstrbFlag = "a"
+  character, parameter :: ageDstrbFlag = "a"
     !! Age distribution in the last 300 time steps
-  character, public, parameter :: deathFlag = "d"
+  character, parameter :: deathFlag = "d"
     !! Death counts (death by age, by mutation, by Verhulst factor) 
     !! per time step.
-  character, public, parameter :: divIdxFlag = "s"
+  character, parameter :: divIdxFlag = "s"
     !! Shannon diversity index per time step.
-  character, public, parameter :: badGeneFlag = "b"
+  character, parameter :: badGeneFlag = "b"
     !! Bad gene distribution per time step.
-  character, public, parameter :: timeFlag = "t"
+  character, parameter :: timeFlag = "t"
     !! Timing statistics.
 
   character(len=*), parameter  :: FILE_NAME_TIME = "time_stat.csv"
     !! File name of time statisttics.
   ! -------------------------------------------------------------------------- !
 
+  public :: nullFlag
+  public :: popFlag
+  public :: ageDstrbFlag
+  public :: deathFlag
+  public :: divIdxFlag
+  public :: badGeneFlag
+  public :: timeFlag
+
   ! Initialization procedures. 
-  public :: initWriterObjs
-  public :: constructAvailableWriter
+  public :: initOutFileRecords
+  public :: initAvailableWriterObj
   
   ! Public `WriterType` procedures and derived types. 
   public :: Writer
@@ -97,32 +104,34 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initWriterObjs
+  ! SUBROUTINE: initOutFileRecords
   !>  Assign all defined `OutputFile` object in `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
-  subroutine initWriterObjs()
+  subroutine initOutFileRecords(outFileName)
+    character(len=*), intent(in) :: outFileName
+      !! Name of the output file data is to be written in.
+
     ! Population size per time step file.
-    popFile = OutputFile(PROG_OUT_FILE_NAME, popFormat, popPosition, popFlag, &
-        popUnit)
+    popFile = OutputFile(outFileName, popFormat, popPosition, popFlag, popUnit)
     ! Final age distribution file.
-    ageDstrbFile = OutputFile(PROG_OUT_FILE_NAME, ageDstrbFormat, &
+    ageDstrbFile = OutputFile(outFileName, ageDstrbFormat, &
         ageDstrbPosition, ageDstrbFlag, ageDstrbUnit)
     ! Death counts per time step file.
-    deathFile = OutputFile(PROG_OUT_FILE_NAME, deathFormat, deathPosition, &
-        deathFlag, deathUnit)
+    deathFile = OutputFile(outFileName, deathFormat, deathPosition, deathFlag, &
+        deathUnit)
     ! Diversity index per time step file.
-    divIdxFile = OutputFile(PROG_OUT_FILE_NAME, divIdxFormat, divIdxPosition, &
+    divIdxFile = OutputFile(outFileName, divIdxFormat, divIdxPosition, &
         divIdxFlag, divIdxUnit)
     ! Bad gene distribution per time step.
-    badGeneDstrbFile = OutputFile(PROG_OUT_FILE_NAME, badGeneDstrbFormat, &
+    badGeneDstrbFile = OutputFile(outFileName, badGeneDstrbFormat, &
         badGeneDstrbPosition, badGeneFlag, badGeneDstrbUnit)
     ! Time statistics file.
-    timeFile = OutputFile(FILE_NAME_TIME, timeFormat, timePosition, &
-        timeFlag, timeUnit)
+    timeFile = OutputFile(FILE_NAME_TIME, timeFormat, timePosition, timeFlag, &
+        timeUnit)
     
     call declareAvailableFiles([popFile, ageDstrbFile, deathFile, divIdxFile, &
         badGeneDstrbFile, timeFile])
-  end subroutine initWriterObjs
+  end subroutine initOutFileRecords
 
 
   ! -------------------------------------------------------------------------- !
@@ -156,12 +165,12 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: constructAvailableWriter
+  ! SUBROUTINE: initAvailableWriterObj
   !>  Create and initialize if `initiliaze` is true a `Writer` object with the
   !!  defined `OutputFile` objects and their corresponding flags in
   !!  `WriterOptions` module.
   ! -------------------------------------------------------------------------- !
-  subroutine constructAvailableWriter(out, flags, initialize)
+  subroutine initAvailableWriterObj(out, flags, initialize)
     type(Writer),      intent(out) :: out
       !! New `Writer` object.
     character,         intent(in)  :: flags(:)
@@ -185,5 +194,5 @@ contains
     end if
 
     call constructWriter(out, foundFiles, initialize_)
-  end subroutine constructAvailableWriter
+  end subroutine initAvailableWriterObj
 end module WriterOptions

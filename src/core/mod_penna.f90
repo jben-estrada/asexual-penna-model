@@ -20,10 +20,20 @@ module Penna
     PROG_PRINT_STATE,     &
     PROG_RNG,             &
     PROG_RNG_SEED,        &
+    PROG_OUT_FILE_NAME,   &
     SILENT_PRINT,         &
     setParams,            &
     printProgDetails,     &
     freeParamAlloctbls
+  use WriterOptions, only:    &
+    Writer, WriteIK, writeRK, &
+    initOutFileRecords,       &
+    initAvailableWriterObj,   &
+    freeWriterModAlloctbls,   &
+    nullFlag, popFlag,        &
+    ageDstrbFlag, deathFlag,  &
+    badGeneFlag, timeFlag,    &
+    divIdxFlag
   use RNG, only: assignRNGParams
   use ProgBarType, only: ProgressBar
   use CastProcedures, only: castIntToChar  
@@ -32,7 +42,6 @@ module Penna
   ! WARNING: Implicit import. This module needs all its public components.
   use Pop
   use Demographics
-  use WriterOptions
   implicit none
   private
 
@@ -56,7 +65,7 @@ contains
     call assignRNGParams(PROG_RNG, PROG_RNG_SEED)
 
     ! Initialize the writer objects.
-    call initWriterObjs()
+    call initOutFileRecords(PROG_OUT_FILE_NAME)
   end subroutine initProgram
 
 
@@ -349,7 +358,7 @@ contains
 
     ! Record mean time and std deviation.
     if (recordTime) then
-      call constructAvailableWriter(timeWriter, [timeFlag], .true.)
+      call initAvailableWriterObj(timeWriter, [timeFlag], .true.)
       call timeWriter % writeHeader(timeFlag, &
           ["max time step       ", &
            "initial pop size    ", &
@@ -402,7 +411,7 @@ contains
     if (recordFlag == nullFlag) return
 
     ! Construct the `Writer` type.
-    call constructAvailableWriter(runWriter, &
+    call initAvailableWriterObj(runWriter, &
         [popFlag, ageDstrbFlag, deathFlag, divIdxFlag, badGeneFlag])
 
     call runWriter % initialize(recordFlag)
