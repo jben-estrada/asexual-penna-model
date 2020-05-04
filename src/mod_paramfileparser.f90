@@ -73,12 +73,10 @@ module ParamFileParserType
         !! Output scalar value.
     end subroutine paramScalar
 
-    module subroutine paramArray(paramVal, arrSize, array)
+    module subroutine paramArray(paramVal, array)
       character(len=*), intent(in)  :: paramVal
         !! Character to be inspected and casted to integer array.
-      integer,          intent(in)  :: arrSize
-        !! Size of the array output.
-      class(*),         intent(out) :: array(arrSize)
+      class(*),         intent(out) :: array(:)
         !! Array output. Its type must be either integer or real.
     end subroutine paramArray
   end interface
@@ -400,14 +398,12 @@ contains
   ! SUBROUTINE: paramfileparser_getArrValue_int
   !>  Get the integer array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getArrValue_int(self, key, arrSize, arrVal, status)
+  subroutine paramfileparser_getArrValue_int(self, key, arrVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    integer,                intent(in)    :: arrSize
-      !! Output array size.
-    integer,                intent(out)   :: arrVal(arrSize)
+    integer,                intent(out)   :: arrVal(:)
       !! Output array.
     integer, optional,      intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
@@ -438,7 +434,7 @@ contains
     end if
     
     ! Finally convert character to the desired type.
-    call paramArray(valueChar, arrSize, arrVal)
+    call paramArray(valueChar, arrVal)
   end subroutine paramfileparser_getArrValue_int
 
 
@@ -446,14 +442,12 @@ contains
   ! SUBROUTINE: paramfileparser_getArrValue_real
   !>  Get the real array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getArrValue_real(self, key, arrSize, arrVal, status)
+  subroutine paramfileparser_getArrValue_real(self, key, arrVal, status)
     class(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be searched.
     character(len=*),       intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    integer,                intent(in)    :: arrSize
-      !! Output array size.
-    real,                   intent(out)   :: arrVal(arrSize)
+    real,                   intent(out)   :: arrVal(:)
       !! Output array.
     integer, optional,      intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
@@ -484,7 +478,7 @@ contains
     end if
     
     ! Finally convert character to the desired type.
-    call paramArray(valueChar, arrSize, arrVal)
+    call paramArray(valueChar, arrVal)
   end subroutine paramfileparser_getArrValue_real
 
 

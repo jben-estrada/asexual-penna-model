@@ -70,9 +70,9 @@ contains
 
     ! Assign array parameter.
     allocate(MODEL_V_WEIGHT(MODEL_L))
-    MODEL_V_WEIGHT(:) = -1
-    call paramReader % getValue(PARAM_KEYS(15), MODEL_L, MODEL_V_WEIGHT, &
-      getStats(15))
+    MODEL_V_WEIGHT(:) = -1  ! Assign some placeholder value.
+
+    call paramReader % getValue(PARAM_KEYS(15), MODEL_V_WEIGHT, getStats(15))
 
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)

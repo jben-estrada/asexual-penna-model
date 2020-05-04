@@ -212,18 +212,16 @@ contains
   !>  Convert `paramVal` to array whose type is either integer or real.
   !!  The type of the output array `array` is determined by its type.
   ! -------------------------------------------------------------------------- !
-  subroutine paramArray(paramVal, arrSize, array)
+  subroutine paramArray(paramVal, array)
     character(len=*), intent(in)  :: paramVal
       !! Character to be inspected and casted to integer array.
-    integer,          intent(in)  :: arrSize
-      !! Size of the array output.
-    class(*),          intent(out) :: array(arrSize)
+    class(*),          intent(out) :: array(:)
       !! Array output. Its type must be either integer or real.
 
     character(len=:), allocatable :: arrElem  ! Array element.
     character :: currChar
     integer   :: currArrPart  ! Current part of the array being inspected.
-    integer   :: charIdx, arrIdx, paramValLen
+    integer   :: charIdx, arrIdx, paramValLen, arrSize
 
     ! Array parts.
     integer, parameter :: ARR_PART_LEFT = 0    ! Currently left of the array
@@ -236,6 +234,7 @@ contains
     arrIdx = 1
     charIdx = 1
     paramValLen = len(trim(paramVal))
+    arrSize = size(array)
 
     do while(charIdx <= paramValLen)
       currChar = paramVal(charIdx: charIdx)
