@@ -56,7 +56,7 @@ contains
     ! Activate all available flags. False by default.
     if (present(initialize)) then
       if (initialize) then
-        call new % initialize
+        call new % init()
       end if
     end if
   end subroutine constructWriter_array
@@ -89,7 +89,7 @@ contains
 
       ! Activate all available flags. False by default.
       if (present(initialize)) then
-        if (initialize) call new % initialize()
+        if (initialize) call new % init()
       end if
     else
       call raiseError("Available output files are not yet declared.")

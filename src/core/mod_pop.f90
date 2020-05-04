@@ -89,17 +89,17 @@ module Pop
   public :: freePersonPtrs
 
   ! Initializer
-  public :: initializePersonList
+  public :: initPersonList
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializePersonList
+  ! SUBROUTINE: initPersonList
   !>  Initialize the `Person` linked list with the provided initial conditions:
   !!  `startPopSize` for starting population size; and `initMttnCount` for
   !!  the initial mutation count.
   ! -------------------------------------------------------------------------- !
-  subroutine initializePersonList(startPopsize, initMttnCount)
+  subroutine initPersonList(startPopsize, initMttnCount)
     integer, intent(in) :: startPopSize
       !! Starting population size.
     integer, intent(in) :: initMttnCount
@@ -135,7 +135,7 @@ contains
     ! Initialize the reader pointer.
     current_ptr => head_ptr
     old_ptr => null()
-  end subroutine initializePersonList
+  end subroutine initPersonList
 
 
   ! -------------------------------------------------------------------------- !

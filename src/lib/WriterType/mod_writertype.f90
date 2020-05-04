@@ -38,7 +38,7 @@ module WriterType
     type(OutputFile), allocatable :: activeFiles(:)
   contains
     private
-    generic, public :: initialize => &
+    generic, public :: init => &
         writer_initialize, &
         writer_initializeAll, &
         writer_listInitialize

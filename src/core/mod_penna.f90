@@ -120,7 +120,7 @@ contains
     deathCount(:) = 0
     call resetAgeDstrb(MODEL_L)
     call initRunWriter(runWriter, recordFlag)
-    call initializePersonList(startPopSize, initMttnCount)
+    call initPersonList(startPopSize, initMttnCount)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
@@ -425,7 +425,7 @@ contains
     call initAvailableWriterObj(runWriter, &
         [popFlag, ageDstrbFlag, deathFlag, divIdxFlag, badGeneFlag])
 
-    call runWriter % initialize(recordFlag)
+    call runWriter % init(recordFlag)
     select case (recordFlag)
       case (popFlag)
         call runWriter % writeHeader(popFlag, ["population size"])
