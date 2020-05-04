@@ -35,13 +35,24 @@ module Penna
     ageDstrbFlag, deathFlag,  &
     badGeneFlag, timeFlag,    &
     divIdxFlag
+  use Demographics, only: &
+    ageDistribution,      &
+    DEF_DEMOG_LAST_STEP,  &
+    DEMOG_LAST_STEPS,     &
+    resetAgeDstrb,        &
+    updateAgeDstrb,       &
+    deallocAgeDstrb,      &
+    updateGenomeDstrb,    &
+    freeGenomeDstrbList,  &
+    getDiversityIdx,      &
+    getBadGeneDstrb
+  
   use RNG, only: assignRNGParams
   use ProgBarType, only: ProgressBar
   use ErrorMSG, only: raiseError, raiseWarning
   
   ! WARNING: Implicit import. This module needs all its public components.
   use Pop
-  use Demographics
   implicit none
   private
 

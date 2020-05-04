@@ -13,16 +13,20 @@ module Demographics
   
   ! AGE DISTRIBUTION
   ! -------------------------------------------------------------------------- !
-  integer, public, allocatable :: ageDistribution(:) 
+  integer, allocatable :: ageDistribution(:) 
     !! Age distribution.
   
   ! Time step range for recording demographics.
-  integer, public, parameter :: DEF_DEMOG_LAST_STEP = 300
+  integer, parameter :: DEF_DEMOG_LAST_STEP = 300
     !! Default final time steps when to record the age distribution.
-  integer, public            :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
+  integer            :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     !! Final time steps when when to record the age distribution.
     !! Defaults to `DEF_DEMOG_LAST_STEP`. Changes to a negative value if
-    !! the age distribution is not to be recorded. 
+    !! the age distribution is not to be recorded.
+
+  public :: ageDistribution
+  public :: DEF_DEMOG_LAST_STEP
+  public :: DEMOG_LAST_STEPS
 
   public :: resetAgeDstrb
   public :: updateAgeDstrb
