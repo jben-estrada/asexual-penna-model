@@ -25,42 +25,46 @@ CMPTYPE:=gnu
 FCFLAGS:=" -c -std=f2008 -Wall -Wextra -fcheck=all -march=native -pedantic
 BLD_SPEC_FLAG=
 
-# FoBiS.py build options.
+# FoBiS.py build options: directories.
 DIRFLAGS:= -s ${SRC_DIR} -dobj $(OBJ_DIR) -dmod $(MOD_DIR)
+# FoBiS.py build options.
 BLDFLAG= build -fc $(FC) -compiler $(CMPTYPE) -o $(BIN_DIR)/$(OUT) \
-	$(DIRFLAGS) -colors -cflags $(FCFLAGS) $(BLD_SPEC_FLAG)
+	$(DIRFLAGS) -colors -j 2 -cflags $(FCFLAGS) $(BLD_SPEC_FLAG)
 
-.PHONY: default help clean clean_mod default_build debug_build static_build
+.PHONY: default help clean clean_mod rel_build debug_build static_build rbld \
+	dbld sbld
 
 default: help
 
 help:
-	@echo "Usage:"
-	@echo " make [rules]"
-	@echo " make [help]"
-	@echo ""
-	@echo "Build the Penna model program with FoBiS.py"
-	@echo ""
 	@echo "Please run 'make' with one of the following rules:"
-	@echo "  default_build - Build the program. "
-	@echo "  debug_build   - Build the program. "
-	@echo "  static_build  - Build the program. "
+	@echo "  rel_build     - Build the program (release build). "
+	@echo "  debug_build   - Build the program (debug build). "
+	@echo "  static_build  - Build the program (release build with staticly linked libs). "
+	@echo "  rbld          - Alias to 'rel_build'. "
+	@echo "  dbld          - Alias to 'debug_build'. "
+	@echo "  sbld          - Alias to 'static_build'. "
 	@echo "  clean         - Remove *.o files."
 	@echo "  clean_mod     - Remove *.mod and *.smod files."
 	@echo ""
 	@echo "  help          - Show this help message."
 
-# Default build.
-default_build: BLD_SPEC_FLAG += -Ofast -g"
-default_build: build
+# Release build.
+rel_build: BLD_SPEC_FLAG += -Ofast -g"
+# Alias to 'rel_build'
+rbld: rel_build
 
 # Debug build.
 debug_build: BLD_SPEC_FLAG += -O0 -g"
-debug_build: build
+# Alias to 'rel_build'
+dbld: debug_build
 
 # Static build.
-static_build: BLD_SPEC_FLAG += -O3 -g -static"
-static_build: build
+static_build: BLD_SPEC_FLAG += -Ofast -g -static"
+# Alias to 'static_build'
+sbld: static_build
+
+rel_build debug_build static_build: build clean
 
 build:
 	@$(FOBIS) $(BLDFLAG)
