@@ -1,11 +1,12 @@
-module Pop
+module PopulationList
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  Pop
+  ! MODULE:  PopulationList
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
-  !>  Module containing evaluation and generation of population
+  !>  Module containing an implementation of singly linked-list for
+  !!  representing the population in Penna model simulations.
   ! -------------------------------------------------------------------------- !
   use Parameters, only: &
     MODEL_L,        &
@@ -546,4 +547,4 @@ contains
       end if
     end do
   end function elemCount
-end module Pop
+end module PopulationList

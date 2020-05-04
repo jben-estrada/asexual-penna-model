@@ -52,7 +52,7 @@ module Penna
   use ErrorMSG, only: raiseError, raiseWarning
   
   ! WARNING: Implicit import. This module needs all its public components.
-  use Pop
+  use PopulationList
   implicit none
   private
 
