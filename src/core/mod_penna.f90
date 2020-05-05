@@ -387,17 +387,19 @@ contains
       ! Write the header of the file.
       call timeWriter % write( &
         ["Max Time Step ", &
-          "Init pop size ", &
-          "Ave. time (ms)", &
-          "Std. dev. (ms)"])
-      call timeWriter % write([(FILE_DIVIDER, i = 1, 4 )])
+         "Init pop size ", &
+         "Sample size   ", &
+         "Ave. time (ms)", &
+         "Std. dev. (ms)"])
+      call timeWriter % write([(FILE_DIVIDER, i = 1, 5)])
         
       ! Write the actual timing statistics.
-      call timeWriter % write([           &
-        real(maxTimeStep, kind=writeRK),  &
-        real(startPopSize, kind=writeRK), &
-        meanTime,                         &
-        stdDevTime]                       &
+      call timeWriter % write([             &
+          real(maxTimeStep, kind=writeRK),  &
+          real(startPopSize, kind=writeRK), &
+          real(SampleSize, kind=writeRK),   &
+          meanTime,                         &
+          stdDevTime]                       &
         )
       call timeWriter % free()
     end if
