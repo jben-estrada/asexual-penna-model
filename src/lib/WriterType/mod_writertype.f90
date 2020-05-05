@@ -22,8 +22,6 @@ module WriterType
       !! Name of the file data are to be written on.
     integer :: unit
       !! Unit with which the file is to be identified within the program.
-    logical :: toAppendData = .false.
-      !! Appended data 
     logical :: isInit = .false.
       !! Initialization state.
     logical :: isFileOpen = .false.
@@ -70,43 +68,18 @@ contains
   ! SUBROUTINE: writer_init
   !>  Initialize the `Writer` object `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_init(self, filename, unit, toAppendData)
+  subroutine writer_init(self, filename, unit)
     class(Writer),    intent(out) :: self
       !! `Writer` object to be initialized.
     character(len=*), intent(in)  :: filename
       !! Name of the file to which data is to written on.
     integer,          intent(in)  :: unit
       !! Unit with which the file is identified within the program.
-    logical,          intent(in)  :: toAppendData
-      !! Append data to existing file if true. Overwrite data to exisiting file
-      !! if false.
   
     self % filename = trim(filename)
     self % unit = unit
-    self % toAppendData = toAppendData
     self % isInit = .true.
   end subroutine writer_init
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getWritePos
-  !>  Get position specifier "append" if `toAppendData` is true. Otherwise, 
-  !!  get "asis".
-  ! -------------------------------------------------------------------------- !
-  function getWritePos(toAppendData) result(position)
-    logical, intent(in) :: toAppendData
-      !! Append data to file.
-
-    character(len=:), allocatable :: position
-
-    allocate(character(len=0) :: position)
-    
-    if (toAppendData) then
-      position = "append"
-    else
-      position = "asis"
-    end if
-  end function getWritePos
 
 
   ! -------------------------------------------------------------------------- !
@@ -124,8 +97,7 @@ contains
         )
     end if
 
-    open(unit=self % unit, file=self % filename, iostat=openStat, &
-      position=getWritePos(self % toAppendData))
+    open(unit=self % unit, file=self % filename, iostat=openStat)
     if (openStat /= 0) then
       call raiseError(&
         "'" // self % filename // &

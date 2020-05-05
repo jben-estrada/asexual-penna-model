@@ -381,7 +381,7 @@ contains
 
     ! Record mean time and std deviation.
     if (recordTime) then
-      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT, .false.)
+      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT)
       call timeWriter % openFile()
 
       ! Write the header of the file.
@@ -446,7 +446,7 @@ contains
     if (recordFlag == REC_NULL) return
 
     ! Initialize writer.
-    call runWriter % init(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT, .false.)  
+    call runWriter % init(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT)  
     ! Open file for writing.
     call runWriter % openFile()
 
