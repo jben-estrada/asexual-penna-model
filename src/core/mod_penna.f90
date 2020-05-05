@@ -170,12 +170,17 @@ contains
       ! Record data.
       call recordData(recordFlag)
 
-      ! Reset variables for the next time step.
-      deathCount(:) = 0
+      ! Move the reader of the population list back to the first element.
       call resetPersonReadPtrs()
-      if (recordFlag == REC_AGE_DSTRB) call resetAgeDstrb(MODEL_L)
-      if (recordFlag == REC_DIV_IDX .or. recordFlag == REC_GENE_DSTRB) &
+      ! Reset counters.
+      select case(recordFlag)
+        case(REC_DEATH)
+          deathCount(:) = 0
+        case(REC_AGE_DSTRB)
+          call resetAgeDstrb(MODEL_L)
+        case(REC_DIV_IDX, REC_GENE_DSTRB)
           call freeGenomeDstrbList()
+      end select
     end do mainLoop
 
     ! Wrap up.
@@ -246,8 +251,10 @@ contains
       ! Evaluate the current individual. 
       call checkCurrIndivDeath(popSize)
       if (isCurrIndivDead()) then
-        ! Get the cause of death of the current dead individual.
-        call determineDeathType(deathByAge, deathByMutation, deathByVerhulst)
+        ! Count the dead ones.
+        if (recordFlag == REC_DEATH) then
+          call countDeath(deathByAge, deathByMutation, deathByVerhulst)
+        end if
 
         popSizeChange = popSizeChange - 1
       else
