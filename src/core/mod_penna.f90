@@ -26,6 +26,7 @@ module Penna
     setParams,            &
     printProgDetails,     &
     freeParamAlloctbls
+
   use WriterOptions, only:    &
     Writer, WriteIK, writeRK, &
     initOutFileRecords,       &
@@ -35,6 +36,7 @@ module Penna
     ageDstrbFlag, deathFlag,  &
     badGeneFlag, timeFlag,    &
     divIdxFlag
+
   use Demographics, only: &
     ageDistribution,      &
     DEF_DEMOG_LAST_STEP,  &
@@ -46,13 +48,26 @@ module Penna
     freeGenomeDstrbList,  &
     getDiversityIdx,      &
     getBadGeneDstrb
-  
+
+  use PopulationList, only: &
+    isCurrIndivDead,        &
+    isCurrIndivMature,      &
+    getCurrIndivAge,        &
+    getCurrIndivGenome,     &
+    determineDeathType,     &
+    elemCount,              &
+    killCurrentIndiv,       &
+    checkCurrIndivDeath,    &
+    updateCurrIndivAge,     &
+    reproduceCurrIndiv,     &
+    nextElem,               &
+    resetPersonReadPtrs,    &
+    freePersonPtrs,         &
+    initPersonList
+
   use ProgressBarType, only: ProgressBar
   use RandNumProcs, only: assignRNGParams
   use ErrorMSG, only: raiseError, raiseWarning
-  
-  ! WARNING: Implicit import. This module needs all its public components.
-  use PopulationList
   implicit none
   private
 
