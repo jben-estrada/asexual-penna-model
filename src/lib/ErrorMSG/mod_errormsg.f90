@@ -11,6 +11,7 @@ module ErrorMSG
   !!  http://fortranwiki.org/fortran/show/ansi_colors
   ! -------------------------------------------------------------------------- !
   use ANSIColorCodes, only: formatChar, escCodeRed, escCodeYellow, escCodeBold
+  use, intrinsic :: iso_fortran_env, only: stderr => error_unit
   implicit none
   private
 
@@ -31,8 +32,8 @@ contains
       !! Stop the program with the `error stop` statement when true.
   
     ! Print the error message in red.
-    print "(2a)", &
-        formatChar("***ERROR*** ", escCodeRed // escCodeBold), &
+    write(stderr, "(a/, a)") &
+        formatChar("***ERROR***", escCodeRed // escCodeBold), &
         formatChar(msg, escCodeRed)
 
     ! Stop the program.
@@ -58,12 +59,12 @@ contains
 
     ! Print "***WARNING***" to signify the warning.
     if (present(withWarningTxt)) then
-      if (withWarningTxt) write(*, "(a)", advance="no") &
-          formatChar("***WARNING*** ", escCodeYellow // escCodeBold)
+      if (withWarningTxt) write(stderr, "(a/)", advance="no") &
+          formatChar("***WARNING***", escCodeYellow // escCodeBold)
     end if
     
     ! Print only the warning message.
-    print "(a)", formatChar(msg, escCodeYellow)
+    write(stderr, "(a)") formatChar(msg, escCodeYellow)
 
     ! Stop the program.
     if (present(stopProgram)) then
