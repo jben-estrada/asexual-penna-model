@@ -26,7 +26,7 @@
 !!       Physics 34.3B (2004), pp. 1066-1076
 !----------------------------------------------------------------------------- !
 program Main
-  use Penna
+  use Penna, only: initProgram, printProgDetails, run, freeAlloctbls
   implicit none
 
   ! Initialize the whole program.
