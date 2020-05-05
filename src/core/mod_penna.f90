@@ -381,17 +381,24 @@ contains
 
     ! Record mean time and std deviation.
     if (recordTime) then
-      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT, .true.)
+      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT, .false.)
+      call timeWriter % openFile()
+
+      ! Write the header of the file.
       call timeWriter % write( &
-          ["Max Time Step ", &
-           "Init pop size ", &
-           "Ave. time (ms)", &
-           "Std. dev. (ms)"])
-      call timeWriter % write( &
-          [real(maxTimeStep, kind=writeRK), &
-           real(startPopSize, kind=writeRK), &
-           meanTime, &
-           stdDevTime])
+        ["Max Time Step ", &
+          "Init pop size ", &
+          "Ave. time (ms)", &
+          "Std. dev. (ms)"])
+      call timeWriter % write([(FILE_DIVIDER, i = 1, 4 )])
+        
+      ! Write the actual timing statistics.
+      call timeWriter % write([           &
+        real(maxTimeStep, kind=writeRK),  &
+        real(startPopSize, kind=writeRK), &
+        meanTime,                         &
+        stdDevTime]                       &
+        )
       call timeWriter % free()
     end if
 
