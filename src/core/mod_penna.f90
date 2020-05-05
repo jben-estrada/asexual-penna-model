@@ -22,20 +22,18 @@ module Penna
     PROG_RNG,             &
     PROG_RNG_SEED,        &
     PROG_OUT_FILE_NAME,   &
+    PROG_TIME_FILE_NAME,  &
     SILENT_PRINT,         &
+    REC_NULL,             &
+    REC_POP,              &
+    REC_AGE_DSTRB,        &
+    REC_DEATH,            &
+    REC_DIV_IDX,          &
+    REC_GENE_DSTRB,       &
+    REC_TIME,             &
     setParams,            &
     printProgDetails,     &
     freeParamAlloctbls
-
-  use WriterOptions, only:    &
-    Writer, WriteIK, writeRK, &
-    initOutFileRecords,       &
-    initAvailableWriterObj,   &
-    freeWriterModAlloctbls,   &
-    nullFlag, popFlag,        &
-    ageDstrbFlag, deathFlag,  &
-    badGeneFlag, timeFlag,    &
-    divIdxFlag
 
   use Demographics, only: &
     ageDistribution,      &
@@ -65,11 +63,16 @@ module Penna
     freePersonPtrs,         &
     initPersonList
 
+  use CastProcs, only: castIntToChar
   use ProgressBarType, only: ProgressBar
   use RandNumProcs, only: assignRNGParams
   use ErrorMSG, only: raiseError, raiseWarning
+  use WriterType, only: Writer, writeIK, writeRK
   implicit none
   private
+
+  ! Header divider for external files to be written on.
+  character(len=*), parameter :: FILE_DIVIDER = "---------------"
 
   public :: run
   public :: initProgram
@@ -83,15 +86,11 @@ contains
   !>  A wrapper subroutine to initialize various module variables.
   ! -------------------------------------------------------------------------- !
   subroutine initProgram()
-
     ! Get the model and program parameters.
     call setParams()
 
     ! Get the chosen RNG and RNG seed.
     call assignRNGParams(PROG_RNG, PROG_RNG_SEED)
-
-    ! Initialize the writer objects.
-    call initOutFileRecords(PROG_OUT_FILE_NAME)
   end subroutine initProgram
 
 
@@ -101,7 +100,6 @@ contains
   !!  module.
   ! -------------------------------------------------------------------------- !
   subroutine freeAlloctbls()
-    call freeWriterModAlloctbls()
     call deallocAgeDstrb()
     call freeParamAlloctbls()
   end subroutine freeAlloctbls
@@ -143,7 +141,7 @@ contains
     deathByVerhulst => deathCount(3)
 
     ! Enable/disable demographics recording.
-    if (recordFlag == ageDstrbFlag) then
+    if (recordFlag == REC_AGE_DSTRB) then
       DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     else
       DEMOG_LAST_STEPS = -1
@@ -175,14 +173,14 @@ contains
       ! Reset variables for the next time step.
       deathCount(:) = 0
       call resetPersonReadPtrs()
-      if (recordFlag == ageDstrbFlag) call resetAgeDstrb(MODEL_L)
-      if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
+      if (recordFlag == REC_AGE_DSTRB) call resetAgeDstrb(MODEL_L)
+      if (recordFlag == REC_DIV_IDX .or. recordFlag == REC_GENE_DSTRB) &
           call freeGenomeDstrbList()
     end do mainLoop
 
     ! Wrap up.
     call freePersonPtrs(popSize)
-    call runWriter % close()
+    if (recordFlag /= REC_NULL) call runWriter % free()
   contains
 
 
@@ -197,23 +195,20 @@ contains
 
       ! Write data into a file as specified by `charFlag`.
       select case (charFlag)
-        case (popFlag)
-          call runWriter % write(popFlag, int(popSize, kind=writeIK))
+        case (REC_POP)
+          call runWriter % write(int(popSize, kind=writeIK))
 
-        case (ageDstrbFlag)
-          call runWriter % write(ageDstrbFlag, &
-              int(ageDistribution, kind=writeIK))
+        case (REC_AGE_DSTRB)
+          call runWriter % write(int(ageDistribution, kind=writeIK))
 
-        case (deathFlag)
-          call runWriter % write(deathFlag, int(deathCount, kind=writeIK))
+        case (REC_DEATH)
+          call runWriter % write(int(deathCount, kind=writeIK))
 
-        case (divIdxFlag)
-          call runWriter % write(divIdxFlag, &
-              real(getDiversityIdx(), kind=writeRK))
+        case (REC_DIV_IDX)
+          call runWriter % write(real(getDiversityIdx(), kind=writeRK))
         
-        case (badGeneFlag)
-          call runWriter % write(badGeneFlag, &
-              int(getBadGeneDstrb(MODEL_L), kind=writeIK))
+        case (REC_GENE_DSTRB)
+          call runWriter % write(int(getBadGeneDstrb(MODEL_L), kind=writeIK))
       end select
     end subroutine recordData
   end subroutine runOneInstance
@@ -260,12 +255,12 @@ contains
         call updateCurrIndivAge()
 
         ! Update genome distribution.
-        if (recordFlag == divIdxFlag .or. recordFlag == badGeneFlag) &
+        if (recordFlag == REC_DIV_IDX .or. recordFlag == REC_GENE_DSTRB) &
             call updateGenomeDstrb(getCurrIndivGenome())
 
         ! Check for birth events.
         if (isCurrIndivMature()) then
-          call reproduceCurrIndiv(recordFlag == divIdxFlag)
+          call reproduceCurrIndiv(recordFlag == REC_DIV_IDX)
           popSizeChange = popSizeChange + MODEL_B
         end if
       end if
@@ -330,6 +325,8 @@ contains
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
+    ! Unit for writing timing statistics.
+    integer, parameter :: TIME_WRITER_UNIT = 101
 
     ! Initialize the progress bar.
     call progBar % init(20, sampleSize)
@@ -384,18 +381,18 @@ contains
 
     ! Record mean time and std deviation.
     if (recordTime) then
-      call initAvailableWriterObj(timeWriter, [timeFlag], .true.)
-      call timeWriter % writeHeader(timeFlag, &
-          ["max time step       ", &
-           "initial pop size    ", &
-           "average time (ms)   ", &
-           "std deviation (ms)  "])
-      call timeWriter % write(timeFlag, &
+      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT, .true.)
+      call timeWriter % write( &
+          ["Max Time Step ", &
+           "Init pop size ", &
+           "Ave. time (ms)", &
+           "Std. dev. (ms)"])
+      call timeWriter % write( &
           [real(maxTimeStep, kind=writeRK), &
            real(startPopSize, kind=writeRK), &
            meanTime, &
            stdDevTime])
-      call timeWriter % close()
+      call timeWriter % free()
     end if
 
     if (printProgress) print "(*(a))", PRINT_SEPARATOR
@@ -434,35 +431,57 @@ contains
     character,    intent(in)    :: recordFlag
       !! Record flag. Values can be found in `WriterOptions`.
 
-    if (recordFlag == nullFlag) return
+    integer, parameter :: RUN_WRITER_UNIT = 100
 
-    ! Construct the `Writer` type.
-    call initAvailableWriterObj(runWriter, &
-        [popFlag, ageDstrbFlag, deathFlag, divIdxFlag, badGeneFlag])
+    character(len=15), allocatable :: headerArr(:)
+    integer :: i, startingAge
 
-    call runWriter % init(recordFlag)
+    if (recordFlag == REC_NULL) return
+
+    ! Initialize writer.
+    call runWriter % init(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT, .false.)  
+    ! Open file for writing.
+    call runWriter % openFile()
+
+    ! Append the header to the file to be written on.
     select case (recordFlag)
-      case (popFlag)
-        call runWriter % writeHeader(popFlag, ["population size"])
+      case (REC_POP)
+        call runWriter % write("Population size")
+        call runWriter % write(FILE_DIVIDER)
 
-      case (ageDstrbFlag)
-        call runWriter % writeHeader(ageDstrbFlag, ["age =>"])
 
-      case (deathFlag)
-        call runWriter % writeHeader(deathFlag, &
-            ["death by old age        ", &
-            "death by mutation       ", &
-            "death by Verhulst factor"])
+      case (REC_GENE_DSTRB, REC_AGE_DSTRB)
+        ! Get the starting age of the age/genome demographics.
+        startingAge = 0
+        if (recordFlag == REC_GENE_DSTRB) startingAge = 1
 
-      case (divIdxFlag)
-        call runWriter % writeHeader(divIdxFlag, &
-            ["Diversity index per time step"])
-      
-      case (badGeneFlag)
-        call runWriter % writeHeader(badGeneFlag, ["age =>"])
+        ! For some reason, implicit do loop truncate numbers.
+        allocate(headerArr(startingAge:MODEL_L))
+        do i = startingAge, MODEL_L
+          headerArr(i) = "AGE " // trim(castIntToChar(i))
+        end do
+
+        call runWriter % write(headerArr)
+        call runWriter % write([(FILE_DIVIDER, i = startingAge, MODEL_L)])
+
+
+      case (REC_DEATH)
+        call runWriter % write( &
+            ["Old age        ", &
+             "Mutation       ", &
+             "Verhulst weight"])
+        call runWriter % write([(FILE_DIVIDER, i = 1, 3)])
+        
+
+      case (REC_DIV_IDX)
+        call runWriter % write("Diversity idx")
+        call runWriter % write(FILE_DIVIDER)
+
 
       case default
-        call raiseError("'" // trim(recordFlag) //"' is an invalid record flag")
+        call raiseError("'" // recordFlag //"' is an invalid record flag")
     end select
+
+    if (allocated(headerArr)) deallocate(headerArr)
   end subroutine initRunWriter
 end module Penna

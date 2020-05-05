@@ -1,237 +1,318 @@
 module WriterType
   ! -------------------------------------------------------------------------- !
-  ! MODULE:  WriterType
+  ! MODULE: WriterType
   ! -------------------------------------------------------------------------- !
   ! AUTHOR: John Benedick A. Estrada
-  !--------------------------------------------------------------------------- !
+  ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing the `Writer` type, a type (class) for creating
-  !!  unified interface for writing files.
+  !>  Module containing the derived type `Writer` for writing numerical data
+  !!  to external files.
   ! -------------------------------------------------------------------------- !
   use, intrinsic :: iso_fortran_env, only: &
     writeIK => int64, &
-    writeRK => real64
-  use ErrorMSG, only: raiseError
+    writeRK =>  real64
+  use ErrorMSG, only: raiseError, raiseWarning
   implicit none
   private
 
-  integer, parameter :: MAX_LEN = 32
-    !! Max character length.
-  ! -------------------------------------------------------------------------- !
-  type :: OutputFile
-    !! Output file structure. A convenient container of classes.
-    character(MAX_LEN) :: filename
-    character(MAX_LEN) :: format
-    character(MAX_LEN) :: position
-    character :: flag
-    integer   :: unit
-  end type
-
-  ! All defined `OutputFile` objects.
-  type(OutputFile), allocatable, protected :: outputFiles(:)
-
-  ! -------------------------------------------------------------------------- !
-  ! `Writer` derived type. A reusable unified interface for writing files.
   type :: Writer
+    !! A derived type for writing numerical data to files.
     private
-    type(OutputFile), allocatable :: availableFiles(:)
-    type(OutputFile), allocatable :: activeFiles(:)
+    character(len=:), allocatable :: filename
+      !! Name of the file data are to be written on.
+    integer :: unit
+      !! Unit with which the file is to be identified within the program.
+    logical :: toAppendData = .false.
+      !! Appended data 
+    logical :: isInit = .false.
+      !! Initialization state.
+    logical :: isFileOpen = .false.
+      !! Writable state.
   contains
     private
-    generic, public :: init => &
-        writer_initialize, &
-        writer_initializeAll, &
-        writer_listInitialize
-    !! Initialize writing of data as specified by the integer flag(s).
-    !! Passing an integer initializes the corresponding output file.
-    !! Passing an array of integer initializes all the output files specified
-    !! by the elements of the array.
-    !! Passing none initializes all defined output files in `SaveFormat` module.
+    procedure, public :: init => writer_init
+      !! Initialize the 'Writer' object.
+    procedure, public :: openFile => writer_openFile
+      !! Open file for writing.
+    procedure, public :: closeFile => writer_closeFile
+      !! Close file.
+    procedure, public :: free =>  writer_free
+      !! Free allocated attributes and close file if it still open.
+    generic,   public :: write => &
+      writer_write_intSclr, &
+      writer_write_realSclr, &
+      writer_write_charSclr, &
+      writer_write_intArr, &
+      writer_write_realArr, &
+      writer_write_charArr
+      !! Write data of either rank-0 or rank-1 to opened file.
 
-    generic, public :: close => &
-        writer_close, &
-        writer_closeAll, &
-        writer_listclose
-    !! Close specified active output files as specified by integer flag(s).
-    !! Passing an integer closes the corresponding output file.
-    !! Passing an array of integers closes all the corresponding output files.
-    !! Passing none closes all active output files.
-
-    generic, public :: write => &
-        writer_write_int, &
-        writer_write_real, &
-        writer_write_intArray, &
-        writer_write_realArray
-    !! Write an integer or real value of rank 0 (scalar) or rank 1 (1D array).
-
-    procedure, public :: writeHeader => writer_writeHeader
-    !! Write the header of the CSV file.
-    ! final :: destroy
-    !! Destructor. Deallocate any allocated attributes.
-
-    procedure :: writer_initialize
-    procedure :: writer_initializeAll
-    procedure :: writer_listInitialize
-    procedure :: writer_close
-    procedure :: writer_closeAll
-    procedure :: writer_listclose
-    procedure :: writer_write_int
-    procedure :: writer_write_real
-    procedure :: writer_write_intArray
-    procedure :: writer_write_realArray
+    procedure :: writer_write_intSclr
+    procedure :: writer_write_realSclr
+    procedure :: writer_write_charSclr
+    procedure :: writer_write_intArr
+    procedure :: writer_write_realArr
+    procedure :: writer_write_charArr
   end type
 
-
-  ! -------------------------------------------------------------------------- !
-  ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [Writer % ]write
-  !>  Write `arg` into the file specified by `flag`. The procedure
-  !!  accepts real or integer arguments of either rank 0 or 1.
-  ! -------------------------------------------------------------------------- !
-  interface
-    module subroutine writer_write_int(self, flag, arg)
-      class(Writer),         intent(inout) :: self
-      integer(kind=writeIK), intent(in)    :: arg
-      character,             intent(in)    :: flag
-    end subroutine
-
-    module subroutine writer_write_real(self, flag, arg)
-      class(Writer),       intent(inout) :: self
-      real(kind=writeRK),  intent(in)    :: arg
-      character,           intent(in)    :: flag
-    end subroutine
-
-    module subroutine writer_write_intArray(self, flag, arg)
-      class(Writer),         intent(inout) :: self
-      integer(kind=writeIK), intent(in)    :: arg(:)
-      character,             intent(in)    :: flag
-    end subroutine
-
-    module subroutine writer_write_realArray(self, flag, arg)
-      class(Writer),       intent(inout) :: self
-      real(kind=writeRK),  intent(in)    :: arg(:)
-      character,           intent(in)    :: flag
-    end subroutine
-  end interface
-
-  ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [Writer % ]initialize
-  !>  Initialize the files specified to be written in. The files are
-  !!  specified by the integer `flag`. Multiple `flag`s can also be
-  !!  as an automatic array of integers.
-  ! -------------------------------------------------------------------------- !
-  interface
-    module subroutine writer_initializeAll(self)
-      class(Writer), intent(inout) :: self
-    end subroutine
-
-    module subroutine writer_initialize(self, flag)
-      class(Writer), intent(inout) :: self
-      character,     intent(in)    :: flag
-    end subroutine
-
-    module subroutine writer_listInitialize(self, flags)
-      class(Writer), intent(inout) :: self
-      character,     intent(in)    :: flags(:)
-    end subroutine
-  end interface
-
-  ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [Writer % ]close
-  !>  Close a unit for writing files specified by the integer `flag`. 
-  !!  To close multiple units, a rank-1 array of integers `flags` can
-  !!  be passed. To close all units, pass nothing. 
-  ! -------------------------------------------------------------------------- !
-  interface
-    module subroutine writer_closeAll(self)
-      class(Writer), intent(inout) :: self
-    end subroutine
-
-    module subroutine writer_close(self, flag)
-      class(Writer), intent(inout) :: self
-      character,     intent(in)    :: flag
-    end subroutine
-
-    module subroutine writer_listclose(self, flags)
-      class(Writer), intent(inout) :: self
-      character,     intent(in)    :: flags(:)
-    end subroutine
-  end interface
-
-  ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: [Writer % ]writeHeader
-  !>  Write the header of the .csv file to write on.
-  ! -------------------------------------------------------------------------- !
-  interface
-    module subroutine writer_writeHeader(self, flag, header)
-      class(Writer),    intent(in) :: self
-      character,        intent(in) :: flag
-      character(len=*), intent(in) :: header(:)
-    end subroutine
-  end interface
-
-
-  interface
-    module subroutine declareAvailableFiles(files)
-      type(OutputFile),  intent(in) :: files(:)
-    end subroutine
-
-    module subroutine constructWriter_array(new, files, initialize)
-      type(Writer),      intent(inout) :: new
-      type(OutputFile),  intent(in)    :: files(:)
-      logical, optional, intent(in)    :: initialize
-    end subroutine
-
-    module subroutine constructWriter_scalar(new, file, initialize)
-      type(Writer),      intent(inout) :: new
-      type(OutputFile),  intent(in)    :: file
-      logical, optional, intent(in)    :: initialize
-    end subroutine
-
-    module subroutine findFileByFlag(array, flag, foundFile)
-      type(OutputFile), allocatable, intent(in)    :: array(:)
-      type(OutputFile), allocatable, intent(inout) :: foundFile
-      character, intent(in) :: flag
-    end subroutine
-
-    module subroutine removeFilebyFlag(array, flag)
-      type(OutputFile), allocatable, intent(inout) :: array(:)
-      character,                     intent(in)    :: flag
-    end subroutine
-
-    module subroutine appendOutputFile(array, file)
-      type(OutputFile), allocatable, intent(inout) :: array(:)
-      type(OutputFile),              intent(in)    :: file
-    end subroutine
-
-    module subroutine freeWriterModAlloctbls()
-    end subroutine
-
-    module subroutine destroy(self)
-      type(Writer), intent(inout) :: self
-    end subroutine destroy
-  end interface
-
-  ! -------------------------------------------------------------------------- !
-  ! GENERIC SUBROUTINE: constructWriter
-  !>  Construct a `Writer` object.
-  ! -------------------------------------------------------------------------- !
-  interface constructWriter
-    procedure :: constructWriter_array
-    procedure :: constructWriter_scalar
-  end interface constructWriter
-  ! -------------------------------------------------------------------------- !
-  ! Note: Kinds can be changed if this were to be used in other programs. 
-  public :: writeIK
-  public :: writeRK
+  ! Write formats.
+  character(len=*), parameter :: FMT_INT =  "(*(i15, '|'))"
+  character(len=*), parameter :: FMT_REAL =  "(*(f15.6, '|'))"
+  character(len=*), parameter :: FMT_CHAR =  "(*(a15, '|'))"
 
   public :: Writer
-  public :: OutputFile
+  public :: writeIK
+  public :: writeRK
+contains
 
-  public :: outputFiles
-  public :: MAX_LEN
 
-  public :: declareAvailableFiles
-  public :: constructWriter
-  public :: freeWriterModAlloctbls
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_init
+  !>  Initialize the `Writer` object `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_init(self, filename, unit, toAppendData)
+    class(Writer),    intent(out) :: self
+      !! `Writer` object to be initialized.
+    character(len=*), intent(in)  :: filename
+      !! Name of the file to which data is to written on.
+    integer,          intent(in)  :: unit
+      !! Unit with which the file is identified within the program.
+    logical,          intent(in)  :: toAppendData
+      !! Append data to existing file if true. Overwrite data to exisiting file
+      !! if false.
+  
+    self % filename = trim(filename)
+    self % unit = unit
+    self % toAppendData = toAppendData
+    self % isInit = .true.
+  end subroutine writer_init
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getWritePos
+  !>  Get position specifier "append" if `toAppendData` is true. Otherwise, 
+  !!  get "asis".
+  ! -------------------------------------------------------------------------- !
+  function getWritePos(toAppendData) result(position)
+    logical, intent(in) :: toAppendData
+      !! Append data to file.
+
+    character(len=:), allocatable :: position
+
+    allocate(character(len=0) :: position)
+    
+    if (toAppendData) then
+      position = "append"
+    else
+      position = "asis"
+    end if
+  end function getWritePos
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_openFile
+  !>  Open the file the `Writer` object `self` is initialized with.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_openFile(self)
+    class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
+    integer :: openStat
+
+    if (.not. self % isInit) then
+      call raiseError( &
+        "Cannot open files. 'Writer' object is uninitialized yet." &
+        )
+    end if
+
+    open(unit=self % unit, file=self % filename, iostat=openStat, &
+      position=getWritePos(self % toAppendData))
+    if (openStat /= 0) then
+      call raiseError(&
+        "'" // self % filename // &
+        "' cannot be opened or does not exists." &
+        )
+    end if
+
+    self % isFileOpen = .true.
+  end subroutine writer_openFile
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkInitState
+  !>  Check the initialization and writeable state of the `Writer` object
+  !!  `writerObj`.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkInitState(writerObj)
+    class(Writer), intent(in) :: writerObj
+      !! 'Writer' object to be checked.
+
+    if (.not. writerObj % isInit) then
+      call raiseError( &
+        "Cannot write to file. 'Writer' object is uninitialized yet." &
+        )
+    else if (.not. writerObj % isFileOpen) then
+      call raiseError( &
+        "Cannot write to file. '" // writerObj % filename // &
+        "' is not yet opened." &
+        )
+    end if
+  end subroutine checkInitState
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_intSclr
+  !>  Write integer of rank-0 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_intSclr(self, scalarData)
+    class(Writer),         intent(inout) :: self
+      !! `Writer` object to write data on file.
+    integer(kind=writeIK), intent(in)    :: scalarData
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_INT, iostat=writeStat) scalarData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_intSclr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_realSclr
+  !>  Write real of rank-0 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_realSclr(self, scalarData)
+    class(Writer),      intent(inout) :: self
+      !! `Writer` object to write data on file.
+    real(kind=writeRK), intent(in)    :: scalarData
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_REAL, iostat=writeStat) scalarData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_realSclr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_charSclr
+  !>  Write character of rank-1 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_charSclr(self, scalarData)
+    class(Writer),    intent(inout) :: self
+      !! `Writer` object to write data on file.
+    character(len=*), intent(in)    :: scalarData
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_CHAR, iostat=writeStat) scalarData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_charSclr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_intArr
+  !>  Write integer of rank-1 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_intArr(self, arrData)
+    class(Writer),         intent(inout) :: self
+      !! `Writer` object to write data on file.
+    integer(kind=writeIK), intent(in)    :: arrData(:)
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_INT, iostat=writeStat) arrData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_intArr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_realArr
+  !>  Write real of rank-1 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_realArr(self, arrData)
+    class(Writer),      intent(inout) :: self
+      !! `Writer` object to write data on file.
+    real(kind=writeRK), intent(in)    :: arrData(:)
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_REAL, iostat=writeStat) arrData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_realArr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_write_charArr
+  !>  Write character of rank-1 to file associated with the `Writer` object
+  !!  `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_write_charArr(self, arrData)
+    class(Writer),    intent(inout) :: self
+      !! `Writer` object to write data on file.
+    character(len=*), intent(in)    :: arrData(:)
+      !! Data to be written to file.
+    integer :: writeStat
+
+    call checkInitState(self)
+
+    write(self % unit, FMT_CHAR, iostat=writeStat) arrData
+    if (writeStat /= 0) then
+      call raiseError("Cannot write to '" // self % filename // "'.")
+    end if
+  end subroutine writer_write_charArr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_closeFile
+  !>  Close the file associated with the `Writer` object `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_closeFile(self)
+    class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
+
+    call checkInitState(self)
+    close(self % unit)
+
+    self % isFileOpen = .false.
+  end subroutine writer_closeFile
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: writer_free
+  !>  Free allocated attributes and close opened file if it is still open.
+  ! -------------------------------------------------------------------------- !
+  subroutine writer_free(self)
+    class(Writer), intent(inout) :: self
+      !! `Writer` object to be modified.
+
+    if (.not. self % isInit) then
+      call raiseWarning("'Writer' object is uninitialized.")
+    end if
+
+    if (allocated(self % filename)) deallocate(self % filename)
+    if (self % isFileOpen) close(self % unit)
+  end subroutine writer_free
 end module WriterType

@@ -69,6 +69,23 @@ module Parameters
   integer, parameter :: VERSION_PRINT = 3
     !! Flag corresponding to printing of the program version.
 
+  ! Record flags.
+  character, parameter :: REC_NULL = "x"
+    !! Nothing (do not record).
+  character, parameter :: REC_POP = "p"
+    !! Population size per time step.
+  character, parameter :: REC_AGE_DSTRB = "a"
+    !! Age distribution in the last 300 time steps
+  character, parameter :: REC_DEATH = "d"
+    !! Death counts (death by age, by mutation, by Verhulst factor) 
+    !! per time step.
+  character, parameter :: REC_DIV_IDX = "s"
+    !! Shannon diversity index per time step.
+  character, parameter :: REC_GENE_DSTRB = "b"
+    !! Bad gene distribution per time step.
+  character, parameter :: REC_TIME = "t"
+    !! Timing statistics.
+
   ! PROGRAM PARAMETERS
   ! -------------------------------------------------------------------------- !
   character(len=*), parameter :: PROG_NAME = &
@@ -100,6 +117,8 @@ module Parameters
     !! NOTE: Default value is obtained from config files.
   character(len=MAX_LEN), target, protected :: PROG_OUT_FILE_NAME = "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
+  character(len=MAX_LEN),         parameter :: PROG_TIME_FILE_NAME ="./time.csv"
+    !! Name of the file to which timing statistics is to be written on.
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
@@ -174,12 +193,22 @@ module Parameters
   public :: PROG_RNG_SEED
   public :: PROG_REC_FLAG
   public :: PROG_OUT_FILE_NAME
+  public :: PROG_TIME_FILE_NAME
   
   ! Values for `PROG_PRINT_STATE`.
   public :: NORMAL_PRINT
   public :: VERBOSE_PRINT
   public :: SILENT_PRINT
   public :: VERSION_PRINT
+
+  ! Values for `PROG_REC_FLAG`.
+  public :: REC_NULL
+  public :: REC_POP
+  public :: REC_AGE_DSTRB
+  public :: REC_DEATH
+  public :: REC_DIV_IDX
+  public :: REC_GENE_DSTRB
+  public :: REC_TIME
 
   ! Model parameters.
   public :: MODEL_L
