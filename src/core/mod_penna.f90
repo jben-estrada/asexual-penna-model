@@ -52,7 +52,7 @@ module Penna
     isCurrIndivMature,      &
     getCurrIndivAge,        &
     getCurrIndivGenome,     &
-    determineDeathType,     &
+    countDeath,             &
     elemCount,              &
     killCurrentIndiv,       &
     checkCurrIndivDeath,    &

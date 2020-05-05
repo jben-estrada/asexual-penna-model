@@ -75,7 +75,7 @@ module PopulationList
   public :: isCurrIndivMature
   public :: getCurrIndivAge
   public :: getCurrIndivGenome
-  public :: determineDeathType
+  public :: countDeath
   public :: elemCount
 
   ! Transformational procedures.
@@ -187,17 +187,17 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: determineDeathType
-  !>  Determine the death of the current individual. This routine fails if
-  !!  the current individual is alive.
+  ! SUBROUTINE: countDeath
+  !>  Determine the death of the current individual and increment the
+  !!  corresponding death counter.
   ! -------------------------------------------------------------------------- !
-  subroutine determineDeathType(deathByAge, deathByMutation, deathByVerhulst)
+  subroutine countDeath(deathByAge, deathByMutation, deathByVerhulst)
     integer, pointer, intent(inout) :: deathByAge
       !! Pointer for death by age counter.
     integer, pointer, intent(inout) :: deathByMutation
-      !! Pointer for death by mutation.
+      !! Pointer for death by mutation counter.
     integer, pointer, intent(inout) :: deathByVerhulst
-      !! Pointer for death by Verhulst killing.
+      !! Pointer for death by Verhulst factor counter.
 
     select case (current_ptr % deathIndex)
       case (DEAD_OLD_AGE)
@@ -213,7 +213,7 @@ contains
         call raiseError("The current individual is not dead or has an" // &
             " invalid death index.")
     end select
-  end subroutine determineDeathType
+  end subroutine countDeath
 
 
   ! -------------------------------------------------------------------------- !
