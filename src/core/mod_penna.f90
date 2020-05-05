@@ -6,7 +6,7 @@ module Penna
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing one of the core procedures for the simulation of the
-  !!  Penna model (along with the `Pop` module)
+  !!  Penna model (along with the `PopulationList` module)
   ! -------------------------------------------------------------------------- !
   use Parameters, only:   &
     MODEL_L,              &
