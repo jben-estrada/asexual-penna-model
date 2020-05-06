@@ -392,6 +392,8 @@ contains
       call timeWriter % openFile()
 
       ! Write the header of the file.
+      call timeWriter % write("DATA: Timing statistics")
+      call timeWriter % write([(FILE_DIVIDER, i = 1, 5)])
       call timeWriter % write( &
         ["Max Time Step ", &
          "Init pop size ", &
@@ -462,14 +464,24 @@ contains
     ! Append the header to the file to be written on.
     select case (recordFlag)
       case (REC_POP)
-        call runWriter % write("Population size")
-        call runWriter % write(FILE_DIVIDER)
+        ! Data description.
+        call runWriter % write("DATA: Population size per time step")
+
+        ! Header of the list.
+        call runWriter % write([FILE_DIVIDER])
+        call runWriter % write(["Population size"])
+        call runWriter % write([FILE_DIVIDER])
 
 
       case (REC_GENE_DSTRB, REC_AGE_DSTRB)
-        ! Get the starting age of the age/genome demographics.
-        startingAge = 0
-        if (recordFlag == REC_GENE_DSTRB) startingAge = 1
+        ! Data description.
+        if (recordFlag == REC_GENE_DSTRB) then
+          call runWriter % write("DATA: Bad gene distribution per time step")
+          startingAge = 1  ! Get the starting age of the distribution as well.
+        else
+          call runWriter % write("DATA: Age distribution per time step")
+          startingAge = 0  ! Get the starting age of the distribution as well.
+        end if
 
         ! For some reason, implicit do loop truncate numbers.
         allocate(headerArr(startingAge:MODEL_L))
@@ -477,21 +489,34 @@ contains
           headerArr(i) = "AGE " // trim(castIntToChar(i))
         end do
 
+        ! Header of the table.
+        call runWriter % write([(FILE_DIVIDER, i = startingAge, MODEL_L)])
         call runWriter % write(headerArr)
         call runWriter % write([(FILE_DIVIDER, i = startingAge, MODEL_L)])
 
 
       case (REC_DEATH)
+        ! Data description.
+        call runWriter % write("DATA: Number of deaths " // &
+            "(due to old age, mutation, Verhulst factor) per time step")
+        
+        ! Header of the table.
+        call runWriter % write([(FILE_DIVIDER, i = 1, 3)])
         call runWriter % write( &
             ["Old age        ", &
              "Mutation       ", &
-             "Verhulst weight"])
+             "Verhulst factor"])
         call runWriter % write([(FILE_DIVIDER, i = 1, 3)])
         
 
       case (REC_DIV_IDX)
-        call runWriter % write("Diversity idx")
-        call runWriter % write(FILE_DIVIDER)
+        ! Data description. 
+        call runWriter % write("DATA: Shannon diversity index per time step.")
+
+        ! Header of the list.
+        call runWriter % write([FILE_DIVIDER])
+        call runWriter % write(["Diversity idx"])
+        call runWriter % write([FILE_DIVIDER])
 
 
       case default

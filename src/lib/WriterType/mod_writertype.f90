@@ -56,7 +56,8 @@ module WriterType
   ! Write formats.
   character(len=*), parameter :: FMT_INT =  "(*(i15, '|'))"
   character(len=*), parameter :: FMT_REAL =  "(*(f15.6, '|'))"
-  character(len=*), parameter :: FMT_CHAR =  "(*(a15, '|'))"
+  character(len=*), parameter :: FMT_CHAR_SCLR =  "(a)"
+  character(len=*), parameter :: FMT_CHAR_ARR =  "(*(a15, '|'))"
 
   public :: Writer
   public :: writeIK
@@ -187,7 +188,7 @@ contains
 
     call checkInitState(self)
 
-    write(self % unit, FMT_CHAR, iostat=writeStat) scalarData
+    write(self % unit, FMT_CHAR_SCLR, iostat=writeStat) scalarData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -250,7 +251,7 @@ contains
 
     call checkInitState(self)
 
-    write(self % unit, FMT_CHAR, iostat=writeStat) arrData
+    write(self % unit, FMT_CHAR_ARR, iostat=writeStat) arrData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
