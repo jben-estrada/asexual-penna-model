@@ -30,7 +30,6 @@ module Penna
     REC_DEATH,            &
     REC_DIV_IDX,          &
     REC_GENE_DSTRB,       &
-    REC_TIME,             &
     setParams,            &
     printProgDetails,     &
     freeParamAlloctbls

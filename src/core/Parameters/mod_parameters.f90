@@ -83,8 +83,6 @@ module Parameters
     !! Shannon diversity index per time step.
   character, parameter :: REC_GENE_DSTRB = "b"
     !! Bad gene distribution per time step.
-  character, parameter :: REC_TIME = "t"
-    !! Timing statistics.
 
   ! PROGRAM PARAMETERS
   ! -------------------------------------------------------------------------- !
@@ -208,7 +206,6 @@ module Parameters
   public :: REC_DEATH
   public :: REC_DIV_IDX
   public :: REC_GENE_DSTRB
-  public :: REC_TIME
 
   ! Model parameters.
   public :: MODEL_L
