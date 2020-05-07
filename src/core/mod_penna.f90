@@ -61,6 +61,9 @@ module Penna
     resetPersonReadPtrs,    &
     freePersonPtrs,         &
     initPersonList
+  use, intrinsic :: iso_fortran_env, only: &
+    timeIK => int64, &
+    timeRK => real64
 
   use CastProcs, only: castIntToChar
   use ProgressBarType, only: ProgressBar
@@ -315,15 +318,15 @@ contains
     logical,   intent(in) :: printProgress
       !! Print the progress with a progress bar.
 
-    real(kind=writeRK)    :: meanTime
-    real(kind=writeRK)    :: stdDevTime
-    integer(kind=writeIK) :: startTimeInt
-    integer(kind=writeIK) :: endTimeInt
-    real(kind=writeRK)    :: startTimeReal
-    real(kind=writeRK)    :: endTimeReal
-    real(kind=writeRK)    :: clockRate
-    real(kind=writeRK)    :: sum
-    real(kind=writeRK)    :: sumSqrd
+    real(kind=timeRK)    :: meanTime
+    real(kind=timeRK)    :: stdDevTime
+    integer(kind=timeIK) :: startTimeInt
+    integer(kind=timeIK) :: endTimeInt
+    real(kind=timeRK)    :: startTimeReal
+    real(kind=timeRK)    :: endTimeReal
+    real(kind=timeRK)    :: clockRate
+    real(kind=timeRK)    :: sum
+    real(kind=timeRK)    :: sumSqrd
 
     type(ProgressBar) :: progBar    ! A `ProgressBar` object.
     type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
@@ -338,12 +341,12 @@ contains
     call progBar % init(20, sampleSize)
 
     ! Call and time the `run` subroutine.
-    sum = 0.
-    sumSqrd = 0.
+    sum = 0._timeRK
+    sumSqrd = 0._timeRK
     do i = 1, sampleSize
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
-      startTimeReal = real(startTimeInt, kind=writeRK)/clockRate
+      startTimeReal = real(startTimeInt, kind=timeRK)/clockRate
 
       ! Run the actual simulation.
       call runOneInstance(maxTimeStep, startPopSize, initMttnCount, &
@@ -351,7 +354,7 @@ contains
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
-      endTimeReal = real(endTimeInt, kind=writeRK)/clockRate
+      endTimeReal = real(endTimeInt, kind=timeRK)/clockRate
 
       ! Calculate necessary values for average and std deviation.
       sum = sum + (endTimeReal - startTimeReal)*1e3
@@ -367,9 +370,9 @@ contains
     write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
 
     ! Get average elapsed time and its std deviation.
-    meanTime = sum/real(sampleSize, kind=writeRK)
+    meanTime = sum/real(sampleSize, kind=timeRK)
     stdDevTime = sqrt(sampleSize*sumSqrd - sum**2) / &
-      real(sampleSize, kind=writeRK)
+      real(sampleSize, kind=timeRK)
 
     ! Print timing statistics.
     if (printProgress) then
@@ -406,8 +409,8 @@ contains
           real(maxTimeStep, kind=writeRK),  &
           real(startPopSize, kind=writeRK), &
           real(SampleSize, kind=writeRK),   &
-          meanTime,                         &
-          stdDevTime]                       &
+          real(meanTime, kind=writeRK),     &
+          real(stdDevTime, kind=writeRK)]   &
         )
       call timeWriter % free()
     end if
