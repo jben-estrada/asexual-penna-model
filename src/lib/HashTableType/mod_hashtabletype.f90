@@ -40,12 +40,7 @@ module HashTableType
       !! Array of slots (or buckets) containing lists of mappings.
     integer :: slotArrSize = -1
       !! Size of the hash table.
-    logical :: isInit = .false.
-      !! Initialization state.
   contains
-    procedure :: init => hashtable_init
-      !! Initialize the hash table. The hash table size can be optionally set.
-      !! It defaults to 50.
     procedure :: get => hashtable_get
       !! Get the value which corresponds to the given key.
     procedure :: set => hashtable_set
@@ -53,9 +48,8 @@ module HashTableType
       !! reassign the value of the key with the new value.
     procedure :: delete => hashtable_delete
       !! Delete an element in the hash table.
-    procedure :: free => hashtable_free
-      !! Free all allocated objects in the hash table. Set the hash table to
-      !! 'uninitialized'.
+    final :: htDestructor
+      !! Free allocated attributes.
   end type HashTable
 
 
@@ -68,18 +62,26 @@ module HashTableType
       !! Current `Slot` array index.
     type(Mapping),   pointer :: currMapping_ptr => null()
       !! Current `Mapping` object in the current `Slot` object.
-    logical                  :: isInit = .false.
-      !! Initialization state.
   contains
-    procedure :: init => hashtableiterator_init
-      !! Initialize the hash table iterator.
     procedure :: getKey => hashtableiterator_getKey
       !! Get key and proceed to the next key-value pair.
-    procedure :: free => hashtableiterator_free
+    final :: htIterDestructor
       !! Free allocated attributes.
   end type  HashTableIterator
 
 
+  ! ------------------------------------------------------------------------- !
+  ! `HashTable` constructor.
+  interface HashTable
+    module procedure :: hashtable_cnstrct
+  end interface
+
+  interface HashTableIterator
+    module procedure :: hashtableiterator_cnstrct
+  end interface
+
+
+  ! ------------------------------------------------------------------------- !
   ! Default hash table size.
   integer, parameter :: DEF_HASHTBL_SIZE = 50
 
@@ -90,7 +92,6 @@ module HashTableType
   ! Procedure statuses.
   integer, public, parameter :: STAT_OK = 0         ! Success.
   integer, public, parameter :: STAT_NOT_FOUND = 1  ! Failed to find a mapping.
-  integer, public, parameter :: STAT_NOT_INIT = 2   ! Hash table uninitialized.
 
   public :: HashTable
   public :: HashTableIterator
@@ -99,34 +100,23 @@ contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! SUBROUTINE: hashtable_init
-  !>  Initialize the hash table `self`. The hash table size can be optionally 
-  !!  set. It defaults to 50.
+  ! FUNCTION: hashtable_cnstrct
+  !>  Constructor for the `HashTable` type.
   ! ------------------------------------------------------------------------- !
-  subroutine hashtable_init(self, tableSize)
-    class(HashTable),  intent(inout) :: self
-      !! `HashTable` object to be initialized.
+  function hashtable_cnstrct(tableSize) result(new)
     integer, optional, intent(in)    :: tableSize
       !! Size of the hash table.
 
-    if (self % isInit) then
-      call raiseWarning( &
-        "Initializing an already initialized 'HashTable' object." &
-        )
-
-      ! Free allocated memory first.
-      call self % free()
-    end if
+    type(HashTable) :: new
 
     if (present(tableSize)) then
-      allocate(self % slotArray(tableSize))
+      allocate(new % slotArray(tableSize))
     else
-      allocate(self % slotArray(DEF_HASHTBL_SIZE))
+      allocate(new % slotArray(DEF_HASHTBL_SIZE))
     end if
 
-    self % slotArrSize = size(self % slotArray)
-    self % isInit = .true.
-  end subroutine hashtable_init
+    new % slotArrSize = size(new % slotArray)
+  end function hashtable_cnstrct
 
 
   ! ------------------------------------------------------------------------- !
@@ -176,20 +166,6 @@ contains
     type(Mapping), pointer :: currMapping_ptr
     integer(kind=int64) :: slotIdx
 
-    ! Check if the hash table is initialized.
-    if (.not. self % isInit) then
-      if (present(status)) then
-        ! Signify that this function failed and return.
-        status = STAT_NOT_INIT
-        value = CHAR_VOID
-        return
-      else
-        call raiseError( &
-          "Cannot get values. 'HashTable' object is uninitialized." &
-          )
-      end if
-    end if
-    
     ! Initialize output.
     allocate(character(len=0) :: value)
 
@@ -249,18 +225,6 @@ contains
   
     type(Mapping), pointer :: currMapping_ptr
     integer(kind=int64) :: slotIdx
-
-    ! Check if the hash table is initialized.
-    if (.not. self % isInit) then
-      if (present(status)) then
-        status = STAT_NOT_INIT
-        return
-      else
-        call raiseError( &
-          "Cannot set an element. 'HashTable' object is uninitialized." &
-          )
-      end if
-    end if
 
     ! Find the slot containing the mapping we seek.
     ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
@@ -323,33 +287,28 @@ contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! SUBROUTINE: hashtable_free
-  !>  Free all allocated objects in the hash table. Set the hash table to
-  !!  'uninitialized'.
+  ! SUBROUTINE: htDestructor
+  !>  Destructor for the `HashTable` type.
   ! ------------------------------------------------------------------------- !
-  subroutine hashtable_free(self)
-    class(HashTable), intent(inout) :: self
+  subroutine htDestructor(self)
+    type(HashTable), intent(inout) :: self
       !! `HashTable` object to be modified.
 
     integer :: i
 
-    if (.not. self % isInit) then
-      call raiseWarning("'HashTable' object is uninitialized. Freeing nothing.")
-      return
+    ! Free all the chained mappings.   
+    if (allocated(self % slotArray)) then
+      do i = lbound(self % slotArray, 1), ubound(self % slotArray, 1)
+        call freeSlot(self % slotArray(i) % headMapping_ptr)
+      end do
+      
+      ! Finally free the slot array.
+      deallocate(self % slotArray)
     end if
-
-    ! Free all the chained mappings.
-    do i = lbound(self % slotArray, 1), ubound(self % slotArray, 1)
-      call freeSlot(self % slotArray(i) % headMapping_ptr)
-    end do
-
-    ! Finally free the slot array.
-    deallocate(self % slotArray)
 
     ! Set the hash table to 'uninitialized' state.
     self % slotArrSize = -1
-    self % isInit = .false.
-  end subroutine hashtable_free
+  end subroutine htDestructor
 
 
   ! ------------------------------------------------------------------------- !
@@ -369,18 +328,6 @@ contains
     type(Mapping), pointer :: currMapping_ptr
     type(Mapping), pointer :: prevMapping_ptr
     integer(kind=int64) :: slotIdx
-
-    ! Check if the hash table is initialized.
-    if (.not. self % isInit) then
-      if (present(status)) then
-        ! Signify that this routine failed and return.
-        status = STAT_NOT_INIT
-        return
-      else
-        call raiseError("Cannot delete an element. " // &
-            "'HashTable' object is uninitialized.")
-      end if
-    end if
 
     ! Find the slot containing the mapping we seek.
     ! NOTE: We add 1 since Fortran is, by default, one-based indexing.
@@ -469,35 +416,19 @@ contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! SUBROUTINE: hashtableiterator_init
-  !>  Initialize the `HashTableIterator` object with the `HashTable` object
-  !!  iteratee_ptr.
+  ! FUNCTION: hashtableiterator_cnstrct
+  !>  Constructor for the  `HashTableIterator` type.
   ! ------------------------------------------------------------------------- !
-  subroutine hashtableiterator_init(self, iteratee_ptr)
-    class(HashTableIterator), intent(inout) :: self
-      !! `HashTableIterator` to be initialized.
+  function hashtableiterator_cnstrct(iteratee_ptr) result(new)
     type(HashTable), pointer, intent(in)    :: iteratee_ptr
-      !! `HashTable` object to be iterated over.
+    !! `HashTable` object to be iterated over.
 
-    if (self % isInit) then
-      call raiseWarning( &
-          "Initializing an already initialized 'HashTableIterator' object." &
-        )
+    type(HashTableIterator) :: new
 
-      ! Free allocated memory first.
-      call self % free()
-    end if
-  
-    ! Check initialization state of `iteratee_ptr`.
-    if (.not. iteratee_ptr % isInit) then
-      call raiseError("'HashTable' iteratee_ptr is uninitialized.")
-    end if
-
-    self % iteratee_ptr => iteratee_ptr
-    self % currSlotIdx = 1
-    self % currMapping_ptr => iteratee_ptr % slotArray(1) % headMapping_ptr
-    self % isInit = .true.
-  end subroutine hashtableiterator_init
+    new % iteratee_ptr => iteratee_ptr
+    new % currSlotIdx = 1
+    new % currMapping_ptr => iteratee_ptr % slotArray(1) % headMapping_ptr
+  end function hashtableiterator_cnstrct
 
 
   ! ------------------------------------------------------------------------- !
@@ -515,11 +446,6 @@ contains
     ! Initialize output.
     allocate(character(len=0) :: key)
     if (present(status)) status = 0
-
-    ! Check initialization.
-    if (.not. self % isInit) then
-      call raiseError("'HashTableIterator' object is uninitialized.")
-    end if
 
     ! Find the next mapping.
     do
@@ -552,28 +478,15 @@ contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! SUBROUTINE: hashtableiterator_free
+  ! SUBROUTINE: htIterDestructor
   !>  Free allocated attributes of `self` and their own attributes.
   ! ------------------------------------------------------------------------- !
-  subroutine hashtableiterator_free(self, freeIteratee)
-    class(HashTableIterator), intent(inout) :: self
+  subroutine htIterDestructor(self)
+    type(HashTableIterator), intent(inout) :: self
       !! `HashTableIterator` to be modified.
-    logical, optional,        intent(in)    :: freeIteratee
-      !! Free the hash table iteratee. Defaults to false.
 
-    if (.not. self % isInit) then
-      call raiseWarning( &
-          "'HashTableIterator' object is already uninitialized." &
-        )
-    end if
-    
-    ! Free the iteratee if the user so chooses.
-    if (present(freeIteratee)) then
-      if (freeIteratee) call self % iteratee_ptr % free()
-    end if
-
+    ! `HashTable` pointer attribute is automatically destroyed.
     self % currMapping_ptr => null()
     self % currSlotIdx = 1
-    self % isInit = .false.
-  end subroutine hashtableiterator_free
+  end subroutine htIterDestructor
 end module HashTableType

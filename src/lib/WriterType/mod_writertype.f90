@@ -22,20 +22,14 @@ module WriterType
       !! Name of the file data are to be written on.
     integer :: unit
       !! Unit with which the file is to be identified within the program.
-    logical :: isInit = .false.
-      !! Initialization state.
     logical :: isFileOpen = .false.
       !! Writable state.
   contains
     private
-    procedure, public :: init => writer_init
-      !! Initialize the 'Writer' object.
     procedure, public :: openFile => writer_openFile
       !! Open file for writing.
     procedure, public :: closeFile => writer_closeFile
       !! Close file.
-    procedure, public :: free =>  writer_free
-      !! Free allocated attributes and close file if it still open.
     generic,   public :: write => &
       writer_write_intSclr, &
       writer_write_realSclr, &
@@ -44,6 +38,8 @@ module WriterType
       writer_write_realArr, &
       writer_write_charArr
       !! Write data of either rank-0 or rank-1 to opened file.
+
+    final :: destructor
 
     procedure :: writer_write_intSclr
     procedure :: writer_write_realSclr
@@ -59,6 +55,11 @@ module WriterType
   character(len=*), parameter :: FMT_CHAR_SCLR =  "(a)"
   character(len=*), parameter :: FMT_CHAR_ARR =  "(*(a15, '|'))"
 
+  !! `Writer` constructor.
+  interface Writer
+    module procedure :: writer_cnstrct
+  end interface
+
   public :: Writer
   public :: writeIK
   public :: writeRK
@@ -66,21 +67,20 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writer_init
-  !>  Initialize the `Writer` object `self`.
+  ! FUNCTION: writer_cnstrct
+  !>  Constructor for `Writer` type.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_init(self, filename, unit)
-    class(Writer),    intent(out) :: self
-      !! `Writer` object to be initialized.
+  function writer_cnstrct(filename, unit) result(new)
     character(len=*), intent(in)  :: filename
       !! Name of the file to which data is to written on.
     integer,          intent(in)  :: unit
       !! Unit with which the file is identified within the program.
-  
-    self % filename = trim(filename)
-    self % unit = unit
-    self % isInit = .true.
-  end subroutine writer_init
+
+    type(Writer) :: new
+
+    new % filename = trim(filename)
+    new % unit = unit
+  end function writer_cnstrct
 
 
   ! -------------------------------------------------------------------------- !
@@ -92,17 +92,11 @@ contains
       !! `Writer` object to be modified.
     integer :: openStat
 
-    if (.not. self % isInit) then
-      call raiseError( &
-        "Cannot open files. 'Writer' object is uninitialized yet." &
-        )
-    end if
-
     open(unit=self % unit, file=self % filename, iostat=openStat)
     if (openStat /= 0) then
       call raiseError(&
         "'" // self % filename // &
-        "' cannot be opened or does not exists." &
+        "' cannot be opened or its directory does not exist." &
         )
     end if
 
@@ -111,25 +105,21 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: checkInitState
-  !>  Check the initialization and writeable state of the `Writer` object
-  !!  `writerObj`.
+  ! SUBROUTINE: checkFileState
+  !>  Check if the file to be written on is open. Raises error if not.
   ! -------------------------------------------------------------------------- !
-  subroutine checkInitState(writerObj)
+  subroutine checkFileState(writerObj, msg)
     class(Writer), intent(in) :: writerObj
       !! 'Writer' object to be checked.
+    character(len=*), intent(in) :: msg
+      !! Error message.
 
-    if (.not. writerObj % isInit) then
-      call raiseError( &
-        "Cannot write to file. 'Writer' object is uninitialized yet." &
-        )
-    else if (.not. writerObj % isFileOpen) then
-      call raiseError( &
-        "Cannot write to file. '" // writerObj % filename // &
-        "' is not yet opened." &
+    if (.not. writerObj % isFileOpen) then
+      call raiseError( & 
+          msg // " '" // writerObj % filename // "' is not yet opened." &
         )
     end if
-  end subroutine checkInitState
+  end subroutine checkFileState
 
 
   ! -------------------------------------------------------------------------- !
@@ -144,7 +134,8 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
+
 
     write(self % unit, FMT_INT, iostat=writeStat) scalarData
     if (writeStat /= 0) then
@@ -165,7 +156,7 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
 
     write(self % unit, FMT_REAL, iostat=writeStat) scalarData
     if (writeStat /= 0) then
@@ -186,7 +177,7 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
 
     write(self % unit, FMT_CHAR_SCLR, iostat=writeStat) scalarData
     if (writeStat /= 0) then
@@ -207,7 +198,7 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
 
     write(self % unit, FMT_INT, iostat=writeStat) arrData
     if (writeStat /= 0) then
@@ -228,7 +219,7 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
 
     write(self % unit, FMT_REAL, iostat=writeStat) arrData
     if (writeStat /= 0) then
@@ -249,7 +240,7 @@ contains
       !! Data to be written to file.
     integer :: writeStat
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot write to file.")
 
     write(self % unit, FMT_CHAR_ARR, iostat=writeStat) arrData
     if (writeStat /= 0) then
@@ -266,7 +257,7 @@ contains
     class(Writer), intent(inout) :: self
       !! `Writer` object to be modified.
 
-    call checkInitState(self)
+    call checkFileState(self, "Cannot close file.")
     close(self % unit)
 
     self % isFileOpen = .false.
@@ -274,18 +265,12 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writer_free
-  !>  Free allocated attributes and close opened file if it is still open.
+  ! SUBROUTINE: destructor
+  !>  Destructor for `Writer` type.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_free(self)
-    class(Writer), intent(inout) :: self
-      !! `Writer` object to be modified.
-
-    if (.not. self % isInit) then
-      call raiseWarning("'Writer' object is uninitialized.")
-    end if
-
-    if (allocated(self % filename)) deallocate(self % filename)
+  subroutine destructor(self)
+    type(Writer), intent(inout) :: self
+      !! `Writer` object to be freed.
     if (self % isFileOpen) close(self % unit)
-  end subroutine writer_free
+  end subroutine destructor
 end module WriterType

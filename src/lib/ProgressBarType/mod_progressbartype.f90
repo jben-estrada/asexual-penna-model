@@ -18,14 +18,17 @@ module ProgressBarType
     integer   :: counter    !! Number representing progress.
     character :: charBit    !! Character to be displayed to denote progress.
   contains
-    procedure :: init => progressbar_init
-      !! Initialize the `ProgressBar` object.
     procedure :: showProgBar => progressbar_showProgBar
       !! Print the progress bar.
     procedure :: incrCounter => progressbar_incrCounter
       !! Increment the progress counter. The increment value, which defaults to
       !! 1, can be optionally changed.
   end type ProgressBar
+
+  ! Constructor.
+  interface ProgressBar
+    module procedure :: progressbar_cnstrct
+  end interface
 
   character, parameter :: DEFAULT_CHAR_BIT = ">"
     !! Default character bit.
@@ -35,12 +38,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: progressbar_init
-  !>  Initialize a `ProgressBar` object.
+  ! FUNCTION: progressbar_cnstrct
+  !>  A constructor for the `ProgressBar` type.
   ! -------------------------------------------------------------------------- !
-  subroutine progressbar_init(new, partition, totalTicks, charBit)
-    class(ProgressBar), intent(out) :: new
-      !! `ProgressBar` object to be initialized.
+  function progressbar_cnstrct(partition, totalTicks, charBit) result(new)
     integer,           intent(in)  :: partition
       !! The `partition` for the `partition` attribute of `new`. 
     integer,           intent(in)  :: totalTicks
@@ -48,6 +49,9 @@ contains
     character,         optional    :: charBit
       !! The `charBit` for the `charBit` attribute of `new`.
       !! Defaults to `DEFAULT_CHAR_BIT`.
+
+    type(ProgressBar) :: new
+      !! `ProgressBar` object to be initialized.
 
     ! Get character bit for progress bar.
     if (present(charBit)) then
@@ -60,7 +64,7 @@ contains
     new % counter = 0
     new % partition = partition
     new % totalTicks = totalTicks
-  end subroutine progressbar_init
+  end function progressbar_cnstrct
 
 
   ! -------------------------------------------------------------------------- !

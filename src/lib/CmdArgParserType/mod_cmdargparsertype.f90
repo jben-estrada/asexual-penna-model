@@ -50,13 +50,9 @@ module CmdArgParserType
       !! Table of aliases of commands.
     type(HashTable) :: cmdUsageTable
       !! Table of usage message for commands.
-    logical :: isInit = .false.
-      !! Initialization state.
     integer :: cmdCount = 0
       !! Number of defined commands defined in this `CmdArgParser` object.
   contains
-    procedure :: init => cmdargparser_init
-      !! Initialize this `CmdArgParser` object.
     procedure :: setCmd => cmdargparser_setCmd
       !! Set a command, its type and its usage text. An alias can be optionally 
       !! be set.
@@ -70,12 +66,10 @@ module CmdArgParserType
       !! Get the value of the given key-value command.
     procedure :: isFlagToggled => cmdargparser_isFlagToggled
       !! Determine if a flag command is passed.
-    procedure :: free => cmdargparser_free
-      !! Free allocated attributes of this `CmdArgParser` object.
   end type
 
-  ! Interface for submodule procedures.
   ! -------------------------------------------------------------------------- !
+  ! Interface for submodule procedures.
   interface
     module subroutine parseCmdArgs(parserObj)
       class(CmdArgParser), intent(inout) :: parserObj
@@ -85,6 +79,11 @@ module CmdArgParserType
     module subroutine sortCharArr(charArr)
       character(len=*), intent(inout) :: charArr(:)
     end subroutine sortCharArr
+  end interface
+
+  ! Constructor.
+  interface CmdArgParser
+    module procedure :: cmdargparser_cnstrct
   end interface
 
   ! Public elements in this module.
@@ -101,35 +100,22 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: cmdargparser_init
-  !>  Initialize the `CmdArgParser` object `self`.
+  ! FUNCTION: cmdargparser_cnstrct
+  !>  Constructor for the `CmdArgParser` type.
   ! -------------------------------------------------------------------------- !
-  subroutine cmdargparser_init(self)
-    class(CmdArgParser), target, intent(inout) :: self
-      !! `CmdArgParser` object to be initialized. We impose that `self` is a
-      !! target for pointers for its hash tables to be iteratable by
-      !! hash table iterators.
-
-    ! Check initialization state of `self`.
-    if (self % isInit) then
-      call raiseWarning( &
-          "Initializing an already initialized 'CmdArgParser' object." &
-        )
-      ! Free allocated memory first.
-      call self % free()
-    end if
+  function cmdargparser_cnstrct() result(new)
+    type(CmdArgParser), target :: new
 
     ! Initialize the hash table attributes.
-    call self % cmdTypeTable % init()
-    call self % cmdValueTable % init()
-    call self % cmdAliasTable % init()
-    call self % cmdUsageTable % init()
-    self % isInit = .true.
+    new % cmdTypeTable = HashTable()
+    new % cmdValueTable = HashTable()
+    new % cmdAliasTable = HashTable()
+    new % cmdUsageTable = HashTable()
 
     ! Add the command for print the help message.
-    call self % setCmd("h", CMD_TYPE_FLAG_S, "Show this help message.", &
+    call new % setCmd("h", CMD_TYPE_FLAG_S, "Show this help message.", &
         "help", CMD_TYPE_FLAG_L)
-  end subroutine cmdargparser_init
+  end function cmdargparser_cnstrct
 
 
   ! -------------------------------------------------------------------------- !
@@ -154,13 +140,6 @@ contains
 
     character :: dummyChar 
     integer   :: getStat
-  
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseError( &
-        "Cannot set commands. `CmdArgParser` is not yet initialized." &
-        )
-    end if
 
     if (.not. isValidCmdType(cmdType)) then
       call raiseError("Cannot set a command. Invalid type of command.")
@@ -284,9 +263,6 @@ contains
     class(CmdArgParser), intent(inout) :: self
       !! `CmdArgParser` object to be modified.
 
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) call raiseError("Uninitialized 'CmdArgParser'.")
-
     call parseCmdArgs(self)
   end subroutine cmdargparser_readCmdArgs
 
@@ -315,16 +291,9 @@ contains
     type(HashTable), pointer :: usageTable_ptr
     type(HashTableIterator)  :: usageTableIter
 
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseError( &
-        "Cannot show the help message. `CmdArgParser` is not yet initialized." &
-        )
-    end if
-
     ! Initialize hash table iterator.
     usageTable_ptr => self % cmdUsageTable
-    call usageTableIter % init(usageTable_ptr)
+    usageTableIter = HashTableIterator(usageTable_ptr)
 
     ! Initialize array of command names.
     allocate(character(len=MAX_CMD_LEN) :: cmdNames(self % cmdCount))
@@ -439,13 +408,6 @@ contains
     character :: cmdType
     integer   :: getStat
 
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseError(& 
-        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
-      )
-    end if
-
     ! Initialize output.
     allocate(character(len=0) :: cmdValue)
 
@@ -492,13 +454,6 @@ contains
     character :: dummyChar
     integer   :: getStat
 
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseError(& 
-        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
-      )
-    end if
-
     dummyChar = self % cmdValueTable % get(cmdName, getStat)
     if (getStat /= HSHTBLE_STAT_OK) then
       call raiseError("Unknown command name '" // trim(cmdName) // "'.")
@@ -521,13 +476,6 @@ contains
     character :: cmdType
     integer   :: getStat
 
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseError(& 
-        "Cannot read any value. 'CmdArgParser' object is uninitialized yet." &
-      )
-    end if
-
     cmdType = self % cmdTypeTable % get(cmdName, getStat)
     if (getStat /= HSHTBLE_STAT_OK) then
       call raiseError("Unknown command name '" // trim(cmdName) // "'.")
@@ -544,32 +492,4 @@ contains
     cmdargparser_isFlagToggled = &
       (self % cmdValueTable % get(cmdName) == FLAG_TOGGLED)
   end function cmdargparser_isFlagToggled
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: cmdargparser_free
-  !>  Free allocated attributes of the `CmdArgParser` object `self`.
-  ! -------------------------------------------------------------------------- !
-  subroutine cmdargparser_free(self)
-    class(CmdArgParser), intent(inout) :: self
-      !! `CmdArgParser` object whose allocated attributes are to be freed.
-
-    ! Check initialization state of `self`.
-    if (.not. self % isInit) then
-      call raiseWarning( &
-      "'CmdArgParser' object is uninitialized. Freeing nothing." &
-      )
-      return
-    end if
-  
-    ! Free all hash table attributes.
-    call self % cmdTypeTable % free()
-    call self % cmdValueTable % free()
-    call self % cmdAliasTable % free()
-    call self % cmdUsageTable % free()
-
-    ! Reset attributes to their initial values.
-    self % cmdCount = 0
-    self % isInit = .false.
-  end subroutine cmdargparser_free
 end module CmdArgParserType

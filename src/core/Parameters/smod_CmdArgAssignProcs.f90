@@ -11,9 +11,6 @@ submodule (Parameters) CmdArgAssignProcs
   ! -------------------------------------------------------------------------- !
   implicit none
 
-  type(CmdArgParser), target :: pennaCmdArgs
-    !! Command argument parser for this program.
-
 
   type :: CmdArgRecord
     !! A handy derived type for collecting command option attributes.
@@ -69,7 +66,9 @@ contains
   ! SUBROUTINE: initCmdArgRecs
   !>  Initialize `CmdArgRecord` objects in the `cmdArgArr` array.
   ! -------------------------------------------------------------------------- !
-  subroutine initCmdArgRecs()
+  subroutine initCmdArgRecs(pennaCmdArgs)
+    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+      !! Command argument parser for this program.
     integer :: i
 
     ! Model parameters.
@@ -154,9 +153,11 @@ contains
   !>  Assign parameters from external file and command arguments.
   ! -------------------------------------------------------------------------- !
   subroutine setParams()
+    type(CmdArgParser), target :: pennaCmdArgs
+
     ! Initialize the command argument parser.
-    call pennaCmdArgs % init()
-    call initCmdArgRecs()
+    pennaCmdArgs = CmdArgParser()
+    call initCmdArgRecs(pennaCmdArgs)
 
     call pennaCmdArgs % readCmdArgs()
 
@@ -167,7 +168,9 @@ contains
     ! Check if the help message is to be printed. Printing the help message has
     ! precendence over initialization of program to help first-time users to
     ! troubleshoot problems.
-    if (pennaCmdArgs % isFlagToggled("help")) call printHelpAndNotesMsgs()
+    if (pennaCmdArgs % isFlagToggled("help")) then
+      call printHelpAndNotesMsgs(pennaCmdArgs)
+    end if
 
     ! Get the flle path for the parameter listing file.
     if (pennaCmdArgs % hasValue(paramFilePath_kv % cmdName)) then
@@ -179,7 +182,7 @@ contains
     call readDefaultParamVal()
 
     ! Assign the parameters obtained from command arguments.
-    call assignUserProvidedParams()
+    call assignUserProvidedParams(pennaCmdArgs)
   end subroutine setParams
 
   
@@ -222,7 +225,9 @@ contains
   ! SUBROUTINE: assignUserProvidedParams
   !>  Assign the values obtained from command arguments to parameters.
   ! -------------------------------------------------------------------------- !
-  subroutine assignUserProvidedParams()
+  subroutine assignUserProvidedParams(pennaCmdArgs)
+    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+      !! Command argument parser for this program.
     type(CmdArgRecord) :: currCmdArg
     integer :: i, castStat
 
@@ -285,7 +290,7 @@ contains
       end if
     end do
 
-    call checkValidParams()
+    call checkValidParams(pennaCmdArgs)
   end subroutine assignUserProvidedParams
 
 
@@ -293,7 +298,9 @@ contains
   ! SUBROUTINE: checkValidParams
   !>  Check the assigned model parameters for invalid values.
   ! -------------------------------------------------------------------------- !
-  subroutine checkValidParams()
+  subroutine checkValidParams(pennaCmdArgs)
+    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+
     logical :: printNoParam, printAllParam
 
     printNoParam = pennaCmdArgs % isFlagToggled(noParam_f % cmdName)
@@ -336,7 +343,9 @@ contains
   ! SUBROUTINE: printHelpAndNotesMsgs
   !>  Print the help messages including some notes.
   ! -------------------------------------------------------------------------- !
-  subroutine printHelpAndNotesMsgs()
+  subroutine printHelpAndNotesMsgs(pennaCmdArgs)
+    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+
     character(len=:), allocatable :: progName
 
     ! Initialize local variables.
@@ -457,9 +466,6 @@ contains
 
     ! Free Verhulst weight array.
     if (allocated(MODEL_V_WEIGHT)) deallocate(MODEL_V_WEIGHT)
-
-    ! Free the attributes of command argument parser.
-    call pennaCmdArgs % free()
 
     ! Free all allocatable attributes of all `CmdArgRecord` objects.
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)

@@ -47,7 +47,7 @@ contains
     call checkParamFilePath()
 
     ! Read parameter file.
-    call paramReader % init(FILE_PARAM_LIST)
+    paramReader = ParamFileParser(FILE_PARAM_LIST)
     call paramReader % readFile()
 
     ! Assign scalar parameters one-by-one.
@@ -81,7 +81,6 @@ contains
 
     ! Free all local allocatable variables.
     deallocate(tempRecFlag)
-    call paramReader % free()
   end subroutine readDefaultParamVal
 
 

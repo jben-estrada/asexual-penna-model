@@ -21,11 +21,7 @@ module ParamFileParserType
       !! Path to the file to be read and parsed.
     type(HashTable) :: keyValTable
       !! Table into which obtained parameters from file is stored.
-    logical :: isInit = .false.
-      !! Initialization state.
   contains
-    procedure :: init => paramfileparser_init
-      !! Initialize the `ParamFileParser`.
     procedure :: readFile => paramfileparser_readFile
       !! Read the file and store the obtained parameter values.
     generic   :: getValue => &
@@ -35,8 +31,8 @@ module ParamFileParserType
         paramfileparser_getArrValue_int, &
         paramfileparser_getArrValue_real
       !! Get parameter values.
-    procedure :: free => paramfileparser_free
-      !! Free allocated memory.
+    final :: destructor
+      !! Free allocated atrtibutes.
 
     ! Specific procedures for generic ones.
     procedure, private :: paramfileparser_getScalarValue_char
@@ -54,8 +50,8 @@ module ParamFileParserType
   character, parameter :: KEYVAL_SEP = "="
   ! End of line character.
   character, parameter :: EOL = achar(0)
-  ! -------------------------------------------------------------------------- !
 
+  ! -------------------------------------------------------------------------- !
   ! Interface for submodule procedures.
   interface
     module logical function isWhiteSpace(char)
@@ -82,37 +78,43 @@ module ParamFileParserType
         !! Array output. Its type must be either integer or real.
     end subroutine paramArray
   end interface
+
+  ! Constructor.
+  interface ParamFileParser
+    module procedure :: paramfileparser_cnstrct
+  end interface
+
   ! -------------------------------------------------------------------------- !
   ! Standard unit in this module for opening and reading files.
   integer, parameter :: STD_UNIT = 50
   ! Maximum length of one line.
   integer, parameter :: MAX_LINE_LEN = 256
 
+
   public :: ParamFileParser
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: paramfileparser_init
-  !>  Initialize the `ParamFileParser` object `new`.
+  ! FUNCTION: paramfileparser_cnstrct
+  !>  Constructor for the  `ParamFileParser` type.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_init(new, filePath)
-    class(ParamFileParser), intent(out) :: new
-      !! New `ParamFileParser` to be initialized.
+  function paramfileparser_cnstrct(filePath) result(new)
     character(len=*),      intent(in)  :: filePath
       !! Path to the file to be opened and read.
-  
+
+    type(ParamFileParser) :: new
     integer :: fileStat
 
-    call new % keyValTable % init()
+    new % keyValTable = HashTable()
+
     ! Check if the file exits.
     inquire(file=filePath, iostat=fileStat)
     if (fileStat /= 0) call raiseError("'" // trim(filePath) // &
         "' cannot be opened or does not exit.")
 
     new % filePath = trim(filePath)  ! NOTE: Automatic allocation
-    new % isInit = .true.
-  end subroutine paramfileparser_init
+  end function paramfileparser_cnstrct
 
 
   ! -------------------------------------------------------------------------- !
@@ -485,15 +487,14 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: paramfileparser_free
-  !>  Free allocated attributes.
+  ! SUBROUTINE: destructor
+  !>  Destructor for the `ParamFileParser` type.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_free(self)
-    class(ParamFileParser), intent(inout) :: self
+  subroutine destructor(self)
+    type(ParamFileParser), intent(inout) :: self
       !! `ParamFileParser` object to be modified.
 
-    self % isInit = .false.
-    call self % keyValTable % free()
+    ! `HashTable` attribute is automatically destroyed.
     deallocate(self % filePath)
-  end subroutine paramfileparser_free
+  end subroutine destructor
 end module ParamFileParserType

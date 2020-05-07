@@ -186,8 +186,7 @@ contains
     end do mainLoop
 
     ! Wrap up.
-    call freePersonPtrs(popSize)
-    if (recordFlag /= REC_NULL) call runWriter % free()
+    call freePersonList(popSize)
   contains
 
 
@@ -338,7 +337,7 @@ contains
     integer, parameter :: TIME_WRITER_UNIT = 101
 
     ! Initialize the progress bar.
-    call progBar % init(20, sampleSize)
+    progBar = ProgressBar(20, sampleSize)
 
     ! Call and time the `run` subroutine.
     sum = 0._timeRK
@@ -390,7 +389,7 @@ contains
 
     ! Record mean time and std deviation.
     if (recordTime) then
-      call timeWriter % init(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT)
+      timeWriter = Writer(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT)
       call timeWriter % openFile()
 
       ! Write the header of the file.
@@ -412,7 +411,6 @@ contains
           real(meanTime, kind=writeRK),     &
           real(stdDevTime, kind=writeRK)]   &
         )
-      call timeWriter % free()
     end if
 
     if (printProgress) print "(*(a))", PRINT_SEPARATOR
@@ -459,7 +457,7 @@ contains
     if (recordFlag == REC_NULL) return
 
     ! Initialize writer.
-    call runWriter % init(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT)  
+    runWriter = Writer(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT)
     ! Open file for writing.
     call runWriter % openFile()
 
