@@ -243,6 +243,15 @@ contains
             currCmdArg % intValue_ptr = castCharToInt( &
               pennaCmdArgs % getCmdValue(currCmdArg % cmdName), castStat &
             )
+            ! Check casting status.
+            if (castStat /= 0) then
+              ! NOTE: Recall that `cmdName`s are short commands while
+              ! `cmdAlias`s are long ones.
+              call raiseError( &
+                "Invalid value for '-" // currCmdArg % cmdName // &
+                "' or '--" // currCmdArg % cmdAlias // "'. Must be integer." &
+                )
+            end if
           end if
 
         else if (associated(currCmdArg % charValue_ptr)) then
