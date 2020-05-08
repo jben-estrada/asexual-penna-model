@@ -47,20 +47,17 @@ module Penna
     getBadGeneDstrb
 
   use PopulationList, only: &
-    isCurrIndivDead,        &
-    isCurrIndivMature,      &
-    getCurrIndivAge,        &
-    getCurrIndivGenome,     &
-    countDeath,             &
-    elemCount,              &
-    killCurrentIndiv,       &
-    checkCurrIndivDeath,    &
-    updateCurrIndivAge,     &
-    reproduceCurrIndiv,     &
-    nextElem,               &
-    resetPersonReadPtrs,    &
-    freePersonPtrs,         &
-    initPersonList
+    ALIVE, &
+    DEAD_OLD_AGE, &
+    DEAD_MUTATION, &
+    DEAD_VERHULST, &
+    Person, &
+    initPersonList, &
+    goToNextPerson, &
+    restartReadingList, &
+    getCurrPerson, &
+    freePersonList
+
   use, intrinsic :: iso_fortran_env, only: &
     timeIK => int64, &
     timeRK => real64
@@ -172,8 +169,6 @@ contains
       ! Record data.
       call recordData(recordFlag)
 
-      ! Move the reader of the population list back to the first element.
-      call resetPersonReadPtrs()
       ! Reset counters.
       select case(recordFlag)
         case(REC_DEATH)
@@ -240,8 +235,11 @@ contains
     integer,          intent(in)    :: countdown        !! Count from max time.
     character,        intent(in)    :: recordFlag       !! Record flag.
 
+    type(Person), pointer :: currPerson_ptr
+
     integer :: popSizeChange
     integer :: listStatus
+    logical :: hasBirth
 
     ! Initialize variables
     popSizeChange = 0
@@ -249,42 +247,57 @@ contains
       ! Catch extinction case.
       if (popSize == 0) exit
 
-      ! Evaluate the current individual. 
-      call checkCurrIndivDeath(popSize)
-      if (isCurrIndivDead()) then
-        ! Count the dead ones.
-        if (recordFlag == REC_DEATH) then
-          call countDeath(deathByAge, deathByMutation, deathByVerhulst)
+      ! Get the current individual.
+      currPerson_ptr => getCurrPerson()
+
+      ! Evaluate the current individaul.
+      call currPerson_ptr % checkDeath(popSize)
+
+      if (currPerson_ptr % getLifeStat() == ALIVE) then
+        ! Update the age of the current person.
+        call currPerson_ptr % incrementAge()
+
+        ! Update the genome distribution.
+        if (any(recordFlag == [REC_DIV_IDX, REC_GENE_DSTRB])) then
+          call updateGenomeDstrb(currPerson_ptr % getGenome())
         end if
 
-        popSizeChange = popSizeChange - 1
+        ! If the current person is alive, check for birth.
+        call currPerson_ptr % checkBirth(hasBirth)
+        ! Update the change in population size.
+        if (hasBirth) popSizeChange = popSizeChange + MODEL_B
       else
-        ! Update age of the alive individuals.
-        call updateCurrIndivAge()
-
-        ! Update genome distribution.
-        if (recordFlag == REC_DIV_IDX .or. recordFlag == REC_GENE_DSTRB) &
-            call updateGenomeDstrb(getCurrIndivGenome())
-
-        ! Check for birth events.
-        if (isCurrIndivMature()) then
-          call reproduceCurrIndiv(recordFlag == REC_DIV_IDX)
-          popSizeChange = popSizeChange + MODEL_B
+        if (recordFlag == REC_DEATH) then
+          ! Increment the appropriate death counter.
+          select case(currPerson_ptr % getLifeStat())
+            case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1
+            case(DEAD_MUTATION); deathByMutation = deathByMutation + 1
+            case(DEAD_VERHULST); deathByVerhulst = deathByVerhulst + 1
+            case default
+              call raiseError("Internal error encountered. Invalid lifeStat.")
+          end select
         end if
+
+        ! Update the change in population size.
+        popSizeChange = popSizeChange - 1
       end if
 
-      ! Record demographics.
-      if (countdown <= DEMOG_LAST_STEPS) &
-          call updateAgeDstrb(getCurrIndivAge(), ageDistribution)
+      ! Record age demographics.
+      if (countdown <= DEMOG_LAST_STEPS) then
+        call updateAgeDstrb(currPerson_ptr % getAge(), ageDistribution)
+      end if
 
-      ! Proceed to the next element of the linked list.
-      call nextElem(listStatus)
-      ! Exit condition.
+      call goToNextPerson(listStatus)
+
+      ! Break out of the loop once the 
       if (listStatus /= 0) exit
     end do evalPop
-  
+
     ! Update population size
     popSize = popSize + popSizeChange
+    
+    ! Move the reader of the population list back to the first element.
+    call restartReadingList()
   end subroutine evalPopulation
 
 

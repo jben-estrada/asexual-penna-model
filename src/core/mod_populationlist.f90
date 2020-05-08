@@ -5,8 +5,8 @@ module PopulationList
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
-  !>  Module containing an implementation of singly linked-list for
-  !!  representing the population in Penna model simulations.
+  !>  Module containing an implementation of singly linked-list of `Person`
+  !!  objects for representing the population in Penna model simulations.
   ! -------------------------------------------------------------------------- !
   use Parameters, only: &
     MODEL_L,        &
@@ -20,78 +20,85 @@ module PopulationList
 
   use ErrorMSG, only: raiseError
   use RandNumProcs, only: getRandReal, getRandRange
-  use Demographics, only: updateGenomeDstrb
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none
   private
 
+  
   ! `PERSON` DERIVED TYPE
   ! -------------------------------------------------------------------------- !
   type :: Person
     !! A node to the population linked-list. This represents a single
     !! individual with its own age and genome.
+    private
     integer(kind=personIK) :: genome
       !! Genome of this individual.
     integer :: age
       !! The age of this individual.
-    integer :: deathIndex
+    integer :: lifeStat
       !! Vitality of this individual. Values greater than 1 denotes death.
     integer :: mutationCount
       !! Number of mutations in this individual's genome.
 
     type(Person), pointer  :: next => null()
       !! Pointer to the next element in the list of individuals.
+  contains
+    procedure :: checkDeath => person_checkDeath
+      !! Check if this `Person` object is to die in the current time step.
+    procedure :: checkBirth => person_checkBirth
+      !! Check if this `Person` object is to reproduce in the current time step.
+    procedure :: getLifeStat => person_getLifeStat
+      !! Get the life status of this `Person` object.
+    procedure :: getGenome => person_getGenome
+      !! Get the genome of this `Person` object.
+    procedure :: getAge => person_getAge
+      !! Get the age of this `Person` object.
+    procedure :: incrementAge => person_incrementAge
+      !! Increment the age of this `Person` object.
   end type Person
+
 
   ! `PERSON` LINKED-LIST POINTERS.
   ! -------------------------------------------------------------------------- !
   ! List pointers.
   type(Person), pointer :: head_ptr => null()
-      !! The head of the list.
+    !! The head of the list.
   type(Person), pointer :: tail_ptr => null()
-    !! The tail of the list at every beginning of each time steps. 
-  type(Person), pointer :: newTail_ptr => null()
-    !! The transient tail of the list during each time steps. At the end of 
-    !! each time steps, `tail_ptr` is updated to point to this pointer.
+    !! The tail of the list at the beginning of each time step. 
+  type(Person), pointer :: futureTail_ptr => null()
+    !! The actual tail of the list.
 
   ! Reader pointers.
-  type(Person), pointer :: current_ptr => null()
+  type(Person), pointer :: readerCurr_ptr => null()
     !! The reading pointer for reading and modifying the list.
     !! This points to the current individual.
-  type(Person), pointer :: old_ptr => null()
-    !! The pointer before `current_ptr`.
+  type(Person), pointer :: readerPrev_ptr => null()
+    !! The pointer before `readerCurr_ptr`.
 
   ! INDIVIDUAL STATES.
   ! -------------------------------------------------------------------------- !
-  integer, parameter :: ALIVE = 1
-  integer, parameter :: DEAD_OLD_AGE = 2
-  integer, parameter :: DEAD_MUTATION = 3
-  integer, parameter :: DEAD_VERHULST = 4
+  integer, parameter :: ALIVE = 0
+  integer, parameter :: DEAD_OLD_AGE = 1
+  integer, parameter :: DEAD_MUTATION = 2
+  integer, parameter :: DEAD_VERHULST = 3
 
-  ! PUBLIC PROCEDURES
-  ! -------------------------------------------------------------------------- !
-  ! Inquiry procedures
-  public :: isCurrIndivDead
-  public :: isCurrIndivMature
-  public :: getCurrIndivAge
-  public :: getCurrIndivGenome
-  public :: countDeath
-  public :: elemCount
+  public :: ALIVE
+  public :: DEAD_OLD_AGE
+  public :: DEAD_MUTATION
+  public :: DEAD_VERHULST
 
-  ! Transformational procedures.
-  public :: killCurrentIndiv
-  public :: checkCurrIndivDeath
-  public :: updateCurrIndivAge
-  public :: reproduceCurrIndiv
-  public :: nextElem
-
-  ! Subroutines for memory management.
-  public :: resetPersonReadPtrs
-  public :: freePersonPtrs
-
-  ! Initializer
+  public :: Person
   public :: initPersonList
+  public :: goToNextPerson
+  public :: restartReadingList
+  public :: getCurrPerson
+  public :: freePersonList
+  public :: countElem
 contains
+
+  ! -------------------------------------------------------------------------- !
+  ! `PERSON` LINKED-LIST INITIALIZATION.
+  ! -------------------------------------------------------------------------- !
 
 
   ! -------------------------------------------------------------------------- !
@@ -106,69 +113,69 @@ contains
     integer, intent(in) :: initMttnCount
       !! Initial mutation count.
 
-    type(Person), pointer :: newIndiv_ptr
-    type(Person), pointer :: oldIndiv_ptr
+    type(Person), pointer :: newPerson_ptr
+    type(Person), pointer :: oldPerson_ptr
     integer :: i
 
     ! Initialize the head of the `Person` list.
-    allocate(head_ptr)
-    call initializeHealthyIndiv(head_ptr, initMttnCount)
+    head_ptr => constructPurePerson(initMttnCount)
 
     ! Append the new individuals.
-    oldIndiv_ptr => head_ptr
-    newIndiv_ptr => null()
+    oldPerson_ptr => head_ptr
+    newPerson_ptr => null()
     if (startPopSize == 1) then
       tail_ptr => head_ptr
     else
       do i = 1, startPopSize - 1
-        allocate(newIndiv_ptr)
-        oldIndiv_ptr % next => newIndiv_ptr
-        oldIndiv_ptr => newIndiv_ptr
-        
-        call initializeHealthyIndiv(newIndiv_ptr, initMttnCount)
+        newPerson_ptr => constructPurePerson(initMttnCount)
+
+        ! Append the new `Person` to the list.
+        oldPerson_ptr % next => newPerson_ptr
+        oldPerson_ptr => newPerson_ptr
       end do
       
-      tail_ptr => newIndiv_ptr
+      tail_ptr => newPerson_ptr
     end if
 
-    newTail_ptr => tail_ptr
+    futureTail_ptr => tail_ptr
 
     ! Initialize the reader pointer.
-    current_ptr => head_ptr
-    old_ptr => null()
+    readerCurr_ptr => head_ptr
+    readerPrev_ptr => null()
   end subroutine initPersonList
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializeHealthyIndiv
-  !>  Initialize the `Person` object `indiv_ptr` is pointing to `Person` with 
-  !!  a healthy genome by default.
+  ! FUNCTION: constructPurePerson
+  !>  Construct and initialize a `Person` object with `mutationCount` number
+  !!  of random bad genes.
   ! -------------------------------------------------------------------------- !
-  subroutine initializeHealthyIndiv(indiv_ptr, mutationCount)
-    type(Person), pointer, intent(inout) :: indiv_ptr
-      !! The pointer to the individual or the `Person` object to be initialized.
-    integer,               intent(in)    :: mutationCount
+  function constructPurePerson(mutationCount) result(person_ptr)
+    integer, intent(in) :: mutationCount
       !! Initial number of mutations.
+    type(Person), pointer :: person_ptr
 
+    allocate(person_ptr)
+    
     ! Initialize genome and mutation count.
-    indiv_ptr % genome = GENE_HEALTHY
-    indiv_ptr % mutationCount = 0
-    call applyInitialMutations(indiv_ptr, mutationCount)
+    person_ptr % genome = GENE_HEALTHY
+    person_ptr % mutationCount = 0
+    call applyInitialMutations(person_ptr, mutationCount)
 
-    indiv_ptr % age = 0
-    indiv_ptr % deathIndex = ALIVE
-  end subroutine initializeHealthyIndiv
+    person_ptr % age = 0
+    person_ptr % lifeStat = ALIVE
+  end function constructPurePerson
 
-  
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: applyInitialMutations
   !>  Apply a set number of mutation to a `Person` object to be initialized.
   ! -------------------------------------------------------------------------- !
-  subroutine applyInitialMutations(indiv_ptr, mutationCount)
-    type(Person), pointer, intent(inout) :: indiv_ptr
+  subroutine applyInitialMutations(person_ptr, mutationCount)
+    type(Person), pointer, intent(inout) :: person_ptr
       !! The pointer to the individual or the `Person` object to be initialized.
     integer,               intent(in)    :: mutationCount
-      !! Number of mutations to apply onto `indiv_ptr`.
+      !! Number of mutations to apply onto `person_ptr`.
 
     integer :: mutationIndcs(mutationCount)
     integer :: i
@@ -179,7 +186,7 @@ contains
 
       ! Apply mutations.
       do i = 1, mutationCount
-        indiv_ptr % genome = ior(indiv_ptr % genome, &
+        person_ptr % genome = ior(person_ptr % genome, &
             int(shiftl(1, mutationIndcs(i) - 1), kind=personIK))
       end do
     end if
@@ -187,364 +194,323 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: countDeath
-  !>  Determine the death of the current individual and increment the
-  !!  corresponding death counter.
+  ! SUBROUTINE: goToNextPerson
+  !>  Go to the next `Person` object in the `Person` linked-list. This also
+  !!  updates the age of previously checked `Person` object or remove them when
+  !!  it is marked as dead.
   ! -------------------------------------------------------------------------- !
-  subroutine countDeath(deathByAge, deathByMutation, deathByVerhulst)
-    integer, pointer, intent(inout) :: deathByAge
-      !! Pointer for death by age counter.
-    integer, pointer, intent(inout) :: deathByMutation
-      !! Pointer for death by mutation counter.
-    integer, pointer, intent(inout) :: deathByVerhulst
-      !! Pointer for death by Verhulst factor counter.
+  subroutine goToNextPerson(listStat)
+    integer, intent(out) :: listStat
+      !! List status. Returns -1 if the current element would be at the tail of
+      !! list after incrementing the pointer. Otherwise, return 0.
 
-    select case (current_ptr % deathIndex)
-      case (DEAD_OLD_AGE)
-        deathByAge = deathByAge + 1
+    ! Check the position of the new current `Person` object in the list.
+    if (associated(readerCurr_ptr, tail_ptr)) then
+      ! NOTE: Removing the current `Person` object moves the `readerCurr_ptr`
+      ! to its next element.
+      if (readerCurr_ptr % lifeStat /= ALIVE) call removeCurrPerson()
+      listStat = -1
+    else
+      if (readerCurr_ptr % lifeStat == ALIVE) then
+        ! Go to the next `Person` element.
+        readerPrev_ptr => readerCurr_ptr
+        readerCurr_ptr => readerCurr_ptr % next
 
-      case (DEAD_MUTATION)
-        deathByMutation = deathByMutation + 1
+        listStat = 0
+      else
+        if (associated(readerCurr_ptr, tail_ptr)) then
+          listStat = -1
+        else
+          listStat = 0
+        end if
 
-      case (DEAD_VERHULST)
-        deathByVerhulst = deathByVerhulst + 1
-
-      case default
-        call raiseError("The current individual is not dead or has an" // &
-            " invalid death index.")
-    end select
-  end subroutine countDeath
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initializeIndiv
-  !>  Initialize `indiv_ptr` with genes inherited from another `Person`
-  !!  object.
-  ! -------------------------------------------------------------------------- !
-  subroutine initializeIndiv(indiv_ptr, genome)
-    type(Person), pointer,  intent(inout) :: indiv_ptr
-      !! The pointer to the individual or the `Person` object to be initialized.
-    integer(kind=personIK), intent(in)    :: genome
-      !! Genome from another `Person` object.
-
-    integer :: mutations(MODEL_M)
-    integer :: i
-
-    mutations(:) = 0  ! Initialize `mutations`
-    mutations = getRandRange(1, MODEL_L, MODEL_M)
-
-    indiv_ptr % genome = genome
-    do i = 1, size(mutations)
-      if (getGene(indiv_ptr % genome, mutations(i)) == GENE_HEALTHY) then
-        indiv_ptr % genome = ior(indiv_ptr % genome, &
-            shiftl(1_personIK, mutations(i) - 1))
+        call removeCurrPerson()
       end if
-    end do
-
-    indiv_ptr % age = 0
-    indiv_ptr % mutationCount = 0
-    indiv_ptr % deathIndex = ALIVE
-  end subroutine initializeIndiv
-
-  
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: freePersonPtrs
-  !>  Free the allocatable elements of the `Person` linked list.
-  ! -------------------------------------------------------------------------- !
-  subroutine freePersonPtrs(popSize)
-    integer, intent(in) :: popSize
-      !! The size of `self`.
-
-    ! Local reader pointers.
-    type(Person), pointer :: localCurr_ptr => null()
-    type(Person), pointer :: localNext_ptr => null()
-
-    if (popSize == 0 .and. associated(head_ptr)) then
-      head_ptr => null()
     end if
+  end subroutine goToNextPerson
 
-    localCurr_ptr => head_ptr
-    localNext_ptr => null()
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: removeCurrPerson
+  !>  Remove the current `Person` object, i.e. the object `readerCurr_ptr` is
+  !!  pointing at.
+  ! -------------------------------------------------------------------------- !
+  subroutine removeCurrPerson()
+    type(Person), pointer :: toBeRemoved_ptr
+
+    ! Mark the current pointer as smt to be freed.
+    toBeRemoved_ptr => readerCurr_ptr
+
+    ! Edge case: head of the list. The next element becomes the head.
+    if (associated(readerCurr_ptr, head_ptr)) then
+      head_ptr => readerCurr_ptr % next
+      readerCurr_ptr => readerCurr_ptr % next
+    ! Edge case: delayed tail of the list. The previous element becomes the tail
+    else if (associated(readerCurr_ptr, tail_ptr)) then
+      ! Update the actual tail pointer.
+      if (associated(futureTail_ptr, tail_ptr)) then
+        futureTail_ptr => readerPrev_ptr
+        futureTail_ptr % next => null()
+      end if
+
+      
+      ! Move the tail back one element.
+      tail_ptr => readerPrev_ptr
+      ! Update the link of the (delayed) tail to the next element.
+      tail_ptr % next => readerCurr_ptr % next
+      ! Move the current pointer back one element.
+      readerCurr_ptr => readerPrev_ptr
+
+      ! NOTE: We do not care about the previous pointer as the list to be read
+      ! at the current time step is already at the end.
+      readerPrev_ptr => null()
+    ! General case.
+    else
+      readerPrev_ptr % next => readerCurr_ptr % next
+      readerCurr_ptr => readerCurr_ptr % next
+    end if
+    
+    deallocate(toBeRemoved_ptr)
+  end subroutine removeCurrPerson
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: restartReadingList
+  !>  Reset the reader pointers. Update the tail of the list.
+  ! -------------------------------------------------------------------------- !
+  subroutine restartReadingList()
+    readerCurr_ptr => head_ptr
+    readerPrev_ptr => null()
+
+    tail_ptr => futureTail_ptr
+  end subroutine restartReadingList
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getCurrPerson
+  !>  Get the pointer pointing at current `Person` object, i.e. the 
+  !   `readerCurr_ptr`.
+  ! -------------------------------------------------------------------------- !
+  function getCurrPerson() result(person_ptr)
+    type(Person), pointer :: person_ptr
+    
+    person_ptr => readerCurr_ptr
+  end function getCurrPerson
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: freePersonList
+  !>  Free all the allocated elements of the `Person` linked-list.
+  ! -------------------------------------------------------------------------- !
+  subroutine freePersonList(popSize)
+    integer, intent(in) :: popSize
+      !! Population size.
+    type(Person), pointer :: currPerson_ptr
+    type(Person), pointer :: toBeFreed_ptr
+
+    ! Prevent doubling freeing.
+    if (popSize == 0 .and. associated(head_ptr)) currPerson_ptr => null()
+
+    ! Deallocate all the elements of th `Person` linked-list.
+    currPerson_ptr => head_ptr
     do
-      if (associated(localCurr_ptr)) then
-        localNext_ptr => localCurr_ptr % next
-        deallocate(localCurr_ptr)
-        localCurr_ptr => localNext_ptr
+      if (associated(currPerson_ptr)) then
+        toBeFreed_ptr => currPerson_ptr
+        currPerson_ptr => currPerson_ptr % next
+
+        deallocate(toBeFreed_ptr)
       else
         exit
       end if
     end do
-  end subroutine freePersonPtrs
+
+    ! Nullify all pointers in this module.
+    readerCurr_ptr => null()
+    readerPrev_ptr => null()
+    head_ptr => null()
+    tail_ptr => null()
+    futureTail_ptr => null()
+  end subroutine freePersonList
 
 
   ! -------------------------------------------------------------------------- !
-  ! BOUND SUBROUTINE: killCurrentIndiv
-  !>  Kill the `Person` attribute `current_ptr` is pointing at  and remove it 
-  !!  from the list.
+  ! `PERSON` BOUND PROCEDURES.
   ! -------------------------------------------------------------------------- !
-  subroutine killCurrentIndiv()
-    type(Person), pointer :: deadIndiv_ptr ! Pointer for `Person` to be killed.
-
-    deadIndiv_ptr => current_ptr
-    current_ptr => current_ptr % next
-    if (associated(old_ptr)) old_ptr % next => current_ptr
-
-    deallocate(deadIndiv_ptr)
-  end subroutine killCurrentIndiv
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: incrementPtr
-  !>  Have the `dummyCurr_ptr` point to the next element of the linked list.
+  ! SUBROUTINE: person_checkDeath
+  !>  Check the death of the `Person` object `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine incrementPtr(dummyCurr_ptr, dummyOld_ptr)
-    type(Person), pointer, intent(inout) :: dummyCurr_ptr
-      !! Dummy argument for the current reader pointer.
-    type(Person), pointer, intent(inout) :: dummyOld_ptr
-    !! Dummy argument for the previous reader pointer.
+  subroutine person_checkDeath(self, popSize)
+    class(Person), intent(inout) :: self
+    integer,       intent(in)    :: popSize
+      !! Population size at the start of the current time step.
 
-    ! NOTE: We demand that `dummyCurr_ptr` will never encounter a
-    ! disassociated pointer.
-    dummyOld_ptr => dummyCurr_ptr
-    dummyCurr_ptr => dummyCurr_ptr % next
-  end subroutine incrementPtr
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: reproduceCurrIndiv
-  !>  Have the `Person` object `current_ptr` is pointing at to reproduce.
-  ! -------------------------------------------------------------------------- !
-  subroutine reproduceCurrIndiv(updateGenome)
-    logical, intent(in) :: updateGenome
-      !! Update the genome distribution if true.
-
-    type(Person), pointer :: newIndiv_ptr
-    type(Person), pointer :: oldIndiv_ptr
-    integer :: i
-
-    ! Check if the current individual can reproduce.
-    if (MODEL_R > current_ptr % age .or. current_ptr % age > MODEL_R_MAX) return
-
-    ! Add new born individuals to the next generation.
-    oldIndiv_ptr => newTail_ptr
-    newIndiv_ptr => null()
-    do i = 1, MODEL_B
-      allocate(newIndiv_ptr)
-
-      ! Pass the genome of the current individual to the newborn ones.
-      call initializeIndiv(newIndiv_ptr, current_ptr % genome)
-
-      ! Proceed to the next element on the list.
-      oldIndiv_ptr % next => newIndiv_ptr
-      oldIndiv_ptr => newIndiv_ptr
-
-      ! Incremenet the genome counter or add a new "genome node" instance to
-      ! be appended onto the genome list.
-      if (updateGenome) call updateGenomeDstrb(newIndiv_ptr % genome)
-    end do
-
-    ! Update the new tail.
-    newTail_ptr => newIndiv_ptr
-  end subroutine reproduceCurrIndiv
-
-
-  !-------------------------------------------------------------------------- !
-  ! FUNCTION: isCurrIndivDead
-  !>  Check whether the `Person` object `current_ptr` is pointing at is dead.
-  ! -------------------------------------------------------------------------- !
-  logical pure function isCurrIndivDead()
-    isCurrIndivDead = (current_ptr % deathIndex /= ALIVE)
-  end function isCurrIndivDead
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCurrIndivAge
-  !>  Get the age of the `Person` object `current_ptr` is pointing at.
-  ! -------------------------------------------------------------------------- !
-  integer function getCurrIndivAge()
-    ! Initialize output with 0.
-    getCurrIndivAge = 0
-
-    if (associated(current_ptr)) then
-      getCurrIndivAge = current_ptr % age
-    else
-      call raiseError("The current pointer of a linked list is disassociated.")
-    end if
-  end function getCurrIndivAge
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getCurrIndivGenome
-  !>  Get the genome of the `Person` object `current_ptr` is pointing at.
-  ! -------------------------------------------------------------------------- !
-  function getCurrIndivGenome() result(genome)
-    integer(kind=personIK) :: genome
-
-    ! Initialize the output with 0.
-    genome = 0_personIK
-
-    if (associated(current_ptr)) then
-      genome = current_ptr % genome
-    else
-      call raiseError("The current pointer of a linked list is disassociated.")
-    end if
-  end function getCurrIndivGenome
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: nextElem
-  !>  Proceed to the next element of the list.
-  ! -------------------------------------------------------------------------- !
-  subroutine nextElem(status)
-    integer, intent(out) :: status
-      !! Status of this routine. Returns 0 if incrementing the `current_ptr` of
-      !! `self` succeeds. Returns -1 if the end of the `self` is reached.
-
-    ! ***Terminal case: end of the linked-list.
-    !    This corresponds to `status` = -1.
-    if (associated(current_ptr, tail_ptr)) then
-      ! Handle the case when the tail `Person` is dead.
-      if (current_ptr % deathIndex /= ALIVE) then
-        call killCurrentIndiv()
-
-        ! Check edge case.
-        if (associated(current_ptr)) then
-          tail_ptr => current_ptr
-        else
-          ! Have `current_ptr` point back to the previous ptr.
-          current_ptr => old_ptr
-          tail_ptr => current_ptr
-          newTail_ptr => current_ptr
-
-          ! NOTE: We will not bother decrementing `old_ptr` since most likely
-          ! it will be reset anyways.
-          old_ptr => null()
-        end if
-      end if
-
-      ! Update the tail of the linked list.
-      status = -1
-      tail_ptr => newTail_ptr
-
-    ! ***Non-terminal case. Move to the next element of the list.
-    ! This corresponds to `status` = 0.
-    else
-      ! Check the life of the current individual.
-      if (current_ptr % deathIndex == ALIVE) then
-        call incrementPtr(current_ptr, old_ptr)
-      else
-        ! Handle the case when the head `Person` is dead.
-        if (associated(current_ptr, head_ptr)) &
-            head_ptr => current_ptr % next
-
-        call killCurrentIndiv()
-      end if
-      
-      status = 0
-    end if
-  end subroutine nextElem
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: resetPersonReadPtrs
-  !>  Reset reader pointers, i.e. `current_ptr` and `old_ptr`. 
-  !!  The current pointer goes back to the head of the list and the "previous" 
-  !!  pointer is nullified.
-  ! -------------------------------------------------------------------------- !
-  subroutine resetPersonReadPtrs()
-    current_ptr => head_ptr
-    old_ptr => null()
-  end subroutine resetPersonReadPtrs
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: updateCurrIndivAge
-  !>  Increment the age of the `Person` object `current_ptr` is pointing at.
-  ! -------------------------------------------------------------------------- !
-  subroutine updateCurrIndivAge()
-    current_ptr % age = current_ptr % age + 1
-  end subroutine updateCurrIndivAge
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isCurrIndivMature
-  !>  Inquire whether the `Person` object the `current_ptr` is pointing at is
-  !!  able to reproduce.
-  ! -------------------------------------------------------------------------- !
-  logical pure function isCurrIndivMature()
-    logical :: lowerBound
-    logical :: upperBound
-
-    lowerBound = MODEL_R <= current_ptr % age
-    upperBound = current_ptr % age <= MODEL_R_MAX
-  
-    isCurrIndivMature = (lowerBound .and. upperBound)
-  end function isCurrIndivMature
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: checkCurrIndivDeath
-  !>  Update the death status of the `Person` object the `current_ptr` is 
-  !!  pointing at. 
-  ! -------------------------------------------------------------------------- !
-  subroutine checkCurrIndivDeath(popSize)
-    integer,           intent(in)    :: popSize
-      !! The current population size for calculating the Verhulst factor.
-  
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
     integer :: nextAge
 
-    nextAge = current_ptr % age + 1             ! Hypothetical age
-    verhulstWeight = MODEL_V_WEIGHT(nextAge)  ! Verhulst weight per age
+    nextAge = self % age + 1 ! Hypothetical age
 
     ! ***Death check: Old age
     if (nextAge >= MODEL_L) then
-      current_ptr % deathIndex = DEAD_OLD_AGE
+      self % lifeStat = DEAD_OLD_AGE
       return
     end if
 
     ! Count mutation.
-    if (getGene(current_ptr % genome, nextAge) == GENE_UNHEALTHY) &
-      current_ptr % mutationCount = current_ptr % mutationCount + 1
+    if (getGene(self % genome, nextAge) == GENE_UNHEALTHY) then
+      self % mutationCount = self % mutationCount + 1
+    end if
+
+    ! Get the Verhulst weight for the hypothetical age.
+    verhulstWeight = MODEL_V_WEIGHT(nextAge)
 
     ! ***Death check: Mutation accumulation
-    if (current_ptr % mutationCount >= MODEL_T) then
-      current_ptr % deathIndex = DEAD_MUTATION
+    if (self % mutationCount >= MODEL_T) then
+      self % lifeStat = DEAD_MUTATION
 
     ! ***Death check: Verhulst factor
     else if (verhulstWeight > 0.0_personIK) then
       ! Get Verhulst factor per age.
       verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
 
-      if (getRandReal() > verhulstFactor) &
-        current_ptr % deathIndex = DEAD_VERHULST
+      if (getRandReal() > verhulstFactor) then
+        self % lifeStat = DEAD_VERHULST
+      end if
     end if
-  end subroutine checkCurrIndivDeath
+  end subroutine person_checkDeath
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: elemCount
-  !>  Count the number of elements of the linked-list. This is usually used
-  !!  for debugging.
+  ! SUBROUTINE: person_checkBirth
+  !>  Check for any births event by the `Person` object `self`.
   ! -------------------------------------------------------------------------- !
-  integer function elemCount()
-    type(Person), pointer :: localCurr_ptr
+  subroutine person_checkBirth(self, hashBirth)
+    class(Person), intent(inout) :: self
+    logical,       intent(out)   :: hashBirth
+      !! True if a birth event occurs. Otherwise, false.
 
-    ! Initialize local variables.
-    localCurr_ptr => head_ptr
-    elemCount = 0
+    type(Person), pointer :: newPerson_ptr
+    type(Person), pointer :: prevPerson_ptr
+    integer :: i
+
+    ! Check if the current individual can reproduce.
+    hashBirth = MODEL_R <= self % age .and. self % age <= MODEL_R_MAX
+    if (.not. hashBirth) return
+
+    ! Add new born individuals to the next generation.
+    prevPerson_ptr => futureTail_ptr
+    newPerson_ptr => null()
+    do i = 1, MODEL_B
+      ! Pass the genome of the current individual to the newborn ones.
+      newPerson_ptr => constructPerson(self % genome)
+
+      ! Append the new `Person` object at the end of the list.
+      prevPerson_ptr % next => newPerson_ptr
+      prevPerson_ptr => newPerson_ptr
+    end do
+
+    ! Update the tail of the list which must be the latest added `Person`
+    ! object.
+    if (MODEL_B > 0) futureTail_ptr => newPerson_ptr
+  end subroutine person_checkBirth
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: constructPerson
+  !>  Construct and initialize a `Person` object whose genome is inhereted
+  !!  from another `Person` object.
+  ! -------------------------------------------------------------------------- !
+  function constructPerson(genome) result(person_ptr)
+    integer(kind=personIK), intent(in) :: genome
+      !! Genome from another `Person` object.    
+    type(Person), pointer :: person_ptr
+      !! Newly minted `Person` object.
+
+    integer :: mutations(MODEL_M)
+    integer :: i
+
+    allocate(person_ptr)
+
+    mutations(:) = 0  ! Initialize `mutations`
+    mutations = getRandRange(1, MODEL_L, MODEL_M)
+
+    person_ptr % genome = genome
+    do i = 1, size(mutations)
+      if (getGene(person_ptr % genome, mutations(i)) == GENE_HEALTHY) then
+        person_ptr % genome = ior(person_ptr % genome, &
+            shiftl(1_personIK, mutations(i) - 1))
+      end if
+    end do
+
+    person_ptr % age = 0
+    person_ptr % mutationCount = 0
+    person_ptr % lifeStat = ALIVE
+  end function constructPerson
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: person_getLifeStat
+  !>  Get the life status of the `Person` object `self`.
+  ! -------------------------------------------------------------------------- !
+  integer function person_getLifeStat(self)
+    class(Person), intent(in) :: self
+    
+    person_getLifeStat = self % lifeStat
+  end function person_getLifeStat
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: person_getGenome
+  !>  Get the genome of the `Person` object `self`.
+  ! -------------------------------------------------------------------------- !
+  integer(kind=personIK) function person_getGenome(self)
+    class(Person), intent(in) :: self
+
+    person_getGenome = self % genome
+  end function person_getGenome
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: person_getAge
+  !>  Get the age of the `Person` object `self`.
+  ! -------------------------------------------------------------------------- !
+  integer function person_getAge(self)
+    class(Person), intent(in) :: self
+    
+    person_getAge = self % age
+  end function person_getAge
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: person_incrementAge
+  !>  Increment age of the `Person` object `self`.
+  ! -------------------------------------------------------------------------- !
+  subroutine person_incrementAge(self)
+    class(Person), intent(inout) :: self
+
+    self % age = self % age + 1
+  end subroutine person_incrementAge
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: person_incrementAge
+  !>  Count the actual elements of the `Person` linked-list. Should only be
+  !!  used for debugging.
+  ! -------------------------------------------------------------------------- !
+  integer function countElem()
+    type(Person), pointer :: currPerson_ptr
+
+    countElem = 0
+    currPerson_ptr => head_ptr
     do
-      ! Count the associated pointers.
-      if (associated(localCurr_ptr)) then
-        elemCount = elemCount + 1
-        ! Get to the next element of the list.
-        localCurr_ptr => localCurr_ptr % next
-
-      ! Exit out of the loop if the pointer is out of bounds.
+      if (associated(currPerson_ptr)) then
+        countElem = countElem + 1
+        currPerson_ptr => currPerson_ptr % next
       else
         exit
       end if
     end do
-  end function elemCount
+  end function
 end module PopulationList
