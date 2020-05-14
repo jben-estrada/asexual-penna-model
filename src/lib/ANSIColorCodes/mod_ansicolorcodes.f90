@@ -150,10 +150,16 @@ contains
     do i = 1, len(flags)
       currChar = flags(i:i)
       formatted = formatted // getCodeNum(currChar)
-      if (i < len(flags)) formatted = formatted // ";"
-    end do
 
-    ! Append the character to format and the reset formatting ANSI code.
-    formatted = formatted // ESC_CODE_END // char // resetCode()
+      if (i < len(flags)) then
+        ! Append separator.
+        formatted = formatted // ";"
+      else if (i == len(flags)) then
+        ! Append the character to format and the reset formatting ANSI code.
+        ! NOTE: Move this bit inside the do loop so as gfortran would shut it
+        ! with its 'Wmaybe-uninitialized' warning.
+        formatted = formatted // ESC_CODE_END // char // resetCode()
+      end if
+    end do
   end function formatChar
 end module ANSIColorCodes

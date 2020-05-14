@@ -38,6 +38,9 @@ contains
     !! Casting status.
 
     integer :: status
+    ! Initialize status.
+    status = 0
+
     read(char, *, iostat=status) castCharToInt
 
     ! Let other routines to handle casting errors.
@@ -66,6 +69,8 @@ contains
 
     integer :: status
 
+    ! Initialize status.
+    status = 0
     ! Initialize output.
     allocate(character(len=0) :: charInt)
 
@@ -96,8 +101,10 @@ contains
 
     integer :: status
 
-    if (associated(intPtr)) then
+    ! Initialize status.
+    status = 0
 
+    if (associated(intPtr)) then
       write(castIntPtrToChar, DEF_INT_FORMAT, iostat=status) intPtr
 
       ! Adjust character to the left.
@@ -129,6 +136,9 @@ contains
       !! Casting status.
     
     integer :: status
+    ! Initialize status.
+    status = 0
+
     read(char, *, iostat=status) castCharToReal
 
     ! Let other routines to handle casting errors.
@@ -155,6 +165,9 @@ contains
     character(len=MAX_LEN) :: rawCharReal
     
     integer :: status
+
+    ! Initialize status.
+    status = 0
 
     ! Initialize output.
     allocate(character(len=0) :: charReal)

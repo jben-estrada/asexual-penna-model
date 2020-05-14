@@ -208,9 +208,6 @@ contains
         ! Concatenate the relative path to the executable and the replacement
         ! file name.
         relPath = trim(progPath(1:i)) // trim(source)
-
-        if (.not.(progPath(1:1) == "/" .or. progPath(1:2) == "./")) &
-            relPath = "./" // relPath
         return
       end if
     end do
