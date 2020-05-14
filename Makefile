@@ -15,7 +15,7 @@ OBJ_DIR:=./obj
 BIN_DIR:=./bin
 
 # Compiler
-FC:=gfortran
+FC:=gfortran-10
 # Compiler type
 CMPTYPE:=gnu
 
