@@ -47,15 +47,19 @@ module Penna
     getBadGeneDstrb
 
   use PopulationList, only: &
-    ALIVE, &
-    DEAD_OLD_AGE, &
-    DEAD_MUTATION, &
-    DEAD_VERHULST, &
-    Person, &
-    initPersonList, &
-    goToNextPerson, &
-    restartReadingList, &
-    getCurrPerson, &
+    ALIVE,                  &
+    DEAD_OLD_AGE,           &
+    DEAD_MUTATION,          &
+    DEAD_VERHULST,          &
+    atEndOfPopulation,      &
+    checkPersonsLife,       &
+    checkPersonBirth,       &
+    population,             &
+    currPersonIdx,          &
+    popList_popSize => popSize, &
+    initPopulation,         &
+    nextPersonIdx,          &
+    restartEvalLoop,        &
     freePersonList
 
   use, intrinsic :: iso_fortran_env, only: &
@@ -132,7 +136,7 @@ contains
     deathCount(:) = 0
     call resetAgeDstrb(MODEL_L)
     call initRunWriter(runWriter, recordFlag)
-    call initPersonList(startPopSize, initMttnCount)
+    call initPopulation(startPopSize, initMttnCount)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
@@ -181,7 +185,7 @@ contains
     end do mainLoop
 
     ! Wrap up.
-    call freePersonList(popSize)
+    call freePersonList()
   contains
 
 
@@ -215,19 +219,14 @@ contains
   end subroutine runOneInstance
 
 
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: evalPopulation
-  !>  Evaluate the population.
-  ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation(&
+  subroutine evalPopulation( &
       popSize,          &
       countdown,        &
       recordFlag,       &
       deathByAge,       &
       deathByMutation,  &
       deathByVerhulst   &
-      )
-
+    )
     integer,          intent(inout) :: popSize          !! Population size.
     integer, pointer, intent(inout) :: deathByAge       !! Death by age count.
     integer, pointer, intent(inout) :: deathByMutation  !! Death by mutation.
@@ -235,69 +234,47 @@ contains
     integer,          intent(in)    :: countdown        !! Count from max time.
     character,        intent(in)    :: recordFlag       !! Record flag.
 
-    type(Person), pointer :: currPerson_ptr
-
-    integer :: popSizeChange
-    integer :: listStatus
-    logical :: hasBirth
-
-    ! Initialize variables
-    popSizeChange = 0
-    evalPop: do
-      ! Catch extinction case.
-      if (popSize == 0) exit
-
+    integer :: idx
+    idx = 1
+    evalPop: do while(.not. atEndOfPopulation())
+      idx = idx + 1
       ! Get the current individual.
-      currPerson_ptr => getCurrPerson()
+      ! Check the vitality of the current individual first.
+      call checkPersonsLife(population, currPersonIdx)
 
-      ! Evaluate the current individaul.
-      call currPerson_ptr % checkDeath(popSize)
-
-      if (currPerson_ptr % getLifeStat() == ALIVE) then
-        ! Update the age of the current person.
-        call currPerson_ptr % incrementAge()
+      if (population(currPersonIdx) % lifeStat == ALIVE) then
+        population(currPersonIdx) % age = population(currPersonIdx) % age + 1
 
         ! Update the genome distribution.
         if (any(recordFlag == [REC_DIV_IDX, REC_GENE_DSTRB])) then
-          call updateGenomeDstrb(currPerson_ptr % getGenome())
+          call updateGenomeDstrb(population(currPersonIdx) % genome)
         end if
 
-        ! If the current person is alive, check for birth.
-        call currPerson_ptr % checkBirth(hasBirth)
-        ! Update the change in population size.
-        if (hasBirth) popSizeChange = popSizeChange + MODEL_B
+        ! Check for birth event for alive individuals.
+        call checkPersonBirth(population, currPersonIdx)
       else
-        if (recordFlag == REC_DEATH) then
-          ! Increment the appropriate death counter.
-          select case(currPerson_ptr % getLifeStat())
-            case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1
-            case(DEAD_MUTATION); deathByMutation = deathByMutation + 1
-            case(DEAD_VERHULST); deathByVerhulst = deathByVerhulst + 1
-            case default
-              call raiseError("Internal error encountered. Invalid lifeStat.")
-          end select
-        end if
-
-        ! Update the change in population size.
-        popSizeChange = popSizeChange - 1
+          if (recordFlag == REC_DEATH) then
+            ! Increment the appropriate death counter.
+            select case(population(currPersonIdx) % lifeStat)
+              case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1
+              case(DEAD_MUTATION); deathByMutation = deathByMutation + 1
+              case(DEAD_VERHULST); deathByVerhulst = deathByVerhulst + 1
+              case default
+                call raiseError("Internal error encountered. Invalid lifeStat.")
+            end select
+          end if
       end if
 
       ! Record age demographics.
       if (countdown <= DEMOG_LAST_STEPS) then
-        call updateAgeDstrb(currPerson_ptr % getAge(), ageDistribution)
+        call updateAgeDstrb(population(currPersonIdx) % age, ageDistribution)
       end if
 
-      call goToNextPerson(listStatus)
-
-      ! Break out of the loop once the 
-      if (listStatus /= 0) exit
+      call nextPersonIdx()
     end do evalPop
 
-    ! Update population size
-    popSize = popSize + popSizeChange
-    
-    ! Move the reader of the population list back to the first element.
-    call restartReadingList()
+    call restartEvalLoop()
+    popSize = poplist_popSize
   end subroutine evalPopulation
 
 
