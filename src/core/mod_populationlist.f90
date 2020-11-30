@@ -20,6 +20,7 @@ module PopulationList
     MODEL_K
 
   use ErrorMSG, only: raiseError
+  use DynamicBitSet, only: BitSet
   use RandNumProcs, only: getRandReal, getRandRange
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none
@@ -46,8 +47,9 @@ module PopulationList
   ! -------------------------------------------------------------------------- !
   type(Person), allocatable :: population(:)
     !! The population array.
-  logical,      allocatable :: deadPopMask(:)
-    !! Mask to filter out dead `Person`s.
+  ! logical,      allocatable :: deadPopMask(:)
+  type(BitSet) :: deadPopMask
+    !! Mask array to filter out dead `Person`s.
   integer :: popArraySize
     !! The size of the population array. The maximum number of `Person`s the
     !! population array can hold.
@@ -115,7 +117,7 @@ contains
 
     if (allocated(population)) deallocate(population)
     allocate(population(startPopSize*int(GROWTH_FACTOR)))
-    allocate(deadPopMask(startPopSize*int(GROWTH_FACTOR)))
+    deadPopMask = BitSet()
 
     ! Initialize each of the `Person`s in the population array.
     popArraySize = startPopSize
@@ -124,7 +126,8 @@ contains
     end do
 
     ! Initialize the dead population mask.
-    deadPopMask(:) = .false.  ! False means that individuals are alive.
+    ! NOTE: False means that individuals are alive.
+    call deadPopMask%set(.false., 1000)
 
     ! Initialize the module-wide array pointers/indices.
     currPersonIdx = 1
@@ -208,7 +211,7 @@ contains
     endIdx = futureEndIdx
     currPersonIdx = 1
 
-    deadPopMask(:endIdx) = .false.
+    call deadPopMask%setAll(.false.)
   end subroutine restartEvalLoop
 
 
@@ -224,7 +227,7 @@ contains
     ! Remove dead individuals that were evaluated in the current time step.
     deathCount = 0
     do i = 1, endIdx
-      if (deadPopMask(i)) then
+      if (deadPopMask%get(i)) then
         deathCount = deathCount + 1
       else
         ! "Filter down" alive individuals to occupy the spaces dead ones
@@ -253,7 +256,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine freePersonList()
     if (allocated(population)) deallocate(population)
-    if (allocated(deadPopMask)) deallocate(deadPopMask)
   end subroutine freePersonList
 
 
@@ -279,7 +281,7 @@ contains
 
     ! ***Death check: Old age
     if (nextAge >= MODEL_L) then
-      deadPopMask(personIdx) =.true.
+      call deadPopMask%set(.true., personIdx)
       popSize = popSize - 1
       personArr(personIdx) % lifeStat = DEAD_OLD_AGE
       return
@@ -310,7 +312,7 @@ contains
 
     ! Mark the current person as dead and for in the next time step.
     if (personArr(personIdx) % lifeStat /= ALIVE) then
-      deadPopMask(personIdx) =.true.
+      call deadPopMask%set(.true., personIdx)
       popSize = popSize - 1
     end if
   end subroutine checkPersonsLife
@@ -395,10 +397,8 @@ contains
     ! integer :: i
 
     type(Person), allocatable :: tempPopArray(:)
-    logical,      allocatable :: tempDeadPopMask(:)
 
     if (allocated(tempPopArray)) deallocate(tempPopArray)
-    if (allocated(tempDeadPopMask)) deallocate(tempDeadPopMask)
 
     oldPopSize = popArraySize
     newPopSize = int(oldPopSize*GROWTH_FACTOR)
@@ -408,13 +408,8 @@ contains
     allocate(population(newPopSize))
     population(:oldPopSize) = tempPopArray(:oldPopSize)
 
-    ! Resize the dead population mask array.
-    call move_alloc(deadPopMask, tempDeadPopMask)
-    allocate(deadPopMask(newPopSize))
-    deadPopMask(:oldPopSize) = tempDeadPopMask(:oldPopSize)
-
     popArraySize = newPopSize
 
-    deallocate(tempPopArray, tempDeadPopMask)
+    deallocate(tempPopArray)
   end subroutine extendPopArray
 end module PopulationList
