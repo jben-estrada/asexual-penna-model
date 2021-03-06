@@ -6,7 +6,7 @@ module PopulationList
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION: 
   !>  Module containing the population list represented as a dynamic array of
-  !!  `Person` objects, which in turn represent the individuals in the Penna
+  !!  `Person_t` objects, which in turn represent the individuals in the Penna
   !!  model.
   ! -------------------------------------------------------------------------- !
   use Parameters, only: &
@@ -19,17 +19,19 @@ module PopulationList
     MODEL_T,        &
     MODEL_K
 
-  use ErrorMSG, only: raiseError
+  use ErrorMSG, only: raiseError, raiseWarning
+  use CastProcs, only: castIntToChar
   use DynamicBitSet, only: BitSet
   use RandNumProcs, only: getRandReal, getRandRange
+  use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
   implicit none
   private
 
-  
-  ! `PERSON` DERIVED TYPE
+
+  ! `PERSON_T` DERIVED TYPE
   ! -------------------------------------------------------------------------- !
-  type :: Person
+  type, extends(AbstractPerson_t) :: Person_t
     !! A derived type representing individuals in the Penna model.
     integer(kind=personIK) :: genome
       !! Genome of this individual.
@@ -37,36 +39,81 @@ module PopulationList
       !! The age of this individual.
     integer :: lifeStat
       !! Vitality of this individual. Values greater than 1 denotes death.
-
-    integer, private :: mutationCount
+    integer :: mutationCount
       !! Number of mutations in this individual's genome.
-  end type Person
+  end type Person_t
 
 
-  ! THE POPULATION ARRAY.
+  ! Derived type for containing `Person_t` pointers.
+  type :: PersonPtr_t
+    type(Person_t), pointer :: person => null()
+  end type PersonPtr_t
+
+
+  ! `POPULATION_T` DERIVED TYPE
   ! -------------------------------------------------------------------------- !
-  type(Person), allocatable :: population(:)
-    !! The population array.
-  ! logical,      allocatable :: deadPopMask(:)
-  type(BitSet) :: deadPopMask
-    !! Mask array to filter out dead `Person`s.
-  integer :: popArraySize
-    !! The size of the population array. The maximum number of `Person`s the
-    !! population array can hold.
-  integer :: popSize
-    !! The actual population size. This should not be confused with
-    !! `PopArraySize` which is the size of the population array including
-    !! uninitialized `Person` elements.
+  type, extends(AbstractPopulation_t):: Population_t
+    private
+    type(PersonPtr_t), allocatable :: population(:)
+      !! Array holding the individuals in the Penna model.
+    type(BitSet)                   :: deadPopMask
+      !! Mask array to filter out dead `Person_t`s.
 
-  integer :: endIdx = 0
-    !! The end of the population array in the current time step.
-  integer :: futureEndIdx = 0
-    !! The end of the population array in between time steps. The actual end.
-  integer :: currPersonIdx = 0
-    !! The index of the current `Person` being evaluated.
+    integer, public :: popArraySize = -1
+      !! The size of the population array. The maximum number of `Person_t`s the
+      !! population array can hold.
+    integer :: popSize = -1
+      !! The actual population size. This should not be confused with
+      !! `PopArraySize` which is the size of the population array including
+      !! uninitialized `Person_t` elements.
+    integer, public :: endIdx = 0
+      !! The end of the population array in the current time step.
+    integer :: futureEndIdx = 0
+      !! The end of the population array in between time steps. The actual end
+      !! of the dynamic array `population`.
+    integer :: currIdx = 0
+      !! The index of the current `Person_t` being evaluated.
+  contains
+    ! Inquiry functions.
+    procedure :: getPopSize => population_getPopSize
+      !! Get the population size.
+    procedure :: getCurrPerson => population_getCurrPerson
+      !! Get the current individual as an `AbstractPerson_t` pointer.
+    procedure :: atEndOfPopulation => population_atEndOfPop
+      !! Return a logical value of whether the current `Person_t` is the last
+      !! individual for the current time step.
 
-  real, parameter :: GROWTH_FACTOR = 1.5
+    ! Transformational subroutines.
+    procedure :: next => population_next
+      !! Go to the next `Person_t` object.
+    procedure :: endCurrStep => population_endCurrStep
+      !! End the current time step in preparation for the next one. The dead
+      !! individuals are removed from the population, and the population array
+      !! indices are updated and reset.
+    procedure :: evalCurrPerson => population_evalCurrPerson
+      !! Evaluate the current individual in the population. The individual is
+      !! checked for death event first before incrementing its age and then
+      !! checking for birth event.
+  
+    ! Memory management subroutines.
+    procedure :: cleanup => population_cleanup
+      !! Deallocate all allocated attributes.
+    procedure :: checkPersonPtrAssoc
+      !! Check for null `Person` pointers. Prints warning texts if at least one
+      !! is encountered.
+  end type Population_t
+
+
+  ! Overload the default constructor of `Population_t`.
+  interface Population_t
+    module procedure :: population_constructor
+  end interface Population_t
+
+
+  real,    parameter :: GROWTH_FACTOR = 1.5
     !! The threshold at which resizing is triggered.
+  logical, parameter :: MASK_ALIVE = .false.
+  logical, parameter :: MASK_DEAD = .not.MASK_ALIVE
 
   ! INDIVIDUAL STATES.
   ! -------------------------------------------------------------------------- !
@@ -80,22 +127,41 @@ module PopulationList
   public :: DEAD_MUTATION
   public :: DEAD_VERHULST
 
-  ! `Person` procedures.
-  public :: checkPersonsLife
-  public :: checkPersonBirth
-
-  public :: population
-  public :: currPersonIdx
-  public :: popSize
-  protected :: currPersonIdx
-  protected :: popSize
-
-  public :: initPopulation
-  public :: atEndOfPopulation
-  public :: nextPersonIdx
-  public :: restartEvalLoop
-  public :: freePersonList
+  public :: Population_t
+  public :: Person_t
+  public :: defaultPersonPtr
 contains
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: population_constructor
+  !>  `Population_t` constructor
+  ! -------------------------------------------------------------------------- !
+  function population_constructor(startPopsize, initMttnCount) result(newPop)
+    integer, intent(in) :: startPopSize
+      !! Starting population size.
+    integer, intent(in) :: initMttnCount
+      !! Initial mutation count.
+    type(Population_t) :: newPop
+
+    if (allocated(newPop%population)) deallocate(newPop%population)
+    allocate(newPop%population(int(startPopSize*GROWTH_FACTOR)))
+    newPop % deadPopMask = BitSet()
+
+    ! Initialize each of the `Person_t`s in the population array.
+    newPop%popArraySize = startPopSize
+    newPop%population = makePersonPtrArr(startPopSize, initMttnCount)
+
+    ! Initialize the dead population mask.
+    call newPop%deadPopMask%set(MASK_ALIVE, startPopSize)
+
+    ! Initialize the array pointers/indices.
+    newPop%currIdx = 1
+    newPop%endIdx = startPopSize
+    newPop%futureEndIdx = startPopSize
+    newPop%popSize = startPopSize
+  end function population_constructor
+
 
   ! -------------------------------------------------------------------------- !
   ! `PERSON` ARRAY.
@@ -103,67 +169,176 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initPopulation
-  !>  Initialize the `Person` array with the provided initial conditions:
-  !!  `startPopSize` for starting population size; and `initMttnCount` for
-  !!  the initial mutation count.
+  ! FUNCTION: makePersonPtrArr
+  !>  Make an array of `PersonPtr_t` whose parent genomes of `Person_t` objects
+  !!  are pure, i.e. have no mutations.
   ! -------------------------------------------------------------------------- !
-  subroutine initPopulation(startPopsize, initMttnCount)
-    integer, intent(in) :: startPopSize
-      !! Starting population size.
+  function makePersonPtrArr(size, initMttnCount) result(personPtrArr)
+    integer, intent(in) :: size
     integer, intent(in) :: initMttnCount
-      !! Initial mutation count.
-    integer :: popIdx
+    type(PersonPtr_t), allocatable :: personPtrArr(:)
+    integer :: i
 
-    if (allocated(population)) deallocate(population)
-    allocate(population(startPopSize*int(GROWTH_FACTOR)))
-    deadPopMask = BitSet()
+    if (allocated(personPtrArr)) deallocate(personPtrArr)
+    allocate(personPtrArr(size))
 
-    ! Initialize each of the `Person`s in the population array.
-    popArraySize = startPopSize
-    do popIdx = 1, startPopsize
-      population(popIdx) = constructPurePerson(initMttnCount)
+    do i = 1, size
+      if (associated(personPtrArr(i)%person)) personPtrArr(i)%person => null()
+      allocate(personPtrArr(i)%person)
+      call initNewPerson(personPtrArr(i)%person, GENE_HEALTHY, initMttnCount)
+    end do
+  end function makePersonPtrArr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: population_getPopSize
+  !>  Get the population size.
+  ! -------------------------------------------------------------------------- !
+  integer function population_getPopSize(self)
+    class(Population_t), intent(in) :: self
+    population_getPopSize = self%popSize
+  end function population_getPopSize
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: population_getCurrPerson
+  !>  Get the current person in the population as an `AbstractPerson_t` pointer.
+  ! -------------------------------------------------------------------------- !
+  function population_getCurrPerson(self) result(personObj_ptr)
+    class(Population_t), intent(in) :: self
+    class(AbstractPerson_t), pointer :: personObj_ptr
+    personObj_ptr => self%population(self%currIdx)%person
+  end function population_getCurrPerson
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: population_atEndOfPop
+  !>  Return a logical value of whether the current `Person_t` is the last
+  !!  individual for the current time step.
+  ! -------------------------------------------------------------------------- !
+  logical function population_atEndOfPop(self)
+    class(Population_t), intent(in) :: self
+    population_atEndOfPop = (self%currIdx > self%endIdx)
+  end function population_atEndOfPop
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: population_next
+  !>  Go to the next person in the population.
+  ! -------------------------------------------------------------------------- !
+  subroutine population_next(self)
+    class(Population_t), intent(inout) :: self
+    self%currIdx = self%currIdx + 1
+  end subroutine population_next
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: population_endCurrStep
+  !>  End the current time step to prepare for the next time step. The
+  !!  population indices are reset, and the dead individuals are remvoed from
+  !!  the population array.
+  ! -------------------------------------------------------------------------- !
+  subroutine population_endCurrStep(self)
+    class(Population_t), intent(inout) :: self
+
+    call removeDeadPersons(self)
+    self%endIdx = self%futureEndIdx
+    self%currIdx = 1
+
+    call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
+  end subroutine population_endCurrStep
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: removeDeadPersons
+  !>  Remove dead individuals as indicated by the logical mask `deadPopMask`
+  !!  by overwriting the spaces they occupied with the alive ones.
+  ! -------------------------------------------------------------------------- !
+  subroutine removeDeadPersons(popObj)
+    class(Population_t), intent(inout) :: popObj
+    integer :: i
+    integer :: deathCount
+    logical :: currPersonIsDead
+
+    ! Remove dead individuals that were evaluated in the current time step.
+    deathCount = 0
+    do i = 1, popObj%futureEndIdx
+      currPersonIsDead = .false.
+      if (i <= popObj%endIdx) then
+        currPersonIsDead = popObj%deadPopMask%get(i) .eqv. MASK_DEAD
+
+        if (currPersonIsDead) then
+          deathCount = deathCount + 1
+          call freePersonPtr(popObj%population(i))
+        end if
+      end if
+
+      ! "Filter down" live individuals to occupy the spaces dead ones once 
+      ! occupied.
+      if (deathCount > 0 .and. .not.currPersonIsDead) then
+        if (i - deathCount >= 1) then
+          popObj%population(i - deathCount)%person => &
+              popObj%population(i)%person
+        end if
+        popObj%population(i)%person => null()
+      end if
     end do
 
-    ! Initialize the dead population mask.
-    ! NOTE: False means that individuals are alive.
-    call deadPopMask%set(.false., 1000)
-
-    ! Initialize the module-wide array pointers/indices.
-    currPersonIdx = 1
-    endIdx = startPopSize
-    futureEndIdx = startPopSize
-    popSize = startPopSize
-  end subroutine initPopulation
+    ! Update the array end indices.
+    popObj%endIdx = popObj%endIdx - deathCount
+    popObj%futureEndIdx = popObj%futureEndIdx - deathCount
+  end subroutine removeDeadPersons
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: constructPurePerson
-  !>  Construct and initialize a `Person` object with `mutationCount` number
-  !!  of random bad genes.
+  ! SUBROUTINE: freePersonList
+  !>  Free all allocatable arrays.
   ! -------------------------------------------------------------------------- !
-  function constructPurePerson(mutationCount) result(new_person)
-    integer, intent(in) :: mutationCount
-      !! Initial number of mutations.
-    type(Person) :: new_person
-    
+  subroutine population_cleanup(self)
+    class(Population_t), intent(inout) :: self
+    integer :: i
+
+    if (allocated(self%population)) then
+        do i = lbound(self%population, 1), ubound(self%population, 1)
+          call freePersonPtr(self%population(i))
+        end do
+
+       deallocate(self%population)
+    end if
+  end subroutine population_cleanup
+
+
+  ! -------------------------------------------------------------------------- !
+  ! `PERSON`-RELATED PROCEDURES.
+  ! -------------------------------------------------------------------------- !
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initNewPerson
+  !>  Initialize a new `Person_t` object.
+  ! -------------------------------------------------------------------------- !
+  subroutine initNewPerson(person, genome, mutationCount)
+    type(Person_t),          intent(inout) :: person
+    integer(kind=personIK),  intent(in)    :: genome
+    integer,                 intent(in)    :: mutationCount
+  
     ! Initialize genome and mutation count.
-    new_person % genome = GENE_HEALTHY
-    new_person % mutationCount = 0
-    call applyInitialMutations(new_person, mutationCount)
+    person%genome = genome
+    person%mutationCount = 0
+    call applyInitialMutations(person, mutationCount)
 
-    new_person % age = 0
-    new_person % lifeStat = ALIVE
-  end function constructPurePerson
+    person%age = 0
+    person%lifeStat = ALIVE
+  end subroutine initNewPerson
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: applyInitialMutations
-  !>  Apply a set number of mutation to the `Person` object to be initialized.
+  !>  Apply a set number of mutation to the `Person_t` object to be initialized.
   ! -------------------------------------------------------------------------- !
-  subroutine applyInitialMutations(personObj, mutationCount)
-    type(Person), intent(inout) :: personObj
-      !! The `Person` object to be modified.
+  subroutine applyInitialMutations(person, mutationCount)
+    type(Person_t), intent(inout) :: person
+      !! The `Person_t` object to be modified.
     integer,      intent(in)    :: mutationCount
       !! Number of mutations to apply onto `person_ptr`.
 
@@ -176,213 +351,119 @@ contains
 
       ! Apply mutations.
       do i = 1, mutationCount
-        personObj % genome = ibset(personObj % genome, mutationIndcs(i))
+        person%genome = ibset(person%genome, mutationIndcs(i))
       end do
     end if
   end subroutine applyInitialMutations
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: atEndOfPopulation
-  !>  Inquiry function to check the 
+  ! SUBROUTINE: population_evalCurrPerson
+  !>  Evaluate the current person in the population. Death event is checked
+  !!  first, before age increment and birth event are checked.
   ! -------------------------------------------------------------------------- !
-  logical function atEndOfPopulation()
-    atEndOfPopulation = currPersonIdx > endIdx
-  end function atEndOfPopulation
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: nextPersonIdx
-  !>  Increment the current `Person` index. If the population array is at its
-  !!  end for the current time step, `arrStat` will have the value of -1 and the
-  !!  `Person` index will not be incremented/, otherwise 0.
-  ! -------------------------------------------------------------------------- !
-  subroutine nextPersonIdx()
-      currPersonIdx = currPersonIdx + 1
-  end subroutine nextPersonIdx
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: restartEvalLoop
-  !>  Reset the reader pointers/indices. Update the end of the array.
-  ! -------------------------------------------------------------------------- !
-  subroutine restartEvalLoop()
-    call removeDeadPersons()
-    endIdx = futureEndIdx
-    currPersonIdx = 1
-
-    call deadPopMask%setAll(.false.)
-  end subroutine restartEvalLoop
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: removeDeadPersons
-  !>  Remove dead individuals as indicated by the logical mask `deadPopMask`
-  !!  by overwriting the spaces they occupied with the alive ones.
-  ! -------------------------------------------------------------------------- !
-  subroutine removeDeadPersons()
-    integer :: i
-    integer :: deathCount
-
-    ! Remove dead individuals that were evaluated in the current time step.
-    deathCount = 0
-    do i = 1, endIdx
-      if (deadPopMask%get(i)) then
-        deathCount = deathCount + 1
-      else
-        ! "Filter down" alive individuals to occupy the spaces dead ones
-        ! occupied.
-        population(i - deathCount) = population(i)
-      end if
-    end do
-
-    ! Continue filtering down alive individuals in the future end section of the
-    ! population array. Do nothing if no death occured.
-    if (deathCount > 0) then
-      do i = endIdx + 1, futureEndIdx
-        population(i - deathCount) = population(i)
-      end do
-    end if
-
-    ! Update the array end indices.
-    endIdx = endIdx - deathCount
-    futureEndIdx = futureEndIdx - deathCount
-  end subroutine removeDeadPersons
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: freePersonList
-  !>  Free all allocatable arrays.
-  ! -------------------------------------------------------------------------- !
-  subroutine freePersonList()
-    if (allocated(population)) deallocate(population)
-  end subroutine freePersonList
-
-
-  ! -------------------------------------------------------------------------- !
-  ! `PERSON`-RELATED PROCEDURES.
-  ! -------------------------------------------------------------------------- !
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: person_checkDeath
-  !>  Check the death of the `Person` object `self`.
-  ! -------------------------------------------------------------------------- ! TODO: Refactor this subroutine.
-  subroutine checkPersonsLife(personArr, personIdx)
-    type(Person), intent(inout) :: personArr(:)
-    integer,      intent(in)    :: personIdx
-      !! Population size at the start of the current time step.
+  subroutine population_evalCurrPerson(self)
+    class(Population_t), intent(inout) :: self
 
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
     integer :: nextAge
+    logical :: isDead
 
-    nextAge = personArr(personIdx) % age + 1 ! Hypothetical age
-
-    ! ***Death check: Old age
-    if (nextAge >= MODEL_L) then
-      call deadPopMask%set(.true., personIdx)
-      popSize = popSize - 1
-      personArr(personIdx) % lifeStat = DEAD_OLD_AGE
-      return
-    end if
-
-    ! Count mutation.
-    if (getGene(personArr(personIdx) % genome, nextAge) == GENE_UNHEALTHY) then
-      personArr(personIdx) % mutationCount = &
-          personArr(personIdx) % mutationCount + 1
-    end if
-
-    ! Get the Verhulst weight for the hypothetical age.
-    verhulstWeight = MODEL_V_WEIGHT(nextAge)
-
-    ! ***Death check: Mutation accumulation
-    if (personArr(personIdx) % mutationCount >= MODEL_T) then
-      personArr(personIdx) % lifeStat = DEAD_MUTATION
-
-    ! ***Death check: Verhulst factor
-    else if (verhulstWeight > 0.0_personIK) then
-      ! Get Verhulst factor per age.
-      verhulstFactor = 1.0 - real(popSize)/real(MODEL_K)*verhulstWeight
-
-      if (getRandReal() > verhulstFactor) then
-        personArr(personIdx) % lifeStat = DEAD_VERHULST
+    associate(currPerson => self%population(self%currIdx)%person)
+      nextAge = currPerson%age + 1
+      isDead = .false.
+  
+      ! ***Death check: Old age
+      if (nextAge > MODEL_L) then
+        currPerson%lifeStat = DEAD_OLD_AGE
+        isDead = .true.
+      else
+        ! Count mutation.
+        if (getGene(currPerson%genome, nextAge) == GENE_UNHEALTHY) then
+            currPerson%mutationCount = currPerson%mutationCount + 1
+        end if
+  
+        verhulstWeight = MODEL_V_WEIGHT(nextAge)
+  
+        ! ***Death check: Mutation
+        if (currPerson%mutationCount >= MODEL_T) then
+          currPerson%lifeStat = DEAD_MUTATION
+          isDead = .true.
+        
+        ! ***Death check: Verhulst weight
+        else if (verhulstWeight > 0.0_personRK) then
+          ! Get Verhulst factor per age.
+          verhulstFactor = &
+              (1.0_personRK - real(self%popSize, kind=personRK) / &
+               real(MODEL_K, kind=personRK)*verhulstWeight)
+  
+          if (getRandReal() > verhulstFactor) then
+            currPerson%lifeStat = DEAD_MUTATION
+            isDead = .true.
+          end if
+        end if
       end if
-    end if
 
-    ! Mark the current person as dead and for in the next time step.
-    if (personArr(personIdx) % lifeStat /= ALIVE) then
-      call deadPopMask%set(.true., personIdx)
-      popSize = popSize - 1
-    end if
-  end subroutine checkPersonsLife
+      if (isDead) then
+        self%popSize = self%popSize - 1
+      else
+        currPerson%age = currPerson%age + 1
+        call checkPersonBirth(self)
+      end if
+    end associate
+  end subroutine population_evalCurrPerson
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: checkPersonBirth
-  !>  Check for any births event by the `Person` object `self`.
+  !>  Check for any births event by the current `Person_t` object of `popObj`.
   ! -------------------------------------------------------------------------- !
-  subroutine checkPersonBirth(personArr, personIdx)
-    type(Person), intent(inout) :: personArr(:)
-    integer,      intent(in)    :: personIdx
+  subroutine checkPersonBirth(popObj)
+    class(Population_t), intent(inout) :: popObj
     logical :: gaveBirth
     integer :: i
 
-    ! Check if the current individual can reproduce.
-    gaveBirth = (MODEL_R     <= personArr(personIdx) % age .and. &
-                 MODEL_R_MAX >= personArr(personIdx) % age)
-    if (.not. gaveBirth) return
+    associate(currPerson => popObj%population(popObj%currIdx)%person)
+      ! Check if the current individual can reproduce.
+      gaveBirth = (MODEL_R <= currPerson%age .and. &
+                   MODEL_R_MAX >= currPerson%age)
 
-    do i = 1, MODEL_B
-      call addNewPerson(personArr(personIdx) % genome)
-    end do
+      ! Add newly born individuals to the population.
+      if (gaveBirth) then
+        do i = 1, MODEL_B
+          ! Extend the population array if needed.
+          if (popObj%futureEndIdx == popObj%popArraySize) then
+            call extendPopArray(popObj)
+          end if
+          popObj%futureEndIdx = popObj%futureEndIdx + 1
 
-    ! Update the population size.
-    popSize = popSize + MODEL_B
+          ! Allocate and initialize a new `Person_t`.
+          associate( &
+                newPersonPtr => popObj%population(popObj%futureEndIdx) &
+              )
+
+            call freePersonPtr(newPersonPtr)
+            allocate(newPersonPtr%person)
+            call initNewPerson(newPersonPtr%person, currPerson%genome, MODEL_M)
+          end associate
+        end do
+
+        popObj%popSize = popObj%popSize + MODEL_B
+      end if
+    end associate
   end subroutine checkPersonBirth
 
-  
+
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: addNewPerson
-  !>  Add a `Person` to the population whose genome is inhereted from another
-  !!  `Person`.
+  ! SUBROUTINE: freePersonPtr
+  !>  Free `Person_t` pointer.
   ! -------------------------------------------------------------------------- !
-  subroutine addNewPerson(genome)
-    integer(kind=personIK), intent(in) :: genome
-      !! Genome to be inherited by the new `Person`.
-    integer :: mutations(MODEL_M)
-    integer :: i
-
-    ! Local copy of the parent genome `genome`.                                  TODO: Refactor this subroutine (see adjacent NOTES)
-    ! NOTE: Since Fortran is call by reference and `extendPopArray` will mutate
-    !       the value of `genome` by deallocating the derived type object it
-    !       belongs, `genome` has to be copied locally in this subroutine to 
-    !       preserved its value.
-    !       This warrants refactoring.
-    integer(kind=personIK) :: genomeLocal
-
-    ! Allot a single space for the new `Person` to be added.
-    genomeLocal = genome
-    if (futureEndIdx == popArraySize) call extendPopArray()
-    futureEndIdx = futureEndIdx + 1
-
-    ! Inherit the genome of the new `Person`, then apply random mutations to the
-    ! inherited genome.
-    ! NOTE: Zero-based indexing for bit sets.
-    mutations(:) = 0  ! Initialize `mutations`
-    mutations = getRandRange(0, MODEL_L-1, MODEL_M)
-    do i = 1, MODEL_M
-      ! Flip "gene" bits that are healthy. Do nothing for unhealthy ones.
-      if (ibits(genomeLocal, mutations(i), 1) == GENE_HEALTHY) then
-        genomeLocal = ibset(genomeLocal, mutations(i))
-      end if 
-    end do
-
-    population(futureEndIdx) % age = 0
-    population(futureEndIdx) % mutationCount = 0
-    population(futureEndIdx) % lifeStat = ALIVE
-    population(futureEndIdx) % genome = genomeLocal
-  end subroutine addNewPerson
+  subroutine freePersonPtr(personPtrObj)
+    type(PersonPtr_t), intent(inout) :: personPtrObj
+    if (associated(personPtrObj%person)) deallocate(personPtrObj%person)
+    personPtrObj%person => null()
+  end subroutine freePersonPtr
 
 
   ! -------------------------------------------------------------------------- !
@@ -391,25 +472,61 @@ contains
   !!  `oldPopSize` is the size of the population array that is yet to be
   !!  extended.
   ! -------------------------------------------------------------------------- !
-  subroutine extendPopArray()
-    integer :: oldPopSize
-    integer :: newPopSize
-    ! integer :: i
+  subroutine extendPopArray(popObj)
+    class(Population_t), intent(inout) :: popObj
+    integer :: oldPopArrSize
+    integer :: newPopArrSize
 
-    type(Person), allocatable :: tempPopArray(:)
+    type(PersonPtr_t), allocatable :: tempPopArray(:)
 
     if (allocated(tempPopArray)) deallocate(tempPopArray)
 
-    oldPopSize = popArraySize
-    newPopSize = int(oldPopSize*GROWTH_FACTOR)
+    oldPopArrSize = popObj%popArraySize
+    newPopArrSize = int((oldPopArrSize + 1)*GROWTH_FACTOR)
 
     ! Resize the population array.
-    call move_alloc(population, tempPopArray)
-    allocate(population(newPopSize))
-    population(:oldPopSize) = tempPopArray(:oldPopSize)
+    call move_alloc(popObj%population, tempPopArray)
+    allocate(popObj%population(newPopArrSize))
+    popObj%population(:oldPopArrSize) = tempPopArray(:oldPopArrSize)
 
-    popArraySize = newPopSize
+    popObj%popArraySize = newPopArrSize
 
     deallocate(tempPopArray)
   end subroutine extendPopArray
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: defaultPersonPtr
+  !>  Return a `AbstractPerson_t` pointer as is if its data type is `Person_t`
+  !!  Otherwise, return a null pointer.
+  ! -------------------------------------------------------------------------- !
+  function defaultPersonPtr(abstractPerson_ptr) result(person_ptr)
+    class(AbstractPerson_t), pointer, intent(in) :: abstractPerson_ptr
+    type(Person_t), pointer :: person_ptr
+    
+    select type(abstractPerson_ptr)
+    type is (Person_t)
+      person_ptr => abstractPerson_ptr
+    class default
+      person_ptr => null()
+    end select
+  end function defaultPersonPtr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: checkPersonPtrAssoc
+  !>  Check the whether `Person` pointers in the active population array are
+  !!  associated or not. Prints warning text if at least one pointer is null.
+  ! -------------------------------------------------------------------------- !
+  subroutine checkPersonPtrAssoc(self)
+    class(Population_t), intent(in) :: self
+    integer :: i
+
+    do i = 1, self%endIdx
+      if (.not. associated(self%population(i)%person)) then
+        call raiseWarning("Person #" // castIntToChar(i) // " is null.", &
+            stopProgram=.false.)
+      end if
+    end do
+  end subroutine checkPersonPtrAssoc
 end module PopulationList
