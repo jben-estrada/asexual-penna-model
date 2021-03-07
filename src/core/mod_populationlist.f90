@@ -153,7 +153,7 @@ contains
     newPop%population = makePersonPtrArr(startPopSize, initMttnCount)
 
     ! Initialize the dead population mask.
-    call newPop%deadPopMask%set(MASK_ALIVE, startPopSize)
+    call newPop%deadPopMask%set(MASK_ALIVE, 1, startPopSize)
 
     ! Initialize the array pointers/indices.
     newPop%currIdx = 1
@@ -407,6 +407,7 @@ contains
 
       if (isDead) then
         self%popSize = self%popSize - 1
+        call self%deadPopMask%set(MASK_DEAD, self%currIdx)
       else
         currPerson%age = currPerson%age + 1
         call checkPersonBirth(self)
