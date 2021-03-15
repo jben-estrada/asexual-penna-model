@@ -7,7 +7,7 @@ module DynamicBitSet
   ! DESCRIPTION:
   !>  Module containing an implementation of bit set.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: int64
+  use iso_fortran_env, only: int64, stdint => int32
   use ANSIColorCodes, only: formatChar, escCodeGreen, escCodeRed
   use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
@@ -227,7 +227,7 @@ contains
         )
     end if
 
-    chunkIdx = int(pos/CHUNK_SIZE) + 1
+    chunkIdx = ceiling(real(pos)/CHUNK_SIZE, kind=stdint)
     bitIdx = mod(pos - 1, CHUNK_SIZE)
     getVal = ibits(self%chunkArr(chunkIdx), bitIdx, 1) == 1
   end function bitSet_get
