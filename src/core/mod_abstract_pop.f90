@@ -10,7 +10,6 @@ module AbstractPopulation
   !!  or "contracts" different implementations of population handling derived
   !!  types have to follow (if there are multiple ones).
   ! -------------------------------------------------------------------------- !
-  use Gene, only: personIK
   implicit none
 
 

@@ -25,7 +25,8 @@ module PopulationList
   use Demographics, only: updateGenomeDstrb
   use RandNumProcs, only: getRandReal, getRandRange
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
-  use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
+  use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
+  use, intrinsic :: iso_fortran_env, only: personRK => real64
   implicit none
   private
 
@@ -34,7 +35,8 @@ module PopulationList
   ! -------------------------------------------------------------------------- !
   type, extends(AbstractPerson_t) :: Person_t
     !! A derived type representing individuals in the Penna model.
-    integer(kind=personIK) :: genome
+    ! integer(kind=personIK) :: genome
+    type(BitSet) :: genome
       !! Genome of this individual.
     integer :: age
       !! The age of this individual.
@@ -171,22 +173,27 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: makePersonPtrArr
-  !>  Make an array of `PersonPtr_t` whose parent genomes of `Person_t` objects
-  !!  are pure, i.e. have no mutations.
+  !>  Make an array of `PersonPtr_t` with `initMttnCount` number of mutations
+  !!  per individual.
   ! -------------------------------------------------------------------------- !
   function makePersonPtrArr(size, initMttnCount) result(personPtrArr)
     integer, intent(in) :: size
     integer, intent(in) :: initMttnCount
+
     type(PersonPtr_t), allocatable :: personPtrArr(:)
+    type(BitSet) :: pureGenome
     integer :: i
 
     if (allocated(personPtrArr)) deallocate(personPtrArr)
     allocate(personPtrArr(size))
 
+    pureGenome = BitSet()
+    call pureGenome%set(GENE_HEALTHY, 1, MODEL_L)
+
     do i = 1, size
       if (associated(personPtrArr(i)%person)) personPtrArr(i)%person => null()
       allocate(personPtrArr(i)%person)
-      call initNewPerson(personPtrArr(i)%person, GENE_HEALTHY, initMttnCount)
+      call initNewPerson(personPtrArr(i)%person, pureGenome, initMttnCount)
     end do
   end function makePersonPtrArr
 
@@ -320,7 +327,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initNewPerson(person, genome, mutationCount)
     type(Person_t),          intent(inout) :: person
-    integer(kind=personIK),  intent(in)    :: genome
+    type(BitSet),            intent(in)    :: genome
     integer,                 intent(in)    :: mutationCount
   
     ! Initialize genome and mutation count.
@@ -348,11 +355,11 @@ contains
 
     if (mutationCount > 0) then
       ! Get random indices of genes to mutate.
-      mutationIndcs = getRandRange(0, MODEL_L-1, mutationCount)
+      mutationIndcs = getRandRange(1, MODEL_L, mutationCount)
 
       ! Apply mutations.
       do i = 1, mutationCount
-        person%genome = ibset(person%genome, mutationIndcs(i))
+        call person%genome%set(GENE_UNHEALTHY, mutationIndcs(i))
       end do
     end if
   end subroutine applyInitialMutations
@@ -382,7 +389,7 @@ contains
         isDead = .true.
       else
         ! Count mutation.
-        if (getGene(currPerson%genome, nextAge) == GENE_UNHEALTHY) then
+        if (currPerson%genome%get(nextAge) .eqv. GENE_UNHEALTHY) then
             currPerson%mutationCount = currPerson%mutationCount + 1
         end if
   

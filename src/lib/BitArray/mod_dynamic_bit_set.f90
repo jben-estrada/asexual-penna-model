@@ -64,8 +64,13 @@ module DynamicBitSet
     module procedure :: bitset_cnstrc
   end interface
 
+  interface operator(==)
+    module procedure :: cmpr_bitsets
+  end interface
+
   public :: BitSet
   public :: CHUNK_SIZE
+  public :: operator(==)
 contains
 
 
@@ -357,6 +362,52 @@ contains
       end do chunk
     end do chunkArr
   end function bitSet_count
+
+
+  function cmpr_bitsets(bitsetLeft, bitsetRight) result(cmprValue)
+    type(BitSet), intent(in) :: bitsetLeft
+    type(BitSet), intent(in) :: bitsetRight
+    logical :: cmprValue
+
+    integer(kind=chunkKind) :: chunkLeft
+    integer(kind=chunkKind) :: chunkRight
+
+    integer :: chunkLo
+    integer :: chunkHi
+    integer :: chunkIdx
+
+    integer :: chunkBitLo
+    integer :: chunkBitHi
+
+    integer(kind=chunkKind) :: stencil
+    
+    cmprValue = .false.
+  
+    if (bitsetLeft%loIdx == bitsetRight%loIdx .and. &
+        bitsetLeft%hiIdx == bitsetRight%hiIdx) then
+        
+      chunkLo = int((bitsetLeft%loIdx - 1) / CHUNK_SIZE) + 1
+      chunkHi = int((bitsetLeft%hiIdx - 1) / CHUNK_SIZE) + 1
+
+      chunkArr: do chunkidx = chunkLo, chunkHi
+        ! Determine the actively used section of the current chunk.
+        chunkBitLo = 0
+        if (chunkIdx*CHUNK_SIZE > bitsetLeft%hiIdx) then
+          chunkBitHi = mod(bitsetLeft%hiIdx - 1, CHUNK_SIZE)
+        else
+          chunkBitHi = CHUNK_SIZE - 1
+        end if
+
+        stencil = iand(shiftl(-1_chunkKind, chunkBitLo), &
+                       shiftr(-1_chunkKind, CHUNK_SIZE - (chunkBitHi + 1)))
+
+        chunkLeft = iand(bitsetLeft%chunkArr(chunkIdx), stencil)
+        chunkRight = iand(bitsetRight%chunkArr(chunkIdx), stencil)
+
+        cmprValue = (chunkLeft == chunkRight)
+      end do chunkArr
+    end  if
+  end function cmpr_bitsets
 
 
   subroutine bitSet_finalizer(self)

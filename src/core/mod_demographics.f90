@@ -7,7 +7,8 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Gene, only: personIK, getGene, GENE_UNHEALTHY
+  use Gene, only: GENE_UNHEALTHY
+  use DynamicBitSet, only: BitSet, operator(==)
   implicit none
   private
   
@@ -39,9 +40,9 @@ module Demographics
 
   type GenomeDstrbNode
     !! Node type for genome distribution lists.
-    integer(kind=personIK)         :: genome
+    type(BitSet) :: genome
       !! The genome of this `GenomeDstrbNode` object.
-    integer                        :: count = 0
+    integer      :: count = 0
       !! Count of `Person` objects with the same value for `genome`
       !! as in this `GenomeDstrbNode` object.
 
@@ -69,7 +70,7 @@ contains
   !!  the non-matching genome.
   ! -------------------------------------------------------------------------- !
   subroutine updateGenomeDstrb(genome)
-    integer(kind=personIK), intent(in) :: genome
+    type(BitSet), intent(in) :: genome
       !! The genome to be added to the genome distribution.
 
     call incrementGenomeCount(genomeDstrbHead, genome)
@@ -84,7 +85,7 @@ contains
   recursive subroutine incrementGenomeCount(node, genome)
     type(GenomeDstrbNode), pointer, intent(inout) :: node
       !! The `GenomeDstrbNode` object to be compared with `genome`.
-    integer(kind=personIK),         intent(in)    :: genome
+    type(BitSet),                   intent(in) :: genome
       !! The genome to be compared to given node in genome distribution list.
 
     if (associated(node)) then
@@ -108,7 +109,7 @@ contains
   !!  list.
   ! -------------------------------------------------------------------------- !
   subroutine appendGenomeDstrbNode(genome)
-    integer(kind=personIK), intent(in) :: genome
+    type(BitSet), intent(in) :: genome
       !! The genome the `GenomeDstrbNode` will contain.
 
     type(GenomeDstrbNode), pointer :: new
@@ -193,7 +194,7 @@ contains
 
         ! Count the bad genes of the current genome.
         do i = 1, genomeLen
-          if (getGene(reader % genome, i) == GENE_UNHEALTHY) &
+          if (reader % genome % get(i) .eqv. GENE_UNHEALTHY) &
             badGeneDstrb(i) = badGeneDstrb(i) + 1
         end do
 
