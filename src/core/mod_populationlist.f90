@@ -22,6 +22,7 @@ module PopulationList
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
   use DynamicBitSet, only: BitSet
+  use Demographics, only: updateGenomeDstrb
   use RandNumProcs, only: getRandReal, getRandRange
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
   use Gene, only: personIK, personRK, GENE_UNHEALTHY, GENE_HEALTHY, getGene
@@ -362,8 +363,9 @@ contains
   !>  Evaluate the current person in the population. Death event is checked
   !!  first, before age increment and birth event are checked.
   ! -------------------------------------------------------------------------- !
-  subroutine population_evalCurrPerson(self)
+  subroutine population_evalCurrPerson(self, toUpdateGenomeDstrb)
     class(Population_t), intent(inout) :: self
+    logical,             intent(in)    :: toUpdateGenomeDstrb
 
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
@@ -410,7 +412,7 @@ contains
         call self%deadPopMask%set(MASK_DEAD, self%currIdx)
       else
         currPerson%age = currPerson%age + 1
-        call checkPersonBirth(self)
+        call checkPersonBirth(self, toUpdateGenomeDstrb)
       end if
     end associate
   end subroutine population_evalCurrPerson
@@ -420,8 +422,9 @@ contains
   ! SUBROUTINE: checkPersonBirth
   !>  Check for any births event by the current `Person_t` object of `popObj`.
   ! -------------------------------------------------------------------------- !
-  subroutine checkPersonBirth(popObj)
+  subroutine checkPersonBirth(popObj, toUpdateGenomeDstrb)
     class(Population_t), intent(inout) :: popObj
+    logical,             intent(in)    :: toUpdateGenomeDstrb
     logical :: gaveBirth
     integer :: i
 
@@ -447,6 +450,10 @@ contains
             call freePersonPtr(newPersonPtr)
             allocate(newPersonPtr%person)
             call initNewPerson(newPersonPtr%person, currPerson%genome, MODEL_M)
+
+            if (toUpdateGenomeDstrb) then
+              call updateGenomeDstrb(newPersonPtr%person%genome)
+            end if
           end associate
         end do
 

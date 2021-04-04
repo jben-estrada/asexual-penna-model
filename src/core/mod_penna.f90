@@ -240,7 +240,7 @@ contains
     evalPop: do while(.not. population%atEndOfPopulation())
       ! Evaluate the current person. If this person is alive, its age is
       ! incremented and birth event is checked.
-      call population%evalCurrPerson()
+      call population%evalCurrPerson(recordFlag == REC_GENE_DSTRB)
 
       currPerson => defaultPersonPtr(population%getCurrPerson())
       if (.not.associated(currPerson)) then

@@ -46,8 +46,9 @@ module AbstractPopulation
       class(AbstractPopulation_t), intent(inout) :: self
     end subroutine next_abstract
 
-    module subroutine evalCurrPerson_abstract(self)
+    module subroutine evalCurrPerson_abstract(self, toUpdateGenomeDstrb)
       class(AbstractPopulation_t), intent(inout) :: self
+      logical,                     intent(in)    :: toUpdateGenomeDstrb
     end subroutine evalCurrPerson_abstract
 
     module function atEndOfPop_abstact(self) result(atEndOfPop)
