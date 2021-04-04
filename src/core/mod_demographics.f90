@@ -7,7 +7,9 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
+  use Parameters, only: MODEL_L
   use Gene, only: GENE_UNHEALTHY
+  use ErrorMSG, only: raiseError
   use DynamicBitSet, only: BitSet, operator(==)
   implicit none
   private
@@ -73,7 +75,7 @@ contains
     type(BitSet), intent(in) :: genome
       !! The genome to be added to the genome distribution.
 
-    call incrementGenomeCount(genomeDstrbHead, genome)
+    call incrementGenomeCount(genome)
     genomeCount = genomeCount + 1
   end subroutine updateGenomeDstrb
 
@@ -82,24 +84,25 @@ contains
   ! SUBROUTINE: incrementGenomeCount
   !>  Increment genome count and update.
   ! -------------------------------------------------------------------------- !
-  recursive subroutine incrementGenomeCount(node, genome)
-    type(GenomeDstrbNode), pointer, intent(inout) :: node
-      !! The `GenomeDstrbNode` object to be compared with `genome`.
-    type(BitSet),                   intent(in) :: genome
-      !! The genome to be compared to given node in genome distribution list.
+  subroutine incrementGenomeCount(genome)
+    type(BitSet), intent(in) :: genome
+    type(GenomeDstrbNode), pointer :: currentNode
 
-    if (associated(node)) then
-      ! Update genome distribution if match is found.
-      if (node % genome == genome) then
-        node % count = node % count + 1
+    currentNode => genomeDstrbHead
+    genomeDstrb: do
+      if (associated(currentNode)) then
+        if (currentNode%genome == genome) then
+          currentNode%count = currentNode%count + 1
+          exit genomeDstrb
+        else
+          currentNode => currentNode%next
+        end if
       else
-        call incrementGenomeCount(node % next, genome)
+        ! Create a new node if no match is found.
+        call appendGenomeDstrbNode(genome)
+        exit genomeDstrb
       end if
-
-    else
-      ! Create a new node if no match is found.
-      call appendGenomeDstrbNode(genome)
-    end if
+    end do genomeDstrb
   end subroutine incrementGenomeCount
 
 
@@ -122,13 +125,17 @@ contains
     new % genome = genome
     new % count  = 1
     new % next   => null()
-    
-    ! Assign head if the list is not yet initialized. 
-    if (.not.associated(genomeDstrbHead)) &
-        genomeDstrbHead => new
-    ! Append the new node at the end of the list.
-    if (associated(genomeDstrbTail)) &
-        genomeDstrbTail % next => new
+
+    if (associated(genomeDstrbHead) .and. associated(genomeDstrbTail)) then
+      genomeDstrbTail%next => new
+    else if (.not.associated(genomeDstrbHead) .and. &
+             .not.associated(genomeDstrbTail)) then
+      ! Assign head if the list is not yet initialized. 
+      genomeDstrbHead => new
+    else
+      call raiseError("Internal error. Invalid genome distribution list.")
+    end if
+
     genomeDstrbTail => new
   end subroutine appendGenomeDstrbNode
 
@@ -138,9 +145,25 @@ contains
   !>  Free allocated nodes of the genome distribution list and reset counters.
   ! -------------------------------------------------------------------------- !
   subroutine freeGenomeDstrbList()
+    type(GenomeDstrbNode), pointer :: currentNode
+    type(GenomeDstrbNode), pointer :: deletedNode
+
+    currentNode => genomeDstrbHead
+    deletedNode => null()
+    do
+      if (associated(currentNode)) then
+        deletedNode => currentNode
+        currentNode => currentNode%next
+
+        deallocate(deletedNode)
+      else
+        exit
+      end if
+    end do
+  
+    genomeDstrbHead => null()
     genomeDstrbTail => null()
     genomeCount = 0
-    call cascadeFreeNodes(genomeDstrbHead)
   end subroutine freeGenomeDstrbList
 
 
@@ -177,11 +200,8 @@ contains
   ! FUNCTION: getBadGeneDstrb
   !>  Get the distribution of bad genes in the population's genomes.
   ! -------------------------------------------------------------------------- !
-  function getBadGeneDstrb(genomeLen) result(badGeneDstrb)
-    integer, intent(in) :: genomeLen
-      !! Genome length which also corresponds to age demographics range.
-
-    integer :: badGeneDstrb(genomeLen)
+  function getBadGeneDstrb() result(badGeneDstrb)
+    integer :: badGeneDstrb(MODEL_L)
 
     type(GenomeDstrbNode), pointer :: reader
     integer :: i
@@ -193,9 +213,9 @@ contains
       if (associated(reader)) then
 
         ! Count the bad genes of the current genome.
-        do i = 1, genomeLen
-          if (reader % genome % get(i) .eqv. GENE_UNHEALTHY) &
-            badGeneDstrb(i) = badGeneDstrb(i) + 1
+        do i = 1, MODEL_L
+          if (reader%genome%get(i) .eqv. GENE_UNHEALTHY) &
+            badGeneDstrb(i) = badGeneDstrb(i) + reader%count
         end do
 
         ! Get to the next element of genome distribution list.
@@ -205,21 +225,6 @@ contains
       end if
     end do
   end function
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: cascadeFreeNodes
-  !>  Free allocated nodes.
-  ! -------------------------------------------------------------------------- !
-  recursive subroutine cascadeFreeNodes(node)
-    type(GenomeDstrbNode), pointer, intent(inout) :: node
-      !! The `GenomeDstrbNode` object to be deallocated.
-
-    if (associated(node)) then
-      call cascadeFreeNodes(node % next)
-      deallocate(node)
-    end if
-  end subroutine cascadeFreeNodes
 
 
   ! -------------------------------------------------------------------------- !

@@ -209,7 +209,7 @@ contains
           call runWriter % write(real(getDiversityIdx(), kind=writeRK))
         
         case (REC_GENE_DSTRB)
-          call runWriter % write(int(getBadGeneDstrb(MODEL_L), kind=writeIK))
+          call runWriter % write(int(getBadGeneDstrb(), kind=writeIK))
       end select
     end subroutine recordData
   end subroutine runOneInstance
