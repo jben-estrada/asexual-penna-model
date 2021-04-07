@@ -92,10 +92,8 @@ module Parameters
   character(len=*), parameter :: PROG_DESC = &
       "A simulation for the 'Penna model', a biological aging model."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = ""
-    !! Program version. 
-    !! NOTE: Temporarily set to none as I still have to work out the appropriate
-    !! versioning scheme.
+  character(len=*), parameter :: PROG_VERSION = "v0.1.1"
+    !! Program version.
 
   integer, target, protected :: PROG_PRINT_STATE = NORMAL_PRINT
     !! Printing state. 
