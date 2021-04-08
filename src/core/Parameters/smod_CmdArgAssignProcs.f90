@@ -35,7 +35,7 @@ submodule (Parameters) CmdArgAssignProcs
 
   ! All commands.
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(20)
+  type(CmdArgRecord), target :: cmdArgArr(19)
   ! Model parameters.
   type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
   type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
@@ -58,7 +58,6 @@ submodule (Parameters) CmdArgAssignProcs
   type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(17)
   type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(18)
   type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(19)
-  type(CmdArgRecord), pointer :: recordTime_f     => cmdArgArr(20)
 contains
 
 
@@ -112,8 +111,6 @@ contains
       "Print nothing when running this program.")
     showVersion_f    = CmdArgRecord("V", "version", FLAG_S, FLAG_L, &
       "Show the version of this program.")
-    recordTime_f     = CmdArgRecord("i", "record-time", FLAG_S, FLAG_L, &
-      "Record timing statistics.")
 
     ! Assign pointers.
     mttnThreshold_kv % intValue_ptr => MODEL_T
@@ -284,10 +281,6 @@ contains
             PROG_PRINT_STATE = VERSION_PRINT
           end if
 
-        else if (currCmdArg % cmdName == recordTime_f % cmdName) then
-          PROG_RECORD_TIME = &
-            pennaCmdArgs % isFlagToggled(recordTime_f % cmdName)
-
         else
           call raiseError( &
               "Unknown flag command '" //  currCmdArg % cmdName // "'." &
@@ -365,13 +358,14 @@ contains
     print "(' ', *(a))", &
       "Valid character values for -", recordData_kv % cmdName, &
       " or --", recordData_kv % cmdAlias
-    write(*, "(6(2(' '), a/))", advance="no") &
+    write(*, "(7(2(' '), a/))", advance="no") &
       "x - Record nothing.", &
       "p - Population size per time step", &
       "a - Age demographics in the last 300 time step.", &
       "d - Death count per time step.", &
       "s - Shannon diversity index of genomes per time step.", &
-      "b - Bad gene distribution per time step."
+      "b - Bad gene distribution per time step.", &
+      "t - (Average) elapsed time and its std deviation if applicable"
     print "(' ', *(a))", &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias

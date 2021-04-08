@@ -17,19 +17,11 @@ module Penna
     MODEL_START_POP_SIZE, &
     PROG_REC_FLAG,        &
     PROG_SAMPLE_SIZE,     &
-    PROG_RECORD_TIME,     &
     PROG_PRINT_STATE,     &
     PROG_RNG,             &
     PROG_RNG_SEED,        &
     PROG_OUT_FILE_NAME,   &
-    PROG_TIME_FILE_NAME,  &
     SILENT_PRINT,         &
-    REC_NULL,             &
-    REC_POP,              &
-    REC_AGE_DSTRB,        &
-    REC_DEATH,            &
-    REC_DIV_IDX,          &
-    REC_GENE_DSTRB,       &
     setParams,            &
     printProgDetails,     &
     freeParamAlloctbls
@@ -54,6 +46,21 @@ module Penna
     Population_t,           &
     defaultPersonPtr,       &
     Person_t
+  
+  use DataWriter, only:  &
+    REC_NULL,            &
+    REC_POP,             &
+    REC_AGE_DSTRB,       &
+    REC_DEATH,           &
+    REC_DIV_IDX,         &
+    REC_GENE_DSTRB,      &
+    REC_TIME,            &
+    getWriterPtr,        &
+    isWriterInitialized, &
+    initDataWriter,      &
+    Writer,              &
+    writeIK,             &
+    writeRK
 
   use, intrinsic :: iso_fortran_env, only: &
     timeIK => int64, &
@@ -63,7 +70,6 @@ module Penna
   use ProgressBarType, only: ProgressBar
   use RandNumProcs, only: assignRNGParams
   use ErrorMSG, only: raiseError, raiseWarning
-  use WriterType, only: Writer, writeIK, writeRK
   implicit none
   private
 
@@ -113,12 +119,11 @@ contains
     integer,          intent(in) :: initMttnCount
       !! Initial mutation count of each individuals.
     character(len=*), intent(in) :: recordFlag
-      !! Record flag. Valid values are found in the `WriterOptions` module.
+      !! Record flag. Can have multiple values.
 
     type(Population_t) :: population
 
-    type(Writer)     :: runWriter     ! `Writer` object for recording data 
-    integer, target  :: deathCount(3) ! Death count 
+    integer, target :: deathCount(3) ! Death count 
     integer :: timeStep               ! Time step
     integer :: popSize                ! Population size
 
@@ -130,7 +135,6 @@ contains
     popSize = startPopSize
     deathCount(:) = 0
     call resetAgeDstrb(MODEL_L)
-    call initRunWriter(runWriter, recordFlag)
     population = Population_t(startPopSize, initMttnCount)
 
     ! Initialize pointers.
@@ -139,7 +143,7 @@ contains
     deathByVerhulst => deathCount(3)
 
     ! Enable/disable demographics recording.
-    if (recordFlag == REC_AGE_DSTRB) then
+    if (isWriterInitialized(REC_AGE_DSTRB)) then
       DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     else
       DEMOG_LAST_STEPS = -1
@@ -148,7 +152,7 @@ contains
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
     ! represent the data at t = 0.
-    call recordData(recordFlag)
+    call recordData()
 
     ! Run the model.
     mainLoop: do timeStep = 1, maxTimestep
@@ -163,11 +167,11 @@ contains
 
       ! Evaluate population.
       call evalPopulation(population, maxTimestep - timeStep, &
-          recordFlag, deathByAge, deathByMutation, deathByVerhulst)
+          deathByAge, deathByMutation, deathByVerhulst)
       popSize = population%getPopSize()
 
       ! Record data.
-      call recordData(recordFlag)
+      call recordData()
 
       ! Reset counters.
       select case(recordFlag)
@@ -190,27 +194,33 @@ contains
     !>  Record data obtained in the subroutine `runOneInstance`. This is a
     !!  subroutine only within the scope of `runOneInstance`.
     ! ------------------------------------------------------------------------ !
-    subroutine recordData(charFlag)
-      character(len=*), intent(in) :: charFlag
-        !! Record flag.
+    subroutine recordData()
+      type(Writer), pointer :: chosenWriter
+      integer :: badGeneDstrb(MODEL_L)
+      integer :: i
 
-      ! Write data into a file as specified by `charFlag`.
-      select case (charFlag)
-        case (REC_POP)
-          call runWriter % write(int(popSize, kind=writeIK))
+      do i = 1, len(recordFlag)
+        chosenWriter => getWriterPtr(recordFlag(i: i))
 
-        case (REC_AGE_DSTRB)
-          call runWriter % write(int(ageDistribution, kind=writeIK))
+        ! Write data into a file as specified by `charFlag`.
+        select case (recordFlag(i: i))
+          case (REC_POP)
+            call chosenWriter%write(int(popSize, kind=writeIK))
 
-        case (REC_DEATH)
-          call runWriter % write(int(deathCount, kind=writeIK))
+          case (REC_AGE_DSTRB)
+            call chosenWriter%write(int(ageDistribution, kind=writeIK))
 
-        case (REC_DIV_IDX)
-          call runWriter % write(real(getDiversityIdx(), kind=writeRK))
-        
-        case (REC_GENE_DSTRB)
-          call runWriter % write(int(getBadGeneDstrb(), kind=writeIK))
-      end select
+          case (REC_DEATH)
+            call chosenWriter%write(int(deathCount, kind=writeIK))
+
+          case (REC_DIV_IDX)
+            call chosenWriter%write(real(getDiversityIdx(), kind=writeRK))
+          
+          case (REC_GENE_DSTRB)
+            badGeneDstrb = getBadGeneDstrb()
+            call chosenWriter%write(int(badGeneDstrb(1:MODEL_L), kind=writeIK))
+        end select
+      end do
     end subroutine recordData
   end subroutine runOneInstance
 
@@ -222,7 +232,6 @@ contains
   subroutine evalPopulation( &
       population,       &
       countdown,        &
-      recordFlag,       &
       deathByAge,       &
       deathByMutation,  &
       deathByVerhulst   &
@@ -233,14 +242,13 @@ contains
     integer, pointer,   intent(inout) :: deathByMutation  !! Death by mutation
     integer, pointer,   intent(inout) :: deathByVerhulst  !! Random death
     integer,            intent(in)    :: countdown        !! Count from max time
-    character,          intent(in)    :: recordFlag       !! Record flag
 
     type(Person_t), pointer :: currPerson
 
     evalPop: do while(.not. population%atEndOfPopulation())
       ! Evaluate the current person. If this person is alive, its age is
       ! incremented and birth event is checked.
-      call population%evalCurrPerson(recordFlag == REC_GENE_DSTRB)
+      call population%evalCurrPerson(isWriterInitialized(REC_GENE_DSTRB))
 
       currPerson => defaultPersonPtr(population%getCurrPerson())
       if (.not.associated(currPerson)) then
@@ -249,11 +257,12 @@ contains
 
       if (currPerson%lifeStat == ALIVE) then
         ! Update the genome distribution.
-        if (any(recordFlag == [REC_DIV_IDX, REC_GENE_DSTRB])) then
-          call updateGenomeDstrb(currPerson%genome)
+        if (isWriterInitialized(REC_DIV_IDX) .or. &
+            isWriterInitialized(REC_GENE_DSTRB)) then
+           call updateGenomeDstrb(currPerson%genome)
         end if
       else
-        if (recordFlag == REC_DEATH) then
+        if (isWriterInitialized(REC_DEATH)) then
           ! Increment the appropriate death counter.
           select case(currPerson%lifeStat)
             case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1
@@ -279,34 +288,11 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: runMultipleInstance
-  !>  Run the Penna model simulation many times.
+  ! SUBROUTINE: run
+  !>  Run the Penna model simulation. This is a wrapper subroutine to the
+  !!  subroutine `runMultipleInstance`.
   ! -------------------------------------------------------------------------- !
-  subroutine runMultipleInstance( &
-      maxTimeStep,    &
-      startPopSize,   &
-      initMttnCount,  &
-      recordFlag,     &
-      sampleSize,     &
-      recordTime,     &
-      printProgress   &
-    )
-
-    integer,   intent(in) :: maxTimeStep
-      !! Maximum (total) time step.
-    integer,   intent(in) :: startPopSize
-      !! Starting population size.
-    integer,   intent(in) :: initMttnCount
-      !! Initial mutation count of each individuals.
-    character, intent(in) :: recordFlag
-      !! Record flag. Valid values are found in the `WriterOptions` module.
-    integer,   intent(in) :: sampleSize
-      !! Sample size. Number of times the simulation is run.
-    logical,   intent(in) :: recordTime
-      !! Record mean elapsed time and the corresponding standard deviation.
-    logical,   intent(in) :: printProgress
-      !! Print the progress with a progress bar.
-
+  subroutine run()
     real(kind=timeRK)    :: meanTime
     real(kind=timeRK)    :: stdDevTime
     integer(kind=timeIK) :: startTimeInt
@@ -317,29 +303,38 @@ contains
     real(kind=timeRK)    :: sum
     real(kind=timeRK)    :: sumSqrd
 
-    type(ProgressBar) :: progBar    ! A `ProgressBar` object.
-    type(Writer)      :: timeWriter ! A `Writer` object for writing timings.
+    type(Writer), pointer :: timeWriter ! A `Writer` object for writing timings.
+    type(ProgressBar)     :: progBar    ! A `ProgressBar` object.
+    logical :: printProgress
     integer :: i
 
     ! Print separator for pretty printing.
     character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
-    ! Unit for writing timing statistics.
-    integer, parameter :: TIME_WRITER_UNIT = 101
+
+    ! Shorthand form
+    printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 
     ! Initialize the progress bar.
-    progBar = ProgressBar(20, sampleSize)
+    progBar = ProgressBar(20, PROG_SAMPLE_SIZE)
+
+    ! Initialize data output writing.
+    call initDataWriter(trim(PROG_REC_FLAG), PROG_OUT_FILE_NAME, .false.)       ! NOTE: Value of `inCSVFormat` is temporary
 
     ! Call and time the `run` subroutine.
     sum = 0._timeRK
     sumSqrd = 0._timeRK
-    do i = 1, sampleSize
+    do i = 1, PROG_SAMPLE_SIZE
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=timeRK)/clockRate
 
-      ! Run the actual simulation.
-      call runOneInstance(maxTimeStep, startPopSize, initMttnCount, &
-          recordFlag)
+      ! Run the actual simulation once.
+      call runOneInstance(                   &
+          maxTimeStep=MODEL_TIME_STEPS,      &
+          startPopSize=MODEL_START_POP_SIZE, &
+          initMttnCount=MODEL_MTTN_COUNT,    &
+          recordFlag=trim(PROG_REC_FLAG)     &
+        )
 
       ! End timer.
       call system_clock(count=endTimeInt, count_rate=clockRate)
@@ -350,7 +345,7 @@ contains
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
 
       ! Print the progress bar.
-      if (printProgress .and. sampleSize > 1) then
+      if (printProgress .and. PROG_SAMPLE_SIZE > 1) then
         call progBar % incrCounter(show=.true.)
       end if
     end do
@@ -359,160 +354,38 @@ contains
     write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
 
     ! Get average elapsed time and its std deviation.
-    meanTime = sum/real(sampleSize, kind=timeRK)
-    stdDevTime = sqrt(sampleSize*sumSqrd - sum**2) / &
-      real(sampleSize, kind=timeRK)
+    meanTime = sum/real(PROG_SAMPLE_SIZE, kind=timeRK)
+    stdDevTime = sqrt(PROG_SAMPLE_SIZE*sumSqrd - sum**2) / &
+      real(PROG_SAMPLE_SIZE, kind=timeRK)
 
     ! Print timing statistics.
     if (printProgress) then
       ! Print elapsed time.
-      if (sampleSize > 1) then
+      if (PROG_SAMPLE_SIZE > 1) then
         print "(a, f12.3, a)", "Average time: ", meanTime, " ms"
       else
         print "(a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
       end if
 
       ! Print the standard deviation.
-      if (sampleSize > 1) &
+      if (PROG_SAMPLE_SIZE > 1) &
         print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
     end if
 
     ! Record mean time and std deviation.
-    if (recordTime) then
-      timeWriter = Writer(PROG_TIME_FILE_NAME, TIME_WRITER_UNIT)
-      call timeWriter % openFile()
+    if (isWriterInitialized(REC_TIME)) then
+      timeWriter => getWriterPtr(REC_TIME)
 
-      ! Write the header of the file.
-      call timeWriter % write("DATA: Timing statistics")
-      call timeWriter % write([(FILE_DIVIDER, i = 1, 5)])
-      call timeWriter % write( &
-        ["Max Time Step ", &
-         "Init pop size ", &
-         "Sample size   ", &
-         "Ave. time (ms)", &
-         "Std. dev. (ms)"])
-      call timeWriter % write([(FILE_DIVIDER, i = 1, 5)])
-        
       ! Write the actual timing statistics.
-      call timeWriter % write([             &
-          real(maxTimeStep, kind=writeRK),  &
-          real(startPopSize, kind=writeRK), &
-          real(SampleSize, kind=writeRK),   &
-          real(meanTime, kind=writeRK),     &
-          real(stdDevTime, kind=writeRK)]   &
+      call timeWriter%write([                       &
+          real(MODEL_TIME_STEPS, kind=writeRK),     &
+          real(MODEL_START_POP_SIZE, kind=writeRK), &
+          real(PROG_SAMPLE_SIZE, kind=writeRK),     &
+          real(meanTime, kind=writeRK),             &
+          real(stdDevTime, kind=writeRK)]           &
         )
     end if
 
     if (printProgress) print "(*(a))", PRINT_SEPARATOR
-  end subroutine runMultipleInstance
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: run
-  !>  Run the Penna model simulation. This is a wrapper subroutine to the
-  !!  subroutine `runMultipleInstance`.
-  ! -------------------------------------------------------------------------- !
-  subroutine run()
-    logical :: printProgress
-    printProgress = PROG_PRINT_STATE /= SILENT_PRINT
-
-    call runMultipleInstance( &
-        MODEL_TIME_STEPS,     &
-        MODEL_START_POP_SIZE, &
-        MODEL_MTTN_COUNT,     &
-        PROG_REC_FLAG,        &
-        PROG_SAMPLE_SIZE,     &
-        PROG_RECORD_TIME,     &
-        printProgress         &
-        )
   end subroutine run
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initRunWriter
-  !>  Initialize a `Writer` object based on the integer `recordFlag`
-  !!  passed. The flags are defined in the `CmdOptions` module.
-  ! -------------------------------------------------------------------------- !
-  subroutine initRunWriter(runWriter, recordFlag)
-    type(Writer), intent(inout) :: runWriter
-      !! The `Writer` object to be initialized.
-    character,    intent(in)    :: recordFlag
-      !! Record flag. Values can be found in `WriterOptions`.
-
-    integer, parameter :: RUN_WRITER_UNIT = 100
-
-    character(len=15), allocatable :: headerArr(:)
-    integer :: i, startingAge
-
-    if (recordFlag == REC_NULL) return
-
-    ! Initialize writer.
-    runWriter = Writer(PROG_OUT_FILE_NAME, RUN_WRITER_UNIT)
-    ! Open file for writing.
-    call runWriter % openFile()
-
-    ! Append the header to the file to be written on.
-    select case (recordFlag)
-      case (REC_POP)
-        ! Data description.
-        call runWriter % write("DATA: Population size per time step")
-
-        ! Header of the list.
-        call runWriter % write([FILE_DIVIDER])
-        call runWriter % write(["Population size"])
-        call runWriter % write([FILE_DIVIDER])
-
-
-      case (REC_GENE_DSTRB, REC_AGE_DSTRB)
-        ! Data description.
-        if (recordFlag == REC_GENE_DSTRB) then
-          call runWriter % write("DATA: Bad gene distribution per time step")
-          startingAge = 1  ! Get the starting age of the distribution as well.
-        else
-          call runWriter % write("DATA: Age distribution per time step")
-          startingAge = 0  ! Get the starting age of the distribution as well.
-        end if
-
-        ! For some reason, implicit do loop truncate numbers.
-        allocate(headerArr(startingAge:MODEL_L))
-        do i = startingAge, MODEL_L
-          headerArr(i) = "AGE " // trim(castIntToChar(i))
-        end do
-
-        ! Header of the table.
-        call runWriter % write([(FILE_DIVIDER, i = startingAge, MODEL_L)])
-        call runWriter % write(headerArr)
-        call runWriter % write([(FILE_DIVIDER, i = startingAge, MODEL_L)])
-
-
-      case (REC_DEATH)
-        ! Data description.
-        call runWriter % write("DATA: Number of deaths " // &
-            "(due to old age, mutation, Verhulst factor) per time step")
-        
-        ! Header of the table.
-        call runWriter % write([(FILE_DIVIDER, i = 1, 3)])
-        call runWriter % write( &
-            ["Old age        ", &
-             "Mutation       ", &
-             "Verhulst factor"])
-        call runWriter % write([(FILE_DIVIDER, i = 1, 3)])
-        
-
-      case (REC_DIV_IDX)
-        ! Data description. 
-        call runWriter % write("DATA: Shannon diversity index per time step.")
-
-        ! Header of the list.
-        call runWriter % write([FILE_DIVIDER])
-        call runWriter % write(["Diversity idx"])
-        call runWriter % write([FILE_DIVIDER])
-
-
-      case default
-        call raiseError("'" // recordFlag //"' is an invalid record flag")
-    end select
-
-    if (allocated(headerArr)) deallocate(headerArr)
-  end subroutine initRunWriter
 end module Penna
