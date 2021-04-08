@@ -16,6 +16,7 @@ module Penna
     MODEL_MTTN_COUNT,     &
     MODEL_START_POP_SIZE, &
     PROG_REC_FLAG,        &
+    PROG_IN_CSV_FMT,      &
     PROG_SAMPLE_SIZE,     &
     PROG_PRINT_STATE,     &
     PROG_RNG,             &
@@ -318,7 +319,7 @@ contains
     progBar = ProgressBar(20, PROG_SAMPLE_SIZE)
 
     ! Initialize data output writing.
-    call initDataWriter(trim(PROG_REC_FLAG), PROG_OUT_FILE_NAME, .false.)       ! NOTE: Value of `inCSVFormat` is temporary
+    call initDataWriter(trim(PROG_REC_FLAG),PROG_OUT_FILE_NAME, PROG_IN_CSV_FMT)
 
     ! Call and time the `run` subroutine.
     sum = 0._timeRK

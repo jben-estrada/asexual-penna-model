@@ -35,7 +35,7 @@ submodule (Parameters) CmdArgAssignProcs
 
   ! All commands.
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(19)
+  type(CmdArgRecord), target :: cmdArgArr(20)
   ! Model parameters.
   type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
   type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
@@ -58,6 +58,7 @@ submodule (Parameters) CmdArgAssignProcs
   type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(17)
   type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(18)
   type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(19)
+  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(20)
 contains
 
 
@@ -111,6 +112,8 @@ contains
       "Print nothing when running this program.")
     showVersion_f    = CmdArgRecord("V", "version", FLAG_S, FLAG_L, &
       "Show the version of this program.")
+    csvFormat_f      = CmdArgRecord("c", "csv-format", FLAG_S, FLAG_L, &
+      "Set the output files to be in CSV format.")
 
     ! Assign pointers.
     mttnThreshold_kv % intValue_ptr => MODEL_T
@@ -280,6 +283,9 @@ contains
           if (pennaCmdArgs % isFlagToggled(showVersion_f % cmdName)) then
             PROG_PRINT_STATE = VERSION_PRINT
           end if
+
+        else if (currCmdArg % cmdName == csvFormat_f % cmdName) then
+          PROG_IN_CSV_FMT = pennaCmdArgs % isFlagToggled(csvFormat_f % cmdName)
 
         else
           call raiseError( &

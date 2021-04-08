@@ -92,6 +92,8 @@ module Parameters
   integer, target, protected :: PROG_RNG_SEED = VOID_INT
     !! RNG seed.
     !! NOTE: Default value is obtained from config files.
+  logical, target, protected :: PROG_IN_CSV_FMT = .false.
+    !! Output files in CSV format.
   character(len=MAX_LEN), target, protected :: PROG_REC_FLAG
     !! List of record flags.
     !! NOTE: Default value is obtained from config files.
@@ -169,6 +171,7 @@ module Parameters
   public :: PROG_RNG
   public :: PROG_RNG_SEED
   public :: PROG_REC_FLAG
+  public :: PROG_IN_CSV_FMT
   public :: PROG_OUT_FILE_NAME
   
   ! Values for `PROG_PRINT_STATE`.

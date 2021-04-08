@@ -114,7 +114,7 @@ contains
     end if
 
     ! Initialize the chosen data writer.
-    chosenWriter = Writer(saveFilename, newWriterUnit)
+    chosenWriter = Writer(saveFilename, newWriterUnit, delim)
     ! Open file for writing.
     call chosenWriter%openFile()
 
@@ -125,9 +125,11 @@ contains
         call chosenWriter%write("DATA: Population size per time step")
 
         ! Header of the list.
-        call chosenWriter%write([divider])
+        if (divider == DIVIDER_READABLE) & 
+            call chosenWriter%write([divider])
         call chosenWriter%write(["Population size"])
-        call chosenWriter%write([divider])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([divider])
       
 
       case(REC_GENE_DSTRB, REC_AGE_DSTRB)
@@ -147,9 +149,11 @@ contains
         end do
 
         ! Header of the table.
-        call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
         call chosenWriter%write(headerArr)
-        call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
 
 
       case (REC_DEATH)
@@ -158,12 +162,14 @@ contains
             "(due to old age, mutation, Verhulst factor) per time step")
         
         ! Header of the table.
-        call chosenWriter%write([(divider, i = 1, 3)])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([(divider, i = 1, 3)])
         call chosenWriter%write( &
             ["Old age        ", &
              "Mutation       ", &
              "Verhulst factor"])
-        call chosenWriter%write([(divider, i = 1, 3)])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([(divider, i = 1, 3)])
         
 
       case (REC_DIV_IDX)
@@ -171,14 +177,17 @@ contains
         call chosenWriter%write("DATA: Shannon diversity index per time step.")
 
         ! Header of the list.
-        call chosenWriter%write([divider])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([divider])
         call chosenWriter%write(["Diversity idx"])
-        call chosenWriter%write([divider])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([divider])
       
 
       case (REC_TIME)
         call chosenWriter%write("DATA: Timing statistics")
-        call chosenWriter%write([(divider, i = 1, 5)])
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([(divider, i = 1, 5)])
         call chosenWriter%write( &
           ["Max Time Step ", &
            "Init pop size ", &
