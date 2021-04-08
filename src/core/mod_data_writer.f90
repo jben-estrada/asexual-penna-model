@@ -1,4 +1,12 @@
 module DataWriter
+  ! -------------------------------------------------------------------------- !
+  ! MODULE:  DataWriter
+  ! -------------------------------------------------------------------------- !
+  ! AUTHOR: John Benedick A. Estrada
+  !--------------------------------------------------------------------------- !
+  ! DESCRIPTION:
+  !>  Module containing procedures for writing data onto files.
+  ! -------------------------------------------------------------------------- !
   use Parameters, only: MODEL_L
   use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
