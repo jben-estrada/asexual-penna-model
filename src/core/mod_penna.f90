@@ -351,7 +351,7 @@ contains
     end do
 
     ! Remove the progress bar.
-    write(*, "(*(a))", advance="no") (char(8), i = 1, 30)
+    write(*, "(a)", advance="no") char(13)
 
     ! Get average elapsed time and its std deviation.
     meanTime = sum/real(PROG_SAMPLE_SIZE, kind=timeRK)
