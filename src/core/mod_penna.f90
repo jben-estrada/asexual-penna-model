@@ -197,7 +197,6 @@ contains
     ! ------------------------------------------------------------------------ !
     subroutine recordData()
       type(Writer), pointer :: chosenWriter
-      integer :: badGeneDstrb(MODEL_L)
       integer :: i
 
       do i = 1, len(recordFlag)
@@ -218,8 +217,7 @@ contains
             call chosenWriter%write(real(getDiversityIdx(), kind=writeRK))
           
           case (REC_GENE_DSTRB)
-            badGeneDstrb = getBadGeneDstrb()
-            call chosenWriter%write(int(badGeneDstrb(1:MODEL_L), kind=writeIK))
+            call chosenWriter%write(int(getBadGeneDstrb(), kind=writeIK))
         end select
       end do
     end subroutine recordData

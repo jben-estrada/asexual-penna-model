@@ -126,7 +126,7 @@ contains
   !!  [lower, upper]. The length of the generated array is that of
   !!  the passed `indices`.
   ! -------------------------------------------------------------------------- !
-  function getRandRange(lower, upper, size) result(indices)
+  function getRandRange(lower, upper, size) result(randRange)
     integer, intent(in) :: upper
       !! The inclusive upper bound of integers to be randomly generated.
     integer, intent(in) :: lower
@@ -134,26 +134,23 @@ contains
     integer, intent(in) :: size
       !! Size of the integer array to be generated.
 
-    integer :: indices(size)
+    integer :: randRange(size)
       !! The array of random integers to be used as randomized indices.
+    integer :: baseRange(lower: upper)
+    integer :: i, j, tempElem
     
-    integer :: index = 0
-    real    :: random = 0
-    integer :: i
+    baseRange = [(i, i = lower, upper)]
 
-    indices(:) = lower - 1
-    do i = 1, size
-      do
-        random = getRandReal()
-        index = getRandInt(upper, lower)
+    do i = upper, lower, -1
+      j = getRandInt(lower, i)
 
-        if (all(indices(1:i) /= index)) then
-          indices(i) = index
-          exit
-        end if
-
-      end do
+      ! Swap ith and jth elements.
+      tempElem = baseRange(j)
+      baseRange(j) = baseRange(i)
+      baseRange(i) = tempElem
     end do
+
+    randRange(:) = baseRange(lower: size-lower+1)
   end function getRandRange
 
 
@@ -163,9 +160,9 @@ contains
   ! -------------------------------------------------------------------------- !
   integer function getRandInt(a, b)
     integer, intent(in) :: a
-      !! The inclusive upper bound of the integer to be randomly generated.
-    integer, intent(in) :: b
       !! The inclusive lower bound of the integer to be randomly generated.
+    integer, intent(in) :: b
+      !! The inclusive upper bound of the integer to be randomly generated.
 
     real :: random
   
