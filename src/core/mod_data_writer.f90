@@ -22,10 +22,6 @@ module DataWriter
   character, parameter :: DELIM_CSV = ","
   character :: delim = char(0)
 
-  ! All writer objects.
-  type(Writer), target  :: writerArr(6)
-  logical :: initWriterArr(6) = .false.
-
   ! Record flags.
   character, parameter, public :: REC_NULL = "x"
     !! Nothing (do not record).
@@ -42,7 +38,13 @@ module DataWriter
     !! Bad gene distribution per time step.
   character, parameter, public :: REC_TIME = "t"
     !! (Average) elapsed time and standard deviation if applicable.
-  character(len=*), parameter  :: REC_FLAG_ORDER = "padsbt"
+  character, parameter, public :: REC_GNM_COUNT = "c"
+    !! Number of unique genomes per time step.
+  character(len=*), parameter  :: REC_FLAG_ORDER = "padsbtc"
+
+  ! All writer objects.
+  type(Writer), target  :: writerArr(len(REC_FLAG_ORDER))
+  logical :: initWriterArr(len(REC_FLAG_ORDER)) = .false.
 
   public :: initDataWriter
   public :: getWriterPtr
@@ -202,7 +204,17 @@ contains
            "Sample size   ", &
            "Avg. time (ms)", &
            "Std. dev. (ms)"])
-        call chosenWriter%write([(divider, i = 1, 5)])
+        if (divider == DIVIDER_READABLE) &
+           call chosenWriter%write([(divider, i = 1, 5)])
+
+
+      case (REC_GNM_COUNT)
+        call chosenWriter%write("DATA: Number of unique genome per time step.")
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([divider])
+        call chosenWriter%write("Unique genome count")
+        if (divider == DIVIDER_READABLE) &
+            call chosenWriter%write([divider])
       
 
       case (REC_NULL)
@@ -257,16 +269,23 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: isWriterInitialized
-  !>  Check whether the specified writer is initialized.
+  !>  Check whether at least one of the specified writer is initialized.
   ! -------------------------------------------------------------------------- !
-  pure logical function isWriterInitialized(recordFlag)
-    character, intent(in) :: recordFlag
+  pure logical function isWriterInitialized(recordFlags)
+    character(len=*), intent(in) :: recordFlags
     integer :: writerIdx
+    integer :: i
 
-    writerIdx = getWriterIdx(recordFlag)
     isWriterInitialized = .false.
+    do i = 1, len(recordFlags)
+      writerIdx = getWriterIdx(recordFlags(i: i))
+  
+      if (writerIdx > 0) then
+        isWriterInitialized = initWriterArr(writerIdx)
+      end if
 
-    if (writerIdx > 0) isWriterInitialized = initWriterArr(writerIdx)
+      if (isWriterInitialized) exit
+    end do
   end function isWriterInitialized
 
   

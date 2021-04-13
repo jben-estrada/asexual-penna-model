@@ -37,7 +37,8 @@ module Penna
     updateGenomeDstrb,    &
     freeGenomeDstrbList,  &
     getDiversityIdx,      &
-    getBadGeneDstrb
+    getBadGeneDstrb,      &
+    getUniqueGenomeCount
 
   use PopulationList, only: &
     ALIVE,                  &
@@ -56,6 +57,7 @@ module Penna
     REC_DIV_IDX,         &
     REC_GENE_DSTRB,      &
     REC_TIME,            &
+    REC_GNM_COUNT,       &
     getWriterPtr,        &
     isWriterInitialized, &
     initDataWriter,      &
@@ -180,7 +182,7 @@ contains
           deathCount(:) = 0
         case(REC_AGE_DSTRB)
           call resetAgeDstrb(MODEL_L)
-        case(REC_DIV_IDX, REC_GENE_DSTRB)
+        case(REC_DIV_IDX, REC_GENE_DSTRB, REC_GNM_COUNT)
           call freeGenomeDstrbList()
       end select
     end do mainLoop
@@ -218,6 +220,9 @@ contains
           
           case (REC_GENE_DSTRB)
             call chosenWriter%write(int(getBadGeneDstrb(), kind=writeIK))
+
+          case (REC_GNM_COUNT)
+            call chosenWriter%write(int(getUniqueGenomeCount(), kind=writeIK))
         end select
       end do
     end subroutine recordData
@@ -243,11 +248,17 @@ contains
     integer,            intent(in)    :: countdown        !! Count from max time
 
     type(Person_t), pointer :: currPerson
+    logical, save :: recordGenomeDstrb
+    logical, save :: recordDeath
+
+    recordGenomeDstrb = &
+        isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
+    recordDeath = isWriterInitialized(REC_DEATH)
 
     evalPop: do while(.not. population%atEndOfPopulation())
       ! Evaluate the current person. If this person is alive, its age is
       ! incremented and birth event is checked.
-      call population%evalCurrPerson(isWriterInitialized(REC_GENE_DSTRB))
+      call population%evalCurrPerson(recordGenomeDstrb)
 
       currPerson => defaultPersonPtr(population%getCurrPerson())
       if (.not.associated(currPerson)) then
@@ -256,12 +267,9 @@ contains
 
       if (currPerson%lifeStat == ALIVE) then
         ! Update the genome distribution.
-        if (isWriterInitialized(REC_DIV_IDX) .or. &
-            isWriterInitialized(REC_GENE_DSTRB)) then
-           call updateGenomeDstrb(currPerson%genome)
-        end if
+        if (recordGenomeDstrb) call updateGenomeDstrb(currPerson%genome)
       else
-        if (isWriterInitialized(REC_DEATH)) then
+        if (recordDeath) then
           ! Increment the appropriate death counter.
           select case(currPerson%lifeStat)
             case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1

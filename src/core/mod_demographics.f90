@@ -61,6 +61,7 @@ module Demographics
   public :: freeGenomeDstrbList
   public :: getDiversityIdx
   public :: getBadGeneDstrb
+  public :: getUniqueGenomeCount
 contains
 
 
@@ -224,7 +225,32 @@ contains
         exit
       end if
     end do
-  end function
+  end function getBadGeneDstrb
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: getUniqueGenomeCount
+  !>  Get the number of unique genomes.
+  ! -------------------------------------------------------------------------- !
+  function getUniqueGenomeCount() result(uniqueGeneCount)
+    type(GenomeDstrbNode), pointer :: reader
+    integer :: uniqueGeneCount
+    
+    uniqueGeneCount = 0
+
+    reader => genomeDstrbHead
+    do
+      if (associated(reader)) then
+        uniqueGeneCount = uniqueGeneCount + 1
+
+        ! Get to the next element of genome distribution list.
+        reader => reader % next
+      else
+        exit
+      end if
+    end do
+  end function getUniqueGenomeCount
+
 
 
   ! -------------------------------------------------------------------------- !
