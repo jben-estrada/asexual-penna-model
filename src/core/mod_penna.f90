@@ -127,8 +127,12 @@ contains
     type(Population_t) :: population
 
     integer, target :: deathCount(3) ! Death count 
-    integer :: timeStep               ! Time step
-    integer :: popSize                ! Population size
+    integer :: timeStep              ! Time step
+    integer :: popSize               ! Population size
+  
+    integer :: recordFlagLen         ! Number of record flags.
+    logical :: recordGnmDstrb
+    logical :: recordDeath
 
     integer, pointer :: deathByAge
     integer, pointer :: deathByMutation
@@ -139,6 +143,12 @@ contains
     deathCount(:) = 0
     call resetAgeDstrb(MODEL_L)
     population = Population_t(startPopSize, initMttnCount)
+
+    ! Initialize data writers
+    recordFlagLen = len(recordFlag)
+    recordGnmDstrb = &
+        isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
+    recordDeath = isWriterInitialized(REC_DEATH)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
@@ -169,22 +179,22 @@ contains
       end if
 
       ! Evaluate population.
-      call evalPopulation(population, maxTimestep - timeStep, &
-          deathByAge, deathByMutation, deathByVerhulst)
+      call evalPopulation(          &
+            population,             &
+            maxTimestep - timeStep, &
+            deathByAge,             &
+            deathByMutation,        &
+            deathByVerhulst,        &
+            recordGnmDstrb,         &
+            recordDeath             &
+          )
       popSize = population%getPopSize()
 
       ! Record data.
       call recordData()
 
       ! Reset counters.
-      select case(recordFlag)
-        case(REC_DEATH)
-          deathCount(:) = 0
-        case(REC_AGE_DSTRB)
-          call resetAgeDstrb(MODEL_L)
-        case(REC_DIV_IDX, REC_GENE_DSTRB, REC_GNM_COUNT)
-          call freeGenomeDstrbList()
-      end select
+      call resetCountingPerTimeStep()
     end do mainLoop
 
     ! Wrap up.
@@ -201,7 +211,7 @@ contains
       type(Writer), pointer :: chosenWriter
       integer :: i
 
-      do i = 1, len(recordFlag)
+      do i = 1, recordFlagLen
         chosenWriter => getWriterPtr(recordFlag(i: i))
 
         ! Write data into a file as specified by `charFlag`.
@@ -226,6 +236,27 @@ contains
         end select
       end do
     end subroutine recordData
+
+
+    ! ------------------------------------------------------------------------ !
+    ! SUBROUTINE: resetCountingPerTimeStep
+    !>  Reset data recording/counting for data sets that are dependent with
+    !!  time.
+    ! ------------------------------------------------------------------------ !
+    subroutine resetCountingPerTimeStep()
+      integer :: i
+
+      do i = 1, recordFlagLen
+        select case(recordFlag(i:i))
+          case(REC_DEATH)
+            deathCount(:) = 0
+          case(REC_AGE_DSTRB)
+            call resetAgeDstrb(MODEL_L)
+          case(REC_DIV_IDX, REC_GENE_DSTRB, REC_GNM_COUNT)
+            call freeGenomeDstrbList()
+        end select  
+      end do
+    end subroutine resetCountingPerTimeStep
   end subroutine runOneInstance
 
 
@@ -238,7 +269,9 @@ contains
       countdown,        &
       deathByAge,       &
       deathByMutation,  &
-      deathByVerhulst   &
+      deathByVerhulst,  &
+      recordGnmDstrb,   &
+      recordDeath       &
      )
     ! use Gene, only: personIK
     type(Population_t), intent(inout) :: population
@@ -246,19 +279,15 @@ contains
     integer, pointer,   intent(inout) :: deathByMutation  !! Death by mutation
     integer, pointer,   intent(inout) :: deathByVerhulst  !! Random death
     integer,            intent(in)    :: countdown        !! Count from max time
+    logical,            intent(in)    :: recordGnmDstrb   !! Record genome dstrb
+    logical,            intent(in)    :: recordDeath      !! Record deaths
 
     type(Person_t), pointer :: currPerson
-    logical, save :: recordGenomeDstrb
-    logical, save :: recordDeath
-
-    recordGenomeDstrb = &
-        isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
-    recordDeath = isWriterInitialized(REC_DEATH)
 
     evalPop: do while(.not. population%atEndOfPopulation())
       ! Evaluate the current person. If this person is alive, its age is
       ! incremented and birth event is checked.
-      call population%evalCurrPerson(recordGenomeDstrb)
+      call population%evalCurrPerson(recordGnmDstrb)
 
       currPerson => defaultPersonPtr(population%getCurrPerson())
       if (.not.associated(currPerson)) then
@@ -267,7 +296,7 @@ contains
 
       if (currPerson%lifeStat == ALIVE) then
         ! Update the genome distribution.
-        if (recordGenomeDstrb) call updateGenomeDstrb(currPerson%genome)
+        if (recordGnmDstrb) call updateGenomeDstrb(currPerson%genome)
       else
         if (recordDeath) then
           ! Increment the appropriate death counter.
