@@ -408,7 +408,7 @@ contains
                real(MODEL_K, kind=personRK)*verhulstWeight)
   
           if (getRandReal() > verhulstFactor) then
-            currPerson%lifeStat = DEAD_MUTATION
+            currPerson%lifeStat = DEAD_VERHULST
             isDead = .true.
           end if
         end if
