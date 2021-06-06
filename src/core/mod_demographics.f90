@@ -274,13 +274,11 @@ contains
   ! SUBROUTINE: updateAgeDstrb
   !>  Update the age demographics.
   ! -------------------------------------------------------------------------- !
-  subroutine updateAgeDstrb(age, dstrb)
-    integer, intent(in)    :: age
+  subroutine updateAgeDstrb(age)
+    integer, intent(in) :: age
       !! The age to be added into the age distribution.
-    integer, intent(inout) :: dstrb(:)
-      !! The age distribution.
 
-    dstrb(age) = dstrb(age) + 1
+    ageDistribution(age) = ageDistribution(age) + 1
   end subroutine updateAgeDstrb
 
 

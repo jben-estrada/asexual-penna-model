@@ -220,7 +220,9 @@ contains
             call chosenWriter%write(int(popSize, kind=writeIK))
 
           case (REC_AGE_DSTRB)
-            call chosenWriter%write(int(ageDistribution, kind=writeIK))
+            if ((maxTimestep - timeStep) <= DEMOG_LAST_STEPS) then
+              call chosenWriter%write(int(ageDistribution, kind=writeIK))
+            end if
 
           case (REC_DEATH)
             call chosenWriter%write(int(deathCount, kind=writeIK))
@@ -295,8 +297,12 @@ contains
       end if
 
       if (currPerson%lifeStat == ALIVE) then
-        ! Update the genome distribution.
+        ! Update the genome distribution if either diversity indices or bad gene
+        ! distribution per time step are to be recorded.
         if (recordGnmDstrb) call updateGenomeDstrb(currPerson%genome)
+
+        ! Update the age demographics if it is to be recorded.
+        if (countdown <= DEMOG_LAST_STEPS) call updateAgeDstrb(currPerson%age)
       else
         if (recordDeath) then
           ! Increment the appropriate death counter.
@@ -308,11 +314,6 @@ contains
               call raiseError("Internal error encountered. Invalid lifeStat.")
           end select
         end if
-      end if
-
-      ! Record age demographics.
-      if (countdown <= DEMOG_LAST_STEPS) then
-        call updateAgeDstrb(currPerson%age, ageDistribution)
       end if
 
       ! Go to the next person.
