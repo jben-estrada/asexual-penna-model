@@ -376,8 +376,8 @@ contains
     print "(' ', *(a))", &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias
-    write(*, "(2(2(' '), a/))", advance="no")                &
-      "0 - xoshiro256** pseudo-RNG (Fortran intrinsic RNG)", &
+    write(*, "(2(2(' '), a/))", advance="no")                    &
+      "0 - xoshiro256** pseudo-RNG (GNU Fortran intrinsic RNG)", &
       "1 - Mersenne twister (MT19937) pseudo-RNG"
 
     print "(/' ', *(a))",                                      &
