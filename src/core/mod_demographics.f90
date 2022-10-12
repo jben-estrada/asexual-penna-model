@@ -57,35 +57,19 @@ module Demographics
   type(GenomeDstrbNode), pointer :: genomeDstrbTail => null()
     !! Tail of the genome distribution list.
 
-  public :: updateGenomeDstrb
+  public :: addGenomeToDstrb
+  public :: delGenomeFromDstrb
   public :: freeGenomeDstrbList
   public :: getDiversityIdx
   public :: getBadGeneDstrb
   public :: getUniqueGenomeCount
 contains
 
-
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: updateGenomeDstrb
-  !>  Update the genome distribution list. It searches for the matching
-  !!  genome and increment the count of the matching genome if found.
-  !!  If no genome is found, a new node in the list is created containing
-  !!  the non-matching genome.
+  ! SUBROUTINE: addGenomeToDstrb
+  !>  Add a genome to the genome distribution
   ! -------------------------------------------------------------------------- !
-  subroutine updateGenomeDstrb(genome)
-    type(BitSet), intent(in) :: genome
-      !! The genome to be added to the genome distribution.
-
-    call incrementGenomeCount(genome)
-    genomeCount = genomeCount + 1
-  end subroutine updateGenomeDstrb
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: incrementGenomeCount
-  !>  Increment genome count and update.
-  ! -------------------------------------------------------------------------- !
-  subroutine incrementGenomeCount(genome)
+  subroutine addGenomeToDstrb(genome)
     type(BitSet), intent(in) :: genome
     type(GenomeDstrbNode), pointer :: currentNode
 
@@ -104,7 +88,52 @@ contains
         exit genomeDstrb
       end if
     end do genomeDstrb
-  end subroutine incrementGenomeCount
+
+    genomeCount = genomeCount + 1
+  end subroutine addGenomeToDstrb
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: delGenomeFromDstrb
+  !>  Delete a genome from the distribution
+  ! -------------------------------------------------------------------------- !
+  subroutine delGenomeFromDstrb(genome)
+    type(BitSet), intent(in) :: genome
+    type(GenomeDstrbNode), pointer :: currentNode
+    type(GenomeDstrbNode), pointer :: prevNode
+    type(GenomeDstrbNode), pointer :: nextNode
+
+    prevNode => null()
+    currentNode => genomeDstrbHead
+
+    genomeDstrb: do
+      if (associated(currentNode)) then
+        if (currentNode%genome == genome) then
+          currentNode%count = currentNode%count - 1
+
+          ! Delete the current node
+          if (currentNode%count <= 0) then
+            nextNode => currentNode%next
+            if (associated(prevNode)) prevNode%next => nextNode
+            if (associated(currentNode, genomeDstrbTail)) &
+                genomeDstrbTail => prevNode
+            if (associated(currentNode, genomeDstrbHead)) &
+                genomeDstrbHead => genomeDstrbHead%next
+            deallocate(currentNode)
+          end if
+
+          exit genomeDstrb
+        else
+          prevNode => currentNode
+          currentNode => currentNode%next
+        end if
+      else
+        call raiseError("Cannot find genome to remove from dstrb.")
+      end if
+    end do genomeDstrb
+
+    genomeCount = genomeCount - 1
+  end subroutine delGenomeFromDstrb
 
 
   ! -------------------------------------------------------------------------- !

@@ -34,7 +34,6 @@ module Penna
     resetAgeDstrb,        &
     updateAgeDstrb,       &
     deallocAgeDstrb,      &
-    updateGenomeDstrb,    &
     freeGenomeDstrbList,  &
     getDiversityIdx,      &
     getBadGeneDstrb,      &
@@ -138,17 +137,17 @@ contains
     integer, pointer :: deathByMutation
     integer, pointer :: deathByVerhulst
 
-    ! Initialization
-    popSize = startPopSize
-    deathCount(:) = 0
-    call resetAgeDstrb(MODEL_L)
-    population = Population_t(startPopSize, initMttnCount)
-
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
     recordGnmDstrb = &
         isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
     recordDeath = isWriterInitialized(REC_DEATH)
+
+    ! Initialization
+    popSize = startPopSize
+    deathCount(:) = 0
+    call resetAgeDstrb(MODEL_L)
+    population = Population_t(startPopSize, initMttnCount, recordGnmDstrb)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
@@ -185,7 +184,6 @@ contains
             deathByAge,             &
             deathByMutation,        &
             deathByVerhulst,        &
-            recordGnmDstrb,         &
             recordDeath             &
           )
       popSize = population%getPopSize()
@@ -198,6 +196,7 @@ contains
     end do mainLoop
 
     ! Wrap up.
+    call freeGenomeDstrbList()
     call population%cleanup()
   contains
 
@@ -254,8 +253,6 @@ contains
             deathCount(:) = 0
           case(REC_AGE_DSTRB)
             call resetAgeDstrb(MODEL_L)
-          case(REC_DIV_IDX, REC_GENE_DSTRB, REC_GNM_COUNT)
-            call freeGenomeDstrbList()
         end select  
       end do
     end subroutine resetCountingPerTimeStep
@@ -272,7 +269,6 @@ contains
       deathByAge,       &
       deathByMutation,  &
       deathByVerhulst,  &
-      recordGnmDstrb,   &
       recordDeath       &
      )
     ! use Gene, only: personIK
@@ -281,15 +277,17 @@ contains
     integer, pointer,   intent(inout) :: deathByMutation  !! Death by mutation
     integer, pointer,   intent(inout) :: deathByVerhulst  !! Random death
     integer,            intent(in)    :: countdown        !! Count from max time
-    logical,            intent(in)    :: recordGnmDstrb   !! Record genome dstrb
     logical,            intent(in)    :: recordDeath      !! Record deaths
 
     type(Person_t), pointer :: currPerson
 
+    ! Initialize the current time step
+    call population%startCurrStep()
+
     evalPop: do while(.not. population%atEndOfPopulation())
       ! Evaluate the current person. If this person is alive, its age is
       ! incremented and birth event is checked.
-      call population%evalCurrPerson(recordGnmDstrb)
+      call population%evalCurrPerson()
 
       currPerson => defaultPersonPtr(population%getCurrPerson())
       if (.not.associated(currPerson)) then
@@ -297,10 +295,6 @@ contains
       end if
 
       if (currPerson%lifeStat == ALIVE) then
-        ! Update the genome distribution if either diversity indices or bad gene
-        ! distribution per time step are to be recorded.
-        if (recordGnmDstrb) call updateGenomeDstrb(currPerson%genome)
-
         ! Update the age demographics if it is to be recorded.
         if (countdown <= DEMOG_LAST_STEPS) call updateAgeDstrb(currPerson%age)
       else
