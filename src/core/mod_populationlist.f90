@@ -23,7 +23,7 @@ module PopulationList
   use CastProcs, only: castIntToChar
   use DynamicBitSet, only: BitSet
   use Demographics, only: updateGenomeDstrb
-  use RandNumProcs, only: getRandReal, getRandRange
+  use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
   use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
   use, intrinsic :: iso_fortran_env, only: personRK => real64
@@ -350,17 +350,29 @@ contains
     integer,      intent(in)    :: mutationCount
       !! Number of mutations to apply onto `person_ptr`.
 
-    integer :: mutationIndcs(mutationCount)
+    integer, allocatable :: mutationIndcs(:)
+    integer :: mutationCount_lcl
     integer :: i
 
-    if (mutationCount > 0) then
+    if (mutationCount >= 0) then
+      mutationCount_lcl = mutationCount
+    else
+      ! For the case MTTN_COUNT = -1, randomize the mutation count of the 
+      mutationCount_lcl = getRandInt(0, MODEL_L)
+    end if
+
+    if (mutationCount_lcl > 0) then
+      allocate(mutationIndcs(mutationCount_lcl))
+
       ! Get random indices of genes to mutate.
-      mutationIndcs = getRandRange(1, MODEL_L, mutationCount)
+      mutationIndcs = getRandRange(1, MODEL_L, mutationCount_lcl)
 
       ! Apply mutations.
       do i = 1, mutationCount
         call person%genome%set(GENE_UNHEALTHY, mutationIndcs(i))
       end do
+
+      deallocate(mutationIndcs)
     end if
   end subroutine applyInitialMutations
 

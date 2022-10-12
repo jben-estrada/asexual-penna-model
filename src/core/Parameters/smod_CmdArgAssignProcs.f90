@@ -361,10 +361,15 @@ contains
 
     ! Print the additional notes.
     print "(/a)", "Notes:"
-    print "(' ', *(a))",                                       &
+    print "(' - ', 5(a)/, '  ', *(a))",                                      &
+      "Negative values for initial mutation count (-",                       &
+      mttnInitCount_kv % cmdName, " / --", mttnInitCount_kv % cmdAlias, ")", &
+      " are interpreted as random initial mutation count for each of the ",  &
+      "individuals."
+    print "(' - ', *(a))",                                       &
       "Valid character values for -", recordData_kv % cmdName, &
       " or --", recordData_kv % cmdAlias
-    write(*, "(8(2(' '), a/))", advance="no")                           &
+    write(*, "(8(4(' '), a/))", advance="no")                           &
       "x - Record nothing.",                                            &
       "p - Population size per time step",                              &
       "a - Age demographics in the last 300 time step.",                &
@@ -373,10 +378,10 @@ contains
       "b - Bad gene distribution per time step.",                       &
       "t - (Average) elapsed time and its std deviation if applicable", &
       "c - Number of unique genome counts per time step."
-    print "(' ', *(a))", &
+    print "(' - ', *(a))", &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias
-    write(*, "(2(2(' '), a/))", advance="no")                    &
+    write(*, "(2(4(' '), a/))", advance="no")                    &
       "0 - xoshiro256** pseudo-RNG (GNU Fortran intrinsic RNG)", &
       "1 - Mersenne twister (MT19937) pseudo-RNG"
 
