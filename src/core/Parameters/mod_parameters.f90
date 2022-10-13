@@ -69,20 +69,6 @@ module Parameters
   integer, parameter :: VERSION_PRINT = 3
     !! Flag corresponding to printing of the program version.
 
-  ! Record flags.
-  character, parameter :: REC_NULL = "x"
-    !! Nothing (do not record).
-  character, parameter :: REC_POP = "p"
-    !! Population size per time step.
-  character, parameter :: REC_AGE_DSTRB = "a"
-    !! Age distribution in the last 300 time steps
-  character, parameter :: REC_DEATH = "d"
-    !! Death counts (death by age, by mutation, by Verhulst factor) 
-    !! per time step.
-  character, parameter :: REC_DIV_IDX = "s"
-    !! Shannon diversity index per time step.
-  character, parameter :: REC_GENE_DSTRB = "b"
-    !! Bad gene distribution per time step.
 
   ! PROGRAM PARAMETERS
   ! -------------------------------------------------------------------------- !
@@ -92,15 +78,11 @@ module Parameters
   character(len=*), parameter :: PROG_DESC = &
       "A simulation for the 'Penna model', a biological aging model."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = ""
-    !! Program version. 
-    !! NOTE: Temporarily set to none as I still have to work out the appropriate
-    !! versioning scheme.
+  character(len=*), parameter :: PROG_VERSION = "v0.2.0"
+    !! Program version.
 
   integer, target, protected :: PROG_PRINT_STATE = NORMAL_PRINT
-    !! Printing state. 
-  logical,         protected :: PROG_RECORD_TIME = .false.
-    !! Record-time state.
+    !! Printing state.
   integer, target, protected :: PROG_SAMPLE_SIZE = VOID_INT
     !! Number of times the simulation will run.
     !! NOTE: Default value is obtained from config files.
@@ -110,13 +92,13 @@ module Parameters
   integer, target, protected :: PROG_RNG_SEED = VOID_INT
     !! RNG seed.
     !! NOTE: Default value is obtained from config files.
+  logical, target, protected :: PROG_IN_CSV_FMT = .false.
+    !! Output files in CSV format.
   character(len=MAX_LEN), target, protected :: PROG_REC_FLAG
     !! List of record flags.
     !! NOTE: Default value is obtained from config files.
   character(len=MAX_LEN), target, protected :: PROG_OUT_FILE_NAME = "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
-  character(len=MAX_LEN),         parameter :: PROG_TIME_FILE_NAME ="./time.csv"
-    !! Name of the file to which timing statistics is to be written on.
 
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
@@ -185,27 +167,18 @@ module Parameters
   public :: PROG_DESC
   public :: PROG_VERSION
   public :: PROG_PRINT_STATE
-  public :: PROG_RECORD_TIME
   public :: PROG_SAMPLE_SIZE
   public :: PROG_RNG
   public :: PROG_RNG_SEED
   public :: PROG_REC_FLAG
+  public :: PROG_IN_CSV_FMT
   public :: PROG_OUT_FILE_NAME
-  public :: PROG_TIME_FILE_NAME
   
   ! Values for `PROG_PRINT_STATE`.
   public :: NORMAL_PRINT
   public :: VERBOSE_PRINT
   public :: SILENT_PRINT
   public :: VERSION_PRINT
-
-  ! Values for `PROG_REC_FLAG`.
-  public :: REC_NULL
-  public :: REC_POP
-  public :: REC_AGE_DSTRB
-  public :: REC_DEATH
-  public :: REC_DIV_IDX
-  public :: REC_GENE_DSTRB
 
   ! Model parameters.
   public :: MODEL_L

@@ -24,6 +24,15 @@ module WriterType
       !! Unit with which the file is to be identified within the program.
     logical :: isFileOpen = .false.
       !! Writable state.
+
+    character :: delim = ""
+      !! Data delimiters
+    character(len=:), allocatable :: fmtInt
+      !! Write format for integers.
+    character(len=:), allocatable :: fmtReal
+      !! Write format for real numbers (floats).
+    character(len=:), allocatable :: fmtChar
+      !! Write format for characters.
   contains
     private
     procedure, public :: openFile => writer_openFile
@@ -49,11 +58,10 @@ module WriterType
     procedure :: writer_write_charArr
   end type
 
-  ! Write formats.
-  character(len=*), parameter :: FMT_INT =  "(*(i15, '|'))"
-  character(len=*), parameter :: FMT_REAL =  "(*(f15.6, '|'))"
-  character(len=*), parameter :: FMT_CHAR_SCLR =  "(a)"
-  character(len=*), parameter :: FMT_CHAR_ARR =  "(*(a15, '|'))"
+  ! Write format bases.
+  character(len=*), parameter :: FMT_INT_LEN = "i15"
+  character(len=*), parameter :: FMT_REAL_LEN = "f15.6"
+  character(len=*), parameter :: FMT_CHAR_LEN = "a"
 
   !! `Writer` constructor.
   interface Writer
@@ -70,16 +78,22 @@ contains
   ! FUNCTION: writer_cnstrct
   !>  Constructor for `Writer` type.
   ! -------------------------------------------------------------------------- !
-  function writer_cnstrct(filename, unit) result(new)
+  function writer_cnstrct(filename, unit, delim) result(new)
     character(len=*), intent(in)  :: filename
       !! Name of the file to which data is to written on.
     integer,          intent(in)  :: unit
       !! Unit with which the file is identified within the program.
+    character,        intent(in)  :: delim
 
     type(Writer) :: new
 
     new % filename = trim(filename)
     new % unit = unit
+    new % delim = delim
+
+    new % fmtInt = "(*(" // FMT_INT_LEN // ",:,'" // delim // "'))"
+    new % fmtReal = "(*(" // FMT_REAL_LEN // ",:,'" // delim // "'))"
+    new % fmtChar = "(*(" // FMT_CHAR_LEN // ",:,'" // delim // "'))"
   end function writer_cnstrct
 
 
@@ -137,7 +151,7 @@ contains
     call checkFileState(self, "Cannot write to file.")
 
 
-    write(self % unit, FMT_INT, iostat=writeStat) scalarData
+    write(self % unit, self % fmtInt, iostat=writeStat) scalarData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -158,7 +172,7 @@ contains
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, FMT_REAL, iostat=writeStat) scalarData
+    write(self % unit, self % fmtReal, iostat=writeStat) scalarData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -179,7 +193,7 @@ contains
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, FMT_CHAR_SCLR, iostat=writeStat) scalarData
+    write(self % unit, self % fmtChar, iostat=writeStat) scalarData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -200,7 +214,7 @@ contains
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, FMT_INT, iostat=writeStat) arrData
+    write(self % unit, self % fmtInt, iostat=writeStat) arrData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -221,7 +235,7 @@ contains
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, FMT_REAL, iostat=writeStat) arrData
+    write(self % unit, self % fmtReal, iostat=writeStat) arrData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
@@ -242,7 +256,7 @@ contains
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, FMT_CHAR_ARR, iostat=writeStat) arrData
+    write(self % unit, self % fmtChar, iostat=writeStat) arrData
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if

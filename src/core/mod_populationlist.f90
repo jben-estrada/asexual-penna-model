@@ -22,8 +22,8 @@ module PopulationList
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
   use DynamicBitSet, only: BitSet
-  use Demographics, only: updateGenomeDstrb
-  use RandNumProcs, only: getRandReal, getRandRange
+  use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
+  use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
   use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
   use, intrinsic :: iso_fortran_env, only: personRK => real64
@@ -62,20 +62,27 @@ module PopulationList
     type(BitSet)                   :: deadPopMask
       !! Mask array to filter out dead `Person_t`s.
 
-    integer, public :: popArraySize = -1
+    integer :: popArraySize = -1
       !! The size of the population array. The maximum number of `Person_t`s the
       !! population array can hold.
     integer :: popSize = -1
       !! The actual population size. This should not be confused with
-      !! `PopArraySize` which is the size of the population array including
+      !! `%popArraySize` which is the size of the population array including
       !! uninitialized `Person_t` elements.
-    integer, public :: endIdx = 0
+    integer :: bornPopSize = 0
+      !! Number of born individuals after a time step. Newly born individuals
+      !! are to be added at the beginning of the next time step.
+    integer :: deadPopSize = 0
+      !! Number of dead individuals after a time step.
+    integer :: endIdx = 0
       !! The end of the population array in the current time step.
     integer :: futureEndIdx = 0
       !! The end of the population array in between time steps. The actual end
-      !! of the dynamic array `population`.
+      !! of the dynamic array `%population`.
     integer :: currIdx = 0
       !! The index of the current `Person_t` being evaluated.
+    logical, public :: recordGnmDstrb = .false.
+      !! Record the genome distribution
   contains
     ! Inquiry functions.
     procedure :: getPopSize => population_getPopSize
@@ -89,6 +96,10 @@ module PopulationList
     ! Transformational subroutines.
     procedure :: next => population_next
       !! Go to the next `Person_t` object.
+    procedure :: startCurrStep => population_startCurrStep
+      !! Initialize and begin the current time step. This is where the number
+      !! of the newly born individuals from the preceeding time step is added
+      !! into the population size
     procedure :: endCurrStep => population_endCurrStep
       !! End the current time step in preparation for the next one. The dead
       !! individuals are removed from the population, and the population array
@@ -140,11 +151,14 @@ contains
   ! FUNCTION: population_constructor
   !>  `Population_t` constructor
   ! -------------------------------------------------------------------------- !
-  function population_constructor(startPopsize, initMttnCount) result(newPop)
+  function population_constructor(startPopsize, initMttnCount, recordGnmDstrb) &
+      result(newPop)
     integer, intent(in) :: startPopSize
       !! Starting population size.
     integer, intent(in) :: initMttnCount
       !! Initial mutation count.
+    logical, intent(in) :: recordGnmDstrb
+      !! Record genome distribution?
     type(Population_t) :: newPop
 
     if (allocated(newPop%population)) deallocate(newPop%population)
@@ -158,11 +172,23 @@ contains
     ! Initialize the dead population mask.
     call newPop%deadPopMask%set(MASK_ALIVE, 1, startPopSize)
 
+    if (recordGnmDstrb) then
+      ! Initialize the genome distribution
+      initGnmDstrb: block
+        integer :: i
+
+        do i = 1, startPopsize
+          call addGenomeToDstrb(newPop%population(i)%person%genome)
+        end do
+      end block initGnmDstrb
+    end if
+
     ! Initialize the array pointers/indices.
     newPop%currIdx = 1
     newPop%endIdx = startPopSize
     newPop%futureEndIdx = startPopSize
     newPop%popSize = startPopSize
+    newPop%recordGnmDstrb = recordGnmDstrb
   end function population_constructor
 
 
@@ -231,6 +257,18 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: population_startCurrStep
+  !>  Initialize the current time step
+  ! -------------------------------------------------------------------------- !
+  subroutine population_startCurrStep(self)
+    class(Population_t), intent(inout) :: self
+
+    self%popSize = self%popSize + self%bornPopSize
+    self%bornPopSize = 0
+  end subroutine population_startCurrStep
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: population_next
   !>  Go to the next person in the population.
   ! -------------------------------------------------------------------------- !
@@ -252,6 +290,9 @@ contains
     call removeDeadPersons(self)
     self%endIdx = self%futureEndIdx
     self%currIdx = 1
+
+    self%popSize = self%popSize - self%deadPopSize
+    self%deadPopSize = 0
 
     call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
   end subroutine population_endCurrStep
@@ -350,17 +391,29 @@ contains
     integer,      intent(in)    :: mutationCount
       !! Number of mutations to apply onto `person_ptr`.
 
-    integer :: mutationIndcs(mutationCount)
+    integer, allocatable :: mutationIndcs(:)
+    integer :: mutationCount_lcl
     integer :: i
 
-    if (mutationCount > 0) then
+    if (mutationCount >= 0) then
+      mutationCount_lcl = mutationCount
+    else
+      ! For the case MTTN_COUNT = -1, randomize the mutation count of the 
+      mutationCount_lcl = getRandInt(0, MODEL_L)
+    end if
+
+    if (mutationCount_lcl > 0) then
+      allocate(mutationIndcs(mutationCount_lcl))
+
       ! Get random indices of genes to mutate.
-      mutationIndcs = getRandRange(1, MODEL_L, mutationCount)
+      mutationIndcs = getRandRange(1, MODEL_L, mutationCount_lcl)
 
       ! Apply mutations.
-      do i = 1, mutationCount
+      do i = 1, mutationCount_lcl
         call person%genome%set(GENE_UNHEALTHY, mutationIndcs(i))
       end do
+
+      deallocate(mutationIndcs)
     end if
   end subroutine applyInitialMutations
 
@@ -370,9 +423,8 @@ contains
   !>  Evaluate the current person in the population. Death event is checked
   !!  first, before age increment and birth event are checked.
   ! -------------------------------------------------------------------------- !
-  subroutine population_evalCurrPerson(self, toUpdateGenomeDstrb)
+  subroutine population_evalCurrPerson(self)
     class(Population_t), intent(inout) :: self
-    logical,             intent(in)    :: toUpdateGenomeDstrb
 
     real(kind=personRK) :: verhulstWeight
     real(kind=personRK) :: verhulstFactor
@@ -408,18 +460,20 @@ contains
                real(MODEL_K, kind=personRK)*verhulstWeight)
   
           if (getRandReal() > verhulstFactor) then
-            currPerson%lifeStat = DEAD_MUTATION
+            currPerson%lifeStat = DEAD_VERHULST
             isDead = .true.
           end if
         end if
       end if
 
       if (isDead) then
-        self%popSize = self%popSize - 1
+        self%deadPopSize = self%deadPopSize + 1
         call self%deadPopMask%set(MASK_DEAD, self%currIdx)
+
+        if (self%recordGnmDstrb) call delGenomeFromDstrb(currPerson%genome)
       else
-        currPerson%age = currPerson%age + 1
-        call checkPersonBirth(self, toUpdateGenomeDstrb)
+        currPerson%age = nextAge
+        call checkPersonBirth(self)
       end if
     end associate
   end subroutine population_evalCurrPerson
@@ -429,9 +483,8 @@ contains
   ! SUBROUTINE: checkPersonBirth
   !>  Check for any births event by the current `Person_t` object of `popObj`.
   ! -------------------------------------------------------------------------- !
-  subroutine checkPersonBirth(popObj, toUpdateGenomeDstrb)
+  subroutine checkPersonBirth(popObj)
     class(Population_t), intent(inout) :: popObj
-    logical,             intent(in)    :: toUpdateGenomeDstrb
     logical :: gaveBirth
     integer :: i
 
@@ -458,13 +511,13 @@ contains
             allocate(newPersonPtr%person)
             call initNewPerson(newPersonPtr%person, currPerson%genome, MODEL_M)
 
-            if (toUpdateGenomeDstrb) then
-              call updateGenomeDstrb(newPersonPtr%person%genome)
+            if (popObj%recordGnmDstrb) then
+              call addGenomeToDstrb(newPersonPtr%person%genome)
             end if
           end associate
         end do
 
-        popObj%popSize = popObj%popSize + MODEL_B
+        popObj%bornPopSize = popObj%bornPopSize + MODEL_B
       end if
     end associate
   end subroutine checkPersonBirth

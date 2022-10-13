@@ -126,7 +126,7 @@ contains
     end if
 
     ! Print the character array.
-    write(*, "(*(a))", advance="no") (char(8), i = 1, self % partition + 10)
+    write(*, "(a)", advance="no") char(13)
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
     write(*, "(f6.1, a)", advance="no") 100*real(self % counter) / &
         real(self % totalTicks), "%"

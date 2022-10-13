@@ -23,6 +23,7 @@ module AbstractPopulation
     procedure(getCurrPerson_abstract),  deferred :: getCurrPerson
     procedure(atEndOfPop_abstact),      deferred :: atEndOfPopulation
     procedure(next_abstract),           deferred :: next
+    procedure(startCurrStep_abstract),  deferred :: startCurrStep
     procedure(endCurrStep_abstract),    deferred :: endCurrStep
     procedure(evalCurrPerson_abstract), deferred :: evalCurrPerson
     procedure(cleanup_abstract),        deferred :: cleanup
@@ -45,15 +46,18 @@ module AbstractPopulation
       class(AbstractPopulation_t), intent(inout) :: self
     end subroutine next_abstract
 
-    module subroutine evalCurrPerson_abstract(self, toUpdateGenomeDstrb)
+    module subroutine evalCurrPerson_abstract(self)
       class(AbstractPopulation_t), intent(inout) :: self
-      logical,                     intent(in)    :: toUpdateGenomeDstrb
     end subroutine evalCurrPerson_abstract
 
     module function atEndOfPop_abstact(self) result(atEndOfPop)
       class(AbstractPopulation_t), intent(in) :: self
       logical :: atEndOfPop
     end function atEndOfPop_abstact
+
+    module subroutine startCurrStep_abstract(self)
+      class(AbstractPopulation_t), intent(inout) :: self
+    end subroutine startCurrStep_abstract
 
     module subroutine endCurrStep_abstract(self)
       class(AbstractPopulation_t), intent(inout) :: self
