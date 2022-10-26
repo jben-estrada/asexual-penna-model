@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import argparse
-from dis import COMPILER_FLAG_NAMES
 import json
 import os
 
@@ -172,5 +171,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # build_ext_lib(["\""])
-    # clean("object")
