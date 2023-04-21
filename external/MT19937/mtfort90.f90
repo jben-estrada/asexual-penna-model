@@ -56,15 +56,22 @@
 ! should still exercise caution as, in some compilers such as in GCC, these
 ! instrinsics are overloaded with non-standard specific procedures.
 ! 
-! The changes were made by John Benedick Estrada (jestrada@nip.upd.edu.ph)
+! The changes were made by John Benedick Estrada (jbestrada@nip.upd.edu.ph)
 ! in December 2019 - January 2020.
 !***********************************************************************
 ! Minor change: Changed the module name `mtmod` to `Mtmod` to conform
 ! with the style of the whole program.
 !
-! Changes made by John Benedick Estrada (jestrada@nip.upd.edu.ph) on
+! Changes made by John Benedick Estrada (jbestrada@nip.upd.edu.ph) on
 ! 04 May 2020
-! 
+!***********************************************************************
+! Changes: * Reject the seed '0' and use the default seed instead.
+!            There has been a problem where using '0' as the seed
+!            generates the value 0.0 repeating ad inf.
+!          * Correct my email address in the previous logs.
+!
+! Changes made by John Benedick Estrada (jbestrada@nip.edu.ph) on
+! 21 April 2023 
 
  module Mtmod
     private
@@ -104,7 +111,13 @@
 !
     integer, intent(in) :: seed
 
-    mt(0) = iand(seed,-1)
+! NOTE: Use the default seed if seed is 0 since it makes this PRNG generate 0.0
+    if (seed == 0) then
+      mt(0) = iand(defaultsd,-1)
+    else
+      mt(0) = iand(seed,-1)
+    end if
+
     do mti = 1, N-1
       mt(mti) = iand(69069 * mt(mti-1),-1)
     end do

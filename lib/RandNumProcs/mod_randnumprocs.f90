@@ -114,6 +114,11 @@ contains
         ! Cast from real(8) to real(4) for compatibility.
         getRandReal = real(grnd())
 
+        ! NOTE: This is just a band-aid solution to a problem.
+        !       When the Mersenne Twister is used, the real(8) -> real(4)
+        !       casting may produce a value of 1.0 which is not valid.
+        if (.not. getRandReal < 1.0)  getRandReal = 0.5
+
       case default
         call raiseError("No RNG has yet been chosen.")
     end select
