@@ -1,4 +1,0 @@
-{
-  "target" : "json_module.F90",
-  "cflag" : "-Wno-unused -Wno-unused-dummy-argument -Wno-maybe-uninitialized -DREAL64 -DINT32"
-}
