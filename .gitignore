@@ -3,6 +3,7 @@
 /test
 /plot
 /.vscode
+/static
 /mod
 /obj
 plot.sh
