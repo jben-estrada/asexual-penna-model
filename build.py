@@ -10,7 +10,7 @@ SCRIPT_DIR = os.path.dirname(__file__)
 OUT = "penna.out"
 
 # Compiler
-FC = "gfortran-10"
+FC = "gfortran"
 # Compiler type
 CMPTYPE = "gnu"
 
