@@ -138,6 +138,12 @@ def clean(type):
 
 
 def main():
+    # Ensure that the destination directories exist
+    os.makedirs(MOD_DIR, exist_ok=True)
+    os.makedirs(BIN_DIR, exist_ok=True)
+    os.makedirs(OBJ_DIR, exist_ok=True)
+    os.makedirs(STATIC_DIR, exist_ok=True)
+
     build_args = parse_cmd_args()
 
     if build_args.type == "no-build" and build_args.clean == "none":
