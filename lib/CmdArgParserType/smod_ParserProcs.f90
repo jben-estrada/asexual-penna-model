@@ -10,7 +10,7 @@ submodule (CmdArgParserType) ParserProcs
   ! -------------------------------------------------------------------------- !
   implicit none
   
-  integer, parameter :: MAX_ARG_LEN = 64
+  integer, parameter :: MAX_ARG_LEN = 256
     !! Maximum length of command-line argument.
 contains
 
