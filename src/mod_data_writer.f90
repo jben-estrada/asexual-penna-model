@@ -33,7 +33,7 @@ module DataWriter
     !! Death counts (death by age, by mutation, by Verhulst factor) 
     !! per time step.
   character, parameter, public :: REC_DIV_IDX = "s"
-    !! Shannon diversity index per time step.
+    !! Genetic diversity index per time step (Normalized Shannon index)
   character, parameter, public :: REC_GENE_DSTRB = "b"
     !! Bad gene distribution per time step.
   character, parameter, public :: REC_TIME = "t"
@@ -184,7 +184,7 @@ contains
 
       case (REC_DIV_IDX)
         ! Data description. 
-        call chosenWriter%write("DATA: Shannon diversity index per time step.")
+        call chosenWriter%write("DATA: Genetic diversity index per time step.")
 
         ! Header of the list.
         if (divider == DIVIDER_READABLE) &

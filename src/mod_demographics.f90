@@ -35,7 +35,7 @@ module Demographics
   public :: updateAgeDstrb
   public :: deallocAgeDstrb
 
-  ! SHANNON DIVERSITY INDEX, GENOME DISTRIBUTION & BAD GENE DISTRIBUTION.
+  ! DIVERSITY INDEX, GENOME DISTRIBUTION & BAD GENE DISTRIBUTION.
   ! -------------------------------------------------------------------------- !
   ! Genome count. This should be equal to population size.
   integer :: genomeCount = 0
@@ -199,8 +199,8 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: getDiversityIdx
-  !>  Calculate the Shannon diversity index of the current genome distribution
-  !!  list.
+  !>  Calculate the genetic diversity index of the current genome distribution
+  !!  list. This implements the normalized Shannon index
   ! -------------------------------------------------------------------------- !
   function getDiversityIdx() result(diversityIdx)
     real :: diversityIdx
@@ -210,7 +210,6 @@ contains
 
     ! Reset the Shannon diversity index just to be sure.
     diversityIdx = 0
-
     ! Read genome count of each node in the genome distribution list.
     do
       if (associated(reader)) then
@@ -223,6 +222,9 @@ contains
         exit
       end if
     end do
+
+    ! Normalize the diversity index
+    diversityIdx = diversityIdx / log(real(genomeCount))
   end function getDiversityIdx
 
 

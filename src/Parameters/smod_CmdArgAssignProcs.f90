@@ -366,19 +366,19 @@ contains
       mttnInitCount_kv % cmdName, " / --", mttnInitCount_kv % cmdAlias, ")", &
       " are interpreted as random initial mutation count for each of the ",  &
       "individuals."
-    print "(' - ', *(a))",                                       &
+    print "(' - ', *(a))",                                     &
       "Valid character values for -", recordData_kv % cmdName, &
       " or --", recordData_kv % cmdAlias
-    write(*, "(8(4(' '), a/))", advance="no")                           &
-      "x - Record nothing.",                                            &
-      "p - Population size per time step",                              &
-      "a - Age demographics in the last 300 time step.",                &
-      "d - Death count per time step.",                                 &
-      "s - Shannon diversity index of genomes per time step.",          &
-      "b - Bad gene distribution per time step.",                       &
-      "t - (Average) elapsed time and its std deviation if applicable", &
+    write(*, "(8(4(' '), a/))", advance="no")                                  &
+      "x - Record nothing.",                                                   &
+      "p - Population size per time step",                                     &
+      "a - Age demographics in the last 300 time step.",                       &
+      "d - Death count per time step.",                                        &
+      "s - Genetic diversity index per time step (Normalized Shannon index).", &
+      "b - Bad gene distribution per time step.",                              &
+      "t - (Average) elapsed time and its std deviation if applicable",        &
       "c - Number of unique genome counts per time step."
-    print "(' - ', *(a))", &
+    print "(' - ', *(a))",                                  &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias
     write(*, "(2(4(' '), a/))", advance="no")                    &
