@@ -9,3 +9,5 @@ bin/penna.out
 *.smod
 *.code-workspace
 *.d
+.github/
+.devcontainer/
