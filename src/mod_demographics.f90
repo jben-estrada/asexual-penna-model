@@ -304,6 +304,12 @@ contains
   function getDiversityIdx(alpha) result(diversityIdx)
     real, intent(in), optional :: alpha
     real :: diversityIdx
+    
+    ! If the population goes extinct, we set the diversity index to 0
+    if (genomeCount == 0) then
+      diversityIdx = 0.0
+      return
+    end if
 
     if (present(alpha)) then
       if (alpha > 0.0) then
