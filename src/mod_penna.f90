@@ -15,6 +15,7 @@ module Penna
     MODEL_TIME_STEPS,     &
     MODEL_MTTN_COUNT,     &
     MODEL_START_POP_SIZE, &
+    MODEL_ENTROPY_ORDER,  &
     PROG_REC_FLAG,        &
     PROG_IN_CSV_FMT,      &
     PROG_SAMPLE_SIZE,     &
@@ -227,7 +228,9 @@ contains
             call chosenWriter%write(int(deathCount, kind=writeIK))
 
           case (REC_DIV_IDX)
-            call chosenWriter%write(real(getDiversityIdx(), kind=writeRK))
+            call chosenWriter%write( &
+                real(getDiversityIdx(MODEL_ENTROPY_ORDER), kind=writeRK) &
+            )
           
           case (REC_GENE_DSTRB)
             call chosenWriter%write(int(getBadGeneDstrb(), kind=writeIK))

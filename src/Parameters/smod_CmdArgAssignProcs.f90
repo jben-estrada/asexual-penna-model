@@ -30,12 +30,14 @@ submodule (Parameters) CmdArgAssignProcs
       !! Pointer to the character parameter `cmdName` modifies.
     integer,                pointer :: intValue_ptr => null()
       !! Pointer to the integer parameter `cmdName` modifies.
+    real,                   pointer :: realValue_ptr => null()
+      !! Pointer to the real parameter `cmdName` modifies
   end type
 
 
   ! All commands.
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(20)
+  type(CmdArgRecord), target :: cmdArgArr(21)
   ! Model parameters.
   type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
   type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
@@ -47,18 +49,19 @@ submodule (Parameters) CmdArgAssignProcs
   type(CmdArgRecord), pointer :: mttnInitCount_kv => cmdArgArr(8)
   type(CmdArgRecord), pointer :: initPopSize_kv   => cmdArgArr(9)
   type(CmdArgRecord), pointer :: timeStepMax_kv   => cmdArgArr(10)
+  type(CmdArgRecord), pointer :: entropyOrder_kv  => cmdArgArr(11)
 
   ! Program parameters.
-  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(11)
-  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(12)
-  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(13)
-  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(14)
-  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(15)
-  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(16)
-  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(17)
-  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(18)
-  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(19)
-  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(20)
+  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(12)
+  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(13)
+  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(14)
+  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(15)
+  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(16)
+  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(17)
+  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(18)
+  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(19)
+  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(20)
+  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(21)
 contains
 
 
@@ -92,6 +95,8 @@ contains
       "Initial population size.")
     timeStepMax_kv   = CmdArgRecord("t", "time-step", KV_S, KV_L, &
       "Maximum time step.")
+    entropyOrder_kv  = CmdArgRecord("O", "ent-order", KV_S, KV_L, &
+      "Renyi entropy order.")
 
     ! Program parameters.
     sampleSize_kv    = CmdArgRecord("s", "sample-size", KV_S, KV_L, &
@@ -116,16 +121,17 @@ contains
       "Set the output files to be in CSV format.")
 
     ! Assign pointers.
-    mttnThreshold_kv % intValue_ptr => MODEL_T
-    birthRate_kv     % intValue_ptr => MODEL_B
-    mttnRate_kv      % intValue_ptr => MODEL_M
-    reprAgeMin_kv    % intValue_ptr => MODEL_R
-    reprAgeMax_kv    % intValue_ptr => MODEL_R_MAX
-    carryingCap_kv   % intValue_ptr => MODEL_K
-    genomeLen_kv     % intValue_ptr => MODEL_L
-    mttnInitCount_kv % intValue_ptr => MODEL_MTTN_COUNT
-    initPopSize_kv   % intValue_ptr => MODEL_START_POP_SIZE
-    timeStepMax_kv   % intValue_ptr => MODEL_TIME_STEPS
+    mttnThreshold_kv % intValue_ptr  => MODEL_T
+    birthRate_kv     % intValue_ptr  => MODEL_B
+    mttnRate_kv      % intValue_ptr  => MODEL_M
+    reprAgeMin_kv    % intValue_ptr  => MODEL_R
+    reprAgeMax_kv    % intValue_ptr  => MODEL_R_MAX
+    carryingCap_kv   % intValue_ptr  => MODEL_K
+    genomeLen_kv     % intValue_ptr  => MODEL_L
+    mttnInitCount_kv % intValue_ptr  => MODEL_MTTN_COUNT
+    initPopSize_kv   % intValue_ptr  => MODEL_START_POP_SIZE
+    timeStepMax_kv   % intValue_ptr  => MODEL_TIME_STEPS
+    entropyOrder_kv  % realValue_ptr => MODEL_ENTROPY_ORDER
 
     sampleSize_kv % intValue_ptr => PROG_SAMPLE_SIZE
     rngChoice_kv  % intValue_ptr => PROG_RNG
@@ -248,6 +254,23 @@ contains
                 "Invalid value for '-" // currCmdArg % cmdName // &
                 "' or '--" // currCmdArg % cmdAlias // "'. Must be integer." &
                 )
+            end if
+          end if
+        
+        else if (associated(currCmdArg % realValue_ptr)) then
+          ! Check if the current key-value command has a value.
+          if (pennaCmdArgs % hasValue(currCmdArg % cmdName)) then
+            ! Get the value and cast it to real
+            currCmdArg % realValue_ptr = castCharToReal( &
+              pennaCmdArgs % getCmdValue(currCmdArg % cmdName), castStat &
+            )
+
+            ! Check casting status
+            if (castStat /= 0) then
+              call raiseError( &
+                "Invalid value for '-" // currCmdArg % cmdName // &
+                "' or '--" // currCmdArg % cmdAlias // "'. Must be real." &
+              )
             end if
           end if
 
@@ -378,6 +401,15 @@ contains
       "b - Bad gene distribution per time step.",                              &
       "t - (Average) elapsed time and its std deviation if applicable",        &
       "c - Number of unique genome counts per time step."
+
+    print "(' - ', *(a))",                                  &
+      "Valid real values for -", entropyOrder_kv % cmdName, &
+      " or --", entropyOrder_kv % cmdAlias
+    write(*, "(3(4(' '), a/))", advance="no")       &
+      " Less then 0.0 - Normalized Shannon Entropy", &
+      " 1.0           - Shannon entropy",            &
+      " Other reals   - Renyi entropy"
+
     print "(' - ', *(a))",                                  &
       "Valid integer values for -", rngChoice_kv % cmdName, &
       " or --", rngChoice_kv % cmdAlias
@@ -452,6 +484,14 @@ contains
 
       write(*, "(*(a20, 8(' '), a1/))", advance="no") &
           "Record flag", PROG_REC_FLAG
+      
+      write(*, "(a20)", advance="no") "Renyi entropy order"
+      if (MODEL_ENTROPY_ORDER > 0.0) then
+        write(*, "(f9.2/)", advance="no") MODEL_ENTROPY_ORDER
+      else
+        write(*, "(f9.2/, a29/)", advance="no") 1.0, "(Normalized)"
+      end if
+
 
       print "(*(a))", PRINT_SEPARATOR
     end if

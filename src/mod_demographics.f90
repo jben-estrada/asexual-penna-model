@@ -198,22 +198,47 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: getDiversityIdx
-  !>  Calculate the genetic diversity index of the current genome distribution
-  !!  list. This implements the normalized Shannon index
+  ! SUBROUTINE: getShannonEntropy
+  !>  Calculate the unnormalized Shannon entropy
   ! -------------------------------------------------------------------------- !
-  function getDiversityIdx() result(diversityIdx)
-    real :: diversityIdx
+  function getShannonEntropy() result(entropy)
+    real :: entropy
 
     type(GenomeDstrbNode), pointer :: reader
     reader => genomeDstrbHead
 
     ! Reset the Shannon diversity index just to be sure.
-    diversityIdx = 0
+    entropy = 0
     ! Read genome count of each node in the genome distribution list.
     do
       if (associated(reader)) then
-        diversityIdx = diversityIdx - real(reader % count)/real(genomeCount) * &
+        entropy = entropy - real(reader % count)/real(genomeCount) * &
+            log(real(reader % count)/real(genomeCount))
+        ! Proceed to the next element of the genome distribution list.
+        reader => reader % next
+      else
+        exit
+      end if
+    end do
+  end function getShannonEntropy
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: getNormalizedShannon
+  !>  Calculate the normalized Shannon entropy
+  ! -------------------------------------------------------------------------- !
+  function getNormalizedShannon() result(entropy)
+    real :: entropy
+
+    type(GenomeDstrbNode), pointer :: reader
+    reader => genomeDstrbHead
+
+    ! Reset the Shannon diversity index just to be sure.
+    entropy = 0.0
+    ! Read genome count of each node in the genome distribution list.
+    do
+      if (associated(reader)) then
+        entropy = entropy - real(reader % count)/real(genomeCount) * &
             log(real(reader % count)/real(genomeCount))
 
         ! Proceed to the next element of the genome distribution list.
@@ -224,7 +249,70 @@ contains
     end do
 
     ! Normalize the diversity index
-    diversityIdx = diversityIdx / log(real(genomeCount))
+    entropy = entropy / log(real(genomeCount))
+  end function getNormalizedShannon
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: getRenyiEntropy
+  !>  Calculate the Renyi Entropy of order alpha
+  !!  a generalization of different entropies including Shannon entropy.
+  ! -------------------------------------------------------------------------- !
+  function getRenyiEntropy(alpha) result(entropy)
+    real, intent(in) :: alpha
+    real :: entropy
+    real :: probabilitySum
+
+    real, parameter :: zeroCmpEpsilon = 1e-6
+
+    type(GenomeDstrbNode), pointer :: reader
+    reader => genomeDstrbHead
+  
+    ! Initialize output
+    entropy = 0.0
+    probabilitySum = 0.0
+
+    ! If alpha is equal to 1.0, use the definition of Shannon entropy
+    if (abs(alpha - 1.0) < zeroCmpEpsilon) then
+      entropy = getShannonEntropy()
+      return
+    end if
+
+    do
+      if (associated(reader)) then
+        probabilitySum = probabilitySum + &
+            (real(reader % count)/real(genomeCount)) ** alpha
+        ! Proceed to the next element of the genome distribution list.
+        reader => reader % next
+      else
+        exit
+      end if
+    end do
+
+    entropy = log(probabilitySum) / (1 - alpha)
+  end function getRenyiEntropy
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: getDiversityIdx
+  !>  Calculate the genetic diversity index of the current genome distribution
+  !!  list. The input parameter `alpha` determines the kind of entropy to be
+  !!  used. Positive real values for alpha corresponds to Renyi entropy of
+  !!  order alpha. Negative real values for alpha corresponds to the
+  !!  normalized Shannon entropy which is also the default behavior.
+  ! -------------------------------------------------------------------------- !
+  function getDiversityIdx(alpha) result(diversityIdx)
+    real, intent(in), optional :: alpha
+    real :: diversityIdx
+
+    if (present(alpha)) then
+      if (alpha < 0.0) then
+        diversityIdx = getRenyiEntropy(alpha)
+        return
+      end if
+    end if
+
+    diversityIdx = getNormalizedShannon()
   end function getDiversityIdx
 
 

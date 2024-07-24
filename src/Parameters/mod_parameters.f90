@@ -48,7 +48,7 @@ module Parameters
     FLAG_TOGGLED
   use ParamFileParserType, only: ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
-  use CastProcs, only: castCharToInt
+  use CastProcs, only: castCharToInt, castCharToReal
   implicit none
   private
 
@@ -58,6 +58,8 @@ module Parameters
     !! Maximum character length for buffer characters.
   integer, parameter :: VOID_INT = -1
     !! Placeholder integer value.
+  real,    parameter :: VOID_REAL = tiny(1.0)
+    !! Placeholder real value.
 
   ! Print states.
   integer, parameter :: NORMAL_PRINT = 0
@@ -78,7 +80,7 @@ module Parameters
   character(len=*), parameter :: PROG_DESC = &
       "A simulation for the 'Penna model', a biological aging model."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = "v0.2.0"
+  character(len=*), parameter :: PROG_VERSION = "v0.3.0"
     !! Program version.
 
   integer, target, protected :: PROG_PRINT_STATE = NORMAL_PRINT
@@ -125,6 +127,8 @@ module Parameters
   integer, target, protected :: MODEL_MTTN_COUNT = VOID_INT
     !! Initial mutation count of individuals in starting pop.
 
+  real,    target, protected :: MODEL_ENTROPY_ORDER = VOID_REAL
+    !! Renyi entropy order value
   real, allocatable, protected :: MODEL_V_WEIGHT(:)
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
@@ -192,6 +196,7 @@ module Parameters
   public :: MODEL_TIME_STEPS
   public :: MODEL_MTTN_COUNT
   public :: MODEL_V_WEIGHT
+  public :: MODEL_ENTROPY_ORDER
 
   ! Parameter listing file.
   public :: FILE_PARAM_LIST

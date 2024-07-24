@@ -25,6 +25,7 @@ submodule (Parameters) ReadExtFile
      "rec_flag   ", &
      "rng        ", &
      "seed       ", &
+     "ent_order  ", &
      "v_weight   " ]
     !! Parameter keys in the parameter listing file.
 contains
@@ -66,6 +67,8 @@ contains
     call paramReader % getValue(PARAM_KEYS(12), tempRecFlag, getStats(12))
     call paramReader % getValue(PARAM_KEYS(13), PROG_RNG, getStats(13))
     call paramReader % getValue(PARAM_KEYS(14), PROG_RNG_SEED, getStats(14))
+    call paramReader % getValue(PARAM_KEYS(15), MODEL_ENTROPY_ORDER, &
+        getStats(15))
 
     ! Assign the temporary character.
     PROG_REC_FLAG = tempRecFlag
@@ -74,7 +77,7 @@ contains
     allocate(MODEL_V_WEIGHT(MODEL_L))
     MODEL_V_WEIGHT(:) = -1  ! Assign some placeholder value.
 
-    call paramReader % getValue(PARAM_KEYS(15), MODEL_V_WEIGHT, getStats(15))
+    call paramReader % getValue(PARAM_KEYS(16), MODEL_V_WEIGHT, getStats(16))
 
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)
