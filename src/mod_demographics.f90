@@ -306,7 +306,7 @@ contains
     real :: diversityIdx
 
     if (present(alpha)) then
-      if (alpha < 0.0) then
+      if (alpha > 0.0) then
         diversityIdx = getRenyiEntropy(alpha)
         return
       end if
