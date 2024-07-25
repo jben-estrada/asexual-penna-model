@@ -48,7 +48,7 @@ module Parameters
     FLAG_TOGGLED
   use ParamFileParserType, only: ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
-  use CastProcs, only: castCharToInt, castCharToReal
+  use CastProcs, only: castCharToInt, castCharToReal, isFinite
   implicit none
   private
 
@@ -114,9 +114,9 @@ module Parameters
     !! Birth rate
   integer, target, protected :: MODEL_M = VOID_INT
     !! Mutation rate
-  integer, target, protected :: MODEL_R = VOID_INT
+  integer, target :: MODEL_R = VOID_INT
     !! Reproduction age
-  integer, target, protected :: MODEL_R_MAX = VOID_INT
+  integer, target :: MODEL_R_MAX = VOID_INT
     !! Maximum reproduction age
   integer, target, protected :: MODEL_K = VOID_INT
     !! Carrying capacity

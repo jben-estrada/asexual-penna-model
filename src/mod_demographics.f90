@@ -11,6 +11,7 @@ module Demographics
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
   use DynamicBitSet, only: BitSet, operator(==)
+  use CastProcs, only: isFinite
   implicit none
   private
   
@@ -312,7 +313,7 @@ contains
     end if
 
     if (present(alpha)) then
-      if (alpha > 0.0) then
+      if (isFinite(alpha)) then
         diversityIdx = getRenyiEntropy(alpha)
         return
       end if
