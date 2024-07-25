@@ -9,6 +9,7 @@ module CastProcs
   !!  to another.
   ! -------------------------------------------------------------------------- !
   use ErrorMSG, only: raiseError
+  use, intrinsic :: ieee_arithmetic
   implicit none
   private
   
@@ -24,6 +25,7 @@ module CastProcs
   public :: castIntPtrToChar
   public :: castRealToChar
   public :: castCharToReal
+  public :: isFinite
 contains
 
 
@@ -185,4 +187,21 @@ contains
       if (status /= 0) call raiseError("Casting real to char failed.")
     end if
   end function castRealToChar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: isFinite
+  !>  Determine if the input real value is finite, i.e. not NaN 
+  !!  (signaling and quiet) or infinity. Note that this is a wrapper for
+  !!  several procedures from IEEE_ARITHMETIC intrinsic module
+  ! -------------------------------------------------------------------------- !
+  logical function isFinite(x)
+    real, intent(in) :: x
+    isFinite = ( &
+      ieee_class(x) /= ieee_quiet_nan     .and. &
+      ieee_class(x) /= ieee_signaling_nan .and. &
+      ieee_class(x) /= ieee_positive_inf  .and. &
+      ieee_class(x) /= ieee_negative_inf        &
+    )
+  end function isFinite
 end module CastProcs

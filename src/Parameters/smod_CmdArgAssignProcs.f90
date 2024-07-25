@@ -406,9 +406,9 @@ contains
       "Valid real values for -", entropyOrder_kv % cmdName, &
       " or --", entropyOrder_kv % cmdAlias
     write(*, "(3(4(' '), a/))", advance="no")       &
-      " Less then 0.0 - Normalized Shannon Entropy", &
-      " 1.0           - Shannon entropy",            &
-      " Other reals   - Renyi entropy"
+      "NaN/infinity (default) - Normalized Shannon entropy", &
+      "1.0                    - Shannon entropy",            &
+      "Other reals            - Renyi entropy"
 
     print "(' - ', *(a))",                                  &
       "Valid integer values for -", rngChoice_kv % cmdName, &
@@ -486,12 +486,11 @@ contains
           "Record flag", PROG_REC_FLAG
       
       write(*, "(a20)", advance="no") "Renyi entropy order"
-      if (MODEL_ENTROPY_ORDER > 0.0) then
+      if (isFinite(MODEL_ENTROPY_ORDER)) then
         write(*, "(f9.2/)", advance="no") MODEL_ENTROPY_ORDER
       else
         write(*, "(f9.2/, a29/)", advance="no") 1.0, "(Normalized)"
       end if
-
 
       print "(*(a))", PRINT_SEPARATOR
     end if
