@@ -30,7 +30,7 @@ EXT_COMPILE_SETTING_FILE = "compile.json"
 # NOTE: The intial apostrophe is required. The final one will be supplied by
 #       `bld_spec_flag`
 FCFLAGS = [
-    "\"", "-c", "-std=f2008", "-Wall", "-Wextra", "-fcheck=all",
+    "\"", "-c", "-std=f2018", "-Wall", "-Wextra", "-fcheck=all",
     "-march=native", "-pedantic"
 ]
 
