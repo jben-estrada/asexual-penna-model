@@ -21,13 +21,10 @@ Varying the Verhulst factor can be useful in, say, modelling *survivability*. By
 ## Prerequisite
 - Python <=3.12
 - A Fortran 2008 compliant compiler
-<<<<<<< HEAD
-=======
     - e.g. `Intel Fortran Compiler 2024.2.0` and `GFortran 12`
 
 ## Installation
 WIP
->>>>>>> d582567 (Add prerequisite in README.md)
 
 ## Reference
 
