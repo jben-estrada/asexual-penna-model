@@ -18,6 +18,10 @@ Now looking at $w_a$ (which we have called *Verhulst weight*), if we let $w_a = 
 
 Varying the Verhulst factor can be useful in, say, modelling *survivability*. By letting $w_a$ increase with age, individuals are more likely to survive as they grow older. Conversely, young individuals are more likely to die due to them being more fragile.
 
+## Prerequisite
+- Python <=3.12
+- A Fortran 2008 compliant compiler
+
 ## Reference
 
 1. Thadeu Penna. "A Bit-String Model for Biological Aging". In: *Journal of Statistical Physics* 78 (Mar. 1995). DOI: 10.1007/BF02180147.
