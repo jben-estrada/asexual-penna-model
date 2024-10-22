@@ -20,7 +20,7 @@ module DynamicBitSetType
 
   real, parameter :: GROWTH_FACTOR = 3.0/2.0
 
-  type :: BitSet
+  type :: DynamicBitSet
     private
     integer(kind=chunkKind), allocatable :: chunkArr(:)
     integer :: chunkArrSize
@@ -58,9 +58,9 @@ module DynamicBitSetType
       !! Count the 1's in the bit set.
     final :: bitSet_finalizer
       !! Deallocate allocatable attribute(s).
-  end type BitSet
+  end type DynamicBitSet
 
-  interface BitSet
+  interface DynamicBitSet
     module procedure :: bitset_cnstrc
   end interface
 
@@ -68,14 +68,14 @@ module DynamicBitSetType
     module procedure :: cmpr_bitsets
   end interface
 
-  public :: BitSet
+  public :: DynamicBitSet
   public :: CHUNK_SIZE
   public :: operator(==)
 contains
 
 
   function bitset_cnstrc() result(newBitSet)
-    type(BitSet) :: newBitSet
+    type(DynamicBitSet) :: newBitSet
 
     if (allocated(newBitSet%chunkArr)) deallocate(newBitSet%chunkArr)
     allocate(newBitSet%chunkArr(DEF_CHUNK_ARR_SIZE))
@@ -88,8 +88,8 @@ contains
 
 
   subroutine resizeChunkArr(self, maxPos)
-    class(BitSet), intent(inout) :: self
-    integer,       intent(in)    :: maxPos
+    class(DynamicBitSet), intent(inout) :: self
+    integer,              intent(in)    :: maxPos
       !! The maximum element position the array is expected to set.
 
     integer :: newSize
@@ -111,8 +111,8 @@ contains
 
 
   subroutine bitSet_set(self, value, lo, hi)
-    class(BitSet), intent(inout)  :: self
-    logical                       :: value
+    class(DynamicBitSet), intent(inout)  :: self
+    logical,           intent(in)  :: value
       !! The value to set the specified bits with.
     integer,           intent(in) :: lo
       !! The inclusive lower index of bits whose values are to be set with
@@ -181,14 +181,14 @@ contains
 
 
   subroutine bitSet_append(self, value)
-    class(BitSet), intent(inout) :: self
-    logical,       intent(in)    :: value
+    class(DynamicBitSet), intent(inout) :: self
+    logical,              intent(in)    :: value
     call self%set(value, self%hiIdx + 1)
   end subroutine bitSet_append
 
 
   subroutine bitSet_pop(self)
-    class(BitSet), intent(inout) :: self
+    class(DynamicBitSet), intent(inout) :: self
 
     if (self%hiIdx - 1 < 0) then
       call raiseError("Attempted to pop an element from an emty bit set.")
@@ -199,8 +199,8 @@ contains
 
 
   subroutine bitSet_setAll(self, value)
-    class(BitSet), intent(inout) :: self
-    logical,       intent(in)    :: value
+    class(DynamicBitSet), intent(inout) :: self
+    logical,              intent(in)    :: value
       !! The value all the bits in the bit set are to be set with.
 
     if (value) then
@@ -212,14 +212,14 @@ contains
 
 
   subroutine bitSet_flip(self)
-    class(BitSet), intent(inout) :: self
+    class(DynamicBitSet), intent(inout) :: self
     self%chunkArr(:) = not(self%chunkArr(:))
   end subroutine bitSet_flip
 
 
   function bitSet_get(self, pos) result(getVal)
-    class(BitSet), intent(in) :: self
-    integer,       intent(in) :: pos
+    class(DynamicBitSet), intent(in) :: self
+    integer,              intent(in) :: pos
       !! Position of the inquired value.
     logical :: getVal
 
@@ -239,7 +239,7 @@ contains
 
 
   function bitSet_any(self) result(anyVal)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     integer(kind=chunkKind) :: finalChunkSection
     integer :: sectionLen
     logical :: anyVal
@@ -259,7 +259,7 @@ contains
 
 
   function bitSet_all(self) result(allVal)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     integer(kind=chunkKind) :: finalChunkSection
     integer :: sectionLen
     logical :: allVal
@@ -279,28 +279,28 @@ contains
 
 
   function bitSet_none(self) result(noneVal)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     logical :: noneVal
     noneVal = .not.self%all()
   end function bitSet_none
 
 
   function bitSet_getBounds(self) result(boundArr)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     integer :: boundArr(2)
     boundArr(:) = [self%loIdx, self%hiIdx]
   end function bitSet_getBounds
 
 
   function bitSet_len(self) result(lenVal)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     integer :: lenVal
     lenVal = self%hiIdx
   end function bitSet_len
 
 
   subroutine bitSet_print(self)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     
     integer(kind=chunkKind) :: currChunk  ! Current chunk.
     integer :: bit
@@ -332,7 +332,7 @@ contains
 
 
   function bitSet_count(self) result(count)
-    class(BitSet), intent(in) :: self
+    class(DynamicBitSet), intent(in) :: self
     integer :: count
 
     integer, parameter :: lookup_tble(0:15) = &
@@ -365,8 +365,8 @@ contains
 
 
   function cmpr_bitsets(bitsetLeft, bitsetRight) result(cmprValue)
-    type(BitSet), intent(in) :: bitsetLeft
-    type(BitSet), intent(in) :: bitsetRight
+    type(DynamicBitSet), intent(in) :: bitsetLeft
+    type(DynamicBitSet), intent(in) :: bitsetRight
     logical :: cmprValue
 
     integer(kind=chunkKind) :: chunkLeft
@@ -411,7 +411,7 @@ contains
 
 
   subroutine bitSet_finalizer(self)
-    type(BitSet), intent(inout) :: self
+    type(DynamicBitSet), intent(inout) :: self
     if (allocated(self%chunkArr)) deallocate(self%chunkArr)
   end subroutine bitSet_finalizer
 end module DynamicBitSetType
