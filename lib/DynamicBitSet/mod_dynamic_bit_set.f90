@@ -1,11 +1,11 @@
-module DynamicBitSet
+module DynamicBitSetType
   ! -------------------------------------------------------------------------- !
-  ! MODULE: DynamicBitSet
+  ! MODULE: DynamicBitSetType
   ! -------------------------------------------------------------------------- !
   ! Author: John Benedick Estrada
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing an implementation of bit set.
+  !>  Module containing an implementation of a dynamic bit set.
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: int64, stdint => int32
   use ANSIColorCodes, only: formatChar, escCodeGreen, escCodeRed
@@ -414,4 +414,4 @@ contains
     type(BitSet), intent(inout) :: self
     if (allocated(self%chunkArr)) deallocate(self%chunkArr)
   end subroutine bitSet_finalizer
-end module DynamicBitSet
+end module DynamicBitSetType

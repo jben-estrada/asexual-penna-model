@@ -10,7 +10,7 @@ module Demographics
   use Parameters, only: MODEL_L
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
-  use DynamicBitSet, only: BitSet, operator(==)
+  use DynamicBitSetType, only: BitSet, operator(==)
   use CastProcs, only: isFinite
   implicit none
   private

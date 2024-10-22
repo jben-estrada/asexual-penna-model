@@ -21,7 +21,7 @@ module PopulationList
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
-  use DynamicBitSet, only: BitSet
+  use DynamicBitSetType, only: BitSet
   use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
   use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
