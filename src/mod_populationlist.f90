@@ -21,7 +21,7 @@ module PopulationList
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
-  use DynamicBitSetType, only: BitSet
+  use StaticBitSetType,  only: StaticBitSet
   use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
   use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
@@ -36,7 +36,7 @@ module PopulationList
   type, extends(AbstractPerson_t) :: Person_t
     !! A derived type representing individuals in the Penna model.
     ! integer(kind=personIK) :: genome
-    type(BitSet) :: genome
+    type(StaticBitSet) :: genome
       !! Genome of this individual.
     integer :: age
       !! The age of this individual.
@@ -59,7 +59,7 @@ module PopulationList
     private
     type(PersonPtr_t), allocatable :: population(:)
       !! Array holding the individuals in the Penna model.
-    type(BitSet)                   :: deadPopMask
+    type(StaticBitSet)             :: deadPopMask
       !! Mask array to filter out dead `Person_t`s.
 
     integer :: popArraySize = -1
@@ -163,14 +163,12 @@ contains
 
     if (allocated(newPop%population)) deallocate(newPop%population)
     allocate(newPop%population(int(startPopSize*GROWTH_FACTOR)))
-    newPop % deadPopMask = BitSet()
+
+    newPop%deadPopMask = StaticBitSet(startPopSize, MASK_ALIVE)
 
     ! Initialize each of the `Person_t`s in the population array.
     newPop%popArraySize = startPopSize
     newPop%population = makePersonPtrArr(startPopSize, initMttnCount)
-
-    ! Initialize the dead population mask.
-    call newPop%deadPopMask%set(MASK_ALIVE, 1, startPopSize)
 
     if (recordGnmDstrb) then
       ! Initialize the genome distribution
@@ -207,14 +205,13 @@ contains
     integer, intent(in) :: initMttnCount
 
     type(PersonPtr_t), allocatable :: personPtrArr(:)
-    type(BitSet) :: pureGenome
+    type(StaticBitSet) :: pureGenome
     integer :: i
 
     if (allocated(personPtrArr)) deallocate(personPtrArr)
     allocate(personPtrArr(size))
 
-    pureGenome = BitSet()
-    call pureGenome%set(GENE_HEALTHY, 1, MODEL_L)
+    pureGenome = StaticBitSet(MODEL_L, GENE_HEALTHY)
 
     do i = 1, size
       if (associated(personPtrArr(i)%person)) personPtrArr(i)%person => null()
@@ -286,6 +283,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine population_endCurrStep(self)
     class(Population_t), intent(inout) :: self
+    integer :: deadPopMaskCurrSize
 
     call removeDeadPersons(self)
     self%endIdx = self%futureEndIdx
@@ -293,6 +291,12 @@ contains
 
     self%popSize = self%popSize - self%deadPopSize
     self%deadPopSize = 0
+
+    ! Expand the dead population mask with a bit of leeway
+    deadPopMaskCurrSize = self%deadPopMask%getSize()
+    if (self%futureEndIdx > deadPopMaskCurrSize) then
+      call self%deadPopMask%changeSize(int(self%futureEndIdx * GROWTH_FACTOR))
+    end if
 
     call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
   end subroutine population_endCurrStep
@@ -368,7 +372,7 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine initNewPerson(person, genome, mutationCount)
     type(Person_t),          intent(inout) :: person
-    type(BitSet),            intent(in)    :: genome
+    type(StaticBitSet),      intent(in)    :: genome
     integer,                 intent(in)    :: mutationCount
   
     ! Initialize genome and mutation count.
@@ -410,7 +414,9 @@ contains
 
       ! Apply mutations.
       do i = 1, mutationCount_lcl
-        call person%genome%set(GENE_UNHEALTHY, mutationIndcs(i))
+        call person%genome%set(  &
+            GENE_UNHEALTHY, mutationIndcs(i), mutationIndcs(i)  &
+          )
       end do
 
       deallocate(mutationIndcs)
@@ -468,7 +474,7 @@ contains
 
       if (isDead) then
         self%deadPopSize = self%deadPopSize + 1
-        call self%deadPopMask%set(MASK_DEAD, self%currIdx)
+        call self%deadPopMask%set(MASK_DEAD, self%currIdx, self%currIdx)
 
         if (self%recordGnmDstrb) call delGenomeFromDstrb(currPerson%genome)
       else

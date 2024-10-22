@@ -10,7 +10,7 @@ module Demographics
   use Parameters, only: MODEL_L
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
-  use DynamicBitSetType, only: BitSet, operator(==)
+  use StaticBitSetType, only: StaticBitSet, operator(==)
   use CastProcs, only: isFinite
   implicit none
   private
@@ -43,9 +43,9 @@ module Demographics
 
   type GenomeDstrbNode
     !! Node type for genome distribution lists.
-    type(BitSet) :: genome
+    type(StaticBitSet) :: genome
       !! The genome of this `GenomeDstrbNode` object.
-    integer      :: count = 0
+    integer            :: count = 0
       !! Count of `Person` objects with the same value for `genome`
       !! as in this `GenomeDstrbNode` object.
 
@@ -71,7 +71,7 @@ contains
   !>  Add a genome to the genome distribution
   ! -------------------------------------------------------------------------- !
   subroutine addGenomeToDstrb(genome)
-    type(BitSet), intent(in) :: genome
+    type(StaticBitSet), intent(in) :: genome
     type(GenomeDstrbNode), pointer :: currentNode
 
     currentNode => genomeDstrbHead
@@ -99,7 +99,7 @@ contains
   !>  Delete a genome from the distribution
   ! -------------------------------------------------------------------------- !
   subroutine delGenomeFromDstrb(genome)
-    type(BitSet), intent(in) :: genome
+    type(StaticBitSet), intent(in) :: genome
     type(GenomeDstrbNode), pointer :: currentNode
     type(GenomeDstrbNode), pointer :: prevNode
     type(GenomeDstrbNode), pointer :: nextNode
@@ -143,7 +143,7 @@ contains
   !!  list.
   ! -------------------------------------------------------------------------- !
   subroutine appendGenomeDstrbNode(genome)
-    type(BitSet), intent(in) :: genome
+    type(StaticBitSet), intent(in) :: genome
       !! The genome the `GenomeDstrbNode` will contain.
 
     type(GenomeDstrbNode), pointer :: new
