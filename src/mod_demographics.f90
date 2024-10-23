@@ -55,8 +55,6 @@ module Demographics
 
   type(GenomeDstrbNode), pointer :: genomeDstrbHead => null()
     !! Head of the genome distribution list.
-  type(GenomeDstrbNode), pointer :: genomeDstrbTail => null()
-    !! Tail of the genome distribution list.
 
   public :: addGenomeToDstrb
   public :: delGenomeFromDstrb
@@ -85,7 +83,7 @@ contains
         end if
       else
         ! Create a new node if no match is found.
-        call appendGenomeDstrbNode(genome)
+        call prependGenomeDstrbNode(genome)
         exit genomeDstrb
       end if
     end do genomeDstrb
@@ -115,9 +113,8 @@ contains
           ! Delete the current node
           if (currentNode%count <= 0) then
             nextNode => currentNode%next
-            if (associated(prevNode)) prevNode%next => nextNode
-            if (associated(currentNode, genomeDstrbTail)) &
-                genomeDstrbTail => prevNode
+            if (associated(prevNode)) &
+                prevNode%next => nextNode
             if (associated(currentNode, genomeDstrbHead)) &
                 genomeDstrbHead => genomeDstrbHead%next
             deallocate(currentNode)
@@ -138,11 +135,10 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: appendGenomeDstrbNode
-  !>  Allocate new node and append it to the end of the genome distribution
-  !!  list.
+  ! SUBROUTINE: prependGenomeDstrbNode
+  !>  Allocate new node and prepend it to the genome distribution list.
   ! -------------------------------------------------------------------------- !
-  subroutine appendGenomeDstrbNode(genome)
+  subroutine prependGenomeDstrbNode(genome)
     type(StaticBitSet), intent(in) :: genome
       !! The genome the `GenomeDstrbNode` will contain.
 
@@ -157,18 +153,14 @@ contains
     new % count  = 1
     new % next   => null()
 
-    if (associated(genomeDstrbHead) .and. associated(genomeDstrbTail)) then
-      genomeDstrbTail%next => new
-    else if (.not.associated(genomeDstrbHead) .and. &
-             .not.associated(genomeDstrbTail)) then
-      ! Assign head if the list is not yet initialized. 
-      genomeDstrbHead => new
-    else
-      call raiseError("Internal error. Invalid genome distribution list.")
+    ! Prepend the new node to the head of the list
+    if (associated(genomeDstrbHead)) then
+      new % next => genomeDstrbHead
     end if
 
-    genomeDstrbTail => new
-  end subroutine appendGenomeDstrbNode
+    ! Update the new head
+    genomeDstrbHead => new
+  end subroutine prependGenomeDstrbNode
 
 
   ! -------------------------------------------------------------------------- !
@@ -193,7 +185,6 @@ contains
     end do
   
     genomeDstrbHead => null()
-    genomeDstrbTail => null()
     genomeCount = 0
   end subroutine freeGenomeDstrbList
 
