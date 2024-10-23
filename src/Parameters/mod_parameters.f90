@@ -134,6 +134,13 @@ module Parameters
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
 
+  logical, allocatable, protected :: MODEL_GENOME_MASK(:)
+    !! Genome mask. NOTE: TRUE is a masking value while FALSE is non-masking.
+  logical, parameter :: GENOME_MASK_DEFAULT = .false.
+    !! Default value for the genome mask element.
+  integer, parameter :: GENOME_MASK_INT_NONMASK = 0
+  integer, parameter :: GENOME_MASK_INT_MASK    = 1
+
   ! RECORD FLAGS
   ! -------------------------------------------------------------------------- !
   character, parameter :: REC_NULL = "x"
@@ -216,8 +223,9 @@ module Parameters
   public :: MODEL_START_POP_SIZE
   public :: MODEL_TIME_STEPS
   public :: MODEL_MTTN_COUNT
-  public :: MODEL_V_WEIGHT
   public :: MODEL_ENTROPY_ORDER
+  public :: MODEL_V_WEIGHT
+  public :: MODEL_GENOME_MASK
 
   ! Record flags
   public :: REC_NULL

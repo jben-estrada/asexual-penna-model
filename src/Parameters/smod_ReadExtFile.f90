@@ -26,7 +26,8 @@ submodule (Parameters) ReadExtFile
      "rng        ", &
      "seed       ", &
      "ent_order  ", &
-     "v_weight   " ]
+     "v_weight   ", &
+     "genome_mask" ]
     !! Parameter keys in the parameter listing file.
 contains
 
@@ -40,6 +41,7 @@ contains
 
     ! Temporary character for `PROG_REC_FLAG`.
     character(len=:), allocatable :: tempRecFlag
+    integer, allocatable :: tempGenomeMask(:)
 
     ! Array of getter statuses.
     integer :: getStats(size(PARAM_KEYS))
@@ -52,38 +54,43 @@ contains
     call paramReader % readFile()
 
     ! Assign scalar parameters one-by-one.
-    call paramReader % getValue(PARAM_KEYS(1),  MODEL_L, getStats(1))
-    call paramReader % getValue(PARAM_KEYS(2),  MODEL_T, getStats(2))
-    call paramReader % getValue(PARAM_KEYS(3),  MODEL_B, getStats(3))
-    call paramReader % getValue(PARAM_KEYS(4),  MODEL_M, getStats(4))
-    call paramReader % getValue(PARAM_KEYS(5),  MODEL_R, getStats(5))
+    call paramReader % getValue(PARAM_KEYS(1),  MODEL_L,     getStats(1))
+    call paramReader % getValue(PARAM_KEYS(2),  MODEL_T,     getStats(2))
+    call paramReader % getValue(PARAM_KEYS(3),  MODEL_B,     getStats(3))
+    call paramReader % getValue(PARAM_KEYS(4),  MODEL_M,     getStats(4))
+    call paramReader % getValue(PARAM_KEYS(5),  MODEL_R,     getStats(5))
     call paramReader % getValue(PARAM_KEYS(6),  MODEL_R_MAX, getStats(6))
-    call paramReader % getValue(PARAM_KEYS(7),  MODEL_K, getStats(7))
+    call paramReader % getValue(PARAM_KEYS(7),  MODEL_K,     getStats(7))
     call paramReader % getValue(PARAM_KEYS(8),  MODEL_START_POP_SIZE, &
         getStats(8))
-    call paramReader % getValue(PARAM_KEYS(9),  MODEL_MTTN_COUNT, getStats(9))
+    call paramReader % getValue(PARAM_KEYS( 9), MODEL_MTTN_COUNT, getStats( 9))
     call paramReader % getValue(PARAM_KEYS(10), MODEL_TIME_STEPS, getStats(10))
     call paramReader % getValue(PARAM_KEYS(11), PROG_SAMPLE_SIZE, getStats(11))
-    call paramReader % getValue(PARAM_KEYS(12), tempRecFlag, getStats(12))
-    call paramReader % getValue(PARAM_KEYS(13), PROG_RNG, getStats(13))
-    call paramReader % getValue(PARAM_KEYS(14), PROG_RNG_SEED, getStats(14))
+    call paramReader % getValue(PARAM_KEYS(12), tempRecFlag,      getStats(12))
+    call paramReader % getValue(PARAM_KEYS(13), PROG_RNG,         getStats(13))
+    call paramReader % getValue(PARAM_KEYS(14), PROG_RNG_SEED,    getStats(14))
     call paramReader % getValue(PARAM_KEYS(15), MODEL_ENTROPY_ORDER, &
         getStats(15))
-
-    ! Assign the temporary character.
-    PROG_REC_FLAG = tempRecFlag
-
-    ! Assign array parameter.
-    allocate(MODEL_V_WEIGHT(MODEL_L))
-    MODEL_V_WEIGHT(:) = -1  ! Assign some placeholder value.
+    
+    ! Initialize parameters with the obtained parameters.
+    ! --- Prepare the Verhulst weight array
+    allocate(MODEL_V_WEIGHT(MODEL_L), source=VWEIGHT_DEFAULT)
+    ! --- Prepare the genome mask array
+    allocate(MODEL_GENOME_MASK(MODEL_L), source=GENOME_MASK_DEFAULT)
+    allocate(tempGenomeMask(MODEL_L))
 
     call paramReader % getValue(PARAM_KEYS(16), MODEL_V_WEIGHT, getStats(16))
+    call paramReader % getValue(PARAM_KEYS(17), tempGenomeMask, getStats(17))
+
+    ! Transfer the obtained default record flag into the program.
+    PROG_REC_FLAG = tempRecFlag
+    MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASK_INT_MASK)
 
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)
 
     ! Free all local allocatable variables.
-    deallocate(tempRecFlag)
+    deallocate(tempRecFlag, tempGenomeMask)
   end subroutine readDefaultParamVal
 
 

@@ -10,7 +10,7 @@ module Demographics
   use Parameters, only: MODEL_L
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
-  use StaticBitSetType, only: StaticBitSet, operator(==)
+  use StaticBitSetType, only: StaticBitSet, maskBitset, operator(==)
   use CastProcs, only: isFinite
   implicit none
   private
@@ -68,14 +68,19 @@ contains
   ! SUBROUTINE: addGenomeToDstrb
   !>  Add a genome to the genome distribution
   ! -------------------------------------------------------------------------- !
-  subroutine addGenomeToDstrb(genome)
+  subroutine addGenomeToDstrb(genome, mask)
     type(StaticBitSet), intent(in) :: genome
+    logical,            intent(in) :: mask(:)
     type(GenomeDstrbNode), pointer :: currentNode
+    type(StaticBitSet)             :: maskedGenome
+
+    ! Apply the mask to the input genome
+    call maskBitset(genome, mask, maskedGenome)
 
     currentNode => genomeDstrbHead
     genomeDstrb: do
       if (associated(currentNode)) then
-        if (currentNode%genome == genome) then
+        if (currentNode%genome == maskedGenome) then
           currentNode%count = currentNode%count + 1
           exit genomeDstrb
         else
@@ -83,7 +88,7 @@ contains
         end if
       else
         ! Create a new node if no match is found.
-        call prependGenomeDstrbNode(genome)
+        call prependGenomeDstrbNode(maskedGenome)
         exit genomeDstrb
       end if
     end do genomeDstrb
@@ -96,18 +101,23 @@ contains
   ! SUBROUTINE: delGenomeFromDstrb
   !>  Delete a genome from the distribution
   ! -------------------------------------------------------------------------- !
-  subroutine delGenomeFromDstrb(genome)
+  subroutine delGenomeFromDstrb(genome, mask)
     type(StaticBitSet), intent(in) :: genome
+    logical,            intent(in) :: mask(:)
+    type(StaticBitSet)             :: maskedGenome
     type(GenomeDstrbNode), pointer :: currentNode
     type(GenomeDstrbNode), pointer :: prevNode
     type(GenomeDstrbNode), pointer :: nextNode
+
+    ! Apply the mask to the input genome
+    call maskBitset(genome, mask, maskedGenome)
 
     prevNode => null()
     currentNode => genomeDstrbHead
 
     genomeDstrb: do
       if (associated(currentNode)) then
-        if (currentNode%genome == genome) then
+        if (currentNode%genome == maskedGenome) then
           currentNode%count = currentNode%count - 1
 
           ! Delete the current node

@@ -49,6 +49,7 @@ module StaticBitSetType
 
   interface StaticBitSet
     module procedure :: bitset_cnstrc
+    module procedure :: bitset_cnstrc_array
   end interface
 
   interface operator(==)
@@ -56,9 +57,10 @@ module StaticBitSetType
   end interface
 
   public :: StaticBitSet
+  public :: maskBitset
   public :: operator(==)
 contains
-    
+
 
   function bitset_cnstrc(setSize, initValue) result(newBitSet)
     integer,           intent(in) :: setSize
@@ -76,10 +78,25 @@ contains
   end function bitset_cnstrc
 
 
+  function bitset_cnstrc_array(boolArr) result(newBitSet)
+    logical, intent(in) :: boolArr(:)
+    type(StaticBitSet)  :: newBitSet
+
+    if (size(boolArr) == 0) then
+      call raiseError("Input logical array cannot be of size 0.")
+    end if
+
+    allocate( newBitSet%data(size(boolArr)) )
+    newBitSet%data(:) = boolArr(:)
+
+    newBitSet%size = size(boolArr)
+  end function bitset_cnstrc_array
+
+
   subroutine bitset_changeSize(self, newSetSize, padding)
     class(StaticBitSet), intent(inout) :: self
-    integer,             intent(in) :: newSetSize
-    logical, optional,   intent(in) :: padding
+    integer,             intent(in)    :: newSetSize
+    logical, optional,   intent(in)    :: padding
 
     logical(kind=bitSetKind), allocatable :: temp_arr(:)
 
@@ -106,9 +123,9 @@ contains
 
   subroutine bitSet_set(self, value, lo, hi)
     class(StaticBitSet), intent(inout) :: self
-    logical,       intent(in)    :: value
-    integer,       intent(in)    :: lo
-    integer,       intent(in)    :: hi
+    logical,             intent(in)    :: value
+    integer,             intent(in)    :: lo
+    integer,             intent(in)    :: hi
 
     if (lo > hi) then
       call raiseError(  &
@@ -133,14 +150,14 @@ contains
 
   subroutine bitSet_setAll(self, value)
     class(StaticBitSet), intent(inout) :: self
-    logical,       intent(in)    :: value
+    logical,             intent(in)    :: value
     self%data(:) = value
   end subroutine bitSet_setAll
 
 
   logical function bitSet_get(self, index) result(value)
     class(StaticBitSet), intent(in) :: self
-    integer,       intent(in) :: index
+    integer,             intent(in) :: index
 
     if (index < 1 .or. index > self%size) then
       call raiseError("StaticBitSet index out of bounds: " // castIntToChar(index))
@@ -175,10 +192,10 @@ contains
 
 
   subroutine bitSet_print(self, lowBitChar, highBitChar, delimChar)
-    class(StaticBitSet), intent(in)  :: self
-    character,        intent(in), optional :: lowBitChar
-    character,        intent(in), optional :: highBitChar
-    character(len=*), intent(in), optional :: delimChar
+    class(StaticBitSet),        intent(in) :: self
+    character,        optional, intent(in) :: lowBitChar
+    character,        optional, intent(in) :: highBitChar
+    character(len=*), optional, intent(in) :: delimChar
   
     character :: hiChar, loChar, currChar
     integer :: i
@@ -227,6 +244,31 @@ contains
 
     cmpr_res = all(left%data .eqv. right%data)
   end function cmpr_bitsets
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: maskBitset
+  !>  Create a new bit set out of an exisiting bit set with a logical mask on.
+  !!  Note that elements to be masked on must correspond to TRUE in the mask
+  !!  array. Otherwise, FALSE.
+  ! -------------------------------------------------------------------------- !
+  subroutine maskBitset(srcBitset, mask, destBitset)
+    type(StaticBitSet), intent(in)  :: srcBitset
+    logical,            intent(in)  :: mask(:)
+    type(StaticBitSet), intent(out) :: destBitset
+
+    logical :: tempArray(size(mask))
+
+    if (.not.allocated(srcBitset%data)) then
+      call raiseError("Source bit set not yet initialized.")
+    end if
+    if (size(mask) /= srcBitset%size) then
+      call raiseError("Mask and the source bit set do not have the same size.")
+    end if
+
+    tempArray(:) = srcBitset%data(:) .or. mask(:)
+    destBitset = bitset_cnstrc_array(tempArray)
+  end subroutine maskBitset
 
 
   subroutine bitSet_finalizer(self)

@@ -10,14 +10,15 @@ module PopulationList
   !!  model.
   ! -------------------------------------------------------------------------- !
   use Parameters, only: &
-    MODEL_L,        &
-    MODEL_M,        &
-    MODEL_R,        &
-    MODEL_R_MAX,    &
-    MODEL_B,        &
-    MODEL_V_WEIGHT, &
-    MODEL_T,        &
-    MODEL_K
+    MODEL_L,            &
+    MODEL_M,            &
+    MODEL_R,            &
+    MODEL_R_MAX,        &
+    MODEL_B,            &
+    MODEL_T,            &
+    MODEL_K,            &
+    MODEL_V_WEIGHT,     &
+    MODEL_GENOME_MASK
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
@@ -176,7 +177,9 @@ contains
         integer :: i
 
         do i = 1, startPopsize
-          call addGenomeToDstrb(newPop%population(i)%person%genome)
+          call addGenomeToDstrb(   &
+                  newPop%population(i)%person%genome, MODEL_GENOME_MASK  &
+              )
         end do
       end block initGnmDstrb
     end if
@@ -476,7 +479,9 @@ contains
         self%deadPopSize = self%deadPopSize + 1
         call self%deadPopMask%set(MASK_DEAD, self%currIdx, self%currIdx)
 
-        if (self%recordGnmDstrb) call delGenomeFromDstrb(currPerson%genome)
+        if (self%recordGnmDstrb) then
+          call delGenomeFromDstrb(currPerson%genome, MODEL_GENOME_MASK)
+        end if
       else
         currPerson%age = nextAge
         call checkPersonBirth(self)
@@ -518,7 +523,9 @@ contains
             call initNewPerson(newPersonPtr%person, currPerson%genome, MODEL_M)
 
             if (popObj%recordGnmDstrb) then
-              call addGenomeToDstrb(newPersonPtr%person%genome)
+              call addGenomeToDstrb(   &
+                      newPersonPtr%person%genome, MODEL_GENOME_MASK  &
+                  )
             end if
           end associate
         end do
