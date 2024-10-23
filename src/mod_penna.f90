@@ -23,6 +23,14 @@ module Penna
     PROG_RNG,             &
     PROG_RNG_SEED,        &
     PROG_OUT_FILE_NAME,   &
+    REC_NULL,             &
+    REC_POP,              &
+    REC_AGE_DSTRB,        &
+    REC_DEATH,            &
+    REC_DIV_IDX,          &
+    REC_GENE_DSTRB,       &
+    REC_TIME,             &
+    REC_GNM_COUNT,        &
     SILENT_PRINT,         &
     setParams,            &
     printProgDetails,     &
@@ -50,14 +58,6 @@ module Penna
     Person_t
   
   use DataWriter, only:  &
-    REC_NULL,            &
-    REC_POP,             &
-    REC_AGE_DSTRB,       &
-    REC_DEATH,           &
-    REC_DIV_IDX,         &
-    REC_GENE_DSTRB,      &
-    REC_TIME,            &
-    REC_GNM_COUNT,       &
     getWriterPtr,        &
     isWriterInitialized, &
     initDataWriter,      &

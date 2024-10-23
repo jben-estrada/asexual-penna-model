@@ -134,6 +134,27 @@ module Parameters
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
 
+  ! RECORD FLAGS
+  ! -------------------------------------------------------------------------- !
+  character, parameter :: REC_NULL = "x"
+    !! Nothing (do not record).
+  character, parameter :: REC_POP = "p"
+    !! Population size per time step.
+  character, parameter :: REC_AGE_DSTRB = "a"
+    !! Age distribution in the last 300 time steps
+  character, parameter :: REC_DEATH = "d"
+    !! Death counts (death by age, by mutation, by Verhulst factor) 
+    !! per time step.
+  character, parameter :: REC_DIV_IDX = "s"
+    !! Genetic diversity index per time step (Normalized Shannon index)
+  character, parameter :: REC_GENE_DSTRB = "b"
+    !! Bad gene distribution per time step.
+  character, parameter :: REC_TIME = "t"
+    !! (Average) elapsed time and standard deviation if applicable.
+  character, parameter :: REC_GNM_COUNT = "c"
+    !! Number of unique genomes per time step.
+  character(len=*), parameter :: REC_FLAG_ORDER = "padsbtc"
+
   ! PARAMETER LISTING FILE PATHS
   ! -------------------------------------------------------------------------- !
   ! Filenames from which model parameters are obtained.
@@ -197,6 +218,17 @@ module Parameters
   public :: MODEL_MTTN_COUNT
   public :: MODEL_V_WEIGHT
   public :: MODEL_ENTROPY_ORDER
+
+  ! Record flags
+  public :: REC_NULL
+  public :: REC_POP
+  public :: REC_AGE_DSTRB
+  public :: REC_DEATH
+  public :: REC_DIV_IDX
+  public :: REC_GENE_DSTRB
+  public :: REC_TIME
+  public :: REC_GNM_COUNT
+  public :: REC_FLAG_ORDER
 
   ! Parameter listing file.
   public :: FILE_PARAM_LIST

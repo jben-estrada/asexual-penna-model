@@ -7,7 +7,17 @@ module DataWriter
   ! DESCRIPTION:
   !>  Module containing procedures for writing data onto files.
   ! -------------------------------------------------------------------------- !
-  use Parameters, only: MODEL_L
+  use Parameters, only: &
+    MODEL_L,            &
+    REC_NULL,           &
+    REC_POP,            &
+    REC_AGE_DSTRB,      &
+    REC_DEATH,          &
+    REC_DIV_IDX,        &
+    REC_GENE_DSTRB,     &
+    REC_TIME,           &
+    REC_GNM_COUNT,      &
+    REC_FLAG_ORDER
   use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
   use WriterType, only: Writer, writeIK, writeRK
@@ -21,26 +31,6 @@ module DataWriter
   character, parameter :: DELIM_READABLE = "|"
   character, parameter :: DELIM_CSV = ","
   character :: delim = char(0)
-
-  ! Record flags.
-  character, parameter, public :: REC_NULL = "x"
-    !! Nothing (do not record).
-  character, parameter, public :: REC_POP = "p"
-    !! Population size per time step.
-  character, parameter, public :: REC_AGE_DSTRB = "a"
-    !! Age distribution in the last 300 time steps
-  character, parameter, public :: REC_DEATH = "d"
-    !! Death counts (death by age, by mutation, by Verhulst factor) 
-    !! per time step.
-  character, parameter, public :: REC_DIV_IDX = "s"
-    !! Genetic diversity index per time step (Normalized Shannon index)
-  character, parameter, public :: REC_GENE_DSTRB = "b"
-    !! Bad gene distribution per time step.
-  character, parameter, public :: REC_TIME = "t"
-    !! (Average) elapsed time and standard deviation if applicable.
-  character, parameter, public :: REC_GNM_COUNT = "c"
-    !! Number of unique genomes per time step.
-  character(len=*), parameter  :: REC_FLAG_ORDER = "padsbtc"
 
   ! All writer objects.
   type(Writer), target  :: writerArr(len(REC_FLAG_ORDER))

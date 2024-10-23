@@ -482,8 +482,16 @@ contains
           "Sample size",          PROG_SAMPLE_SIZE, &
           "Starting pop size",    MODEL_START_POP_SIZE
 
-      write(*, "(*(a20, 8(' '), a1/))", advance="no") &
-          "Record flag", PROG_REC_FLAG
+      write(*, "(*(a20, a))", advance="no") &
+          "Record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
+      do k = 1, len(REC_FLAG_ORDER)
+        if (scan(PROG_REC_FLAG, REC_FLAG_ORDER(k:k)) > 0) then
+          write(*, "(a)", advance="no") REC_FLAG_ORDER(k:k)
+        else
+          write(*, "(a)", advance="no") "-"
+        end if
+      end do
+      write(*, "(a)")
       
       write(*, "(a20)", advance="no") "Renyi entropy order"
       if (isFinite(MODEL_ENTROPY_ORDER)) then
