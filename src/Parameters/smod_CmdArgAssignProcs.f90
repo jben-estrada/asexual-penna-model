@@ -37,7 +37,7 @@ submodule (Parameters) CmdArgAssignProcs
 
   ! All commands.
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(21)
+  type(CmdArgRecord), target :: cmdArgArr(20)
   ! Model parameters.
   type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
   type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
@@ -45,23 +45,22 @@ submodule (Parameters) CmdArgAssignProcs
   type(CmdArgRecord), pointer :: reprAgeMin_kv    => cmdArgArr(4)
   type(CmdArgRecord), pointer :: reprAgeMax_kv    => cmdArgArr(5)
   type(CmdArgRecord), pointer :: carryingCap_kv   => cmdArgArr(6)
-  type(CmdArgRecord), pointer :: genomeLen_kv     => cmdArgArr(7)
-  type(CmdArgRecord), pointer :: mttnInitCount_kv => cmdArgArr(8)
-  type(CmdArgRecord), pointer :: initPopSize_kv   => cmdArgArr(9)
-  type(CmdArgRecord), pointer :: timeStepMax_kv   => cmdArgArr(10)
-  type(CmdArgRecord), pointer :: entropyOrder_kv  => cmdArgArr(11)
+  type(CmdArgRecord), pointer :: mttnInitCount_kv => cmdArgArr(7)
+  type(CmdArgRecord), pointer :: initPopSize_kv   => cmdArgArr(8)
+  type(CmdArgRecord), pointer :: timeStepMax_kv   => cmdArgArr(9)
+  type(CmdArgRecord), pointer :: entropyOrder_kv  => cmdArgArr(10)
 
   ! Program parameters.
-  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(12)
-  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(13)
-  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(14)
-  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(15)
-  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(16)
-  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(17)
-  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(18)
-  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(19)
-  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(20)
-  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(21)
+  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(11)
+  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(12)
+  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(13)
+  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(14)
+  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(15)
+  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(16)
+  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(17)
+  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(18)
+  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(19)
+  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(20)
 contains
 
 
@@ -87,8 +86,6 @@ contains
       "Maximum reproduction age.")
     carryingCap_kv   = CmdArgRecord("K", "pop-cap", KV_S, KV_L, &
       "Carrying capacity.")
-    genomeLen_kv     = CmdArgRecord("L", "genome-len", KV_S, KV_L, &
-     "Genome length.")
     mttnInitCount_kv = CmdArgRecord("m", "init-mttn", KV_S, KV_L, &
       "Initial mutation count per individual.")
     initPopSize_kv   = CmdArgRecord("p", "pop-size", KV_S, KV_L, &
@@ -127,7 +124,6 @@ contains
     reprAgeMin_kv    % intValue_ptr  => MODEL_R
     reprAgeMax_kv    % intValue_ptr  => MODEL_R_MAX
     carryingCap_kv   % intValue_ptr  => MODEL_K
-    genomeLen_kv     % intValue_ptr  => MODEL_L
     mttnInitCount_kv % intValue_ptr  => MODEL_MTTN_COUNT
     initPopSize_kv   % intValue_ptr  => MODEL_START_POP_SIZE
     timeStepMax_kv   % intValue_ptr  => MODEL_TIME_STEPS
