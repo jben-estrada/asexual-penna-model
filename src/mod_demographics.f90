@@ -7,7 +7,7 @@ module Demographics
   ! DESCRIPTION:
   !>  Module containing variables and procedures for recording demographics
   ! -------------------------------------------------------------------------- !
-  use Parameters, only: MODEL_L
+  use Parameters, only: MODEL_L, MODEL_AGE_DSTRB_INIT_TIMESTEP
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
   use CastProcs, only: isFinite, logicalToInt
@@ -25,19 +25,8 @@ module Demographics
   ! -------------------------------------------------------------------------- !
   integer, allocatable :: ageDistribution(:) 
     !! Age distribution.
-  
-  ! Time step range for recording demographics.
-  integer, parameter :: DEF_DEMOG_LAST_STEP = 300
-    !! Default final time steps when to record the age distribution.
-  integer            :: DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
-    !! Final time steps when when to record the age distribution.
-    !! Defaults to `DEF_DEMOG_LAST_STEP`. Changes to a negative value if
-    !! the age distribution is not to be recorded.
 
   public :: ageDistribution
-  public :: DEF_DEMOG_LAST_STEP
-  public :: DEMOG_LAST_STEPS
-
   public :: resetAgeDstrb
   public :: updateAgeDstrb
   public :: deallocAgeDstrb
@@ -389,20 +378,17 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: resetAgeDstrb
-  !>  Reset the demographics.
+  !>  Reset the age distribution.
   ! -------------------------------------------------------------------------- !
-  subroutine resetAgeDstrb(genomeLen)
-    integer, intent(in) :: genomeLen
-      !! Genome length which also corresponds to age demographics range.
-
-    if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:genomeLen))
+  subroutine resetAgeDstrb()
+    if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
     ageDistribution(:) = 0
   end subroutine resetAgeDstrb
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: updateAgeDstrb
-  !>  Update the age demographics.
+  !>  Update the age distribution.
   ! -------------------------------------------------------------------------- !
   subroutine updateAgeDstrb(age)
     integer, intent(in) :: age
@@ -413,8 +399,8 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: deallocDstrb
-  !>  Deallocate demographic arrays
+  ! SUBROUTINE: deallocAgeDstrb
+  !>  Deallocate age distribution arrays
   ! -------------------------------------------------------------------------- !
   subroutine deallocAgeDstrb()
     if (allocated(ageDistribution)) deallocate(ageDistribution)

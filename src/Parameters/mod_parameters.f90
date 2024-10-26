@@ -126,9 +126,12 @@ module Parameters
     !! Total time steps
   integer, target, protected :: MODEL_MTTN_COUNT = VOID_INT
     !! Initial mutation count of individuals in starting pop.
-
   real,    target, protected :: MODEL_ENTROPY_ORDER = VOID_REAL
-    !! Renyi entropy order value
+    !! Renyi entropy order value  
+  integer, target, protected :: MODEL_AGE_DSTRB_INIT_TIMESTEP
+    !! The intial time step till the final time step where the age distribution
+    !! is taken.
+
   real, allocatable, protected :: MODEL_V_WEIGHT(:)
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
@@ -138,8 +141,10 @@ module Parameters
     !! Genome mask. NOTE: TRUE is a masking value while FALSE is non-masking.
   logical, parameter :: GENOME_MASK_DEFAULT = .false.
     !! Default value for the genome mask element.
-  integer, parameter :: GENOME_MASK_INT_NONMASK = 0
-  integer, parameter :: GENOME_MASK_INT_MASK    = 1
+  integer, parameter :: GENOME_MASKING_INT    = 1
+    !! The corresponding integer value for the masking value TRUE.
+  integer, parameter :: GENOME_NONMASKING_INT = 0
+    !! The corresponding integer value for the non-masking value FALSE.
 
   ! RECORD FLAGS
   ! -------------------------------------------------------------------------- !
@@ -226,6 +231,7 @@ module Parameters
   public :: MODEL_ENTROPY_ORDER
   public :: MODEL_V_WEIGHT
   public :: MODEL_GENOME_MASK
+  public :: MODEL_AGE_DSTRB_INIT_TIMESTEP
 
   ! Record flags
   public :: REC_NULL

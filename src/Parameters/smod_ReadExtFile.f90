@@ -11,23 +11,24 @@ submodule (Parameters) ReadExtFile
   implicit none
 
   character(len=*), parameter :: PARAM_KEYS(*) = &
-    ["L          ", &
-     "T          ", &
-     "B          ", &
-     "M          ", &
-     "R          ", &
-     "R_max      ", &
-     "K          ", &
-     "N0         ", &
-     "mttn_count ", &
-     "t_max      ", &
-     "sample_size", &
-     "rec_flag   ", &
-     "rng        ", &
-     "seed       ", &
-     "ent_order  ", &
-     "v_weight   ", &
-     "genome_mask" ]
+    ["L             ", &
+     "T             ", &
+     "B             ", &
+     "M             ", &
+     "R             ", &
+     "R_max         ", &
+     "K             ", &
+     "N0            ", &
+     "mttn_count    ", &
+     "t_max         ", &
+     "sample_size   ", &
+     "rec_flag      ", &
+     "rng           ", &
+     "seed          ", &
+     "ent_order     ", &
+     "age_dstrb_time", &
+     "v_weight      ", &
+     "genome_mask   " ]
     !! Parameter keys in the parameter listing file.
 contains
 
@@ -61,7 +62,7 @@ contains
     call paramReader % getValue(PARAM_KEYS(5),  MODEL_R,     getStats(5))
     call paramReader % getValue(PARAM_KEYS(6),  MODEL_R_MAX, getStats(6))
     call paramReader % getValue(PARAM_KEYS(7),  MODEL_K,     getStats(7))
-    call paramReader % getValue(PARAM_KEYS(8),  MODEL_START_POP_SIZE, &
+    call paramReader % getValue(PARAM_KEYS(8),  MODEL_START_POP_SIZE,  &
         getStats(8))
     call paramReader % getValue(PARAM_KEYS( 9), MODEL_MTTN_COUNT, getStats( 9))
     call paramReader % getValue(PARAM_KEYS(10), MODEL_TIME_STEPS, getStats(10))
@@ -69,8 +70,10 @@ contains
     call paramReader % getValue(PARAM_KEYS(12), tempRecFlag,      getStats(12))
     call paramReader % getValue(PARAM_KEYS(13), PROG_RNG,         getStats(13))
     call paramReader % getValue(PARAM_KEYS(14), PROG_RNG_SEED,    getStats(14))
-    call paramReader % getValue(PARAM_KEYS(15), MODEL_ENTROPY_ORDER, &
+    call paramReader % getValue(PARAM_KEYS(15), MODEL_ENTROPY_ORDER,  &
         getStats(15))
+    call paramReader % getValue(PARAM_KEYS(16), MODEL_AGE_DSTRB_INIT_TIMESTEP, &
+        getStats(16))
     
     ! Initialize parameters with the obtained parameters.
     ! --- Prepare the Verhulst weight array
@@ -79,12 +82,12 @@ contains
     allocate(MODEL_GENOME_MASK(MODEL_L), source=GENOME_MASK_DEFAULT)
     allocate(tempGenomeMask(MODEL_L))
 
-    call paramReader % getValue(PARAM_KEYS(16), MODEL_V_WEIGHT, getStats(16))
-    call paramReader % getValue(PARAM_KEYS(17), tempGenomeMask, getStats(17))
+    call paramReader % getValue(PARAM_KEYS(17), MODEL_V_WEIGHT, getStats(16))
+    call paramReader % getValue(PARAM_KEYS(18), tempGenomeMask, getStats(17))
 
     ! Transfer the obtained default record flag into the program.
     PROG_REC_FLAG = tempRecFlag
-    MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASK_INT_MASK)
+    MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASKING_INT)
 
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)

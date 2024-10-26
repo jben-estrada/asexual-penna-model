@@ -37,7 +37,7 @@ submodule (Parameters) CmdArgAssignProcs
 
   ! All commands.
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(20)
+  type(CmdArgRecord), target :: cmdArgArr(21)
   ! Model parameters.
   type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
   type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
@@ -49,18 +49,19 @@ submodule (Parameters) CmdArgAssignProcs
   type(CmdArgRecord), pointer :: initPopSize_kv   => cmdArgArr(8)
   type(CmdArgRecord), pointer :: timeStepMax_kv   => cmdArgArr(9)
   type(CmdArgRecord), pointer :: entropyOrder_kv  => cmdArgArr(10)
+  type(CmdArgRecord), pointer :: ageDstrbTime_kv  => cmdArgArr(11)
 
   ! Program parameters.
-  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(11)
-  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(12)
-  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(13)
-  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(14)
-  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(15)
-  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(16)
-  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(17)
-  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(18)
-  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(19)
-  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(20)
+  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(12)
+  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(13)
+  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(14)
+  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(15)
+  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(16)
+  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(17)
+  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(18)
+  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(19)
+  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(20)
+  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(21)
 contains
 
 
@@ -94,6 +95,8 @@ contains
       "Maximum time step.")
     entropyOrder_kv  = CmdArgRecord("O", "ent-order", KV_S, KV_L, &
       "Renyi entropy order.")
+    ageDstrbTime_kv  = CmdArgRecord("a", "age-dstrb-time", KV_S, KV_L, &
+      "Age distribution time step till the final time step.")
 
     ! Program parameters.
     sampleSize_kv    = CmdArgRecord("s", "sample-size", KV_S, KV_L, &
@@ -128,6 +131,7 @@ contains
     initPopSize_kv   % intValue_ptr  => MODEL_START_POP_SIZE
     timeStepMax_kv   % intValue_ptr  => MODEL_TIME_STEPS
     entropyOrder_kv  % realValue_ptr => MODEL_ENTROPY_ORDER
+    ageDstrbTime_kv  % intValue_ptr  => MODEL_AGE_DSTRB_INIT_TIMESTEP
 
     sampleSize_kv % intValue_ptr => PROG_SAMPLE_SIZE
     rngChoice_kv  % intValue_ptr => PROG_RNG
@@ -391,7 +395,7 @@ contains
     write(*, "(8(4(' '), a/))", advance="no")                                  &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
-      "a - Age demographics in the last 300 time step.",                       &
+      "a - Age distribution in the final time steps.",                         &
       "d - Death count per time step.",                                        &
       "s - Genetic diversity index per time step (Normalized Shannon index).", &
       "b - Bad gene distribution per time step.",                              &

@@ -8,38 +8,37 @@ module Penna
   !>  Module containing one of the core procedures for the simulation of the
   !!  Penna model (along with the `PopulationList` module)
   ! -------------------------------------------------------------------------- !
-  use Parameters, only:   &
-    MODEL_L,              &
-    MODEL_B,              &
-    MODEL_K,              &
-    MODEL_TIME_STEPS,     &
-    MODEL_MTTN_COUNT,     &
-    MODEL_START_POP_SIZE, &
-    MODEL_ENTROPY_ORDER,  &
-    PROG_REC_FLAG,        &
-    PROG_IN_CSV_FMT,      &
-    PROG_SAMPLE_SIZE,     &
-    PROG_PRINT_STATE,     &
-    PROG_RNG,             &
-    PROG_RNG_SEED,        &
-    PROG_OUT_FILE_NAME,   &
-    REC_NULL,             &
-    REC_POP,              &
-    REC_AGE_DSTRB,        &
-    REC_DEATH,            &
-    REC_DIV_IDX,          &
-    REC_GENE_DSTRB,       &
-    REC_TIME,             &
-    REC_GNM_COUNT,        &
-    SILENT_PRINT,         &
-    setParams,            &
-    printProgDetails,     &
+  use Parameters, only:            &
+    MODEL_L,                       &
+    MODEL_B,                       &
+    MODEL_K,                       &
+    MODEL_TIME_STEPS,              &
+    MODEL_MTTN_COUNT,              &
+    MODEL_START_POP_SIZE,          &
+    MODEL_ENTROPY_ORDER,           &
+    MODEL_AGE_DSTRB_INIT_TIMESTEP, &
+    PROG_REC_FLAG,                 &
+    PROG_IN_CSV_FMT,               &
+    PROG_SAMPLE_SIZE,              &
+    PROG_PRINT_STATE,              &
+    PROG_RNG,                      &
+    PROG_RNG_SEED,                 &
+    PROG_OUT_FILE_NAME,            &
+    REC_NULL,                      &
+    REC_POP,                       &
+    REC_AGE_DSTRB,                 &
+    REC_DEATH,                     &
+    REC_DIV_IDX,                   &
+    REC_GENE_DSTRB,                &
+    REC_TIME,                      &
+    REC_GNM_COUNT,                 &
+    SILENT_PRINT,                  &
+    setParams,                     &
+    printProgDetails,              &
     freeParamAlloctbls
 
   use Demographics, only: &
     ageDistribution,      &
-    DEF_DEMOG_LAST_STEP,  &
-    DEMOG_LAST_STEPS,     &
     resetAgeDstrb,        &
     updateAgeDstrb,       &
     deallocAgeDstrb,      &
@@ -134,6 +133,7 @@ contains
     integer :: recordFlagLen         ! Number of record flags.
     logical :: recordGnmDstrb
     logical :: recordDeath
+    logical :: recordAgeDstrb
 
     integer, pointer :: deathByAge
     integer, pointer :: deathByMutation
@@ -141,28 +141,23 @@ contains
 
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
+
     recordGnmDstrb = &
         isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
-    recordDeath = isWriterInitialized(REC_DEATH)
+    recordDeath    = isWriterInitialized(REC_DEATH)
+    recordAgeDstrb = isWriterInitialized(REC_AGE_DSTRB)
 
     ! Initialization
     popSize = startPopSize
     deathCount(:) = 0
     call initGenomeDstrb()
-    call resetAgeDstrb(MODEL_L)
+    call resetAgeDstrb()
     population = Population_t(startPopSize, initMttnCount, recordGnmDstrb)
 
     ! Initialize pointers.
     deathByAge => deathCount(1)
     deathByMutation => deathCount(2)
     deathByVerhulst => deathCount(3)
-
-    ! Enable/disable age distribution recording.
-    if (isWriterInitialized(REC_AGE_DSTRB)) then
-      DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
-    else
-      DEMOG_LAST_STEPS = -1
-    end if
 
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
@@ -187,7 +182,8 @@ contains
             deathByAge,             &
             deathByMutation,        &
             deathByVerhulst,        &
-            recordDeath             &
+            recordDeath,            &
+            recordAgeDstrb          &
           )
       popSize = population%getPopSize()
 
@@ -222,7 +218,7 @@ contains
             call chosenWriter%write(int(popSize, kind=writeIK))
 
           case (REC_AGE_DSTRB)
-            if ((maxTimestep - timeStep) <= DEMOG_LAST_STEPS) then
+            if ((maxTimestep - timeStep) <= MODEL_AGE_DSTRB_INIT_TIMESTEP) then
               call chosenWriter%write(int(ageDistribution, kind=writeIK))
             end if
 
@@ -250,16 +246,8 @@ contains
     !!  time.
     ! ------------------------------------------------------------------------ !
     subroutine resetCountingPerTimeStep()
-      integer :: i
-
-      do i = 1, recordFlagLen
-        select case(recordFlag(i:i))
-          case(REC_DEATH)
-            deathCount(:) = 0
-          case(REC_AGE_DSTRB)
-            call resetAgeDstrb(MODEL_L)
-        end select  
-      end do
+      if (recordDeath)    deathCount(:) = 0
+      if (recordAgeDstrb) call resetAgeDstrb()
     end subroutine resetCountingPerTimeStep
   end subroutine runOneInstance
 
@@ -274,7 +262,8 @@ contains
       deathByAge,       &
       deathByMutation,  &
       deathByVerhulst,  &
-      recordDeath       &
+      recordDeath,      &
+      recordAgeDstrb    &
      )
     ! use Gene, only: personIK
     type(Population_t), intent(inout) :: population
@@ -283,6 +272,7 @@ contains
     integer, pointer,   intent(inout) :: deathByVerhulst  !! Random death
     integer,            intent(in)    :: countdown        !! Count from max time
     logical,            intent(in)    :: recordDeath      !! Record deaths
+    logical,            intent(in)    :: recordAgeDstrb   !! Record age dstrb
 
     type(Person_t), pointer :: currPerson
 
@@ -300,8 +290,11 @@ contains
       end if
 
       if (currPerson%lifeStat == ALIVE) then
-        ! Update the age demographics if it is to be recorded.
-        if (countdown <= DEMOG_LAST_STEPS) call updateAgeDstrb(currPerson%age)
+        ! Update the age distribution if it is to be recorded.
+        if (recordAgeDstrb .and. &
+            countdown <= MODEL_AGE_DSTRB_INIT_TIMESTEP) then
+          call updateAgeDstrb(currPerson%age)
+        end if
       else
         if (recordDeath) then
           ! Increment the appropriate death counter.
