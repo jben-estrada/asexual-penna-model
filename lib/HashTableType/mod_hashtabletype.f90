@@ -141,10 +141,10 @@ contains
     p_term = 1
     do i = 1, len(char)
       hash = hash + (iachar(char(i:i)))*(p_term**(i - 1))
-      hash = mod(hash, slotSize) + 1
+      hash = modulo(hash, slotSize) + 1
 
       ! Update the current term in the polynomial.
-      p_term = mod(p_term*p, slotSize)
+      p_term = modulo(p_term*p, slotSize)
     end do
   end function hash
 
