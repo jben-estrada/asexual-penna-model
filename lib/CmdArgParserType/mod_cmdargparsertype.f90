@@ -280,7 +280,7 @@ contains
       !! Program description using this module.
 
 
-    integer, parameter :: MAX_CMD_LEN = 20 ! Max length of command to display.
+    integer, parameter :: MAX_CMD_LEN = 25 ! Max length of command to display.
     integer :: i, j, getStat
 
     character(len=:), allocatable :: cmdNames(:)
@@ -340,7 +340,7 @@ contains
         end if
       end if
 
-      print "(' ', a10, a20, a)", &
+      print "(' ', a10, a25, a)", &
           shortCmd, longCmd, self % cmdUsageTable % get(cmdNames(i))
     end do
 
@@ -379,9 +379,9 @@ contains
 
     select case(cmdParser % cmdTypeTable % get(cmdName))
       case(CMD_TYPE_KEYVAL_L)
-        cmd = LONG_CMD_ID // trim(cmdName) // "=<val>"
+        cmd = LONG_CMD_ID // trim(cmdName) // "=<VAL>"
       case(CMD_TYPE_KEYVAL_S)
-        cmd = SHORT_CMD_ID // trim(cmdName) // " <val>"
+        cmd = SHORT_CMD_ID // trim(cmdName) // " <VAL>"
       case(CMD_TYPE_FLAG_L)
         cmd = LONG_CMD_ID // trim(cmdName)
       case(CMD_TYPE_FLAG_S)
