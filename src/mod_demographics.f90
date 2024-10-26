@@ -10,8 +10,14 @@ module Demographics
   use Parameters, only: MODEL_L
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
-  use StaticBitSetType, only: StaticBitSet, maskBitset, operator(==)
-  use CastProcs, only: isFinite
+  use CastProcs, only: isFinite, logicalToInt
+  use StaticBitSetType, only: &
+    StaticBitSet,      &
+    maskBitset,        &
+    hashBitSet,        &
+    bitSetHashKind,    &
+    extractBitSetData, &
+    operator(==)
   implicit none
   private
   
@@ -38,165 +44,220 @@ module Demographics
 
   ! DIVERSITY INDEX, GENOME DISTRIBUTION & BAD GENE DISTRIBUTION.
   ! -------------------------------------------------------------------------- !
-  ! Genome count. This should be equal to population size.
-  integer :: genomeCount = 0
+  type :: GenomeBin
+    !! A bin for the genome distribution containing the genome and its 
+    !! number of bearers.
 
-  type GenomeDstrbNode
-    !! Node type for genome distribution lists.
     type(StaticBitSet) :: genome
       !! The genome of this `GenomeDstrbNode` object.
-    integer            :: count = 0
+    integer            :: count
       !! Count of `Person` objects with the same value for `genome`
       !! as in this `GenomeDstrbNode` object.
+  end type GenomeBin
 
-    type(GenomeDstrbNode), pointer :: next => null()
-      !! Pointer to the element of genome distribution list.
-  end type
+  type(GenomeBin), allocatable :: genomeDstrb(:)
+    !! A set of genomes in the population with their corresponding bearer count.
+  integer :: genomeDstrbSize    = 0
+  integer :: genomeDstrbMaxSize = 0
 
-  type(GenomeDstrbNode), pointer :: genomeDstrbHead => null()
-    !! Head of the genome distribution list.
+  integer, allocatable :: genomeIdxArray(:)
+    !! Array of genome locations in the distribution for ease of iteration in
+    !! calculating the Renyi entropies: e.g. Shannon entropy.
+  integer :: genomeRichness = 0
+    !! Number of unique genomes in the population.
+    !! Also the size of `genomeIdxArray`
+  integer :: genomeIdxMaxSize = 0
 
+  ! Genome count. This should be equal to population size.
+  integer :: totalGenomeCount = 0
+  
+  integer, parameter :: INIT_GENOME_DSTRB_SIZE = 100
+  real,    parameter :: MAX_LOAD_FACTOR = 0.75
+  real,    parameter :: GROWTH_FACTOR = 1.5
+
+  public :: initGenomeDstrb
+  public :: freeGenomeDstrb
   public :: addGenomeToDstrb
   public :: delGenomeFromDstrb
-  public :: freeGenomeDstrbList
   public :: getDiversityIdx
   public :: getBadGeneDstrb
   public :: getUniqueGenomeCount
 contains
 
+
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: addGenomeToDstrb
-  !>  Add a genome to the genome distribution
+  ! SUBROUTINE: initGenomeDstrb
+  !>  Initialize the hash map, genome distribution.
+  ! -------------------------------------------------------------------------- !
+  subroutine initGenomeDstrb()
+    allocate(genomeDstrb(0: INIT_GENOME_DSTRB_SIZE - 1))
+    genomeDstrbMaxSize = INIT_GENOME_DSTRB_SIZE
+    genomeDstrbSize = 0
+
+    allocate(genomeIdxArray(INIT_GENOME_DSTRB_SIZE))
+    genomeIdxMaxSize = INIT_GENOME_DSTRB_SIZE
+    genomeRichness = 0
+  end subroutine initGenomeDstrb
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: freeGenomeDstrb
+  !>  Free the genome distribution and its content.
+  ! -------------------------------------------------------------------------- !
+  subroutine freeGenomeDstrb()
+    if (allocated(genomeDstrb)) deallocate(genomeDstrb)
+    genomeDstrbSize = 0
+    genomeDstrbMaxSize = 0
+
+    if (allocated(genomeIdxArray)) deallocate(genomeIdxArray)
+    genomeIdxMaxSize = 0
+    genomeRichness = 0
+  end subroutine freeGenomeDstrb
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: addGenomeToDstrb__
+  !>  Add a genome to the genome distribution.
   ! -------------------------------------------------------------------------- !
   subroutine addGenomeToDstrb(genome, mask)
     type(StaticBitSet), intent(in) :: genome
     logical,            intent(in) :: mask(:)
-    type(GenomeDstrbNode), pointer :: currentNode
-    type(StaticBitSet)             :: maskedGenome
+    type(StaticBitSet) :: maskedGenome
+    integer :: genomeIdx
 
-    ! Apply the mask to the input genome
+    if (real(genomeDstrbSize)/real(genomeDstrbMaxSize) > MAX_LOAD_FACTOR) then
+      call rehashGenomeDstrb(mask)
+    end if
+
     call maskBitset(genome, mask, maskedGenome)
+    genomeIdx = findGenomeIdx(maskedGenome)
 
-    currentNode => genomeDstrbHead
-    genomeDstrb: do
-      if (associated(currentNode)) then
-        if (currentNode%genome == maskedGenome) then
-          currentNode%count = currentNode%count + 1
-          exit genomeDstrb
-        else
-          currentNode => currentNode%next
-        end if
-      else
-        ! Create a new node if no match is found.
-        call prependGenomeDstrbNode(maskedGenome)
-        exit genomeDstrb
-      end if
-    end do genomeDstrb
+    ! If the genome is not yet in the distribution, initialize it.
+    if (.not.genomeDstrb(genomeIdx)%genome%isInitialized()) then      
+      ! Initialize the new entry in the distribution
+      genomeDstrb(genomeIdx)%genome = maskedGenome
+      genomeDstrb(genomeIdx)%count  = 0
+      genomeDstrbSize = genomeDstrbSize + 1
 
-    genomeCount = genomeCount + 1
+      ! Register the new genome for iterating later on.
+      genomeRichness = genomeRichness + 1
+      genomeIdxArray(genomeRichness) = genomeIdx
+    end if
+
+    genomeDstrb(genomeIdx)%count = genomeDstrb(genomeIdx)%count + 1
+    totalGenomeCount = totalGenomeCount + 1
   end subroutine addGenomeToDstrb
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: delGenomeFromDstrb
-  !>  Delete a genome from the distribution
+  !>  Delete a distribution from the genome distribution.
   ! -------------------------------------------------------------------------- !
   subroutine delGenomeFromDstrb(genome, mask)
     type(StaticBitSet), intent(in) :: genome
     logical,            intent(in) :: mask(:)
-    type(StaticBitSet)             :: maskedGenome
-    type(GenomeDstrbNode), pointer :: currentNode
-    type(GenomeDstrbNode), pointer :: prevNode
-    type(GenomeDstrbNode), pointer :: nextNode
-
-    ! Apply the mask to the input genome
+    type(StaticBitSet) :: maskedGenome
+    integer :: genomeIdx
+    
     call maskBitset(genome, mask, maskedGenome)
+    genomeIdx = findGenomeIdx(maskedGenome)
 
-    prevNode => null()
-    currentNode => genomeDstrbHead
+    if (genomeDstrb(genomeIdx)%count == 0) then
+      call raiseError(  &
+          "Cannot delete a genome from the genome distribution. " //  &
+          "The genome count is already at 0."  &
+        )
+    end if
 
-    genomeDstrb: do
-      if (associated(currentNode)) then
-        if (currentNode%genome == maskedGenome) then
-          currentNode%count = currentNode%count - 1
-
-          ! Delete the current node
-          if (currentNode%count <= 0) then
-            nextNode => currentNode%next
-            if (associated(prevNode)) &
-                prevNode%next => nextNode
-            if (associated(currentNode, genomeDstrbHead)) &
-                genomeDstrbHead => genomeDstrbHead%next
-            deallocate(currentNode)
-          end if
-
-          exit genomeDstrb
-        else
-          prevNode => currentNode
-          currentNode => currentNode%next
-        end if
-      else
-        call raiseError("Cannot find genome to remove from dstrb.")
-      end if
-    end do genomeDstrb
-
-    genomeCount = genomeCount - 1
+    genomeDstrb(genomeIdx)%count = genomeDstrb(genomeIdx)%count - 1
+    totalGenomeCount = totalGenomeCount - 1
   end subroutine delGenomeFromDstrb
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: prependGenomeDstrbNode
-  !>  Allocate new node and prepend it to the genome distribution list.
+  ! SUBROUTINE: rehashGenomeDstrb
+  !>  Rehash the genome distribution, a hash map, to increase its maximum size.
   ! -------------------------------------------------------------------------- !
-  subroutine prependGenomeDstrbNode(genome)
-    type(StaticBitSet), intent(in) :: genome
-      !! The genome the `GenomeDstrbNode` will contain.
+  subroutine rehashGenomeDstrb(mask)
+    logical, intent(in) :: mask(:)
 
-    type(GenomeDstrbNode), pointer :: new
+    type(GenomeBin), allocatable :: tempGenomeDstrb(:)
+    type(StaticBitSet) :: maskedGenome
+    integer :: newSize, genomeIdx, i
 
-    ! Allocate new node.
-    new => null()
-    allocate(new)
+    newSize = int(genomeDstrbMaxSize * GROWTH_FACTOR)
 
-    ! Initialize the new node.
-    new % genome = genome
-    new % count  = 1
-    new % next   => null()
+    if (allocated(tempGenomeDstrb)) deallocate(tempGenomeDstrb)
+    call move_alloc(genomeDstrb, tempGenomeDstrb)
+    allocate(genomeDstrb(0: newSize - 1))
+    genomeDstrbMaxSize = newSize
 
-    ! Prepend the new node to the head of the list
-    if (associated(genomeDstrbHead)) then
-      new % next => genomeDstrbHead
-    end if
+    ! Also extend the genome index array and prepare to refresh its content.
+    call extendGenomeIdxArray()
+    genomeRichness = 0
+    
+    ! Reinsert all genomes
+    do i = lbound(tempGenomeDstrb, 1), ubound(tempGenomeDstrb, 1)
+      if ( .not. tempGenomeDstrb(i)%genome%isInitialized() ) cycle
 
-    ! Update the new head
-    genomeDstrbHead => new
-  end subroutine prependGenomeDstrbNode
+      call maskBitset(tempGenomeDstrb(i)%genome, mask, maskedGenome)
+      genomeIdx = findGenomeIdx(maskedGenome)
 
+      genomeDstrb(genomeIdx)%genome = maskedGenome
+      genomeDstrb(genomeIdx)%count = tempGenomeDstrb(i)%count
 
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: freeGenomeDstrbList
-  !>  Free allocated nodes of the genome distribution list and reset counters.
-  ! -------------------------------------------------------------------------- !
-  subroutine freeGenomeDstrbList()
-    type(GenomeDstrbNode), pointer :: currentNode
-    type(GenomeDstrbNode), pointer :: deletedNode
-
-    currentNode => genomeDstrbHead
-    deletedNode => null()
-    do
-      if (associated(currentNode)) then
-        deletedNode => currentNode
-        currentNode => currentNode%next
-
-        deallocate(deletedNode)
-      else
-        exit
-      end if
+      genomeRichness = genomeRichness + 1
+      genomeIdxArray(genomeRichness) = genomeIdx
     end do
-  
-    genomeDstrbHead => null()
-    genomeCount = 0
-  end subroutine freeGenomeDstrbList
+  end subroutine rehashGenomeDstrb
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: extendGenomeIdxArray
+  !>  Extend the genome index array to accomodate more genomes.
+  ! -------------------------------------------------------------------------- !
+  subroutine extendGenomeIdxArray()
+    integer :: newSize
+
+    newSize = int(genomeIdxMaxSize * GROWTH_FACTOR)
+    deallocate(genomeIdxArray)
+    allocate(genomeIdxArray(newSize))
+
+    genomeIdxMaxSize = newSize
+  end subroutine extendGenomeIdxArray
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: findGenomeIdx
+  !>  Find the corresponding index for the input genome. The genome
+  !!  distribution hash map resolves collision by linear probing for simpler
+  !!  implementation and to ease the finalization of the genome distribition.
+  ! -------------------------------------------------------------------------- !
+  integer function findGenomeIdx(genome) result(idx)
+    type(StaticBitSet), intent(in)  :: genome
+
+    idx = int(                                          &
+        modulo(                                         &
+          hashBitSet(genome),                           &
+          int(genomeDstrbMaxSize, kind=bitSetHashKind)  &
+        )                                               &
+      )
+
+    ! Whenever a collision occurs, increase index and prob the corresponding
+    ! element for an empty slot. Do so until an empty slot is found.
+    do
+      if (genomeDstrb(idx)%genome%isInitialized()) then
+        ! Match found
+        if (genomeDstrb(idx)%genome == genome) then
+          exit
+        end if
+
+        idx = modulo(idx + 1, genomeDstrbMaxSize)
+        cycle
+      end if
+      exit
+    end do
+  end function findGenomeIdx
 
 
   ! -------------------------------------------------------------------------- !
@@ -204,55 +265,23 @@ contains
   !>  Calculate the unnormalized Shannon entropy
   ! -------------------------------------------------------------------------- !
   function getShannonEntropy() result(entropy)
-    real :: entropy
+    integer :: i, genomeIdx, genomeCount
+    real :: entropy, probability
 
-    type(GenomeDstrbNode), pointer :: reader
-    reader => genomeDstrbHead
+    ! Initialize the Shannon diversity index
+    entropy = 0.0
 
-    ! Reset the Shannon diversity index just to be sure.
-    entropy = 0
-    ! Read genome count of each node in the genome distribution list.
-    do
-      if (associated(reader)) then
-        entropy = entropy - real(reader % count)/real(genomeCount) * &
-            log(real(reader % count)/real(genomeCount))
-        ! Proceed to the next element of the genome distribution list.
-        reader => reader % next
-      else
-        exit
-      end if
+    ! Get the corresponding counts of each genomes
+    do i = 1, genomeRichness
+      genomeIdx   = genomeIdxArray(i)
+      genomeCount = genomeDstrb(genomeIdx)%count
+
+      if (genomeCount == 0) cycle
+
+      probability = real(genomeCount) / real(totalGenomeCount)
+      entropy = entropy - probability * log(probability)
     end do
   end function getShannonEntropy
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: getNormalizedShannon
-  !>  Calculate the normalized Shannon entropy
-  ! -------------------------------------------------------------------------- !
-  function getNormalizedShannon() result(entropy)
-    real :: entropy
-
-    type(GenomeDstrbNode), pointer :: reader
-    reader => genomeDstrbHead
-
-    ! Reset the Shannon diversity index just to be sure.
-    entropy = 0.0
-    ! Read genome count of each node in the genome distribution list.
-    do
-      if (associated(reader)) then
-        entropy = entropy - real(reader % count)/real(genomeCount) * &
-            log(real(reader % count)/real(genomeCount))
-
-        ! Proceed to the next element of the genome distribution list.
-        reader => reader % next
-      else
-        exit
-      end if
-    end do
-
-    ! Normalize the diversity index
-    entropy = entropy / log(real(genomeCount))
-  end function getNormalizedShannon
 
 
   ! -------------------------------------------------------------------------- !
@@ -262,13 +291,11 @@ contains
   ! -------------------------------------------------------------------------- !
   function getRenyiEntropy(alpha) result(entropy)
     real, intent(in) :: alpha
-    real :: entropy
-    real :: probabilitySum
+    
+    real    :: entropy, probabilitySum, probability
+    integer :: i, genomeIdx, genomeCount
 
     real, parameter :: zeroCmpEpsilon = 1e-6
-
-    type(GenomeDstrbNode), pointer :: reader
-    reader => genomeDstrbHead
   
     ! Initialize output
     entropy = 0.0
@@ -280,15 +307,14 @@ contains
       return
     end if
 
-    do
-      if (associated(reader)) then
-        probabilitySum = probabilitySum + &
-            (real(reader % count)/real(genomeCount)) ** alpha
-        ! Proceed to the next element of the genome distribution list.
-        reader => reader % next
-      else
-        exit
-      end if
+    do i = 1, genomeRichness
+      genomeIdx   = genomeIdxArray(i)
+      genomeCount = genomeDstrb(genomeIdx)%count
+
+      if (genomeCount == 0) cycle
+
+      probability = genomeCount / real(totalGenomeCount)
+      probabilitySum = probabilitySum + (probability ** alpha)
     end do
 
     entropy = log(probabilitySum) / (1 - alpha)
@@ -308,7 +334,7 @@ contains
     real :: diversityIdx
     
     ! If the population goes extinct, we set the diversity index to 0
-    if (genomeCount == 0) then
+    if (totalGenomeCount == 0) then
       diversityIdx = 0.0
       return
     end if
@@ -320,7 +346,8 @@ contains
       end if
     end if
 
-    diversityIdx = getNormalizedShannon()
+    ! Get the *Normalized* Shannon entropy
+    diversityIdx = getShannonEntropy() / log(real(totalGenomeCount))
   end function getDiversityIdx
 
 
@@ -330,27 +357,19 @@ contains
   ! -------------------------------------------------------------------------- !
   function getBadGeneDstrb() result(badGeneDstrb)
     integer :: badGeneDstrb(MODEL_L)
-
-    type(GenomeDstrbNode), pointer :: reader
+    integer :: genomeIntArray(MODEL_L)
+    logical :: genomeLgclArray(MODEL_L)
+    type(StaticBitSet) :: genome
     integer :: i
 
     badGeneDstrb(:) = 0
-    reader => genomeDstrbHead
 
-    do
-      if (associated(reader)) then
+    do i = lbound(genomeIdxArray, 1), ubound(genomeIdxArray, 1)
+      genome = genomeDstrb(genomeIdxArray(i))%genome
+      call extractBitSetData(genome, genomeLgclArray)
 
-        ! Count the bad genes of the current genome.
-        do i = 1, MODEL_L
-          if (reader%genome%get(i) .eqv. GENE_UNHEALTHY) &
-            badGeneDstrb(i) = badGeneDstrb(i) + reader%count
-        end do
-
-        ! Get to the next element of genome distribution list.
-        reader => reader % next
-      else
-        exit
-      end if
+      genomeIntArray = logicalToInt(genomeLgclArray)
+      badGeneDstrb(:) = badGeneDstrb(:) + genomeIntArray(:)
     end do
   end function getBadGeneDstrb
 
@@ -359,25 +378,9 @@ contains
   ! FUNCTION: getUniqueGenomeCount
   !>  Get the number of unique genomes.
   ! -------------------------------------------------------------------------- !
-  function getUniqueGenomeCount() result(uniqueGeneCount)
-    type(GenomeDstrbNode), pointer :: reader
-    integer :: uniqueGeneCount
-    
-    uniqueGeneCount = 0
-
-    reader => genomeDstrbHead
-    do
-      if (associated(reader)) then
-        uniqueGeneCount = uniqueGeneCount + 1
-
-        ! Get to the next element of genome distribution list.
-        reader => reader % next
-      else
-        exit
-      end if
-    end do
+  integer function getUniqueGenomeCount() result(uniqueGenomeCount)
+    uniqueGenomeCount = genomeRichness
   end function getUniqueGenomeCount
-
 
 
   ! -------------------------------------------------------------------------- !

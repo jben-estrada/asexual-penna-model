@@ -7,13 +7,14 @@ module StaticBitSetType
   ! DESCRIPTION:
   !>  Module containing an implementation of a static bit set.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: logical_kinds
+  use iso_fortran_env, only: logical_kinds, int64
   use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
   implicit none
   private
 
   integer, parameter :: bitSetKind = logical_kinds(1)
+  integer, parameter :: bitSetHashKind = int64
   
   type :: StaticBitSet
     private
@@ -39,6 +40,8 @@ module StaticBitSetType
       !! Get the size of the bit set.
     procedure :: changeSize => bitset_changeSize
       !! Change the size of the bit set.
+    procedure :: isInitialized => bitSet_isInitialized
+      !! Check if the bitset is initialized
     procedure :: print => bitSet_print
       !! Print the bit set.
     final :: bitSet_finalizer
@@ -58,7 +61,11 @@ module StaticBitSetType
 
   public :: StaticBitSet
   public :: maskBitset
+  public :: extractBitSetData
   public :: operator(==)
+
+  public :: bitSetHashKind
+  public :: hashBitSet
 contains
 
 
@@ -78,18 +85,18 @@ contains
   end function bitset_cnstrc
 
 
-  function bitset_cnstrc_array(boolArr) result(newBitSet)
-    logical, intent(in) :: boolArr(:)
+  function bitset_cnstrc_array(lgclArr) result(newBitSet)
+    logical, intent(in) :: lgclArr(:)
     type(StaticBitSet)  :: newBitSet
 
-    if (size(boolArr) == 0) then
+    if (size(lgclArr) == 0) then
       call raiseError("Input logical array cannot be of size 0.")
     end if
 
-    allocate( newBitSet%data(size(boolArr)) )
-    newBitSet%data(:) = boolArr(:)
+    allocate( newBitSet%data(size(lgclArr)) )
+    newBitSet%data(:) = lgclArr(:)
 
-    newBitSet%size = size(boolArr)
+    newBitSet%size = size(lgclArr)
   end function bitset_cnstrc_array
 
 
@@ -191,6 +198,12 @@ contains
   end function bitSet_count
 
 
+  logical function bitSet_isInitialized(self) result(isInit)
+    class(StaticBitSet), intent(in) :: self
+    isInit = allocated(self%data)
+  end function bitSet_isInitialized
+
+
   subroutine bitSet_print(self, lowBitChar, highBitChar, delimChar)
     class(StaticBitSet),        intent(in) :: self
     character,        optional, intent(in) :: lowBitChar
@@ -247,6 +260,29 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! FUNCTION: hashBitSet
+  !>  Take a bit set and turn it into an integer unique to it. For now, it
+  !!  just transfer the bit patterns into a 64 bit integer.
+  ! -------------------------------------------------------------------------- !
+  integer(bitSetHashKind) function hashBitSet(bitSet) result(hash)
+    type(StaticBitSet), intent(in) :: bitSet
+    integer(bitSetHashKind) :: m
+    integer :: i
+    m = 1
+    hash = 0
+
+    if (.not.bitSet_isInitialized(bitSet)) then
+      call raiseError("Hashing an uninitialized BitSet")
+    end if
+
+    do i = lbound(bitSet%data, 1), ubound(bitSet%data, 1)
+      if (bitSet%data(i)) hash = hash + m 
+      m = shiftl(m , 1)
+    end do
+  end function hashBitSet
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: maskBitset
   !>  Create a new bit set out of an exisiting bit set with a logical mask on.
   !!  Note that elements to be masked on must correspond to TRUE in the mask
@@ -269,6 +305,22 @@ contains
     tempArray(:) = srcBitset%data(:) .or. mask(:)
     destBitset = bitset_cnstrc_array(tempArray)
   end subroutine maskBitset
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: extractBitSetData
+  !>  Extract data from an input bit set as a logical array.
+  ! -------------------------------------------------------------------------- !
+  subroutine extractBitSetData(srcBitset, destArray)
+    type(StaticBitSet), intent(in)  :: srcBitset
+    logical,            intent(out) :: destArray(srcBitset%size)
+    
+    if (.not.allocated(srcBitset%data)) then
+      call raiseError("Source bitset not yet initialized.")
+    end if
+
+    destArray(:) = srcBitset%data(:)
+  end subroutine extractBitSetData
 
 
   subroutine bitSet_finalizer(self)

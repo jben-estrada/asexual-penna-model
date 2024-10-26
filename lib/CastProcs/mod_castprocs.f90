@@ -25,6 +25,7 @@ module CastProcs
   public :: castIntPtrToChar
   public :: castRealToChar
   public :: castCharToReal
+  public :: logicalToInt
   public :: isFinite
 contains
 
@@ -187,6 +188,21 @@ contains
       if (status /= 0) call raiseError("Casting real to char failed.")
     end if
   end function castRealToChar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION logicalToInt
+  !>  Transform TRUE into 1 and FALSE into 0. Being an elemental function,
+  !!  it can also accept array dummy arguments.
+  ! -------------------------------------------------------------------------- !
+  elemental integer function logicalToInt(input) result(output)
+    logical, intent(in) :: input
+    if (input) then
+      output = 1
+    else
+      output = 0
+    end if
+  end function logicalToInt
 
 
   ! -------------------------------------------------------------------------- !

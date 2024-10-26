@@ -43,7 +43,8 @@ module Penna
     resetAgeDstrb,        &
     updateAgeDstrb,       &
     deallocAgeDstrb,      &
-    freeGenomeDstrbList,  &
+    initGenomeDstrb,      &
+    freeGenomeDstrb,      &
     getDiversityIdx,      &
     getBadGeneDstrb,      &
     getUniqueGenomeCount
@@ -147,6 +148,7 @@ contains
     ! Initialization
     popSize = startPopSize
     deathCount(:) = 0
+    call initGenomeDstrb()
     call resetAgeDstrb(MODEL_L)
     population = Population_t(startPopSize, initMttnCount, recordGnmDstrb)
 
@@ -155,7 +157,7 @@ contains
     deathByMutation => deathCount(2)
     deathByVerhulst => deathCount(3)
 
-    ! Enable/disable demographics recording.
+    ! Enable/disable age distribution recording.
     if (isWriterInitialized(REC_AGE_DSTRB)) then
       DEMOG_LAST_STEPS = DEF_DEMOG_LAST_STEP
     else
@@ -197,7 +199,7 @@ contains
     end do mainLoop
 
     ! Wrap up.
-    call freeGenomeDstrbList()
+    call freeGenomeDstrb()
     call population%cleanup()
   contains
 
