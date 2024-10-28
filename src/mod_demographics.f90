@@ -52,8 +52,8 @@ module Demographics
   integer, allocatable :: genomeIdxArray(:)
     !! Array of genome locations in the distribution for ease of iteration in
     !! calculating the Renyi entropies: e.g. Shannon entropy.
-  integer :: genomeRichness = 0
-    !! Number of unique genomes in the population.
+  integer :: uniqueGenomeCount = 0
+    !! Number of active unique genomes in the population.
     !! Also the size of `genomeIdxArray`
   integer :: genomeIdxMaxSize = 0
 
@@ -85,7 +85,7 @@ contains
 
     allocate(genomeIdxArray(INIT_GENOME_DSTRB_SIZE))
     genomeIdxMaxSize = INIT_GENOME_DSTRB_SIZE
-    genomeRichness = 0
+    uniqueGenomeCount = 0
   end subroutine initGenomeDstrb
 
 
@@ -100,12 +100,12 @@ contains
 
     if (allocated(genomeIdxArray)) deallocate(genomeIdxArray)
     genomeIdxMaxSize = 0
-    genomeRichness = 0
+    uniqueGenomeCount = 0
   end subroutine freeGenomeDstrb
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: addGenomeToDstrb__
+  ! SUBROUTINE: addGenomeToDstrb
   !>  Add a genome to the genome distribution.
   ! -------------------------------------------------------------------------- !
   subroutine addGenomeToDstrb(genome, mask)
@@ -129,8 +129,8 @@ contains
       genomeDstrbSize = genomeDstrbSize + 1
 
       ! Register the new genome for iterating later on.
-      genomeRichness = genomeRichness + 1
-      genomeIdxArray(genomeRichness) = genomeIdx
+      uniqueGenomeCount = uniqueGenomeCount + 1
+      genomeIdxArray(uniqueGenomeCount) = genomeIdx
     end if
 
     genomeDstrb(genomeIdx)%count = genomeDstrb(genomeIdx)%count + 1
@@ -183,7 +183,7 @@ contains
 
     ! Also extend the genome index array and prepare to refresh its content.
     call extendGenomeIdxArray()
-    genomeRichness = 0
+    uniqueGenomeCount = 0
     
     ! Reinsert all genomes
     do i = lbound(tempGenomeDstrb, 1), ubound(tempGenomeDstrb, 1)
@@ -195,8 +195,8 @@ contains
       genomeDstrb(genomeIdx)%genome = maskedGenome
       genomeDstrb(genomeIdx)%count = tempGenomeDstrb(i)%count
 
-      genomeRichness = genomeRichness + 1
-      genomeIdxArray(genomeRichness) = genomeIdx
+      uniqueGenomeCount = uniqueGenomeCount + 1
+      genomeIdxArray(uniqueGenomeCount) = genomeIdx
     end do
   end subroutine rehashGenomeDstrb
 
@@ -261,7 +261,7 @@ contains
     entropy = 0.0
 
     ! Get the corresponding counts of each genomes
-    do i = 1, genomeRichness
+    do i = 1, uniqueGenomeCount
       genomeIdx   = genomeIdxArray(i)
       genomeCount = genomeDstrb(genomeIdx)%count
 
@@ -296,7 +296,7 @@ contains
       return
     end if
 
-    do i = 1, genomeRichness
+    do i = 1, uniqueGenomeCount
       genomeIdx   = genomeIdxArray(i)
       genomeCount = genomeDstrb(genomeIdx)%count
 
@@ -353,7 +353,7 @@ contains
 
     badGeneDstrb(:) = 0
 
-    do i = 1, genomeRichness
+    do i = 1, uniqueGenomeCount
       genome = genomeDstrb(genomeIdxArray(i))%genome
       call extractBitSetData(genome, genomeLgclArray)
 
@@ -367,8 +367,13 @@ contains
   ! FUNCTION: getUniqueGenomeCount
   !>  Get the number of unique genomes.
   ! -------------------------------------------------------------------------- !
-  integer function getUniqueGenomeCount() result(uniqueGenomeCount)
-    uniqueGenomeCount = genomeRichness
+  integer function getUniqueGenomeCount() result(result)
+    integer :: i, genomeIdx
+    result = 0
+    do i = 1, uniqueGenomeCount
+      genomeIdx = genomeIdxArray(i)
+      if (genomeDstrb(genomeIdx)%count > 0) result = result + 1
+    end do
   end function getUniqueGenomeCount
 
 
