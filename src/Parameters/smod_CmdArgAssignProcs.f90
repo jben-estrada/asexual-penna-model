@@ -34,34 +34,49 @@ submodule (Parameters) CmdArgAssignProcs
       !! Pointer to the real parameter `cmdName` modifies
   end type
 
-
-  ! All commands.
+  ! Command line arguments
   ! -------------------------------------------------------------------------- !
-  type(CmdArgRecord), target :: cmdArgArr(21)
-  ! Model parameters.
-  type(CmdArgRecord), pointer :: mttnThreshold_kv => cmdArgArr(1)
-  type(CmdArgRecord), pointer :: birthRate_kv     => cmdArgArr(2)
-  type(CmdArgRecord), pointer :: mttnRate_kv      => cmdArgArr(3)
-  type(CmdArgRecord), pointer :: reprAgeMin_kv    => cmdArgArr(4)
-  type(CmdArgRecord), pointer :: reprAgeMax_kv    => cmdArgArr(5)
-  type(CmdArgRecord), pointer :: carryingCap_kv   => cmdArgArr(6)
-  type(CmdArgRecord), pointer :: mttnInitCount_kv => cmdArgArr(7)
-  type(CmdArgRecord), pointer :: initPopSize_kv   => cmdArgArr(8)
-  type(CmdArgRecord), pointer :: timeStepMax_kv   => cmdArgArr(9)
-  type(CmdArgRecord), pointer :: entropyOrder_kv  => cmdArgArr(10)
-  type(CmdArgRecord), pointer :: ageDstrbTime_kv  => cmdArgArr(11)
+  ! Array of all commands
+  type(CmdArgRecord) :: cmdArgArr(21)
 
+  ! Model parameters.
+  integer, parameter :: IDX_MTTN_THRESHOLD_KV  = 1
+  integer, parameter :: IDX_BIRTH_RATE_KV      = 2
+  integer, parameter :: IDX_MTTN_RATE_KV       = 3
+  integer, parameter :: IDX_R_AGE_MIN_KV       = 4
+  integer, parameter :: IDX_R_AGE_MAX_KV       = 5
+  integer, parameter :: IDX_MAX_POP_SIZE_KV    = 6
+  integer, parameter :: IDX_INIT_MTTN_COUNT_KV = 7   ! special values: -1, 0
+  integer, parameter :: IDX_INIT_POP_SIZE_KV   = 8
+  integer, parameter :: IDX_MAX_TIME_STEP_KV   = 9
+  integer, parameter :: IDX_ENTROPY_ORDER_KV   = 10  ! can be any floats
+  integer, parameter :: IDX_AGE_DSTRB_TIME_KV  = 11
+  
   ! Program parameters.
-  type(CmdArgRecord), pointer :: sampleSize_kv    => cmdArgArr(12)
-  type(CmdArgRecord), pointer :: recordData_kv    => cmdArgArr(13)
-  type(CmdArgRecord), pointer :: rngChoice_kv     => cmdArgArr(14)
-  type(CmdArgRecord), pointer :: rngSeed_kv       => cmdArgArr(15)
-  type(CmdArgRecord), pointer :: paramFilePath_kv => cmdArgArr(16)
-  type(CmdArgRecord), pointer :: outFilePath_kv   => cmdArgArr(17)
-  type(CmdArgRecord), pointer :: showParam_f      => cmdArgArr(18)
-  type(CmdArgRecord), pointer :: noParam_f        => cmdArgArr(19)
-  type(CmdArgRecord), pointer :: showVersion_f    => cmdArgArr(20)
-  type(CmdArgRecord), pointer :: csvFormat_f      => cmdArgArr(21)
+  integer, parameter :: IDX_SAMPLE_SIZE_KV     = 12
+  integer, parameter :: IDX_RECORD_DATA_KV     = 13  ! String-valued command
+  integer, parameter :: IDX_RNG_CHOICE_KV      = 14  ! Special constraint value
+  integer, parameter :: IDX_RNG_SEED_KV        = 15  ! Any integer
+  integer, parameter :: IDX_PARAM_FILE_PATH_KV = 16  ! String-valued command
+  integer, parameter :: IDX_OUT_FILE_PATH_KV   = 17  ! String-valued command
+  integer, parameter :: IDX_SHOW_PARAM_F       = 18
+  integer, parameter :: IDX_NO_PARAM_F         = 19
+  integer, parameter :: IDX_SHOW_VERSION_F     = 20
+  integer, parameter :: IDX_CSV_FORMAT_F       = 21
+
+  ! Commands whose value must be positive integers.
+  integer, parameter :: CMD_POSITIVE_INT(*) = [ &
+    IDX_MTTN_THRESHOLD_KV, &
+    IDX_BIRTH_RATE_KV,     &
+    IDX_MTTN_RATE_KV,      &
+    IDX_R_AGE_MIN_KV,      &
+    IDX_R_AGE_MAX_KV,      &
+    IDX_MAX_POP_SIZE_KV,   &
+    IDX_INIT_POP_SIZE_KV,  &
+    IDX_MAX_TIME_STEP_KV,  &
+    IDX_AGE_DSTRB_TIME_KV, &
+    IDX_SAMPLE_SIZE_KV     &
+  ]
 contains
 
 
@@ -75,80 +90,108 @@ contains
     integer :: i
 
     ! Model parameters.
-    mttnThreshold_kv = CmdArgRecord("T", "mttn-lim", KV_S, KV_L, &
-      "Mutation threshold.")
-    birthRate_kv     = CmdArgRecord("B", "birth-rate", KV_S, KV_L, &
-      "Birth rate.")
-    mttnRate_kv      = CmdArgRecord("M", "mttn-rate", KV_S, KV_L, &
-      "Mutation rate.")
-    reprAgeMin_kv    = CmdArgRecord("r", "r-age-min", KV_S, KV_L, &
-      "Minimum reproduction age.")
-    reprAgeMax_kv    = CmdArgRecord("R", "r-age-max", KV_S, KV_L, &
-      "Maximum reproduction age.")
-    carryingCap_kv   = CmdArgRecord("K", "pop-cap", KV_S, KV_L, &
-      "Carrying capacity.")
-    mttnInitCount_kv = CmdArgRecord("m", "init-mttn", KV_S, KV_L, &
-      "Initial mutation count per individual.")
-    initPopSize_kv   = CmdArgRecord("p", "pop-size", KV_S, KV_L, &
-      "Initial population size.")
-    timeStepMax_kv   = CmdArgRecord("t", "time-step", KV_S, KV_L, &
-      "Maximum time step.")
-    entropyOrder_kv  = CmdArgRecord("O", "ent-order", KV_S, KV_L, &
-      "Renyi entropy order.")
-    ageDstrbTime_kv  = CmdArgRecord("a", "age-dstrb-time", KV_S, KV_L, &
-      "Age distribution time step till the final time step.")
+    cmdArgArr(IDX_MTTN_THRESHOLD_KV) = CmdArgRecord(      &
+        "T", "mttn-lim", KV_S, KV_L, "Mutation threshold" &
+      )
+    cmdArgArr(IDX_BIRTH_RATE_KV) = CmdArgRecord(     &
+        "B", "birth-rate", KV_S, KV_L, "Birth rate"  &
+      )
+    cmdArgArr(IDX_MTTN_RATE_KV) = CmdArgRecord(        &
+        "M", "mttn-rate", KV_S, KV_L, "Mutation rate"  &
+      )
+    cmdArgArr(IDX_R_AGE_MIN_KV) = CmdArgRecord(                  &
+        "r", "r-age-min", KV_S, KV_L, "Minimum reproduction age" &
+      )
+    cmdArgArr(IDX_R_AGE_MAX_KV) = CmdArgRecord(                   &
+        "R", "r-age-max", KV_S, KV_L, "Maximum reproduction age"  &
+      )
+    cmdArgArr(IDX_MAX_POP_SIZE_KV) = CmdArgRecord(       &
+        "K", "pop-cap", KV_S, KV_L, "Carrying capacity"  &
+      )
+    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) = CmdArgRecord(                          &
+        "m", "init-mttn", KV_S, KV_L, "Initial mutation count per individual"  &
+      )
+    cmdArgArr(IDX_INIT_POP_SIZE_KV) = CmdArgRecord(             &
+        "p", "pop-size", KV_S, KV_L, "Initial population size"  &
+      )
+    cmdArgArr(IDX_MAX_TIME_STEP_KV) = CmdArgRecord(        &
+        "t", "time-step", KV_S, KV_L, "Maximum time step"  &
+      )
+    cmdArgArr(IDX_ENTROPY_ORDER_KV) = CmdArgRecord(          &
+        "O", "ent-order", KV_S, KV_L, "Renyi entropy order"  &
+      )
+    cmdArgArr(IDX_AGE_DSTRB_TIME_KV) = CmdArgRecord(          &
+        "a", "age-dstrb-time", KV_S, KV_L,                    &
+        "Age distribution time step till the final time step" &
+      )
 
     ! Program parameters.
-    sampleSize_kv    = CmdArgRecord("s", "sample-size", KV_S, KV_L, &
-      "Sample size.")
-    recordData_kv    = CmdArgRecord("d", "record-data", KV_S, KV_L, &
-      "Record data. See 'notes' below for recordable data set.")
-    rngChoice_kv     = CmdArgRecord("g", "rng-choice", KV_S, KV_L, &
-      "Choice of pseduo-RNG. See 'notes' below for available RNGs.")
-    rngSeed_kv       = CmdArgRecord("S", "rng-seed", KV_S, KV_L, &
-      "RNG seed. Must be integer.")
-    paramFilePath_kv = CmdArgRecord("f", "param-file", KV_S, KV_L, &
-      "Path to the file containing the default parameter listing.")
-    outFilePath_kv   = CmdArgRecord("o", "out", KV_S, KV_L, &
-      "Path to file data is to be written in.")
-    showParam_f      = CmdArgRecord("v", "verbose", FLAG_S, FLAG_L, &
-      "Show all parameters.")
-    noParam_f        = CmdArgRecord("q", "quiet", FLAG_S, FLAG_L, &
-      "Print nothing when running this program.")
-    showVersion_f    = CmdArgRecord("V", "version", FLAG_S, FLAG_L, &
-      "Show the version of this program.")
-    csvFormat_f      = CmdArgRecord("c", "csv-format", FLAG_S, FLAG_L, &
-      "Set the output files to be in CSV format.")
+    cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord(      &
+        "s", "sample-size", KV_S, KV_L, "Sample size"  &
+      )
+    cmdArgArr(IDX_RECORD_DATA_KV) = CmdArgRecord(                 &
+        "d", "record-data", KV_S, KV_L,                           &
+        "Record data. See 'notes' below for recordable data set"  &
+      )
+    cmdArgArr(IDX_RNG_CHOICE_KV) = CmdArgRecord(                      &
+        "g", "rng-choice", KV_S, KV_L,                                &
+        "Choice of pseduo-RNG. See 'notes' below for available RNGs"  &
+      )
+    cmdArgArr(IDX_RNG_SEED_KV) = CmdArgRecord(                    &
+        "S", "rng-seed", KV_S, KV_L, "RNG seed. Must be integer"  &
+      )
+    cmdArgArr(IDX_PARAM_FILE_PATH_KV) = CmdArgRecord(                &
+        "f", "param-file", KV_S, KV_L,                               &
+        "Path to the file containing the default parameter listing"  &
+      )
+    cmdArgArr(IDX_OUT_FILE_PATH_KV) = CmdArgRecord(                      &
+        "o", "out", KV_S, KV_L, "Path to file data is to be written in"  &
+      )
+    cmdArgArr(IDX_SHOW_PARAM_F) = CmdArgRecord(              &
+      "v", "verbose", FLAG_S, FLAG_L, "Show all parameters"  &
+    )
+    cmdArgArr(IDX_NO_PARAM_F) = CmdArgRecord(      &
+        "q", "quiet", FLAG_S, FLAG_L,              &
+        "Print nothing when running this program"  &
+      )
+    cmdArgArr(IDX_SHOW_VERSION_F) = CmdArgRecord(                           &
+        "V", "version", FLAG_S, FLAG_L, "Show the version of this program"  &
+      )
+    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord(     &
+        "c", "csv-format", FLAG_S, FLAG_L,          &
+        "Set the output files to be in CSV format"  &
+      )
 
     ! Assign pointers.
-    mttnThreshold_kv % intValue_ptr  => MODEL_T
-    birthRate_kv     % intValue_ptr  => MODEL_B
-    mttnRate_kv      % intValue_ptr  => MODEL_M
-    reprAgeMin_kv    % intValue_ptr  => MODEL_R
-    reprAgeMax_kv    % intValue_ptr  => MODEL_R_MAX
-    carryingCap_kv   % intValue_ptr  => MODEL_K
-    mttnInitCount_kv % intValue_ptr  => MODEL_MTTN_COUNT
-    initPopSize_kv   % intValue_ptr  => MODEL_START_POP_SIZE
-    timeStepMax_kv   % intValue_ptr  => MODEL_TIME_STEPS
-    entropyOrder_kv  % realValue_ptr => MODEL_ENTROPY_ORDER
-    ageDstrbTime_kv  % intValue_ptr  => MODEL_AGE_DSTRB_INIT_TIMESTEP
+    cmdArgArr(IDX_MTTN_THRESHOLD_KV)  % intValue_ptr  => MODEL_T
+    cmdArgArr(IDX_BIRTH_RATE_KV)      % intValue_ptr  => MODEL_B
+    cmdArgArr(IDX_MTTN_RATE_KV)       % intValue_ptr  => MODEL_M
+    cmdArgArr(IDX_R_AGE_MIN_KV)       % intValue_ptr  => MODEL_R
+    cmdArgArr(IDX_R_AGE_MAX_KV)       % intValue_ptr  => MODEL_R_MAX
+    cmdArgArr(IDX_MAX_POP_SIZE_KV)    % intValue_ptr  => MODEL_K
+    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) % intValue_ptr  => MODEL_MTTN_COUNT
+    cmdArgArr(IDX_INIT_POP_SIZE_KV)   % intValue_ptr  => MODEL_START_POP_SIZE
+    cmdArgArr(IDX_MAX_TIME_STEP_KV)   % intValue_ptr  => MODEL_TIME_STEPS
+    cmdArgArr(IDX_ENTROPY_ORDER_KV)   % realValue_ptr => MODEL_ENTROPY_ORDER
+    cmdArgArr(IDX_AGE_DSTRB_TIME_KV)  % intValue_ptr  &
+      => MODEL_AGE_DSTRB_INIT_TIMESTEP
 
-    sampleSize_kv % intValue_ptr => PROG_SAMPLE_SIZE
-    rngChoice_kv  % intValue_ptr => PROG_RNG
-    rngSeed_kv    % intValue_ptr => PROG_RNG_SEED
+    cmdArgArr(IDX_SAMPLE_SIZE_KV) % intValue_ptr => PROG_SAMPLE_SIZE
+    cmdArgArr(IDX_RNG_CHOICE_KV)  % intValue_ptr => PROG_RNG
+    cmdArgArr(IDX_RNG_SEED_KV)    % intValue_ptr => PROG_RNG_SEED
 
-    recordData_kv    % charValue_ptr => PROG_REC_FLAG
-    paramFilePath_kv % charValue_ptr => FILE_PARAM_LIST
-    outFilePath_kv   % charValue_ptr => PROG_OUT_FILE_NAME
+    cmdArgArr(IDX_RECORD_DATA_KV)     % charValue_ptr => PROG_REC_FLAG
+    cmdArgArr(IDX_PARAM_FILE_PATH_KV) % charValue_ptr => FILE_PARAM_LIST
+    cmdArgArr(IDX_OUT_FILE_PATH_KV)   % charValue_ptr => PROG_OUT_FILE_NAME
 
     ! Set all initialized commands in this routine.
-    do i = 1, size(cmdArgArr)
-      call pennaCmdArgs % setCmd( &
-        cmdArgArr(i) % cmdName,     &
-        cmdArgArr(i) % cmdType,     &
-        cmdArgArr(i) % usageTxt,    &
-        cmdArgArr(i) % cmdAlias,    &
-        cmdArgArr(i) % cmdAliasType &
+    do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
+      call pennaCmdArgs%setCmd(     &
+          cmdArgArr(i)%cmdName,     &
+          cmdArgArr(i)%cmdType,     &
+          cmdArgArr(i)%usageTxt,    &
+          cmdArgArr(i)%cmdAlias,    &
+          cmdArgArr(i)%cmdAliasType &
         )
     end do
   end subroutine initCmdArgRecs
@@ -165,7 +208,7 @@ contains
     pennaCmdArgs = CmdArgParser()
     call initCmdArgRecs(pennaCmdArgs)
 
-    call pennaCmdArgs % readCmdArgs()
+    call pennaCmdArgs%readCmdArgs()
 
     ! Prefix to file name the relative path to the program executable.
     ! The default parameter file is in the same directory as the executable.
@@ -174,14 +217,19 @@ contains
     ! Check if the help message is to be printed. Printing the help message has
     ! precendence over initialization of program to help first-time users to
     ! troubleshoot problems.
-    if (pennaCmdArgs % isFlagToggled("help")) then
+    if (pennaCmdArgs%isFlagToggled("help")) then
       call printHelpAndNotesMsgs(pennaCmdArgs)
     end if
 
-    ! Get the flle path for the parameter listing file.
-    if (pennaCmdArgs % hasValue(paramFilePath_kv % cmdName)) then
-      paramFilePath_kv % charValue_ptr = &
-        pennaCmdArgs % getCmdValue(paramFilePath_kv % cmdName)
+    ! Get the file path for the parameter listing file.
+    if (                                                   &
+          pennaCmdArgs%hasValue(                         &
+              cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName  &
+          )                                                &
+        ) then
+
+      cmdArgArr(IDX_PARAM_FILE_PATH_KV)%charValue_ptr = &
+        pennaCmdArgs%getCmdValue(cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName)
     end if
 
     ! Read the model parameters from the config files.
@@ -189,6 +237,8 @@ contains
 
     ! Assign the parameters obtained from command arguments.
     call assignUserProvidedParams(pennaCmdArgs)
+
+    call checkValidParams(pennaCmdArgs)
   end subroutine setParams
 
   
@@ -234,51 +284,51 @@ contains
     type(CmdArgRecord) :: currCmdArg
     integer :: i, castStat
 
-    do i = 1, size(cmdArgArr)
+    do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
       currCmdArg = cmdArgArr(i)
 
       ! Handle key-value commands.
-      if (currCmdArg % cmdType == KV_L .or. currCmdArg % cmdType == KV_S) then
-        if (associated(currCmdArg % intValue_ptr)) then
+      if (currCmdArg%cmdType == KV_L .or. currCmdArg%cmdType == KV_S) then
+        if (associated(currCmdArg%intValue_ptr)) then
           ! Check if the current key-value command has a value.
-          if (pennaCmdArgs % hasValue(currCmdArg % cmdName)) then
+          if (pennaCmdArgs%hasValue(currCmdArg%cmdName)) then
             ! Get value and cast it to integer.
-            currCmdArg % intValue_ptr = castCharToInt( &
-              pennaCmdArgs % getCmdValue(currCmdArg % cmdName), castStat &
+            currCmdArg%intValue_ptr = castCharToInt( &
+              pennaCmdArgs%getCmdValue(currCmdArg%cmdName), castStat &
             )
             ! Check casting status.
             if (castStat /= 0) then
               ! NOTE: Recall that `cmdName`s are short commands while
               ! `cmdAlias`s are long ones.
               call raiseError( &
-                "Invalid value for '-" // currCmdArg % cmdName // &
-                "' or '--" // currCmdArg % cmdAlias // "'. Must be integer." &
+                "Invalid value for '-" // currCmdArg%cmdName // &
+                "' or '--" // currCmdArg%cmdAlias // "'. Must be integer." &
                 )
             end if
           end if
         
-        else if (associated(currCmdArg % realValue_ptr)) then
+        else if (associated(currCmdArg%realValue_ptr)) then
           ! Check if the current key-value command has a value.
-          if (pennaCmdArgs % hasValue(currCmdArg % cmdName)) then
+          if (pennaCmdArgs%hasValue(currCmdArg%cmdName)) then
             ! Get the value and cast it to real
-            currCmdArg % realValue_ptr = castCharToReal( &
-              pennaCmdArgs % getCmdValue(currCmdArg % cmdName), castStat &
+            currCmdArg%realValue_ptr = castCharToReal( &
+              pennaCmdArgs%getCmdValue(currCmdArg%cmdName), castStat &
             )
 
             ! Check casting status
             if (castStat /= 0) then
               call raiseError( &
-                "Invalid value for '-" // currCmdArg % cmdName // &
-                "' or '--" // currCmdArg % cmdAlias // "'. Must be real." &
+                "Invalid value for '-" // currCmdArg%cmdName // &
+                "' or '--" // currCmdArg%cmdAlias // "'. Must be real." &
               )
             end if
           end if
 
-        else if (associated(currCmdArg % charValue_ptr)) then
+        else if (associated(currCmdArg%charValue_ptr)) then
           ! Check if the current key-value command has a value.
-          if (pennaCmdArgs % hasValue(currCmdArg % cmdName)) then
-            currCmdArg % charValue_ptr = &
-              pennaCmdArgs % getCmdValue(currCmdArg % cmdName)
+          if (pennaCmdArgs%hasValue(currCmdArg%cmdName)) then
+            currCmdArg%charValue_ptr = &
+              pennaCmdArgs%getCmdValue(currCmdArg%cmdName)
           end if
 
         else
@@ -291,34 +341,64 @@ contains
 
       ! Handle flag commands.
       else
-        ! NOTE: Apparently using `select case` on this one does not work.
-        if (currCmdArg % cmdName == showParam_f % cmdName) then
-          if (pennaCmdArgs % isFlagToggled(showParam_f % cmdName)) then
+
+        ! === Verbose print flag ============================================= !
+        if (                                       &
+            currCmdArg%cmdName ==                  &
+              cmdArgArr(IDX_SHOW_PARAM_F)%cmdName  &
+            ) then
+          if (                                         &
+                pennaCmdArgs%isFlagToggled(            &
+                  cmdArgArr(IDX_SHOW_PARAM_F)%cmdName  &
+                )                                      &
+              ) then
             PROG_PRINT_STATE = VERBOSE_PRINT
           end if
 
-        else if (currCmdArg % cmdName == noParam_f % cmdName) then
-          if (pennaCmdArgs % isFlagToggled(noParam_f % cmdName)) then
+          ! === Silent print flag ============================================ !
+        else if (                                  &
+              currCmdArg%cmdName ==                &
+                cmdArgArr(IDX_NO_PARAM_F)%cmdName  &
+            ) then
+          if (                                       &
+                pennaCmdArgs%isFlagToggled(          &
+                  cmdArgArr(IDX_NO_PARAM_F)%cmdName  &
+                )                                    &
+              ) then
             PROG_PRINT_STATE = SILENT_PRINT
           end if
 
-        else if (currCmdArg % cmdName == showVersion_f % cmdName) then
-          if (pennaCmdArgs % isFlagToggled(showVersion_f % cmdName)) then
+        ! === Print version flag ============================================= !
+        else if (                                    &
+              currCmdArg%cmdName ==                  &
+              cmdArgArr(IDX_SHOW_VERSION_F)%cmdName  &
+            ) then
+          if (                                            &
+                pennaCmdArgs%isFlagToggled(               &
+                  cmdArgArr(IDX_SHOW_VERSION_F)%cmdName   &
+                )                                         &
+              ) then
             PROG_PRINT_STATE = VERSION_PRINT
           end if
 
-        else if (currCmdArg % cmdName == csvFormat_f % cmdName) then
-          PROG_IN_CSV_FMT = pennaCmdArgs % isFlagToggled(csvFormat_f % cmdName)
+        ! === CSV Format flag ================================================ !
+        else if (                                    &
+              currCmdArg%cmdName ==                  &
+              cmdArgArr(IDX_CSV_FORMAT_F)%cmdName  &
+            ) then
+          PROG_IN_CSV_FMT = (                          &
+              pennaCmdArgs%isFlagToggled(              &
+                cmdArgArr(IDX_CSV_FORMAT_F)%cmdName  &
+              )                                        &
+          )
 
         else
           call raiseError( &
-              "Unknown flag command '" //  currCmdArg % cmdName // "'." &
+              "Unknown flag command '" //  currCmdArg%cmdName // "'." &
             )
         end  if
       end if
     end do
-
-    call checkValidParams(pennaCmdArgs)
   end subroutine assignUserProvidedParams
 
 
@@ -328,19 +408,50 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine checkValidParams(pennaCmdArgs)
     type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+    type(CmdArgRecord) :: cmdArg
 
     logical :: printNoParam, printAllParam
+    integer :: i
 
-    printNoParam = pennaCmdArgs % isFlagToggled(noParam_f % cmdName)
-    printAllParam = pennaCmdArgs % isFlagToggled(showParam_f % cmdName)
+    printNoParam = (                           &
+          pennaCmdArgs%isFlagToggled(          &
+            cmdArgArr(IDX_NO_PARAM_F)%cmdName  &
+          )                                    &
+      )
+    printAllParam = (                                                        &
+          pennaCmdArgs%isFlagToggled(cmdArgArr(IDX_SHOW_PARAM_F)%cmdName)  &
+      )
 
-    ! Check invalid combination of flags.
+    ! Check invalid combination of toggle options.
     if (printNoParam .and. printAllParam) then
-
       call raiseError( &
         "Flag options for verbose print and silent print cannot be chosen " // &
         "together." &
       )
+    end if
+
+    ! Check for invalid positive integer arguments.
+    do i = lbound(CMD_POSITIVE_INT, 1), ubound(CMD_POSITIVE_INT, 1)
+      cmdArg = cmdArgArr(CMD_POSITIVE_INT(i))
+      if (cmdArg%intValue_ptr <= 0) then
+        call raiseError(                                       &
+            "Invalid value for '" // trim(cmdArg%usageTxt ) // &
+            "' (="// castIntToChar(cmdArg%intValue_ptr) //     &
+            "). Must be a positive integer."                   &
+          )
+      end if
+    end do
+
+    
+    if (cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%intValue_ptr < -1) then
+      cmdArg = cmdArgArr(IDX_INIT_MTTN_COUNT_KV)
+      call raiseError(                                     &
+          "Invalid value for " //                          &
+          "'Initial mutation count per individual'. (=" // &
+          castIntToChar(cmdArg%intValue_ptr)            // &
+          "Must be either a non-negative integer or "   // &
+          "-1 (for the fully random case)"                 &
+        )
     end if
   end subroutine checkValidParams
 
@@ -380,18 +491,19 @@ contains
     allocate(character(len=0) :: progName)
     progName = getProgName()
 
-    call pennaCmdArgs % printHelp(progName, PROG_DESC)
+    call pennaCmdArgs%printHelp(progName, PROG_DESC)
 
     ! Print the additional notes.
     print "(/a)", "Notes:"
     print "(' - ', 5(a)/, '  ', *(a))",                                      &
       "Negative values for initial mutation count (-",                       &
-      mttnInitCount_kv % cmdName, " / --", mttnInitCount_kv % cmdAlias, ")", &
+      cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " / --",                    &
+      cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdAlias, ")",                       &
       " are interpreted as random initial mutation count for each of the ",  &
       "individuals."
     print "(' - ', *(a))",                                     &
-      "Valid character values for -", recordData_kv % cmdName, &
-      " or --", recordData_kv % cmdAlias
+      "Valid character values for -", cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, &
+      " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias
     write(*, "(8(4(' '), a/))", advance="no")                                  &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
@@ -403,16 +515,16 @@ contains
       "c - Number of unique genome counts per time step."
 
     print "(' - ', *(a))",                                  &
-      "Valid real values for -", entropyOrder_kv % cmdName, &
-      " or --", entropyOrder_kv % cmdAlias
+      "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
+      " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias
     write(*, "(3(4(' '), a/))", advance="no")       &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
       "Other reals            - Renyi entropy"
 
     print "(' - ', *(a))",                                  &
-      "Valid integer values for -", rngChoice_kv % cmdName, &
-      " or --", rngChoice_kv % cmdAlias
+      "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
+      " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias
     write(*, "(2(4(' '), a/))", advance="no")                    &
       "0 - xoshiro256** pseudo-RNG (GNU Fortran intrinsic RNG)", &
       "1 - Mersenne twister (MT19937) pseudo-RNG"
@@ -529,13 +641,13 @@ contains
     ! Free all allocatable attributes of all `CmdArgRecord` objects.
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
       ! Free allocatable character attributes.
-      if (allocated(cmdArgArr(i) % cmdName)) deallocate(cmdArgArr(i) % cmdName)
-      if (allocated(cmdArgArr(i) % cmdAlias)) deallocate(cmdArgArr(i) %cmdAlias)
-      if (allocated(cmdArgArr(i) % usageTxt)) deallocate(cmdArgArr(i) %usageTxt)
+      if (allocated(cmdArgArr(i)%cmdName)) deallocate(cmdArgArr(i)%cmdName)
+      if (allocated(cmdArgArr(i)%cmdAlias)) deallocate(cmdArgArr(i)%cmdAlias)
+      if (allocated(cmdArgArr(i)%usageTxt)) deallocate(cmdArgArr(i)%usageTxt)
 
       ! Nullify pointer attributes.
-      cmdArgArr(i) % charValue_ptr => null()
-      cmdArgArr(i) % intValue_ptr => null()
+      cmdArgArr(i)%charValue_ptr => null()
+      cmdArgArr(i)%intValue_ptr => null()
     end do
   end subroutine freeParamAlloctbls
 end submodule CmdArgAssignProcs
