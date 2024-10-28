@@ -301,7 +301,9 @@ contains
       call self%deadPopMask%changeSize(int(self%futureEndIdx * GROWTH_FACTOR))
     end if
 
-    call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
+    if (self%futureEndIdx > 0) then
+      call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
+    end if
   end subroutine population_endCurrStep
 
 
