@@ -353,7 +353,7 @@ contains
 
     badGeneDstrb(:) = 0
 
-    do i = lbound(genomeIdxArray, 1), ubound(genomeIdxArray, 1)
+    do i = 1, genomeRichness
       genome = genomeDstrb(genomeIdxArray(i))%genome
       call extractBitSetData(genome, genomeLgclArray)
 
