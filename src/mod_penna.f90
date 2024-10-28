@@ -257,13 +257,13 @@ contains
   !>  Evaluate the population for one time step.
   ! -------------------------------------------------------------------------- !
   subroutine evalPopulation( &
-      population,       &
-      countdown,        &
-      deathByAge,       &
-      deathByMutation,  &
-      deathByVerhulst,  &
-      recordDeath,      &
-      recordAgeDstrb    &
+        population,          &
+        countdown,           &
+        deathByAge,          &
+        deathByMutation,     &
+        deathByVerhulst,     &
+        recordDeath,         &
+        recordAgeDstrb       &
      )
     ! use Gene, only: personIK
     type(Population_t), intent(inout) :: population

@@ -295,7 +295,8 @@ contains
     self%popSize = self%popSize - self%deadPopSize
     self%deadPopSize = 0
 
-    ! Expand the dead population mask with a bit of leeway
+    ! Expand the dead population mask if it gets full. The mask does not
+    ! contract in size with the population size.
     deadPopMaskCurrSize = self%deadPopMask%getSize()
     if (self%futureEndIdx > deadPopMaskCurrSize) then
       call self%deadPopMask%changeSize(int(self%futureEndIdx * GROWTH_FACTOR))
@@ -312,22 +313,22 @@ contains
   !>  Remove dead individuals as indicated by the logical mask `deadPopMask`
   !!  by overwriting the spaces they occupied with the alive ones.
   ! -------------------------------------------------------------------------- !
-  subroutine removeDeadPersons(popObj)
-    class(Population_t), intent(inout) :: popObj
+  subroutine removeDeadPersons(self)
+    class(Population_t), intent(inout) :: self
     integer :: i
     integer :: deathCount
     logical :: currPersonIsDead
 
     ! Remove dead individuals that were evaluated in the current time step.
     deathCount = 0
-    do i = 1, popObj%futureEndIdx
+    do i = 1, self%futureEndIdx
       currPersonIsDead = .false.
-      if (i <= popObj%endIdx) then
-        currPersonIsDead = popObj%deadPopMask%get(i) .eqv. MASK_DEAD
+      if (i <= self%endIdx) then
+        currPersonIsDead = self%deadPopMask%get(i) .eqv. MASK_DEAD
 
         if (currPersonIsDead) then
           deathCount = deathCount + 1
-          call freePersonPtr(popObj%population(i))
+          call freePersonPtr(self%population(i))
         end if
       end if
 
@@ -335,16 +336,15 @@ contains
       ! occupied.
       if (deathCount > 0 .and. .not.currPersonIsDead) then
         if (i - deathCount >= 1) then
-          popObj%population(i - deathCount)%person => &
-              popObj%population(i)%person
+          self%population(i - deathCount)%person => self%population(i)%person
         end if
-        popObj%population(i)%person => null()
+        self%population(i)%person => null()
       end if
     end do
 
     ! Update the array end indices.
-    popObj%endIdx = popObj%endIdx - deathCount
-    popObj%futureEndIdx = popObj%futureEndIdx - deathCount
+    self%endIdx       = self%endIdx       - deathCount
+    self%futureEndIdx = self%futureEndIdx - deathCount
   end subroutine removeDeadPersons
 
 
@@ -496,12 +496,12 @@ contains
   ! SUBROUTINE: checkPersonBirth
   !>  Check for any births event by the current `Person_t` object of `popObj`.
   ! -------------------------------------------------------------------------- !
-  subroutine checkPersonBirth(popObj)
-    class(Population_t), intent(inout) :: popObj
+  subroutine checkPersonBirth(self)
+    class(Population_t), intent(inout) :: self
     logical :: gaveBirth
     integer :: i
 
-    associate(currPerson => popObj%population(popObj%currIdx)%person)
+    associate(currPerson => self%population(self%currIdx)%person)
       ! Check if the current individual can reproduce.
       gaveBirth = (MODEL_R <= currPerson%age .and. &
                    MODEL_R_MAX >= currPerson%age)
@@ -510,21 +510,21 @@ contains
       if (gaveBirth) then
         do i = 1, MODEL_B
           ! Extend the population array if needed.
-          if (popObj%futureEndIdx == popObj%popArraySize) then
-            call extendPopArray(popObj)
+          if (self%futureEndIdx == self%popArraySize) then
+            call extendPopArray(self)
           end if
-          popObj%futureEndIdx = popObj%futureEndIdx + 1
+          self%futureEndIdx = self%futureEndIdx + 1
 
           ! Allocate and initialize a new `Person_t`.
           associate( &
-                newPersonPtr => popObj%population(popObj%futureEndIdx) &
+                newPersonPtr => self%population(self%futureEndIdx) &
               )
 
             call freePersonPtr(newPersonPtr)
             allocate(newPersonPtr%person)
             call initNewPerson(newPersonPtr%person, currPerson%genome, MODEL_M)
 
-            if (popObj%recordGnmDstrb) then
+            if (self%recordGnmDstrb) then
               call addGenomeToDstrb(   &
                       newPersonPtr%person%genome, MODEL_GENOME_MASK  &
                   )
@@ -532,7 +532,7 @@ contains
           end associate
         end do
 
-        popObj%bornPopSize = popObj%bornPopSize + MODEL_B
+        self%bornPopSize = self%bornPopSize + MODEL_B
       end if
     end associate
   end subroutine checkPersonBirth
@@ -555,8 +555,8 @@ contains
   !!  `oldPopSize` is the size of the population array that is yet to be
   !!  extended.
   ! -------------------------------------------------------------------------- !
-  subroutine extendPopArray(popObj)
-    class(Population_t), intent(inout) :: popObj
+  subroutine extendPopArray(self)
+    class(Population_t), intent(inout) :: self
     integer :: oldPopArrSize
     integer :: newPopArrSize
 
@@ -564,15 +564,15 @@ contains
 
     if (allocated(tempPopArray)) deallocate(tempPopArray)
 
-    oldPopArrSize = popObj%popArraySize
+    oldPopArrSize = self%popArraySize
     newPopArrSize = int((oldPopArrSize + 1)*GROWTH_FACTOR)
 
     ! Resize the population array.
-    call move_alloc(popObj%population, tempPopArray)
-    allocate(popObj%population(newPopArrSize))
-    popObj%population(:oldPopArrSize) = tempPopArray(:oldPopArrSize)
+    call move_alloc(self%population, tempPopArray)
+    allocate(self%population(newPopArrSize))
+    self%population(:oldPopArrSize) = tempPopArray(:oldPopArrSize)
 
-    popObj%popArraySize = newPopArrSize
+    self%popArraySize = newPopArrSize
 
     deallocate(tempPopArray)
   end subroutine extendPopArray
