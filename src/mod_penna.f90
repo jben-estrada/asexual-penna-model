@@ -11,6 +11,10 @@ module Penna
   use Parameters, only:            &
     MODEL_L,                       &
     MODEL_B,                       &
+    MODEL_M,                       &
+    MODEL_R,                       &
+    MODEL_R_MAX,                   &
+    MODEL_T,                       &
     MODEL_K,                       &
     MODEL_TIME_STEPS,              &
     MODEL_MTTN_COUNT,              &
@@ -139,6 +143,9 @@ contains
     integer, pointer :: deathByMutation
     integer, pointer :: deathByVerhulst
 
+    ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
+    ! integer, pointer :: paramToChange, paramToChange2
+
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
 
@@ -159,6 +166,10 @@ contains
     deathByMutation => deathCount(2)
     deathByVerhulst => deathCount(3)
 
+    ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
+    ! paramToChange  => MODEL_R
+    ! paramToChange2 => MODEL_R_MAX
+
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
     ! represent the data at t = 0.
@@ -174,6 +185,12 @@ contains
         " capacity! Stopping the current run.")
         exit
       end if
+
+      ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
+      ! if (modulo(popSize, 200) == 0) then
+      !   paramToChange = paramToChange + 1
+      !   paramToChange2 = paramToChange2 + 1
+      ! end if
 
       ! Evaluate population.
       call evalPopulation(          &
