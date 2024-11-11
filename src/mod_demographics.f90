@@ -349,16 +349,20 @@ contains
     integer :: genomeIntArray(MODEL_L)
     logical :: genomeLgclArray(MODEL_L)
     type(StaticBitSet) :: genome
-    integer :: i
+    integer :: genomeCount, i
 
     badGeneDstrb(:) = 0
 
     do i = 1, uniqueGenomeCount
-      genome = genomeDstrb(genomeIdxArray(i))%genome
+      genome      = genomeDstrb(genomeIdxArray(i))%genome
+      genomeCount = genomeDstrb(genomeIdxArray(i))%count
+
+      if (genomeCount == 0) continue
+
       call extractBitSetData(genome, genomeLgclArray)
 
       genomeIntArray = logicalToInt(genomeLgclArray)
-      badGeneDstrb(:) = badGeneDstrb(:) + genomeIntArray(:)
+      badGeneDstrb(:) = badGeneDstrb(:) + (genomeIntArray(:) * genomeCount)
     end do
   end function getBadGeneDstrb
 
