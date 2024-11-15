@@ -238,6 +238,8 @@ contains
     ! Assign the parameters obtained from command arguments.
     call assignUserProvidedParams(pennaCmdArgs)
 
+    ! Check if the parameters provided by the user from both config file and
+    ! command line arguments are valid
     call checkValidParams(pennaCmdArgs)
   end subroutine setParams
 

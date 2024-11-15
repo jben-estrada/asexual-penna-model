@@ -86,7 +86,9 @@ contains
     call paramReader % getValue(PARAM_KEYS(18), tempGenomeMask, getStats(17))
 
     ! Transfer the obtained default record flag into the program.
+    ! --- Record flag
     PROG_REC_FLAG = tempRecFlag
+    ! --- Genome mask
     MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASKING_INT)
 
     ! Check if all the getters succeeded in obtaining the parameters.
