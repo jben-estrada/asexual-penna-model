@@ -25,7 +25,6 @@ module PopulationList
   use StaticBitSetType,  only: StaticBitSet
   use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
   use RandNumProcs, only: getRandReal, getRandRange, getRandInt
-  use AbstractPopulation, only: AbstractPopulation_t, AbstractPerson_t
   use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
   use, intrinsic :: iso_fortran_env, only: personRK => real64
   implicit none
@@ -34,7 +33,7 @@ module PopulationList
 
   ! `PERSON_T` DERIVED TYPE
   ! -------------------------------------------------------------------------- !
-  type, extends(AbstractPerson_t) :: Person_t
+  type :: Person_t
     !! A derived type representing individuals in the Penna model.
     ! integer(kind=personIK) :: genome
     type(StaticBitSet) :: genome
@@ -56,7 +55,7 @@ module PopulationList
 
   ! `POPULATION_T` DERIVED TYPE
   ! -------------------------------------------------------------------------- !
-  type, extends(AbstractPopulation_t):: Population_t
+  type :: Population_t
     private
     type(PersonPtr_t), allocatable :: population(:)
       !! Array holding the individuals in the Penna model.
@@ -89,7 +88,7 @@ module PopulationList
     procedure :: getPopSize => population_getPopSize
       !! Get the population size.
     procedure :: getCurrPerson => population_getCurrPerson
-      !! Get the current individual as an `AbstractPerson_t` pointer.
+      !! Get the current individual as a `Person_t` pointer.
     procedure :: atEndOfPopulation => population_atEndOfPop
       !! Return a logical value of whether the current `Person_t` is the last
       !! individual for the current time step.
@@ -132,8 +131,8 @@ module PopulationList
 
   ! INDIVIDUAL STATES.
   ! -------------------------------------------------------------------------- !
-  integer, parameter :: ALIVE = 0
-  integer, parameter :: DEAD_OLD_AGE = 1
+  integer, parameter :: ALIVE         = 0
+  integer, parameter :: DEAD_OLD_AGE  = 1
   integer, parameter :: DEAD_MUTATION = 2
   integer, parameter :: DEAD_VERHULST = 3
 
@@ -144,7 +143,6 @@ module PopulationList
 
   public :: Population_t
   public :: Person_t
-  public :: defaultPersonPtr
 contains
 
 
@@ -236,11 +234,11 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: population_getCurrPerson
-  !>  Get the current person in the population as an `AbstractPerson_t` pointer.
+  !>  Get the current person in the population as a `Person_t` pointer.
   ! -------------------------------------------------------------------------- !
   function population_getCurrPerson(self) result(personObj_ptr)
     class(Population_t), intent(in) :: self
-    class(AbstractPerson_t), pointer :: personObj_ptr
+    type(Person_t), pointer :: personObj_ptr
     personObj_ptr => self%population(self%currIdx)%person
   end function population_getCurrPerson
 
@@ -576,24 +574,6 @@ contains
 
     deallocate(tempPopArray)
   end subroutine extendPopArray
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: defaultPersonPtr
-  !>  Return a `AbstractPerson_t` pointer as is if its data type is `Person_t`
-  !!  Otherwise, return a null pointer.
-  ! -------------------------------------------------------------------------- !
-  function defaultPersonPtr(abstractPerson_ptr) result(person_ptr)
-    class(AbstractPerson_t), pointer, intent(in) :: abstractPerson_ptr
-    type(Person_t), pointer :: person_ptr
-    
-    select type(abstractPerson_ptr)
-    type is (Person_t)
-      person_ptr => abstractPerson_ptr
-    class default
-      person_ptr => null()
-    end select
-  end function defaultPersonPtr
 
 
   ! -------------------------------------------------------------------------- !

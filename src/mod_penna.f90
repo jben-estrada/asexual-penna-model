@@ -58,7 +58,6 @@ module Penna
     DEAD_MUTATION,          &
     DEAD_VERHULST,          &
     Population_t,           &
-    defaultPersonPtr,       &
     Person_t
   
   use DataWriter, only:  &
@@ -305,7 +304,7 @@ contains
       ! incremented and birth event is checked.
       call population%evalCurrPerson()
 
-      currPerson => defaultPersonPtr(population%getCurrPerson())
+      currPerson => population%getCurrPerson()
       if (.not.associated(currPerson)) then
         call raiseError("Internal error. Null current `Person_t` pointer.")
       end if
