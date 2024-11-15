@@ -2,29 +2,76 @@
 
 ## Model description
 
-An implementation of a biological aging model in Fortran 2008 as first introduced by T.J.P. Penna \[[1](#Reference)\]. The model we consider here however conforms more with the description of S. Oliveira \[[2](#Reference)\] than that of the original with some important modifications in the Verhulst factor.
+An implementation of a biological aging model in Fortran 2008 as first introduced by T.J.P. Penna \[[1, 2](#reference)\]. This program follows the original model with some important changes.
 
-In Oliveira's description, Verhulst factor is constant with age of the individuals throughout the run. In some implementations, the Verhulst factor is disabled for newborn individuals and active throughout their lives. Here, we let the Verhulst factor freely vary with the age of the individuals.
+#### Age-dependent Verhulst factor
+
+In the original description \[[1](#reference)\], the Verhulst factor is constant with the age of the individuals. In other variants, the Verhulst factor is disabled for newborn individuals and active throughout their lives. Here, we let the Verhulst factor freely vary with the age of the individuals.
 
 $$V_a = 1 - w_a\frac{N(t)}{N_{max}},$$
 
 where $V_a$ is the Verhulst factor at age $a$, $w_a$ is the *Verhulst weight* at age $a$, $N(t)$ is the population size at time $t$, and $N_{max}$ is the carrying capacity. The *Verhulst weight* is a real number in the interval [0, 1].
 
-We note the unity term in $V_a$. Oliveira defined the age-independent Verhulst factor to be $V = N(t)/N_{max}$. In their implementation of the model, individuals die if some real number $r \in (0, 1)$ is less than the $V$. In our case, they die if $r$ is greater than $V$. As such, both definitions of the Verhulst factor are equivalent given that the implementation of death corresponds with whatever definition we use. Here, we consider the following definition for the age-independent Verhulst factor from which the age-dependent one is derived.
+We note the unity term in $V_a$. Oliveira \[[2](#reference)\] defined the age-independent Verhulst factor to be $V = N(t)/N_{max}$. In their implementation of the model, individuals die if some real number $r \in (0, 1)$ is less than the $V$. In our case, they die if $r$ is greater than $V$. As such, both definitions of the Verhulst factor are equivalent given that the implementation of death corresponds with whatever definition we use. Here, we consider the following definition for the age-independent Verhulst factor from which the age-dependent one is derived.
 
 $$V = 1 - \frac{N(t)}{N_{max}}$$
 
-Now looking at $w_a$ (which we have called *Verhulst weight*), if we let $w_a = 0$, $V_a$ is equal to 1 at age $a$. Since $r$ cannot be greater than 1, individuals at this age cannot randomly die due to the Verhulst factor. On the other hand, if $w_a = 1$, $V_a$ becomes the original Verhulst factor.
+Now looking at $w_a$ (which we call as the *Verhulst weight*), if we let $w_a = 0$, $V_a$ is equal to 1 at age $a$. Since $r$ cannot be greater than 1, individuals at this age cannot randomly die due to the Verhulst factor. On the other hand, if $w_a = 1$, $V_a$ becomes the original Verhulst factor.
 
-Varying the Verhulst factor can be useful in, say, modelling *survivability*. By letting $w_a$ increase with age, individuals are more likely to survive as they grow older. Conversely, young individuals are more likely to die due to them being more fragile.
+Varying the Verhulst factor can be useful in, say, modelling *survivability*. By letting $w_a$ increase with age, individuals are more likely to survive as they grow older. Conversely, young individuals are more likely to die due to being fragile and less adept in their environment.
 
-## Prerequisite
-- Python <=3.12
-- A Fortran 2008 compliant compiler
-    - e.g. `Intel Fortran Compiler 2024.2.0` and `GFortran 12`
-
+Go to [Top](#asexual-penna-model).
 ## Installation
+### Prerequisite
+- Python <=3.11
+- A Fortran 2008 compliant compiler
+    - e.g. `Intel Fortran Compiler 2024.2.0` and `GFortran 13`
+
+### Installing the required Python libraries
+This project requires the Python library `FoBiS.py` to build the Fortran code.
+
+Currently, `FoBiS.py` can be installed using `pip`:
+```bash
+pip install FoBiS.py
+```
+
+To my knowledge, it is also available on Anaconda but only the older versions. Alternatively you can install `FoBiS.py` manually. Refer to the [Wiki page](https://github.com/szaghi/FoBiS/wiki/Manual-Installation) of this project.
+
+### Building the Penna model program
+
+Once you have downloaded or cloned the project, run the build script `build.py` in the project directory.
+It has several options to build the project but for most cases, you might want to do a release build. That is to say, run the follow commands:
+
+```bash
+cd asexual-penna-model     # Go to the project directory
+python build.py --type release --clean
+```
+
+The output executable `penna.out` can be found in `bin/` in the project directory.
+
+For information about the other build types, run the script with the `--help` option.
+```bash
+python build.py --help
+```
+
+#### NOTE :
+The build script assumes that you use `gfortran`. Due to limited time (and money), I was not able to implement options for other compilers. So if you use other Fortran compilers such as `ifx`, you will have to edit the build script.
+
+Go to [Top](#asexual-penna-model).
+
+## Usage
+
+Running the executable in the `bin/` directory runs the Penna model program with the default parameters indicated in `bin/model.cfg`.
+
+For more information, run the Penna model program with the `--help` option.
+
+```bash
+bin/penna.out --help
+```
+
 WIP
+
+Go to [Top](#asexual-penna-model).
 
 ## Reference
 
