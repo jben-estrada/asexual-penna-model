@@ -108,15 +108,15 @@ module Parameters
   ! NOTE: Default values are obtained from config files.
   integer, target, protected :: MODEL_L = VOID_INT
     !! Genome length
-  integer, target :: MODEL_T = VOID_INT
+  integer, target, protected :: MODEL_T = VOID_INT
     !! Mutation threshold
-  integer, target :: MODEL_B = VOID_INT
+  integer, target, protected :: MODEL_B = VOID_INT
     !! Birth rate
-  integer, target :: MODEL_M = VOID_INT
+  integer, target, protected :: MODEL_M = VOID_INT
     !! Mutation rate
-  integer, target :: MODEL_R = VOID_INT
+  integer, target, protected :: MODEL_R = VOID_INT
     !! Reproduction age
-  integer, target :: MODEL_R_MAX = VOID_INT
+  integer, target, protected :: MODEL_R_MAX = VOID_INT
     !! Maximum reproduction age
   integer, target, protected :: MODEL_K = VOID_INT
     !! Carrying capacity

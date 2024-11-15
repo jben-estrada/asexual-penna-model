@@ -143,8 +143,10 @@ contains
     integer, pointer :: deathByMutation
     integer, pointer :: deathByVerhulst
 
-    ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
-    ! integer, pointer :: paramToChange, paramToChange2
+    ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
+    ! integer, pointer :: paramToChange
+    ! integer, pointer :: paramToChange2
+    ! ================================================= !
 
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
@@ -166,9 +168,10 @@ contains
     deathByMutation => deathCount(2)
     deathByVerhulst => deathCount(3)
 
-    ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
-    ! paramToChange  => MODEL_R
-    ! paramToChange2 => MODEL_R_MAX
+    ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
+    ! paramToChange  => !!!!!!
+    ! ================================================= !
+    
 
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
@@ -186,11 +189,12 @@ contains
         exit
       end if
 
-      ! >>> MODIFICATION ADDED FOR VARYING PARAMETERS <<<
+      ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
       ! if (modulo(popSize, 200) == 0) then
       !   paramToChange = paramToChange + 1
       !   paramToChange2 = paramToChange2 + 1
       ! end if
+      ! ================================================= !
 
       ! Evaluate population.
       call evalPopulation(          &
