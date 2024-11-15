@@ -1,13 +1,14 @@
-test/
 .vscode/
+.github/
+.devcontainer/
+.deprecated/
 static/
 mod/
 obj/
+test/
 bin/penna.out
 *.csv
 *.mod
 *.smod
 *.code-workspace
 *.d
-.github/
-.devcontainer/
