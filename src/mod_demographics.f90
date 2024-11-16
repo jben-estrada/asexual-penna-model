@@ -357,7 +357,7 @@ contains
       genome      = genomeDstrb(genomeIdxArray(i))%genome
       genomeCount = genomeDstrb(genomeIdxArray(i))%count
 
-      if (genomeCount == 0) continue
+      if (genomeCount == 0) cycle
 
       call extractBitSetData(genome, genomeLgclArray)
 
