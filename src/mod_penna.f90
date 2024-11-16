@@ -127,16 +127,20 @@ contains
     character(len=*), intent(in) :: recordFlag
       !! Record flag. Can have multiple values.
 
-    type(Population_t) :: population
+    type(Population_t)      :: population
+    type(Person_t), pointer :: currPersonPtr
 
     integer, target :: deathCount(3) ! Death count 
     integer :: timeStep              ! Time step
     integer :: popSize               ! Population size
-  
+    
     integer :: recordFlagLen         ! Number of record flags.
     logical :: recordGnmDstrb
     logical :: recordDeath
     logical :: recordAgeDstrb
+
+    ! True if the time step is within the range for recording age demographics
+    logical :: withinAgeDemogRange
 
     integer, pointer :: deathByAge
     integer, pointer :: deathByMutation
@@ -150,28 +154,29 @@ contains
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
 
+    ! Initialize inquiry flags for data recording.
     recordGnmDstrb = &
         isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
     recordDeath    = isWriterInitialized(REC_DEATH)
     recordAgeDstrb = isWriterInitialized(REC_AGE_DSTRB)
-
-    ! Initialization
-    popSize = startPopSize
+    withinAgeDemogRange = (maxTimestep <= MODEL_AGE_DSTRB_INIT_TIMESTEP)
+      
+    ! Initialize the death counters.
     deathCount(:) = 0
+    deathByAge      => deathCount(1)
+    deathByMutation => deathCount(2)
+    deathByVerhulst => deathCount(3)
+
+    ! Initialize the population
+    popSize = startPopSize
     call initGenomeDstrb()
     call resetAgeDstrb()
     population = Population_t(startPopSize, initMttnCount, recordGnmDstrb)
 
-    ! Initialize pointers.
-    deathByAge => deathCount(1)
-    deathByMutation => deathCount(2)
-    deathByVerhulst => deathCount(3)
-
-    ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
+    ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
     ! paramToChange  => !!!!!!
     ! ================================================= !
     
-
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
     ! represent the data at t = 0.
@@ -179,51 +184,87 @@ contains
 
     ! Run the model.
     mainLoop: do timeStep = 1, maxTimestep
-      ! Catch case when pop size exceeds the carrying capacity.
-      ! For this given set of model parameters, pop size might explode.
-      ! As such, we halt the run once this case is reached.
-      if (popSize > MODEL_K) then
-        call raiseWarning("The population has exceeded the carrying" // &
-        " capacity! Stopping the current run.")
-        exit
-      end if
+      ! Catch case when the population size exceeds the carrying capacity.
+      ! NOTE:
+      !   With Verhulst death enabled, this does not happen. But if it is
+      !   disabled, there is no mechanism to prevent runaway population growth.
+      !   In this Penna model program, the carrying capacity acts as a 
+      !   "fail-safe" to prevent any unintended runaway growth.
+      runawayGrowthCheck: if (popSize > MODEL_K) then
+        call raiseWarning(                                           &
+            "The population has exceeded the carrying capacity! " // &
+            "Stopping the current run."                              &
+          )
+        exit mainLoop
+      end if runawayGrowthCheck
 
-      ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
+      ! Age demogaphics range check.
+      withinAgeDemogRange = (                                             &
+              (maxTimestep - timeStep) <= MODEL_AGE_DSTRB_INIT_TIMESTEP   &
+        )
+
+      ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
       ! if (modulo(popSize, 200) == 0) then
-      !   paramToChange = paramToChange + 1
+      !   paramToChange  = paramToChange  + 1
       !   paramToChange2 = paramToChange2 + 1
       ! end if
       ! ================================================= !
 
-      ! Evaluate population.
-      call evalPopulation(          &
-            population,             &
-            maxTimestep - timeStep, &
-            deathByAge,             &
-            deathByMutation,        &
-            deathByVerhulst,        &
-            recordDeath,            &
-            recordAgeDstrb          &
-          )
+      ! Ready the population for evaluation in the current time step.
+      call population%startCurrStep()
+
+      evalPop: do while(.not. population%atEndOfPopulation())
+        ! Evaluate the current person for death and birth events.
+        call population%evalCurrPerson()
+
+        ! Access the current person to record the requested data.
+        currPersonPtr => population%getCurrPerson()
+        if (.not.associated(currPersonPtr)) then
+          call raiseError("Internal error. Null current `Person_t` pointer.")
+        end if
+
+        ! === DATA RECORDING FOR LIVE INDIVIDUALS === !
+        postEvalDataRec: if (currPersonPtr%lifeStat == ALIVE) then
+          ! --- Data recording: Age demographics
+          if (recordAgeDstrb .and. withinAgeDemogRange) then
+            call updateAgeDstrb(currPersonPtr%age)
+          end if
+        ! === DATA RECORDING FOR LIVE INDIVIDUALS === !
+        else if (recordDeath) then
+            ! --- Data recording: Death count
+            select case(currPersonPtr%lifeStat)
+              case(DEAD_OLD_AGE);  deathByAge      = deathByAge      + 1
+              case(DEAD_MUTATION); deathByMutation = deathByMutation + 1
+              case(DEAD_VERHULST); deathByVerhulst = deathByVerhulst + 1
+              case default
+                call raiseError("Internal error encountered. Invalid lifeStat.")
+            end select
+        end if postEvalDataRec
+
+        ! Go to the next person.
+        call population%next()
+      end do evalPop
+      
+      ! Finalize the population evaluation
+      call population%endCurrStep()
       popSize = population%getPopSize()
 
       ! Record data.
       call recordData()
-
       ! Reset counters.
-      call resetCountingPerTimeStep()
+      if (recordDeath)    deathCount(:) = 0
+      if (recordAgeDstrb) call resetAgeDstrb()
     end do mainLoop
 
-    ! Wrap up.
+    ! Clean up any allocated objects.
     call freeGenomeDstrb()
     call population%cleanup()
   contains
 
 
     ! ------------------------------------------------------------------------ !
-    ! SUBROUTINE: recordData
-    !>  Record data obtained in the subroutine `runOneInstance`. This is a
-    !!  subroutine only within the scope of `runOneInstance`.
+    ! `runOneInstance` SUBROUTINE: recordData
+    !>  Record data obtained in the subroutine `runOneInstance`.
     ! ------------------------------------------------------------------------ !
     subroutine recordData()
       type(Writer), pointer :: chosenWriter
@@ -238,7 +279,7 @@ contains
             call chosenWriter%write(int(popSize, kind=writeIK))
 
           case (REC_AGE_DSTRB)
-            if ((maxTimestep - timeStep) <= MODEL_AGE_DSTRB_INIT_TIMESTEP) then
+            if (withinAgeDemogRange) then
               call chosenWriter%write(int(ageDistribution, kind=writeIK))
             end if
 
@@ -258,82 +299,7 @@ contains
         end select
       end do
     end subroutine recordData
-
-
-    ! ------------------------------------------------------------------------ !
-    ! SUBROUTINE: resetCountingPerTimeStep
-    !>  Reset data recording/counting for data sets that are dependent with
-    !!  time.
-    ! ------------------------------------------------------------------------ !
-    subroutine resetCountingPerTimeStep()
-      if (recordDeath)    deathCount(:) = 0
-      if (recordAgeDstrb) call resetAgeDstrb()
-    end subroutine resetCountingPerTimeStep
   end subroutine runOneInstance
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: evalPopulation
-  !>  Evaluate the population for one time step.
-  ! -------------------------------------------------------------------------- !
-  subroutine evalPopulation( &
-        population,          &
-        countdown,           &
-        deathByAge,          &
-        deathByMutation,     &
-        deathByVerhulst,     &
-        recordDeath,         &
-        recordAgeDstrb       &
-     )
-    ! use Gene, only: personIK
-    type(Population_t), intent(inout) :: population
-    integer, pointer,   intent(inout) :: deathByAge       !! Death by age count
-    integer, pointer,   intent(inout) :: deathByMutation  !! Death by mutation
-    integer, pointer,   intent(inout) :: deathByVerhulst  !! Random death
-    integer,            intent(in)    :: countdown        !! Count from max time
-    logical,            intent(in)    :: recordDeath      !! Record deaths
-    logical,            intent(in)    :: recordAgeDstrb   !! Record age dstrb
-
-    type(Person_t), pointer :: currPerson
-
-    ! Initialize the current time step
-    call population%startCurrStep()
-
-    evalPop: do while(.not. population%atEndOfPopulation())
-      ! Evaluate the current person. If this person is alive, its age is
-      ! incremented and birth event is checked.
-      call population%evalCurrPerson()
-
-      currPerson => population%getCurrPerson()
-      if (.not.associated(currPerson)) then
-        call raiseError("Internal error. Null current `Person_t` pointer.")
-      end if
-
-      if (currPerson%lifeStat == ALIVE) then
-        ! Update the age distribution if it is to be recorded.
-        if (recordAgeDstrb .and. &
-            countdown <= MODEL_AGE_DSTRB_INIT_TIMESTEP) then
-          call updateAgeDstrb(currPerson%age)
-        end if
-      else
-        if (recordDeath) then
-          ! Increment the appropriate death counter.
-          select case(currPerson%lifeStat)
-            case(DEAD_OLD_AGE);  deathByAge = deathByAge + 1
-            case(DEAD_MUTATION); deathByMutation = deathByMutation + 1
-            case(DEAD_VERHULST); deathByVerhulst = deathByVerhulst + 1
-            case default
-              call raiseError("Internal error encountered. Invalid lifeStat.")
-          end select
-        end if
-      end if
-
-      ! Go to the next person.
-      call population%next()
-    end do evalPop
-
-    call population%endCurrStep()
-  end subroutine evalPopulation
 
 
   ! -------------------------------------------------------------------------- !
