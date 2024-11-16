@@ -22,7 +22,7 @@ module WriterType
       !! Name of the file data are to be written on.
     integer :: unit
       !! Unit with which the file is to be identified within the program.
-    logical :: isFileOpen = .false.
+    logical :: fileOpen = .false.
       !! Writable state.
 
     character :: delim = ""
@@ -39,12 +39,14 @@ module WriterType
       !! Open file for writing.
     procedure, public :: closeFile => writer_closeFile
       !! Close file.
+    procedure, public :: IsFileOpen => writer_isFileOpen
+      !! Check if the file is open for writing.
     generic,   public :: write => &
-      writer_write_intSclr, &
-      writer_write_realSclr, &
-      writer_write_charSclr, &
-      writer_write_intArr, &
-      writer_write_realArr, &
+      writer_write_intSclr,       &
+      writer_write_realSclr,      &
+      writer_write_charSclr,      &
+      writer_write_intArr,        &
+      writer_write_realArr,       &
       writer_write_charArr
       !! Write data of either rank-0 or rank-1 to opened file.
 
@@ -114,8 +116,18 @@ contains
         )
     end if
 
-    self % isFileOpen = .true.
+    self % fileOpen = .true.
   end subroutine writer_openFile
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: writer_isFileOpen
+  !>  Check if the file associated with the `Writer` object is open for writing.
+  ! -------------------------------------------------------------------------- !
+  logical function writer_isFileOpen(self)
+    class(Writer), intent(in) :: self
+    writer_isFileOpen = self % fileOpen
+  end function writer_isFileOpen
 
 
   ! -------------------------------------------------------------------------- !
@@ -128,7 +140,7 @@ contains
     character(len=*), intent(in) :: msg
       !! Error message.
 
-    if (.not. writerObj % isFileOpen) then
+    if (.not. writerObj % fileOpen) then
       call raiseError( & 
           msg // " '" // writerObj % filename // "' is not yet opened." &
         )
@@ -274,7 +286,7 @@ contains
     call checkFileState(self, "Cannot close file.")
     close(self % unit)
 
-    self % isFileOpen = .false.
+    self % fileOpen = .false.
   end subroutine writer_closeFile
 
 
@@ -285,6 +297,6 @@ contains
   subroutine destructor(self)
     type(Writer), intent(inout) :: self
       !! `Writer` object to be freed.
-    if (self % isFileOpen) close(self % unit)
+    if (self % fileOpen) close(self % unit)
   end subroutine destructor
 end module WriterType

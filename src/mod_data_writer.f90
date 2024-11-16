@@ -15,8 +15,10 @@ module DataWriter
     REC_DEATH,          &
     REC_DIV_IDX,        &
     REC_GENE_DSTRB,     &
-    REC_TIME,           &
     REC_GNM_COUNT,      &
+    REC_TIME,           &
+    REC_FLAG_PENNA,     &
+    REC_FLAG_PROG,      &
     REC_FLAG_ORDER
   use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
@@ -26,11 +28,19 @@ module DataWriter
 
   character(len=*), parameter   :: DIVIDER_READABLE = "---------------"
   character(len=:), allocatable :: divider
+  logical :: dividerDelimSet = .false.
 
-  ! Data file delimiters
+  ! Data file delimiters.
   character, parameter :: DELIM_READABLE = "|"
   character, parameter :: DELIM_CSV = ","
   character :: delim = char(0)
+
+  ! Data writer types.
+  integer, parameter :: DATA_WRITER_PENNA = 0
+  integer, parameter :: DATA_WRITER_PROG  = 1
+
+  ! Base IO unit.
+  integer, parameter :: BASE_UNIT = 99
 
   ! All writer objects.
   type(Writer), target  :: writerArr(len(REC_FLAG_ORDER))
@@ -39,32 +49,15 @@ module DataWriter
   public :: initDataWriter
   public :: getWriterPtr
   public :: isWriterInitialized
+  public :: closeDataWriter
+  
+  public :: DATA_WRITER_PENNA
+  public :: DATA_WRITER_PROG
+
   public :: Writer
   public :: writeIK
   public :: writeRK
 contains
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: getWriterIdx
-  !>  Get the index that corresponds with the specified record flag.
-  ! -------------------------------------------------------------------------- !
-  pure function getWriterIdx(recordFlag) result(writerIdx)
-    character, intent(in) :: recordFlag
-    integer   :: writerIdx, i
-    character :: currFlag
-
-    writerIdx = -1
-
-    do i = 1, len(REC_FLAG_ORDER)
-      currFlag = REC_FLAG_ORDER(i: i)
-
-      if (currFlag == recordFlag) then
-        writerIdx = i
-        exit
-      end if
-    end do
-  end function getWriterIdx
 
 
   ! -------------------------------------------------------------------------- !
@@ -76,7 +69,7 @@ contains
     type(Writer), pointer :: writerPtr
     integer :: writerIdx
 
-    writerIdx = getWriterIdx(recordFlag)
+    writerIdx = scan(REC_FLAG_ORDER, recordFlag)
     if (writerIdx > 0) then
       writerPtr => writerArr(writerIdx)
     else
@@ -107,7 +100,7 @@ contains
     chosenWriter => getWriterPtr(recordFlag)
 
     if (.not.associated(chosenWriter)) return
-    if (initWriterArr(getWriterIdx(recordFlag))) then
+    if (initWriterArr( scan(REC_FLAG_ORDER, recordFlag) )) then
       call raiseError(                                                &
           "Record flag '"// recordFlag // "' occured more than once." &
         )
@@ -218,7 +211,7 @@ contains
 
     if (allocated(headerArr)) deallocate(headerArr)
     ! Mark the specified writer as initialized.
-    initWriterArr(getWriterIdx(recordFlag)) = .true.
+    initWriterArr( scan(REC_FLAG_ORDER, recordFlag) ) = .true.
   end subroutine initChosenWriter
 
 
@@ -268,7 +261,7 @@ contains
 
     isWriterInitialized = .false.
     do i = 1, len(recordFlags)
-      writerIdx = getWriterIdx(recordFlags(i: i))
+      writerIdx = scan(REC_FLAG_ORDER, recordFlags(i:i))
   
       if (writerIdx > 0) then
         isWriterInitialized = initWriterArr(writerIdx)
@@ -278,23 +271,14 @@ contains
     end do
   end function isWriterInitialized
 
-  
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: initDataWriter
-  !>  Initialize all the data/output writers.
-  ! -------------------------------------------------------------------------- !
-  subroutine initDataWriter(recordFlags, saveFilename, inCSVFormat)
-    character(len=*), intent(in) :: recordFlags
-    character(len=*), intent(in) :: saveFilename
-    logical,          intent(in) :: inCSVFormat
 
-    integer, parameter :: baseUnit = 99
-    character :: currFlag
-    integer :: recordFlagLen
-    integer :: i
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setDividerDelimChar
+  !>  Set the divider and delim strings based on the chosen format.
+  ! -------------------------------------------------------------------------- !
+  subroutine setDividerDelimChar(inCSVFormat)
+    logical, intent(in) :: inCSVFormat
     
-    character(len=:), allocatable :: newSaveFilename
-
     if (inCSVFormat) then
       delim = DELIM_CSV
       allocate(character(len=0) :: divider)
@@ -303,6 +287,49 @@ contains
       divider = DIVIDER_READABLE
     end if
 
+    dividerDelimSet = .true.
+  end subroutine setDividerDelimChar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: flagMatchesDataWriterType
+  !>  Return TRUE if the input record Flag matches the input data writer type.
+  ! -------------------------------------------------------------------------- !
+  logical function flagMatchesDataWriterType(recordFlag, dataWriterType)
+    character, intent(in) :: recordFlag
+    integer,   intent(in) :: dataWriterType
+  
+    flagMatchesDataWriterType = .false.
+    select case (dataWriterType)
+    case (DATA_WRITER_PENNA)
+      flagMatchesDataWriterType = (scan(REC_FLAG_PENNA, recordFlag) > 0)
+    case (DATA_WRITER_PROG)
+      flagMatchesDataWriterType = (scan(REC_FLAG_PROG, recordFlag) > 0)
+    case default
+      call raiseError("Internal error. Unknown Data writer type.")
+    end select
+  end function flagMatchesDataWriterType
+
+  
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: initDataWriter
+  !>  Initialize data writers of the specified type.
+  ! -------------------------------------------------------------------------- !
+  subroutine initDataWriter(                                   &
+        recordFlags, saveFilename, inCSVFormat, dataWriterType &
+      )
+    character(len=*), intent(in) :: recordFlags
+    character(len=*), intent(in) :: saveFilename
+    logical,          intent(in) :: inCSVFormat
+    integer,          intent(in) :: dataWriterType
+
+    character(len=:), allocatable :: newSaveFilename
+    character :: currFlag
+    integer   :: recordFlagLen
+    integer   :: i
+    
+    if (.not. dividerDelimSet) call setDividerDelimChar(inCSVFormat)
+
     recordFlagLen = len(recordFlags)
     if (recordFlagLen == 0) then
       call raiseError("Internal error. Empty record flag")
@@ -310,6 +337,11 @@ contains
 
     do i = 1, recordFlagLen
       currFlag = recordFlags(i: i)
+
+      ! Skip flags that are not of the specified type.
+      if (.not.flagMatchesDataWriterType(currFlag, dataWriterType)) then
+        cycle
+      end if
 
       ! Append a unique indentifier to file names when saving multiple data sets
       if (recordFlagLen > 1) then
@@ -320,7 +352,35 @@ contains
         newSaveFilename = saveFilename
       end if
 
-      call initChosenWriter(currFlag, newSaveFilename, baseUnit + i)
+      call initChosenWriter(currFlag, newSaveFilename, BASE_UNIT + i)
     end do
   end subroutine initDataWriter
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: closeDataWriter
+  !>  Close the data writers of the specified type.
+  ! -------------------------------------------------------------------------- !
+  subroutine closeDataWriter(dataWriterType)
+    integer, intent(in) :: dataWriterType
+
+    type(Writer), pointer :: currWriterPtr
+    character :: currFlag
+    integer   :: i
+
+    do i = 1, len(REC_FLAG_ORDER)
+      currFlag = REC_FLAG_ORDER(i:i)
+
+      if (.not. flagMatchesDataWriterType(currFlag, dataWriterType)) then
+        cycle
+      end if
+
+      currWriterPtr => getWriterPtr(currFlag)
+      if (currWriterPtr%isFileOpen()) then
+         call currWriterPtr%closeFile()
+      end if
+
+      initWriterArr( scan(REC_FLAG_ORDER, currFlag) ) = .false.
+    end do
+  end subroutine closeDataWriter
 end module DataWriter

@@ -64,9 +64,12 @@ module Penna
     getWriterPtr,        &
     isWriterInitialized, &
     initDataWriter,      &
+    closeDataWriter,     &
     Writer,              &
     writeIK,             &
-    writeRK
+    writeRK,             &
+    DATA_WRITER_PENNA,   &
+    DATA_WRITER_PROG
 
   use, intrinsic :: iso_fortran_env, only: &
     timeIK => int64, &
@@ -81,6 +84,14 @@ module Penna
 
   ! Header divider for external files to be written on.
   character(len=*), parameter :: FILE_DIVIDER = "---------------"
+
+  logical :: toRecPop       = .false.
+  logical :: toRecDeath     = .false.
+  logical :: toRecDivIdx    = .false.
+  logical :: toRecGeneDstrb = .false.
+  logical :: toRecGnmCount  = .false.
+  logical :: toRecAgeDstrb  = .false.
+  logical :: toRecTime      = .false.
 
   public :: run
   public :: initProgram
@@ -135,9 +146,6 @@ contains
     integer :: popSize               ! Population size
     
     integer :: recordFlagLen         ! Number of record flags.
-    logical :: recordGnmDstrb
-    logical :: recordDeath
-    logical :: recordAgeDstrb
 
     ! True if the time step is within the range for recording age demographics
     logical :: withinAgeDemogRange
@@ -155,10 +163,6 @@ contains
     recordFlagLen = len(recordFlag)
 
     ! Initialize inquiry flags for data recording.
-    recordGnmDstrb = &
-        isWriterInitialized(REC_DIV_IDX // REC_GENE_DSTRB // REC_GNM_COUNT)
-    recordDeath    = isWriterInitialized(REC_DEATH)
-    recordAgeDstrb = isWriterInitialized(REC_AGE_DSTRB)
     withinAgeDemogRange = (maxTimestep <= MODEL_AGE_DSTRB_INIT_TIMESTEP)
       
     ! Initialize the death counters.
@@ -171,7 +175,11 @@ contains
     popSize = startPopSize
     call initGenomeDstrb()
     call resetAgeDstrb()
-    population = Population_t(startPopSize, initMttnCount, recordGnmDstrb)
+    population = Population_t(        &
+                      startPopSize,   &
+                      initMttnCount,  &
+                      toRecDivIdx .or. toRecGeneDstrb .or. toRecGnmCount &
+                  )
 
     ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
     ! paramToChange  => !!!!!!
@@ -226,11 +234,11 @@ contains
         ! === DATA RECORDING FOR LIVE INDIVIDUALS === !
         postEvalDataRec: if (currPersonPtr%lifeStat == ALIVE) then
           ! --- Data recording: Age demographics
-          if (recordAgeDstrb .and. withinAgeDemogRange) then
+          if (toRecAgeDstrb .and. withinAgeDemogRange) then
             call updateAgeDstrb(currPersonPtr%age)
           end if
         ! === DATA RECORDING FOR LIVE INDIVIDUALS === !
-        else if (recordDeath) then
+        else if (toRecDeath) then
             ! --- Data recording: Death count
             select case(currPersonPtr%lifeStat)
               case(DEAD_OLD_AGE);  deathByAge      = deathByAge      + 1
@@ -252,8 +260,8 @@ contains
       ! Record data.
       call recordData()
       ! Reset counters.
-      if (recordDeath)    deathCount(:) = 0
-      if (recordAgeDstrb) call resetAgeDstrb()
+      if (toRecDeath)    deathCount(:) = 0
+      if (toRecAgeDstrb) call resetAgeDstrb()
     end do mainLoop
 
     ! Clean up any allocated objects.
@@ -302,6 +310,31 @@ contains
   end subroutine runOneInstance
 
 
+  subroutine setWriterInqFlag(recordFlags)
+    character(len=*), intent(in) :: recordFlags
+    integer :: i
+
+    do i = 1, len(recordFlags)
+      select case (recordFlags(i:i))
+      case (REC_POP)
+        ToRecPop = .true.
+      case (REC_DEATH)
+        ToRecDeath = .true.
+      case (REC_DIV_IDX)
+        ToRecDivIdx = .true.
+      case (REC_GENE_DSTRB)
+        ToRecGeneDstrb = .true.
+      case (REC_GNM_COUNT)
+        ToRecGnmCount = .true.
+      case (REC_AGE_DSTRB)
+        ToRecAgeDstrb = .true.
+      case (REC_TIME)
+        ToRecTime = .true.
+      end select
+    end do
+  end subroutine setWriterInqFlag
+
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
   !>  Run the Penna model simulation. This is a wrapper subroutine to the
@@ -332,13 +365,28 @@ contains
     ! Initialize the progress bar.
     progBar = ProgressBar(20, PROG_SAMPLE_SIZE)
 
-    ! Initialize data output writing.
-    call initDataWriter(trim(PROG_REC_FLAG),PROG_OUT_FILE_NAME, PROG_IN_CSV_FMT)
+    call setWriterInqFlag(trim(PROG_REC_FLAG))
 
+    ! Initialize data writing for the current program run (e.g. time elapsed)
+    call initDataWriter(       &
+          trim(PROG_REC_FLAG), &
+          PROG_OUT_FILE_NAME,  &
+          PROG_IN_CSV_FMT,     &
+          DATA_WRITER_PROG     &
+        )
+    
     ! Call and time the `run` subroutine.
     sum = 0._timeRK
     sumSqrd = 0._timeRK
     do i = 1, PROG_SAMPLE_SIZE
+      ! Initialize data writing for Penna data.
+      call initDataWriter(     &
+          trim(PROG_REC_FLAG), &
+          PROG_OUT_FILE_NAME,  &
+          PROG_IN_CSV_FMT,     &
+          DATA_WRITER_PENNA    &
+        )
+
       ! Start timer.
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=timeRK)/clockRate
@@ -358,6 +406,9 @@ contains
       ! Calculate necessary values for average and std deviation.
       sum = sum + (endTimeReal - startTimeReal)*1e3
       sumSqrd = sumSqrd + ((endTimeReal - startTimeReal)*1e3)**2
+
+      ! Finalize and close the Penna data writers.
+      call closeDataWriter(DATA_WRITER_PENNA)
 
       ! Print the progress bar.
       if (printProgress .and. PROG_SAMPLE_SIZE > 1) then
@@ -388,7 +439,7 @@ contains
     end if
 
     ! Record mean time and std deviation.
-    if (isWriterInitialized(REC_TIME)) then
+    if (toRecTime) then
       timeWriter => getWriterPtr(REC_TIME)
 
       ! Write the actual timing statistics.
@@ -400,6 +451,9 @@ contains
           real(stdDevTime, kind=writeRK)]           &
         )
     end if
+
+    ! Close the other data writers.
+    call closeDataWriter(DATA_WRITER_PROG)
 
     if (printProgress) print "(*(a))", PRINT_SEPARATOR
   end subroutine run

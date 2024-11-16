@@ -165,7 +165,16 @@ module Parameters
     !! (Average) elapsed time and standard deviation if applicable.
   character, parameter :: REC_GNM_COUNT = "c"
     !! Number of unique genomes per time step.
-  character(len=*), parameter :: REC_FLAG_ORDER = "padsbtc"
+  character(len=*), parameter :: REC_FLAG_PENNA = &
+      REC_POP // REC_AGE_DSTRB // REC_DEATH // REC_DIV_IDX // REC_GENE_DSTRB //&
+      REC_GNM_COUNT
+    !! Record flags for Penna data.
+  character(len=*), parameter :: REC_FLAG_PROG = REC_TIME
+    !! Record flags for program run data.
+  character(len=*), parameter :: REC_FLAG_ORDER = &
+      REC_FLAG_PENNA // REC_FLAG_PROG
+    !! Record flags and their respective order as position in the string.
+
 
   ! PARAMETER LISTING FILE PATHS
   ! -------------------------------------------------------------------------- !
@@ -240,8 +249,10 @@ module Parameters
   public :: REC_DEATH
   public :: REC_DIV_IDX
   public :: REC_GENE_DSTRB
-  public :: REC_TIME
   public :: REC_GNM_COUNT
+  public :: REC_TIME
+  public :: REC_FLAG_PENNA
+  public :: REC_FLAG_PROG
   public :: REC_FLAG_ORDER
 
   ! Parameter listing file.
