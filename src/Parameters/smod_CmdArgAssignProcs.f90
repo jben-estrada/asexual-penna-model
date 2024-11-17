@@ -496,8 +496,8 @@ contains
     call pennaCmdArgs%printHelp(progName, PROG_DESC)
 
     ! Print the additional notes.
-    print "(/a)", "Notes:"
-    print "(' - ', 5(a)/, '  ', *(a))",                                      &
+    print "(/a)", "NOTES:"
+    print "(' - ', 5(a)/, '  ', 2(a)/)",                                     &
       "Negative values for initial mutation count (-",                       &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " / --",                    &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdAlias, ")",                       &
@@ -506,7 +506,7 @@ contains
     print "(' - ', *(a))",                                     &
       "Valid character values for -", cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, &
       " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias
-    write(*, "(8(4(' '), a/))", advance="no")                                  &
+    write(*, "(8(4(' '), a/)/)", advance="no")                                 &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
       "a - Age distribution in the final time steps.",                         &
@@ -516,20 +516,34 @@ contains
       "t - (Average) elapsed time and its std deviation if applicable",        &
       "c - Number of unique genome counts per time step."
 
-    print "(' - ', *(a))",                                  &
+    print "(' - ', *(a))",  &
       "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
       " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias
-    write(*, "(3(4(' '), a/))", advance="no")       &
+    write(*, "(3(4(' '), a/)/)", advance="no")  &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
       "Other reals            - Renyi entropy"
 
-    print "(' - ', *(a))",                                  &
+    print "(' - ', *(a))",  &
       "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
       " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias
-    write(*, "(2(4(' '), a/))", advance="no")                    &
-      "0 - xoshiro256** pseudo-RNG (GNU Fortran intrinsic RNG)", &
-      "1 - Mersenne twister (MT19937) pseudo-RNG"
+    write(*, "(2(4(' '), a/)/)", advance="no")  &
+      "0 - Intrinsic RNG by the compiler (" // compiler_version() // ")", &
+      "1 - 32-bit Mersenne twister PRNG"
+
+    print "(' - ', *(a))",  &
+      "Formatting for the output file name -", &
+      cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
+      " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias
+    write(*, "(4(4(' '), a/)/)", advance="no")  &
+      "%[N]n - Data set number. Can be optionally left-padded with " //        &
+        "N number of zeroes",                                                  &
+      "%[N]f - The record data flag provided by -" //                          &
+        cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &
+        cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. ",                 &
+        "        Can be optionally left-padded with N whitespace characters.", &
+      "Note that the brackets denote optionality. " //                         &
+      "So '%n' and '%5n' are both valid."
 
     print "(/' ', *(a))",                                      &
       "Default values of all key-value options above are, " // &
