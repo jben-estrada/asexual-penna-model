@@ -20,21 +20,31 @@ module DataWriter
     REC_FLAG_PENNA,     &
     REC_FLAG_PROG,      &
     REC_FLAG_ORDER
-  use CastProcs, only: castIntToChar
   use ErrorMSG, only: raiseError
+  use CastProcs, only: castCharToInt, castIntToChar
   use WriterType, only: Writer, writeIK, writeRK
   implicit none
   private
 
+  ! Divider string
   character(len=*), parameter   :: DIVIDER_READABLE = "---------------"
   character(len=:), allocatable :: divider
-  logical :: dividerDelimSet = .false.
-
+  
   ! Data file delimiters.
   character, parameter :: DELIM_READABLE = "|"
   character, parameter :: DELIM_CSV = ","
   character :: delim = char(0)
 
+  ! File name formatter
+  character(len=*), parameter :: FILE_NAME_FMT_DELIM       = "%"
+  character(len=*), parameter :: FILE_NAME_FLAG_FMT        = "f"
+  character(len=*), parameter :: FILE_NAME_DATASET_NUM_FMT = "n"
+  character(len=*), parameter :: FILE_NAME_FLAG_PAD        = " "
+  character(len=*), parameter :: FILE_NAME_DATASET_NUM_PAD = "0"
+
+  ! File delimiter and divider string status.
+  logical :: dividerDelimSet = .false.
+  
   ! Data writer types.
   integer, parameter :: DATA_WRITER_PENNA = 0
   integer, parameter :: DATA_WRITER_PROG  = 1
@@ -58,6 +68,91 @@ module DataWriter
   public :: writeIK
   public :: writeRK
 contains
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: isNumber
+  !>  Returns TRUE if the input character is a number, otherwise FALSE.
+  ! -------------------------------------------------------------------------- !
+  pure logical function isNumber(c)
+    character, intent(in) :: c
+    integer :: cint
+
+    cint = iachar(c)
+    isNumber = (48 <= cint .and. cint <= 57)
+  end function isNumber
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: evalOutFileNameFmt
+  !>  Parse the output file name and substitute in the specified data.
+  ! -------------------------------------------------------------------------- !
+  subroutine evalOutFileNameFmt(srcStr, outStr, recFlag, dataSetNum)
+    character(len=*),              intent(in)    :: srcStr
+    character(len=:), allocatable, intent(inout) :: outStr
+    character,                     intent(in)    :: recFlag
+    integer,                       intent(in)    :: dataSetNum
+    integer   :: i, fmtPos, parsedInt
+    character :: c
+
+    character(len=:), allocatable :: dataSetNumStr
+    integer :: dataSetNumStrLen
+
+    if (allocated(outStr)) deallocate(outStr)
+    allocate(character(len=0) :: outStr)
+
+    dataSetNumStr = castIntToChar(dataSetNum)
+    dataSetNumStrLen = len(dataSetNumStr)
+
+    parsedInt = 0
+    i = 0
+    do while (i < len(srcStr))
+      i = i + 1
+      c = srcStr(i:i)
+
+      if (c /= FILE_NAME_FMT_DELIM) then
+        outStr = outStr // c
+        cycle
+      end if
+
+      i = i + 1
+      fmtPos = i
+      c = srcStr(i:i)
+
+      if (isNumber(c)) then
+        do while( isNumber(srcStr(i:i)) )
+          i = i + 1
+        end do
+        parsedInt = castCharToInt( srcStr(fmtPos:i-1) )
+        c = srcStr(i:i)
+      end if
+
+      select case(c)
+      case (FILE_NAME_FLAG_FMT)
+        if (dataSetNumStrLen < parsedInt) then
+          outStr = outStr // &
+              repeat(FILE_NAME_FLAG_PAD, parsedInt - dataSetNumStrLen)
+        end if
+        outStr = outStr // recFlag
+
+      case (FILE_NAME_DATASET_NUM_FMT)
+        if (dataSetNumStrLen < parsedInt) then
+          outStr = outStr // &
+              repeat(FILE_NAME_DATASET_NUM_PAD, parsedInt - dataSetNumStrLen)
+        end if
+        outStr = outStr // dataSetNumStr
+
+      case default
+        outStr = outStr // FILE_NAME_FMT_DELIM
+        i = fmtPos - 1
+        cycle
+      end select
+
+      parsedInt = 0
+    end do
+
+    deallocate(dataSetNumStr)
+  end subroutine evalOutFileNameFmt
 
 
   ! -------------------------------------------------------------------------- !
@@ -216,41 +311,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: appendToFilename
-  !>  Append a string to the body of file name, i.e. not to the file extension.
-  ! -------------------------------------------------------------------------- !
-  function appendToFilename(filename, appended) result(appendedFilename)
-    character(len=*), intent(in) :: filename
-    character(len=*), intent(in) :: appended
-
-    character(len=:), allocatable :: fileExt
-    character(len=:), allocatable :: appendedFilename
-    character :: currChar
-    integer :: i
-    integer :: filenameLen
-    logical :: copyingFileExt
-
-    allocate(character(len=0) :: fileExt, appendedFilename)
-
-    filenameLen = len(filename)
-    copyingFileExt = .true.
-    do i = filenameLen, 1, -1
-      currChar = filename(i: i)
-      
-      if (copyingFileExt) then
-        fileExt = currChar // fileExt
-      else
-        appendedFilename = currChar // appendedFilename
-      end if
-
-      if (currChar == ".") copyingFileExt = .false.
-    end do
-
-    appendedFilename = appendedFilename // appended // fileExt
-  end function appendToFilename
-
-
-  ! -------------------------------------------------------------------------- !
   ! FUNCTION: isWriterInitialized
   !>  Check whether at least one of the specified writer is initialized.
   ! -------------------------------------------------------------------------- !
@@ -315,13 +375,14 @@ contains
   ! SUBROUTINE: initDataWriter
   !>  Initialize data writers of the specified type.
   ! -------------------------------------------------------------------------- !
-  subroutine initDataWriter(                                   &
-        recordFlags, saveFilename, inCSVFormat, dataWriterType &
+  subroutine initDataWriter(                                               &
+        recordFlags, saveFilename, inCSVFormat, dataWriterType, dataSetNum &
       )
     character(len=*), intent(in) :: recordFlags
     character(len=*), intent(in) :: saveFilename
     logical,          intent(in) :: inCSVFormat
     integer,          intent(in) :: dataWriterType
+    integer,          intent(in) :: dataSetNum
 
     character(len=:), allocatable :: newSaveFilename
     character :: currFlag
@@ -343,16 +404,14 @@ contains
         cycle
       end if
 
-      ! Append a unique indentifier to file names when saving multiple data sets
-      if (recordFlagLen > 1) then
-        if (allocated(newSaveFilename)) deallocate(newSaveFilename)
-        newSaveFilename = appendToFilename(saveFilename, &
-                                           "_(flag=" // currFlag // ")")
-      else
-        newSaveFilename = saveFilename
-      end if
+      ! Substitute the specified formatter in the provided save file name.
+      call evalOutFileNameFmt( &
+          trim(saveFileName), newSaveFileName, currFlag, dataSetNum &
+        )
 
       call initChosenWriter(currFlag, newSaveFilename, BASE_UNIT + i)
+
+      deallocate(newSaveFilename)
     end do
   end subroutine initDataWriter
 

@@ -372,7 +372,8 @@ contains
           trim(PROG_REC_FLAG), &
           PROG_OUT_FILE_NAME,  &
           PROG_IN_CSV_FMT,     &
-          DATA_WRITER_PROG     &
+          DATA_WRITER_PROG,    &
+          1                    &   ! Only one set of data for run analyses
         )
     
     ! Call and time the `run` subroutine.
@@ -384,7 +385,8 @@ contains
           trim(PROG_REC_FLAG), &
           PROG_OUT_FILE_NAME,  &
           PROG_IN_CSV_FMT,     &
-          DATA_WRITER_PENNA    &
+          DATA_WRITER_PENNA,   &
+          i                    &
         )
 
       ! Start timer.
