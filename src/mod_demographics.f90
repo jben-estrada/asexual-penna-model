@@ -337,7 +337,14 @@ contains
     end if
 
     ! Get the *Normalized* Shannon entropy
-    diversityIdx = getShannonEntropy() / log(real(totalGenomeCount))
+    if (totalGenomeCount > 1) then
+      diversityIdx = getShannonEntropy() / log(real(totalGenomeCount))
+    else
+      ! Since we get a 0/0 case when totalGenomeCount = 0, we just set it to 0
+      ! to be in line with the behavior for the unnormalized Shannon entropy
+      ! (also 0.0 at totalGenomeCount = 0)
+      diversityIdx = 0.0
+    end if
   end function getDiversityIdx
 
 
