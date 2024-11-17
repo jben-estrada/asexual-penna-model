@@ -99,8 +99,9 @@ contains
     genomeDstrbMaxSize = 0
 
     if (allocated(genomeIdxArray)) deallocate(genomeIdxArray)
-    genomeIdxMaxSize = 0
+    genomeIdxMaxSize  = 0
     uniqueGenomeCount = 0
+    totalGenomeCount  = 0
   end subroutine freeGenomeDstrb
 
 
