@@ -15,9 +15,9 @@ module RandNumProcs
   private
 
   integer, parameter :: RNG_INTRINSIC = 0
-    !! FLag corresponding to the intrinsic pseudo-RNG of Fortran.
+    !! Flag corresponding to the intrinsic RNG provided by the compiler.
   integer, parameter :: RNG_MERSENNE_TWISTER = 1
-    !! Flag corresponding to the Mersenne Twister MT19937 pseudo-RNG.
+    !! Flag corresponding to the Mersenne Twister PRNG (MT19937).
   integer, parameter :: RNG_FLAGS(2) = &
       [RNG_INTRINSIC, RNG_MERSENNE_TWISTER] !! Array of RNG flags.
 
@@ -28,6 +28,7 @@ module RandNumProcs
   public :: RNG_MERSENNE_TWISTER  
 
   public :: assignRNGParams
+  public :: setSeed
   public :: getRandInt
   public :: getRandReal
   public :: getRandRange
@@ -50,7 +51,7 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: chooseRNG
   !>  Choose random number generator. So far, there are two RNGs available:
-  !!  the intrinsic RNG (a KISS PRNG) and a Mersenne Twister RNG (MT19937).
+  !!  the intrinsic RNG and the Mersenne Twister PRNG (MT19937).
   ! -------------------------------------------------------------------------- !
   subroutine chooseRNG(choice)
     integer, intent(in) :: choice

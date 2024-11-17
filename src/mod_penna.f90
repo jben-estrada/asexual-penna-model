@@ -77,7 +77,7 @@ module Penna
 
   use CastProcs, only: castIntToChar
   use ProgressBarType, only: ProgressBar
-  use RandNumProcs, only: assignRNGParams
+  use RandNumProcs, only: assignRNGParams, setSeed
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
   private
@@ -337,8 +337,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: run
-  !>  Run the Penna model simulation. This is a wrapper subroutine to the
-  !!  subroutine `runMultipleInstance`.
+  !>  Run the Penna model simulation.
   ! -------------------------------------------------------------------------- !
   subroutine run()
     real(kind=timeRK)    :: meanTime
@@ -393,7 +392,7 @@ contains
       call system_clock(count=startTimeInt, count_rate=clockRate)  
       startTimeReal = real(startTimeInt, kind=timeRK)/clockRate
 
-      ! Run the actual simulation once.
+      ! Run the Penna model simulation once.
       call runOneInstance(                   &
           maxTimeStep=MODEL_TIME_STEPS,      &
           startPopSize=MODEL_START_POP_SIZE, &
@@ -411,6 +410,9 @@ contains
 
       ! Finalize and close the Penna data writers.
       call closeDataWriter(DATA_WRITER_PENNA)
+
+      ! Reset the RNG with a new seed.
+      call setSeed(PROG_RNG_SEED + i)
 
       ! Print the progress bar.
       if (printProgress .and. PROG_SAMPLE_SIZE > 1) then
