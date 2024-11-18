@@ -50,7 +50,7 @@ module Parameters
   use ParamFileParserType, only: ParamFileParser, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar, isFinite
-  use, intrinsic :: iso_fortran_env, only: compiler_version
+  use, intrinsic :: iso_fortran_env, only: compiler_version, output_unit
   implicit none
   private
 

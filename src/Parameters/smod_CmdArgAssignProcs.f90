@@ -545,10 +545,9 @@ contains
       "Note that the brackets denote optionality. " //                         &
       "So '%n' and '%5n' are both valid."
 
-    print "(/' ', *(a))",                                      &
+    print "(' ', 4a/)",                                      &
       "Default values of all key-value options above are, " // &
-      "by default, listed in '", trim(FILE_PARAM_LIST),        &
-      "'.", new_line("")
+      "by default, listed in '", trim(FILE_PARAM_LIST), "'."
     stop
   end subroutine printHelpAndNotesMsgs
   
