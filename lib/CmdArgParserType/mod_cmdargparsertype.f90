@@ -8,9 +8,11 @@ module CmdArgParserType
   !>  Module containing the derived type `CmdArgParser` for parsing command
   !!  arguments.
   ! ------------------------------------------------------------------------- !
-  use HashTableType, only: &
-    HashTable, &
-    HashTableIterator, &
+  use HashTableType, only:  &
+    HashTable,              &
+    HashTableIterator,      &
+    init_HashTable,         &
+    init_HashTableIterator, &
     HSHTBLE_STAT_OK => STAT_OK
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
@@ -81,14 +83,10 @@ module CmdArgParserType
     end subroutine sortCharArr
   end interface
 
-  ! Constructor.
-  interface CmdArgParser
-    module procedure :: cmdargparser_cnstrct
-  end interface
-
   ! Public elements in this module.
   ! -------------------------------------------------------------------------- !
   public :: CmdArgParser
+  public :: init_CmdArgParser
 
   public :: CMD_TYPE_FLAG_S
   public :: CMD_TYPE_FLAG_L
@@ -100,22 +98,22 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: cmdargparser_cnstrct
-  !>  Constructor for the `CmdArgParser` type.
+  ! SUBROUTINE: init_CmdArgParser
+  !>  Initializer of `CmdArgParser` objects.
   ! -------------------------------------------------------------------------- !
-  function cmdargparser_cnstrct() result(new)
-    type(CmdArgParser), target :: new
+  subroutine init_CmdArgParser(new)
+    type(CmdArgParser), target, intent(inout) :: new
 
     ! Initialize the hash table attributes.
-    new % cmdTypeTable = HashTable()
-    new % cmdValueTable = HashTable()
-    new % cmdAliasTable = HashTable()
-    new % cmdUsageTable = HashTable()
+    call init_HashTable(new % cmdTypeTable)
+    call init_HashTable(new % cmdValueTable)
+    call init_HashTable(new % cmdAliasTable)
+    call init_HashTable(new % cmdUsageTable)
 
     ! Add the command for print the help message.
     call new % setCmd("h", CMD_TYPE_FLAG_S, "Show this help message.", &
         "help", CMD_TYPE_FLAG_L)
-  end function cmdargparser_cnstrct
+    end subroutine init_CmdArgParser
 
 
   ! -------------------------------------------------------------------------- !
@@ -293,7 +291,7 @@ contains
 
     ! Initialize hash table iterator.
     usageTable_ptr => self % cmdUsageTable
-    usageTableIter = HashTableIterator(usageTable_ptr)
+    call init_HashTableIterator(usageTableIter, usageTable_ptr)
 
     ! Initialize array of command names.
     allocate(character(len=MAX_CMD_LEN) :: cmdNames(self % cmdCount))

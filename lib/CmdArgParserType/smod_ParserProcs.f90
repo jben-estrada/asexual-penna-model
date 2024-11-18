@@ -19,7 +19,7 @@ contains
   ! SUBROUTINE: parseCmdArgs
   !>  Parse command arguments.
   ! -------------------------------------------------------------------------- !
-  subroutine parseCmdArgs(parserObj)
+  module subroutine parseCmdArgs(parserObj)
     class(CmdArgParser), intent(inout) :: parserObj
       !! `CmdArgParser` object.
 

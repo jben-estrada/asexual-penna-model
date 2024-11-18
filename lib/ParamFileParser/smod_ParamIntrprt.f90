@@ -25,7 +25,7 @@ contains
   ! FUNCTION: isWhiteSpace
   !>  Check the character `char` if it is a whitespace character or not.
   ! -------------------------------------------------------------------------- !
-  logical function isWhiteSpace(char)
+  module logical function isWhiteSpace(char)
     character, intent(in) :: char
       !! Character to be inspected.
 
@@ -55,7 +55,7 @@ contains
   ! FUNCTION: isAlphanumeric
   !>  Check the character `char` if it is an alphanumeric character or not.
   ! -------------------------------------------------------------------------- !
-  logical function isAlphanumeric(char)
+  module logical function isAlphanumeric(char)
     character, intent(in) :: char
       !! Character to be inspected.
 
@@ -137,7 +137,7 @@ contains
   !>  Convert the character `paramVal` to either integer or real, the type of
   !!  which is determined by the type of the output argument `scalar`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramScalar(paramVal, scalar)
+  module subroutine paramScalar(paramVal, scalar)
     character(len=*), intent(in)  :: paramVal
       !! Character to be inspected and casted to either integer or real.
     class(*),         intent(out) :: scalar
@@ -214,7 +214,7 @@ contains
   !>  Convert `paramVal` to array whose type is either integer or real.
   !!  The type of the output array `array` is determined by its type.
   ! -------------------------------------------------------------------------- !
-  subroutine paramArray(paramVal, array)
+  module subroutine paramArray(paramVal, array)
     character(len=*), intent(in)  :: paramVal
       !! Character to be inspected and casted to integer array.
     class(*),          intent(out) :: array(:)

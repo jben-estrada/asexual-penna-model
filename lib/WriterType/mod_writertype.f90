@@ -65,29 +65,25 @@ module WriterType
   character(len=*), parameter :: FMT_REAL_LEN = "f15.6"
   character(len=*), parameter :: FMT_CHAR_LEN = "a"
 
-  !! `Writer` constructor.
-  interface Writer
-    module procedure :: writer_cnstrct
-  end interface
-
   public :: Writer
+  public :: init_Writer
   public :: writeIK
   public :: writeRK
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: writer_cnstrct
+  ! SUBROUTINE: writer_cnstrct
   !>  Constructor for `Writer` type.
   ! -------------------------------------------------------------------------- !
-  function writer_cnstrct(filename, unit, delim) result(new)
-    character(len=*), intent(in)  :: filename
+  subroutine init_Writer(new, filename, unit, delim)
+    type(Writer),     intent(inout) :: new
+      !! new `Writer` object to be initialized.
+    character(len=*), intent(in)    :: filename
       !! Name of the file to which data is to written on.
-    integer,          intent(in)  :: unit
+    integer,          intent(in)    :: unit
       !! Unit with which the file is identified within the program.
-    character,        intent(in)  :: delim
-
-    type(Writer) :: new
+    character,        intent(in)    :: delim
 
     new % filename = trim(filename)
     new % unit = unit
@@ -96,7 +92,7 @@ contains
     new % fmtInt = "(*(" // FMT_INT_LEN // ",:,'" // delim // "'))"
     new % fmtReal = "(*(" // FMT_REAL_LEN // ",:,'" // delim // "'))"
     new % fmtChar = "(*(" // FMT_CHAR_LEN // ",:,'" // delim // "'))"
-  end function writer_cnstrct
+  end subroutine init_Writer
 
 
   ! -------------------------------------------------------------------------- !

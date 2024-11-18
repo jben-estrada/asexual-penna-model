@@ -31,7 +31,7 @@ contains
   !!         differing cases, the comparison is case-insensitive (e.g. "a" is
   !!         equal to "A").
   ! -------------------------------------------------------------------------- !
-  subroutine sortCharArr(charArr)
+  module subroutine sortCharArr(charArr)
     character(len=*), intent(inout) :: charArr(:)
       !! Character array to be sorted in place.
 

@@ -50,16 +50,17 @@ module StaticBitSetType
   character, parameter :: LO_BIT_CHAR = "0"
   character, parameter :: HI_BIT_CHAR = "1"
 
-  interface StaticBitSet
-    module procedure :: bitset_cnstrc
-    module procedure :: bitset_cnstrc_array
-  end interface
+  interface init_StaticBitSet
+      procedure :: init_StaticBitSet_scalar
+      procedure :: init_StaticBitSet_array
+  end interface init_StaticBitSet
 
   interface operator(==)
     module procedure :: cmpr_bitsets
   end interface
 
   public :: StaticBitSet
+  public :: init_StaticBitSet
   public :: maskBitset
   public :: extractBitSetData
   public :: operator(==)
@@ -69,25 +70,38 @@ module StaticBitSetType
 contains
 
 
-  function bitset_cnstrc(setSize, initValue) result(newBitSet)
-    integer,           intent(in) :: setSize
-    logical, optional, intent(in) :: initValue
-    type(StaticBitSet) :: newBitSet
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: init_StaticBitSet_scalar
+  !>  Initializer for `StaticBitSet` objects with optional scalar initial value.
+  ! -------------------------------------------------------------------------- !
+  subroutine init_StaticBitSet_scalar(new, setSize, initValue)
+    type(StaticBitSet), intent(inout):: new
+      !! New `BitSet` object to be initialized.
+    integer,           intent(in)    :: setSize
+      !! Size of the bit set.
+    logical, optional, intent(in)    :: initValue
+      !! Initial value of the bit set. This is optional.
 
     if (setSize <= 0) then
       call raiseError("Invalid BitSet size: " // castIntToChar(setSize))
     end if
 
-    newBitSet%size = setSize
-    allocate(newBitSet%data(setSize))
+    new%size = setSize
+    allocate(new%data(setSize))
 
-    if (present(initValue)) newBitSet%data(:) = initValue
-  end function bitset_cnstrc
+    if (present(initValue)) new%data(:) = initValue
+  end subroutine init_StaticBitSet_scalar
 
 
-  function bitset_cnstrc_array(lgclArr) result(newBitSet)
-    logical, intent(in) :: lgclArr(:)
-    type(StaticBitSet)  :: newBitSet
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: init_StaticBitSet_array
+  !>  Initializer for `StaticBitSet` objects with logical array as initializer.
+  ! -------------------------------------------------------------------------- !
+  subroutine init_StaticBitSet_array(newBitSet, lgclArr)
+    type(StaticBitSet), intent(inout)  :: newBitSet
+      !! New `BitSet` object to be initialized.
+    logical,            intent(in)     :: lgclArr(:)
+      !! Logical array as data for the new bit set.
 
     if (size(lgclArr) == 0) then
       call raiseError("Input logical array cannot be of size 0.")
@@ -97,7 +111,7 @@ contains
     newBitSet%data(:) = lgclArr(:)
 
     newBitSet%size = size(lgclArr)
-  end function bitset_cnstrc_array
+  end subroutine init_StaticBitSet_array
 
 
   subroutine bitset_changeSize(self, newSetSize, padding)
@@ -303,7 +317,7 @@ contains
     end if
 
     tempArray(:) = srcBitset%data(:) .or. mask(:)
-    destBitset = bitset_cnstrc_array(tempArray)
+    call init_StaticBitSet_array(destBitset, tempArray)
   end subroutine maskBitset
 
 

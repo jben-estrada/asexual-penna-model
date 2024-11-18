@@ -71,17 +71,6 @@ module HashTableType
 
 
   ! ------------------------------------------------------------------------- !
-  ! `HashTable` constructor.
-  interface HashTable
-    module procedure :: hashtable_cnstrct
-  end interface
-
-  interface HashTableIterator
-    module procedure :: hashtableiterator_cnstrct
-  end interface
-
-
-  ! ------------------------------------------------------------------------- !
   ! Default hash table size.
   integer, parameter :: DEF_HASHTBL_SIZE = 50
 
@@ -95,19 +84,21 @@ module HashTableType
 
   public :: HashTable
   public :: HashTableIterator
+  public :: init_HashTable
+  public :: init_HashTableIterator
   public :: hash
 contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! FUNCTION: hashtable_cnstrct
-  !>  Constructor for the `HashTable` type.
+  ! SUBROUTINE: init_HashTable
+  !>  Initializer for `HashTable` objects.
   ! ------------------------------------------------------------------------- !
-  function hashtable_cnstrct(tableSize) result(new)
-    integer, optional, intent(in)    :: tableSize
-      !! Size of the hash table.
-
-    type(HashTable) :: new
+  subroutine init_HashTable(new, tableSize)
+    type(HashTable), intent(inout) :: new
+      !! New `HashTable` object to be initialized.
+    integer, optional, intent(in)  :: tableSize
+      !! Size of the hash table. The default value is provided by the module
 
     if (present(tableSize)) then
       allocate(new % slotArray(tableSize))
@@ -116,7 +107,7 @@ contains
     end if
 
     new % slotArrSize = size(new % slotArray)
-  end function hashtable_cnstrct
+  end subroutine init_HashTable
 
 
   ! ------------------------------------------------------------------------- !
@@ -416,19 +407,19 @@ contains
 
 
   ! ------------------------------------------------------------------------- !
-  ! FUNCTION: hashtableiterator_cnstrct
-  !>  Constructor for the  `HashTableIterator` type.
+  ! SUBROUTINE: init_HashTableIterator
+  !>  Initializer for `HashTableIterator` objects.
   ! ------------------------------------------------------------------------- !
-  function hashtableiterator_cnstrct(iteratee_ptr) result(new)
-    type(HashTable), pointer, intent(in)    :: iteratee_ptr
-    !! `HashTable` object to be iterated over.
-
-    type(HashTableIterator) :: new
+  subroutine init_HashTableIterator(new, iteratee_ptr)
+    type(HashTableIterator), intent(inout) :: new
+      !! The new `HashTableIterator` object to be initialized.
+    type(HashTable), pointer, intent(in)   :: iteratee_ptr
+      !! Hash table to be iterated.
 
     new % iteratee_ptr => iteratee_ptr
     new % currSlotIdx = 1
     new % currMapping_ptr => iteratee_ptr % slotArray(1) % headMapping_ptr
-  end function hashtableiterator_cnstrct
+  end subroutine init_HashTableIterator
 
 
   ! ------------------------------------------------------------------------- !

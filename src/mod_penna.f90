@@ -58,6 +58,7 @@ module Penna
     DEAD_MUTATION,          &
     DEAD_VERHULST,          &
     Population_t,           &
+    init_Population_t,      &
     Person_t
   
   use DataWriter, only:  &
@@ -72,11 +73,11 @@ module Penna
     DATA_WRITER_PROG
 
   use, intrinsic :: iso_fortran_env, only: &
-    timeIK => int64, &
+    timeIK => int64,  &
     timeRK => real64
 
   use CastProcs, only: castIntToChar
-  use ProgressBarType, only: ProgressBar
+  use ProgressBarType, only: ProgressBar, init_ProgressBar
   use RandNumProcs, only: assignRNGParams, setSeed
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
@@ -175,11 +176,12 @@ contains
     popSize = startPopSize
     call initGenomeDstrb()
     call resetAgeDstrb()
-    population = Population_t(        &
-                      startPopSize,   &
-                      initMttnCount,  &
-                      toRecDivIdx .or. toRecGeneDstrb .or. toRecGnmCount &
-                  )
+    call init_Population_t( &
+        population, &
+        startPopSize, &
+        initMttnCount, &
+        toRecDivIdx .or. toRecGeneDstrb .or. toRecGnmCount &
+      )
 
     ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
     ! paramToChange  => !!!!!!
@@ -362,8 +364,9 @@ contains
     printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 
     ! Initialize the progress bar.
-    progBar = ProgressBar(20, PROG_SAMPLE_SIZE)
+    call init_ProgressBar(progBar, 20, PROG_SAMPLE_SIZE)
 
+    ! Set the global inquiry flags for data to be recorded.
     call setWriterInqFlag(trim(PROG_REC_FLAG))
 
     ! Initialize data writing for the current program run (e.g. time elapsed)

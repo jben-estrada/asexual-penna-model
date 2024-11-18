@@ -22,7 +22,7 @@ module PopulationList
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
-  use StaticBitSetType,  only: StaticBitSet
+  use StaticBitSetType,  only: StaticBitSet, init_StaticBitSet
   use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
   use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
@@ -117,13 +117,6 @@ module PopulationList
       !! is encountered.
   end type Population_t
 
-
-  ! Overload the default constructor of `Population_t`.
-  interface Population_t
-    module procedure :: population_constructor
-  end interface Population_t
-
-
   real,    parameter :: GROWTH_FACTOR = 1.5
     !! The threshold at which resizing is triggered.
   logical, parameter :: MASK_ALIVE = .false.
@@ -142,28 +135,31 @@ module PopulationList
   public :: DEAD_VERHULST
 
   public :: Population_t
+  public :: init_Population_t
   public :: Person_t
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: population_constructor
-  !>  `Population_t` constructor
+  ! SUBROUTINE: init_Population_t
+  !>  Initializer for `Population_t` objects.
   ! -------------------------------------------------------------------------- !
-  function population_constructor(startPopsize, initMttnCount, recordGnmDstrb) &
-      result(newPop)
-    integer, intent(in) :: startPopSize
+  subroutine init_Population_t(                             &
+        newPop, startPopsize, initMttnCount, recordGnmDstrb &
+      )
+    type(Population_t), intent(inout) :: newPop
+      !! New `Population_t` object to be initialized.
+    integer,            intent(in)    :: startPopSize
       !! Starting population size.
-    integer, intent(in) :: initMttnCount
+    integer,            intent(in)    :: initMttnCount
       !! Initial mutation count.
-    logical, intent(in) :: recordGnmDstrb
+    logical,            intent(in)    :: recordGnmDstrb
       !! Record genome distribution?
-    type(Population_t) :: newPop
 
     if (allocated(newPop%population)) deallocate(newPop%population)
     allocate(newPop%population(int(startPopSize*GROWTH_FACTOR)))
 
-    newPop%deadPopMask = StaticBitSet(startPopSize, MASK_ALIVE)
+    call init_StaticBitSet(newPop%deadPopMask, startPopSize, MASK_ALIVE)
 
     ! Initialize each of the `Person_t`s in the population array.
     newPop%popArraySize = startPopSize
@@ -188,7 +184,7 @@ contains
     newPop%futureEndIdx = startPopSize
     newPop%popSize = startPopSize
     newPop%recordGnmDstrb = recordGnmDstrb
-  end function population_constructor
+  end subroutine init_Population_t
 
 
   ! -------------------------------------------------------------------------- !
@@ -212,7 +208,7 @@ contains
     if (allocated(personPtrArr)) deallocate(personPtrArr)
     allocate(personPtrArr(size))
 
-    pureGenome = StaticBitSet(MODEL_L, GENE_HEALTHY)
+    call init_StaticBitSet(pureGenome, MODEL_L, GENE_HEALTHY)
 
     do i = 1, size
       if (associated(personPtrArr(i)%person)) personPtrArr(i)%person => null()

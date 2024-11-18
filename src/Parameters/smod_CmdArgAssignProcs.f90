@@ -201,11 +201,11 @@ contains
   ! SUBROUTINE: setParams
   !>  Assign parameters from external file and command arguments.
   ! -------------------------------------------------------------------------- !
-  subroutine setParams()
+  module subroutine setParams()
     type(CmdArgParser), target :: pennaCmdArgs
 
     ! Initialize the command argument parser.
-    pennaCmdArgs = CmdArgParser()
+    call init_CmdArgParser(pennaCmdArgs)
     call initCmdArgRecs(pennaCmdArgs)
 
     call pennaCmdArgs%readCmdArgs()
@@ -463,7 +463,7 @@ contains
   !>  Pretty print the model parameters. Can print verbosely or print nothing
   !!  if need be.
   ! -------------------------------------------------------------------------- !
-  subroutine printProgDetails()
+  module subroutine printProgDetails()
     select case (PROG_PRINT_STATE)
       case (NORMAL_PRINT, VERBOSE_PRINT)
         call printParams()
@@ -648,7 +648,7 @@ contains
   !>  Free all allocatable objects and objects with allocatable attributes in
   !!  the 'Parameter' module.
   ! -------------------------------------------------------------------------- !
-  subroutine freeParamAlloctbls()
+  module subroutine freeParamAlloctbls()
     integer :: i
 
     ! Free Verhulst weight array.

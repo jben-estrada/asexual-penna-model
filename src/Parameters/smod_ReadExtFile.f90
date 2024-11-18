@@ -37,7 +37,7 @@ contains
   ! SUBROUTINE: readDefaultParamVal
   !>  Read default parameter values from an external file.
   ! -------------------------------------------------------------------------- !
-  subroutine readDefaultParamVal()
+  module subroutine readDefaultParamVal()
     type(ParamFileParser) :: paramReader
 
     ! Temporary character for `PROG_REC_FLAG`.
@@ -51,7 +51,7 @@ contains
     call checkParamFilePath()
 
     ! Read parameter file.
-    paramReader = ParamFileParser(FILE_PARAM_LIST)
+    call init_ParamFileParser(paramReader, FILE_PARAM_LIST)
     call paramReader % readFile()
 
     ! Assign scalar parameters one-by-one.

@@ -25,33 +25,29 @@ module ProgressBarType
       !! 1, can be optionally changed.
   end type ProgressBar
 
-  ! Constructor.
-  interface ProgressBar
-    module procedure :: progressbar_cnstrct
-  end interface
-
   character, parameter :: DEFAULT_CHAR_BIT = ">"
     !! Default character bit.
 
   public :: ProgressBar
+  public :: init_ProgressBar
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: progressbar_cnstrct
-  !>  A constructor for the `ProgressBar` type.
+  ! SUBROUTINE: init_ProgressBar
+  !>  Initializer for `ProgressBar` objects.
   ! -------------------------------------------------------------------------- !
-  function progressbar_cnstrct(partition, totalTicks, charBit) result(new)
-    integer,           intent(in)  :: partition
+  subroutine init_ProgressBar(new, partition, totalTicks, charBit)
+    type(ProgressBar), intent(inout) :: new
+      !! `ProgressBar` object to be initialized.
+    integer,           intent(in)    :: partition
       !! The `partition` for the `partition` attribute of `new`. 
-    integer,           intent(in)  :: totalTicks
+    integer,           intent(in)    :: totalTicks
       !! The `totalTicks` for the `totalTicks` attribute of `new`. 
-    character,         optional    :: charBit
+    character,         optional      :: charBit
       !! The `charBit` for the `charBit` attribute of `new`.
       !! Defaults to `DEFAULT_CHAR_BIT`.
 
-    type(ProgressBar) :: new
-      !! `ProgressBar` object to be initialized.
 
     ! Get character bit for progress bar.
     if (present(charBit)) then
@@ -64,7 +60,7 @@ contains
     new % counter = 0
     new % partition = partition
     new % totalTicks = totalTicks
-  end function progressbar_cnstrct
+  end subroutine init_ProgressBar
 
 
   ! -------------------------------------------------------------------------- !

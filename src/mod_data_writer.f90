@@ -22,7 +22,7 @@ module DataWriter
     REC_FLAG_ORDER
   use ErrorMSG, only: raiseError
   use CastProcs, only: castCharToInt, castIntToChar
-  use WriterType, only: Writer, writeIK, writeRK
+  use WriterType, only: Writer, init_Writer, writeIK, writeRK
   implicit none
   private
 
@@ -202,7 +202,7 @@ contains
     end if
 
     ! Initialize the chosen data writer.
-    chosenWriter = Writer(saveFilename, newWriterUnit, delim)
+    call init_Writer(chosenWriter, saveFilename, newWriterUnit, delim)
     ! Open file for writing.
     call chosenWriter%openFile()
 

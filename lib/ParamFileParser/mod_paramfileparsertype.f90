@@ -8,7 +8,10 @@ module ParamFileParserType
   !>  Module containing a derived type for reading parameter values from
   !!  external files.
   ! -------------------------------------------------------------------------- !
-  use HashTableType, only: HashTable, HSHTBL_STAT_OK => STAT_OK
+  use HashTableType, only: &
+    HashTable,             &
+    init_HashTable,        &
+    HSHTBL_STAT_OK => STAT_OK
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar
   use ErrorMSG, only: raiseError
   implicit none
@@ -79,19 +82,14 @@ module ParamFileParserType
     end subroutine paramArray
   end interface
 
-  ! Constructor.
-  interface ParamFileParser
-    module procedure :: paramfileparser_cnstrct
-  end interface
-
   ! -------------------------------------------------------------------------- !
   ! Standard unit in this module for opening and reading files.
   integer, parameter :: STD_UNIT = 50
   ! Maximum length of one line.
   integer, parameter :: MAX_LINE_LEN = 256
 
-
   public :: ParamFileParser
+  public :: init_ParamFileParser
 contains
 
 
@@ -99,14 +97,16 @@ contains
   ! FUNCTION: paramfileparser_cnstrct
   !>  Constructor for the  `ParamFileParser` type.
   ! -------------------------------------------------------------------------- !
-  function paramfileparser_cnstrct(filePath) result(new)
-    character(len=*),      intent(in)  :: filePath
+  subroutine init_ParamFileParser(new, filePath)
+    type(ParamFileParser), intent(inout) :: new
+      !! New `ParamFileParser` object to be initialized.
+    character(len=*),      intent(in)    :: filePath
       !! Path to the file to be opened and read.
 
-    type(ParamFileParser) :: new
+
     integer :: fileStat
 
-    new % keyValTable = HashTable()
+    call init_HashTable(new % keyValTable)
 
     ! Check if the file exits.
     inquire(file=filePath, iostat=fileStat)
@@ -114,7 +114,7 @@ contains
         "' cannot be opened or does not exit.")
 
     new % filePath = trim(filePath)  ! NOTE: Automatic allocation
-  end function paramfileparser_cnstrct
+  end subroutine init_ParamFileParser
 
 
   ! -------------------------------------------------------------------------- !
@@ -495,6 +495,6 @@ contains
       !! `ParamFileParser` object to be modified.
 
     ! `HashTable` attribute is automatically destroyed.
-    deallocate(self % filePath)
+    if (allocated(self % filePath)) deallocate(self % filePath)
   end subroutine destructor
 end module ParamFileParserType

@@ -41,12 +41,13 @@ module Parameters
   ! -------------------------------------------------------------------------- !
   use CmdArgParserType, only:  &
     CmdArgParser,              &
+    init_CmdArgParser,         &
     FLAG_S => CMD_TYPE_FLAG_S, &
     FLAG_L => CMD_TYPE_FLAG_L, &
     KV_S => CMD_TYPE_KEYVAL_S, &
     KV_L => CMD_TYPE_KEYVAL_L, &
     FLAG_TOGGLED
-  use ParamFileParserType, only: ParamFileParser
+  use ParamFileParserType, only: ParamFileParser, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar, isFinite
   use, intrinsic :: iso_fortran_env, only: compiler_version
