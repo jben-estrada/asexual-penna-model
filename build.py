@@ -3,16 +3,14 @@ import argparse
 import json
 import os
 
+from typing import NamedTuple
+from enum import Enum
+
 # Script directory
 SCRIPT_DIR = os.path.dirname(__file__)
 
 # Output executable name
-OUT = "penna.out"
-
-# Compiler
-FC = "gfortran"
-# Compiler type
-CMPTYPE = "gnu"
+OUTPUT_NAME = "penna"
 
 # Directory
 SRC_DIR = f"{SCRIPT_DIR}/src"
@@ -26,74 +24,149 @@ EXTERNAL_DIR = f"{SCRIPT_DIR}/external"
 STATIC_DIR = f"{SCRIPT_DIR}/static"
 EXT_COMPILE_SETTING_FILE = "compile.json"
 
-# Compiler flags
-# NOTE: The intial apostrophe is required. The final one will be supplied by
-#       `bld_spec_flag`
-FCFLAGS = [
-    "\"", "-c", "-std=f2018", "-Wall", "-Wextra", "-fcheck=all",
-    "-march=native", "-pedantic"
-]
 
-# FoBiS.py command
+BUILD_TYPES = ["release", "debug", "static", "no-build"]
+
+
+class CompilerType(Enum):
+    GNU   = "gnu"
+    INTEL = "intel"
+
+
+class BuildType(Enum):
+    RELEASE = "release"
+    DEBUG   = "debug"
+    STATIC  = "static"
+    NOBUILD = "no-build"
+
+
+class CompilerInfo(NamedTuple):
+    type:              CompilerType
+    compiler:          str         # Compiler executable
+    cflags:            list[str]   # Compile flags
+    lflags:            list[str]   # Linking flags
+    build_spec_cflags: dict[BuildType, list[str]]   # Build-specific cflags
+    build_spec_lflags: dict[BuildType, list[str]]   # Build-specific lflags
+
+
+
+COMPILER_GNU = CompilerInfo(
+        type=CompilerType.GNU,
+        compiler="gfortran",
+        cflags=[
+            "-c", "-std=f2018", "-Wall", "-Wextra",
+            "-fcheck=all", "-march=native", "-pedantic"
+        ],
+        lflags=[],
+        build_spec_cflags={
+            BuildType.RELEASE : ["-O3", "-g1"],
+            BuildType.DEBUG   : ["-O0", "-g2"],
+            BuildType.STATIC  : ["-O3", "-g1", "-static"],
+            BuildType.NOBUILD : []
+        },
+        build_spec_lflags={
+            BuildType.RELEASE : [],
+            BuildType.DEBUG   : [],
+            BuildType.STATIC  : [],
+            BuildType.NOBUILD : []
+        }
+    )
+
+COMPILER_INTEL = CompilerInfo(
+        type=CompilerType.INTEL,
+        compiler="ifx",
+        cflags=[
+            "-c", "-stand f18", "-ccdefault none", 
+            "-warn all,stderrors,usage,unused"
+        ],
+        lflags=[],
+        build_spec_cflags={
+            BuildType.RELEASE : ["-O3", "-g1"],
+            BuildType.DEBUG   : ["-O0", "-fsanitize address", "-check all",
+                                 "-debug all", "-g2", "-traceback"],
+            BuildType.STATIC  : ["-O3", "-g1", "-static"],
+            BuildType.NOBUILD : []
+        },
+        build_spec_lflags={
+            BuildType.RELEASE : [],
+            BuildType.DEBUG   : ["-O0", "-fsanitize address", "-check all"],
+            BuildType.STATIC  : [],
+            BuildType.NOBUILD : []
+        }
+    )
+
+COMPILER_TYPE_DICT = {
+    CompilerType.GNU:   COMPILER_GNU,
+    CompilerType.INTEL: COMPILER_INTEL
+}
+
+
+# === FoBiS.py flags === #
+# FoBiS.py executable
 FOBIS = "FoBiS.py"
-# FoBiS.py build options: directory
-DIRFLAGS = [
-    "-s", SRC_DIR, LIB_DIR,
+# Directory options
+FOBIS_DIR_FLAGS = [
+    "-s",   SRC_DIR, LIB_DIR,
     "-dobj", OBJ_DIR,
     "-dmod", MOD_DIR
 ]
-EXT_OBJDIRFLAGS = [
+# Directory options for external src code
+FOBIS_EXT_DIR_FLAGS = [
     "-dobj", OBJ_DIR,
     "-dmod", MOD_DIR
 ]
-# FoBiS.py build flags
-BLDFLAG = [
-    "-fc", FC,
-    "-compiler", CMPTYPE,
-    "-o", f"{BIN_DIR}/{OUT}",
-    *DIRFLAGS,
-    "-colors",
-    "-j", "2",
-    "-q",
-    "-cflags", *FCFLAGS
-]
-EXT_BLDFLAG= [
-    "-fc", FC,
-    "-compiler", CMPTYPE,
-    "-colors",
-    "-j", "2",
-    "-q",
-    "-cflags", *FCFLAGS
-]
-
-BUILD_TYPE = ["release", "debug", "static", "no-build"]
 
 
-def parse_cmd_args():
-    arg_parser = argparse.ArgumentParser(
-        description="Build script for the asexual Penna model simulation code"
-    )
-    arg_parser.add_argument(
-        "-t", "--type", choices=BUILD_TYPE, default="no-build",
-        help="build type"
-    )
-    arg_parser.add_argument(
-        "--clean", choices=["object", "mod", "none"], nargs="?",
-        const="object", default="object", help="delete build files"
-    )
-    return arg_parser.parse_args()
+def get_fobis_build_flags(
+            cmp_type: CompilerType,
+            build_type: BuildType,
+            flag_type: str = "build",
+            custom_cflags: list[str] | None = None
+        ) -> list[str]:
+    
+    if cmp_type not in COMPILER_TYPE_DICT:
+        raise ValueError(f"Invalid CompilerType: \"{repr(cmp_type)}\"")
+    cmp_info = COMPILER_TYPE_DICT[cmp_type]
+    
+    if flag_type == "build":
+        add_fobis_flags = [
+            "-o", f"{BIN_DIR}/{OUTPUT_NAME}",
+            *FOBIS_DIR_FLAGS,
+            "-lflags \"",
+                *cmp_info.lflags,
+                *cmp_info.build_spec_lflags[build_type],
+                "\""
+        ]
+    elif flag_type == "external-lib":
+        add_fobis_flags = []   # Add new stuff if necessary
+    else:
+        add_fobis_flags = []
+
+    return [
+        "-fc",       cmp_info.compiler,
+        "-compiler", cmp_info.type.value,
+        *add_fobis_flags,
+        "-colors",
+        "-j", "2",
+        "-q",
+        "-cflags \"",
+            *cmp_info.cflags,
+            *cmp_info.build_spec_cflags[build_type],
+            *(custom_cflags if custom_cflags else []),
+            "\""
+    ]
 
 
-def build_ext_lib(build_spec_flags):
+def build_external_lib(cmp_type: CompilerType, build_type: BuildType):
     print("[Building external library]")
     static_lib_path_list = []
+
     for ext_lib in os.listdir(EXTERNAL_DIR):
         ext_lib_dir = f"{EXTERNAL_DIR}/{ext_lib}"
         if not os.path.isdir(ext_lib_dir):
             continue
 
-        print(f"\n> Compiling {ext_lib}...")
-
+        print(f"\t> Compiling {ext_lib}...")
         compile_setting_path = f"{ext_lib_dir}/{EXT_COMPILE_SETTING_FILE}"
         try:
             with open(compile_setting_path, "r") as file:
@@ -106,34 +179,59 @@ def build_ext_lib(build_spec_flags):
             ) from e
         
         output_path = f"{STATIC_DIR}/{ext_lib}.a"
-        build_flags = " ".join(
+        ext_build_flags = get_fobis_build_flags(
+                                cmp_type,
+                                build_type,
+                                flag_type="external-lib",
+                                custom_cflags=[cflag]
+                            )
+        ext_build_flag_str = " ".join(
             [
                 "-mklib", "static",
                 "-t", target_file,
                 "-o", output_path,
                 "-s", ext_lib_dir,
-                *EXT_OBJDIRFLAGS,
-                *EXT_BLDFLAG, cflag, *build_spec_flags
+                *FOBIS_EXT_DIR_FLAGS,
+                *ext_build_flags
             ]
         )
 
-        os.system(f"{FOBIS} build {build_flags}")
+        os.system(f"{FOBIS} build {ext_build_flag_str}")
         static_lib_path_list.append(output_path)
     return static_lib_path_list
 
 
-def build():
-    pass
+def parse_cmd_args():
+    arg_parser = argparse.ArgumentParser(
+        description="Build script for the asexual Penna model simulation code"
+    )
+    arg_parser.add_argument(
+        "-b", "--build-type",
+        choices=list(map(lambda e: e.value, BuildType)),
+        default=BuildType.NOBUILD.value, help="build type"
+    )
+    arg_parser.add_argument(
+        "-c", "--compiler-type",
+        choices=list(map(lambda e: e.value, CompilerType)),
+        default=CompilerType.GNU.value, help="compiler type"
+    )
+    arg_parser.add_argument(
+        "--clean", choices=["object", "mod", "all", "none"], nargs="?",
+        const="object", default="object", help="delete build files"
+    )
+    return arg_parser.parse_args()
 
 
-def clean(type):
-    if type == "object":
-        print(f"\n[Removing {OBJ_DIR}/*.o files...]")
+def clean(clean_type: str):
+    print("")
+    if clean_type == "object" or clean_type == "all":
+        print(f"[Removing {OBJ_DIR}/*.o files...]")
         os.system(f"rm -f {OBJ_DIR}/*.o")
         print(f"[Removing {STATIC_DIR}/*.a files...]")
         os.system(f"rm -f {STATIC_DIR}/*.a")
-    elif type == "mod":
-        print(f"\n[Removing {MOD_DIR}/*.(s)mod files...]")
+
+    if clean_type == "mod"  or clean_type == "all":
+        print(f"[Removing {MOD_DIR}/*.(s)mod files...]")
         os.system(f"rm -f {MOD_DIR}/*.mod {MOD_DIR}/*.smod")
 
 
@@ -146,30 +244,47 @@ def main():
 
     build_args = parse_cmd_args()
 
-    if build_args.type == "no-build" and build_args.clean == "none":
+    # Determine the compiler type specified by the user
+    for t in CompilerType:
+        if t.value == build_args.compiler_type:
+            cmp_type = t
+            break
+    else:
+        raise ValueError(
+            f"\"{build_args.compiler_type}\" is not a valid compiler type"
+        )
+    # Determine the build type specified by the user
+    for t in BuildType:
+        if t.value == build_args.build_type:
+            build_type = t
+            break
+    else:
+        raise ValueError(
+            f"\"{build_args.build_type}\" is not a valid build type"
+        )
+    
+    if (        build_args.build_type == BuildType.NOBUILD
+            and build_args.clean == "none"):
         raise ValueError(
             f"Choose something! Run: `{__file__} --help` for more information"
         )
-
-    bld_spec_flag = ["\""]
-    if build_args.type == "release":
-        bld_spec_flag = ["-Ofast", "-g"] + bld_spec_flag
-    elif build_args.type == "debug":
-        bld_spec_flag = ["-O0", "-g"] + bld_spec_flag
-    elif build_args.type == "static":
-        bld_spec_flag = ["-Ofast", "-g", "-static"] + bld_spec_flag
-
-    if build_args.type != "no-build":
+    
+    if build_type != BuildType.NOBUILD:
         # Build the external libraries
-        lib_path_list = build_ext_lib(bld_spec_flag)
-        if lib_path_list:
-            lib_path_list = ["-libs"] + lib_path_list
+        ext_lib_path_list = build_external_lib(cmp_type, build_type)
+        if ext_lib_path_list:
+            ext_lib_path_list.insert(0, "-libs")
+        
+        # Build the rest of the project.
+        fobis_build_flag_list = get_fobis_build_flags(
+                cmp_type, build_type, flag_type="build"
+            )
+        fobis_build_flag_str = " ".join(
+                ext_lib_path_list + fobis_build_flag_list
+            )
 
-        # Build the entire project
-        fobis_build_flags = " ".join(
-            lib_path_list + BLDFLAG + bld_spec_flag
-        )
-        os.system(f"{FOBIS} build {fobis_build_flags}")
+        print("\n[Building the project]\n")
+        os.system(f"{FOBIS} build {fobis_build_flag_str}")
 
     if build_args.clean != "none":
         clean(build_args.clean)

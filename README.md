@@ -40,22 +40,27 @@ To my knowledge, it is also available on Anaconda but only the older versions. A
 ### Building the Penna model program
 
 Once you have downloaded or cloned the project, run the build script `build.py` in the project directory.
-It has several options to build the project but for most cases, you might want to do a release build. That is to say, run the follow commands:
+It has several options to build the project but for most cases, you want to do a release build.
+To do so, run the following commands:
 
 ```bash
 cd asexual-penna-model     # Go to the project directory
-python build.py --type release --clean
+python build.py --build-type release --compiler-type gnu --clean
 ```
 
-The output executable `penna.out` can be found in `bin/` in the project directory.
+Note that this assumes that you use `gfortran`. To change it into Intel Fortran Compiler (`ifx`), replace `gnu` with `intel`:
+```bash
+python build.py ... --compiler-type intel ...
+```
 
+The output executable `penna` can be found in `bin/` in the project directory.
 For information about the other build types, run the script with the `--help` option.
 ```bash
 python build.py --help
 ```
 
 #### NOTE :
-The build script assumes that you use `gfortran`. Due to limited time (and money), I was not able to implement options for other compilers. So if you use other Fortran compilers such as `ifx`, you will have to edit the build script.
+So far, the build script only allows `gfortran` and `ifx` compilers.
 
 Go to [Top](#asexual-penna-model).
 
