@@ -80,10 +80,12 @@ module Parameters
       "Asexual Penna model simulation"
     !! Name of the program
   character(len=*), parameter :: PROG_DESC = &
-      "A simulation for the 'Penna model', a biological aging model."
+      "Asexual Penna model: A computer model for biological aging based " // &
+      "on mutation accumulation."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = "v0.3.0"
+  character(len=*), parameter :: PROG_VERSION = "v2024.11.0"
     !! Program version.
+    !! This is based on the year and month the program is released.
 
   integer, target, protected :: PROG_PRINT_STATE = NORMAL_PRINT
     !! Printing state.
