@@ -505,7 +505,7 @@ contains
       "individuals."
     print "(' - ', *(a))",                                     &
       "Valid character values for -", cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias
+      " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
     write(*, "(8(4(' '), a/)/)", advance="no")                                 &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
@@ -518,7 +518,7 @@ contains
 
     print "(' - ', *(a))",  &
       "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias
+      " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias, ":"
     write(*, "(3(4(' '), a/)/)", advance="no")  &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
@@ -526,7 +526,7 @@ contains
 
     print "(' - ', *(a))",  &
       "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias
+      " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias, ":"
     write(*, "(2(4(' '), a/)/)", advance="no")  &
       "0 - Intrinsic RNG by the compiler (" // compiler_version() // ")", &
       "1 - 32-bit Mersenne twister PRNG"
@@ -534,20 +534,20 @@ contains
     print "(' - ', *(a))",  &
       "Formatting for the output file name -", &
       cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias
-    write(*, "(4(4(' '), a/)/)", advance="no")  &
-      "%[N]n - Data set number. Can be optionally left-padded with " //        &
-        "N number of zeroes",                                                  &
+      " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, ":"
+    write(*, "(2(4(' '), a/), /3(6(' '), a/) /)", advance="no")  &
+      "%[N]n - Data set number for multiple samples.",                         &
       "%[N]f - The record data flag provided by -" //                          &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. ",                 &
-        "        Can be optionally left-padded with N whitespace characters.", &
-      "Note that the brackets denote optionality. " //                         &
-      "So '%n' and '%5n' are both valid."
+      "N is the number of characters padded to the left of the data " //       &
+      "specified by the formatting.", "It is optional and defaults to 0, " //  &
+      "e.g. %5f and %f are valid. ",                                           &
+      "The padding characters are '_' for %f and '0' for %n."
 
-    print "(' ', 4a/)",                                      &
-      "Default values of all key-value options above are, " // &
-      "by default, listed in '", trim(FILE_PARAM_LIST), "'."
+    print "(' ', a/)",                                      &
+      "By default, the default values of all key-value options above are " // &
+      "listed in '" // trim(FILE_PARAM_LIST) // "'."
     stop
   end subroutine printHelpAndNotesMsgs
   

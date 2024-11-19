@@ -40,7 +40,7 @@ module DataWriter
   character(len=*), parameter :: FILE_NAME_FMT_DELIM       = "%"
   character(len=*), parameter :: FILE_NAME_FLAG_FMT        = "f"
   character(len=*), parameter :: FILE_NAME_DATASET_NUM_FMT = "n"
-  character(len=*), parameter :: FILE_NAME_FLAG_PAD        = " "
+  character(len=*), parameter :: FILE_NAME_FLAG_PAD        = "_"
   character(len=*), parameter :: FILE_NAME_DATASET_NUM_PAD = "0"
 
   ! File delimiter and divider string status.
