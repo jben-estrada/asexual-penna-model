@@ -82,8 +82,8 @@ contains
     allocate(MODEL_GENOME_MASK(MODEL_L), source=GENOME_MASK_DEFAULT)
     allocate(tempGenomeMask(MODEL_L))
 
-    call paramReader % getValue(PARAM_KEYS(17), MODEL_V_WEIGHT, getStats(16))
-    call paramReader % getValue(PARAM_KEYS(18), tempGenomeMask, getStats(17))
+    call paramReader % getValue(PARAM_KEYS(17), MODEL_V_WEIGHT, getStats(17))
+    call paramReader % getValue(PARAM_KEYS(18), tempGenomeMask, getStats(18))
 
     ! Transfer the obtained default record flag into the program.
     ! --- Record flag
