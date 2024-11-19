@@ -54,13 +54,12 @@ COMPILER_GNU = CompilerInfo(
         type=CompilerType.GNU,
         compiler="gfortran",
         cflags=[
-            "-c", "-std=f2018", "-Wall", "-Wextra",
-            "-fcheck=all", "-march=native", "-pedantic"
+            "-c", "-std=f2018", "-Wall", "-Wextra", "-pedantic", "-march=native"
         ],
         lflags=[],
         build_spec_cflags={
             BuildType.RELEASE : ["-O3", "-g1"],
-            BuildType.DEBUG   : ["-O0", "-g2"],
+            BuildType.DEBUG   : ["-O0", "-g2", "-fcheck=all"],
             BuildType.STATIC  : ["-O3", "-g1", "-static"],
             BuildType.NOBUILD : []
         },
@@ -76,8 +75,7 @@ COMPILER_INTEL = CompilerInfo(
         type=CompilerType.INTEL,
         compiler="ifx",
         cflags=[
-            "-c", "-stand f18", "-ccdefault none", 
-            "-warn all,stderrors,usage,unused"
+            "-c", "-stand f18", "-xHost", "-warn all,stderrors,usage,unused"
         ],
         lflags=[],
         build_spec_cflags={
