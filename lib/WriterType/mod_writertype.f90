@@ -260,11 +260,14 @@ contains
       !! `Writer` object to write data on file.
     character(len=*), intent(in)    :: arrData(:)
       !! Data to be written to file.
-    integer :: writeStat
+    integer :: writeStat, i
 
     call checkFileState(self, "Cannot write to file.")
 
-    write(self % unit, self % fmtChar, iostat=writeStat) arrData
+    ! Write the array data with an implied loop to satisfy check requirements.
+    write(self % unit, self % fmtChar, iostat=writeStat) &
+        (arrData(i), i = lbound(arrData, 1), ubound(arrData, 1))
+
     if (writeStat /= 0) then
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if

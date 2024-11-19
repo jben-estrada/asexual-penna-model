@@ -27,8 +27,9 @@ module DataWriter
   private
 
   ! Divider string
-  character(len=*), parameter   :: DIVIDER_READABLE = "---------------"
-  character(len=:), allocatable :: divider
+  character(len=*), parameter   :: DIVIDER = "---------------"
+  character(len=:), allocatable :: dividerArr(:)
+    !! Array of dividers for certain multi-dimensional data 
   
   ! Data file delimiters.
   character, parameter :: DELIM_READABLE = "|"
@@ -43,6 +44,7 @@ module DataWriter
   character(len=*), parameter :: FILE_NAME_DATASET_NUM_PAD = "0"
 
   ! File delimiter and divider string status.
+  logical :: isInCSVFormat = .false.
   logical :: dividerDelimSet = .false.
   
   ! Data writer types.
@@ -188,7 +190,6 @@ contains
     integer,          intent(in)    :: newWriterUnit
       !! Fortran ID for the file to be written on.
 
-    character(len=15), allocatable :: headerArr(:)
     type(Writer), pointer :: chosenWriter
     integer :: i, startingAge
 
@@ -213,14 +214,17 @@ contains
         call chosenWriter%write("DATA: Population size per time step")
 
         ! Header of the list.
-        if (divider == DIVIDER_READABLE) & 
-            call chosenWriter%write([divider])
-        call chosenWriter%write(["Population size"])
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([divider])
+        if (.not.isInCSVFormat) & 
+            call chosenWriter%write(DIVIDER)
+        call chosenWriter%write("Population size")
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(DIVIDER)
       
 
       case(REC_GENE_DSTRB, REC_AGE_DSTRB)
+      recDstrb: block
+        character(len=15), allocatable :: headerArr(:)
+
         ! Data description.
         if (recordFlag == REC_AGE_DSTRB) then
           call chosenWriter%write("DATA: Age distribution per time step")
@@ -237,11 +241,14 @@ contains
         end do
 
         ! Header of the table.
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(dividerArr(startingAge:MODEL_L))
         call chosenWriter%write(headerArr)
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([(divider, i = startingAge, MODEL_L)])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(dividerArr(startingAge:MODEL_L))
+          
+        deallocate(headerArr)
+      end block recDstrb
 
 
       case (REC_DEATH)
@@ -250,14 +257,14 @@ contains
             "(due to old age, mutation, Verhulst factor) per time step")
         
         ! Header of the table.
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([(divider, i = 1, 3)])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(dividerArr(1:3))
         call chosenWriter%write( &
             ["Old age        ", &
              "Mutation       ", &
              "Verhulst factor"])
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([(divider, i = 1, 3)])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(dividerArr(1:3))
         
 
       case (REC_DIV_IDX)
@@ -265,34 +272,34 @@ contains
         call chosenWriter%write("DATA: Genetic diversity index per time step.")
 
         ! Header of the list.
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([divider])
-        call chosenWriter%write(["Diversity idx"])
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([divider])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(DIVIDER)
+        call chosenWriter%write("Diversity idx")
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(DIVIDER)
       
 
       case (REC_TIME)
         call chosenWriter%write("DATA: Timing statistics")
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([(divider, i = 1, 5)])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(dividerArr(1:5))
         call chosenWriter%write( &
           ["Max Time Step ", &
            "Init pop size ", &
            "Sample size   ", &
            "Avg. time (ms)", &
            "Std. dev. (ms)"])
-        if (divider == DIVIDER_READABLE) &
-           call chosenWriter%write([(divider, i = 1, 5)])
+        if (.not.isInCSVFormat) &
+           call chosenWriter%write(dividerArr(1:5))
 
 
       case (REC_GNM_COUNT)
         call chosenWriter%write("DATA: Number of unique genome per time step.")
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([divider])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(DIVIDER)
         call chosenWriter%write("Unique genome count")
-        if (divider == DIVIDER_READABLE) &
-            call chosenWriter%write([divider])
+        if (.not.isInCSVFormat) &
+            call chosenWriter%write(DIVIDER)
       
 
       case (REC_NULL)
@@ -304,7 +311,6 @@ contains
         call raiseError("'" // recordFlag //"' is an invalid record flag")
     end select
 
-    if (allocated(headerArr)) deallocate(headerArr)
     ! Mark the specified writer as initialized.
     initWriterArr( scan(REC_FLAG_ORDER, recordFlag) ) = .true.
   end subroutine initChosenWriter
@@ -341,13 +347,16 @@ contains
     
     if (inCSVFormat) then
       delim = DELIM_CSV
-      allocate(character(len=0) :: divider)
     else
       delim = DELIM_READABLE
-      divider = DIVIDER_READABLE
+      allocate(   &
+          character(len=len(DIVIDER)) :: dividerArr(0:MODEL_L)  &
+        )
+      dividerArr(:) = DIVIDER
     end if
 
     dividerDelimSet = .true.
+    isInCSVFormat = inCSVFormat
   end subroutine setDividerDelimChar
 
 
