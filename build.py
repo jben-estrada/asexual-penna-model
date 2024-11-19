@@ -82,7 +82,8 @@ COMPILER_INTEL = CompilerInfo(
         lflags=[],
         build_spec_cflags={
             BuildType.RELEASE : ["-O3", "-g1"],
-            BuildType.DEBUG   : ["-O0", "-fsanitize address", "-check all",
+            BuildType.DEBUG   : ["-O0", "-fsanitize address",
+                                 "-fstack-protector-all", "-check all",
                                  "-debug all", "-g2", "-traceback"],
             BuildType.STATIC  : ["-O3", "-g1", "-static"],
             BuildType.NOBUILD : []
