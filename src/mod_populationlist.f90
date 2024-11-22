@@ -59,8 +59,6 @@ module PopulationList
     private
     type(PersonPtr_t), allocatable :: population(:)
       !! Array holding the individuals in the Penna model.
-    type(StaticBitSet)             :: deadPopMask
-      !! Mask array to filter out dead `Person_t`s.
 
     integer :: popArraySize = -1
       !! The size of the population array. The maximum number of `Person_t`s the
@@ -158,8 +156,6 @@ contains
 
     if (allocated(newPop%population)) deallocate(newPop%population)
     allocate(newPop%population(int(startPopSize*GROWTH_FACTOR)))
-
-    call init_StaticBitSet(newPop%deadPopMask, startPopSize, MASK_ALIVE)
 
     ! Initialize each of the `Person_t`s in the population array.
     newPop%popArraySize = startPopSize
@@ -280,7 +276,6 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine population_endCurrStep(self)
     class(Population_t), intent(inout) :: self
-    integer :: deadPopMaskCurrSize
 
     call removeDeadPersons(self)
     self%endIdx = self%futureEndIdx
@@ -288,17 +283,6 @@ contains
 
     self%popSize = self%popSize - self%deadPopSize
     self%deadPopSize = 0
-
-    ! Expand the dead population mask if it gets full. The mask does not
-    ! contract in size with the population size.
-    deadPopMaskCurrSize = self%deadPopMask%getSize()
-    if (self%futureEndIdx > deadPopMaskCurrSize) then
-      call self%deadPopMask%changeSize(int(self%futureEndIdx * GROWTH_FACTOR))
-    end if
-
-    if (self%futureEndIdx > 0) then
-      call self%deadPopMask%set(MASK_ALIVE, 1, self%futureEndIdx)
-    end if
   end subroutine population_endCurrStep
 
 
@@ -318,7 +302,7 @@ contains
     do i = 1, self%futureEndIdx
       currPersonIsDead = .false.
       if (i <= self%endIdx) then
-        currPersonIsDead = self%deadPopMask%get(i) .eqv. MASK_DEAD
+        currPersonIsDead = (self%population(i)%person%lifeStat /= ALIVE)
 
         if (currPersonIsDead) then
           deathCount = deathCount + 1
@@ -473,7 +457,6 @@ contains
 
       if (isDead) then
         self%deadPopSize = self%deadPopSize + 1
-        call self%deadPopMask%set(MASK_DEAD, self%currIdx, self%currIdx)
 
         if (self%recordGnmDstrb) then
           call delGenomeFromDstrb(currPerson%genome, MODEL_GENOME_MASK)
