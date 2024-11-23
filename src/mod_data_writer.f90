@@ -34,7 +34,7 @@ module DataWriter
   ! Data file delimiters.
   character, parameter :: DELIM_READABLE = "|"
   character, parameter :: DELIM_CSV = ","
-  character :: delim = char(0)
+  character :: delim = achar(0)
 
   ! File name formatter
   character(len=*), parameter :: FILE_NAME_FMT_DELIM       = "%"

@@ -78,7 +78,7 @@ module HashTableType
 
   ! A dummy character to be returned by functions that failed
   ! (e.g. failed to find a mapping with the provided key).
-  character, parameter :: CHAR_VOID = char(0)
+  character, parameter :: CHAR_VOID = achar(0)
 
   ! Procedure statuses.
   integer, public, parameter :: STAT_OK = 0         ! Success.
