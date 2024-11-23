@@ -83,7 +83,7 @@ module Parameters
       "Asexual Penna model: A computer model for biological aging based " // &
       "on mutation accumulation."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = "v2024.11.0"
+  character(len=*), parameter :: PROG_VERSION = "v2024.11.1"
     !! Program version.
     !! This is based on the year and month the program is released.
 
@@ -132,15 +132,42 @@ module Parameters
     !! Initial mutation count of individuals in starting pop.
   real,    target, protected :: MODEL_ENTROPY_ORDER = VOID_REAL
     !! Renyi entropy order value  
-  integer, target, protected :: MODEL_AGE_DSTRB_INIT_TIMESTEP
+  integer, target, protected :: MODEL_AGE_DSTRB_INIT_TIMESTEP = VOID_INT
     !! The intial time step till the final time step where the age distribution
     !! is taken.
 
+  ! --- TIME DEPENDENT MODEL PARAMETERS --- !
+  character, parameter :: TMDP_PARAM_BIRTH     = "b"
+    !! Time-dependent parameter choice: Birth rate
+  character, parameter :: TMDP_PARAM_MTTN_RATE = "m"
+    !! Time-dependent parameter choice: Mutation rate
+  character, parameter :: TMDP_PARAM_R_AGE     = "r"
+    !! Time-dependent parameter choice: Reproduction age.
+    !! NOTE: Both R and R_MAX are incremented, not just R
+  character, parameter :: TMDP_PARAM_MTTN_LIM  = "t"
+    !! Time-dependent parameter choice: Mutation threshold.
+  character, parameter :: TMDP_PARAM_NULL      = "x"
+    !! Time-dependent parameter choice: None
+  character(len=*), parameter :: TMDP_ALL_CHOICES                    &
+      = TMDP_PARAM_BIRTH // TMDP_PARAM_MTTN_RATE // TMDP_PARAM_R_AGE &
+      // TMDP_PARAM_MTTN_LIM // TMDP_PARAM_NULL
+    !! All possible choices for time-dependent Penna model parameter.
+
+  character(len=MAX_LEN), target, protected :: MODEL_TIME_DEPENDENT_PARAM   &
+      = TMDP_PARAM_NULL
+    !! User's choice on time-dependent Penna model parameter. Defaults to none. 
+  integer, pointer, protected :: MODEL_TIME_DEPENDENT_PARAM_PTR => null()
+    !! Penna model parameter chosen to vary with time.
+  integer, target,  protected :: MODEL_TMDP_PARAM_DELTA_T = VOID_INT
+    !! Period between increments of the time-dependent Penna model parameter.
+  
+  ! --- VERHULST WEIGHTS --- !
   real, allocatable, protected :: MODEL_V_WEIGHT(:)
     !! Verhulst weights.
   real, parameter :: VWEIGHT_DEFAULT = 0.
     !! Default Verhulst weight.
 
+  ! --- GENOME MASK --- !
   logical, allocatable, protected :: MODEL_GENOME_MASK(:)
     !! Genome mask. NOTE: TRUE is a masking value while FALSE is non-masking.
   logical, parameter :: GENOME_MASK_DEFAULT = .false.
@@ -200,6 +227,15 @@ module Parameters
       !! Assign parameters from external file and command arguments.
     end subroutine
 
+    module subroutine incrementTimeDependentParam(timeStep, reset)
+      !! Increment the time-dependent parameter if the argument `timeStep` is
+      !! a multiple of `MODEL_TMDP_PARAM_DELTA_T`.
+      !! If the optional argument `reset` is true, reset the parameter to its
+      !! starting value. It is FALSE by default.
+      integer, intent(in)           :: timeStep
+      logical, intent(in), optional :: reset
+    end subroutine
+
     module subroutine printProgDetails()
       !! Pretty print the model parameters. Can print verbosely or print nothing
       !! if need be.
@@ -245,6 +281,9 @@ module Parameters
   public :: MODEL_V_WEIGHT
   public :: MODEL_GENOME_MASK
   public :: MODEL_AGE_DSTRB_INIT_TIMESTEP
+  public :: MODEL_TIME_DEPENDENT_PARAM
+  public :: MODEL_TIME_DEPENDENT_PARAM_PTR
+  public :: MODEL_TMDP_PARAM_DELTA_T
 
   ! Record flags
   public :: REC_NULL
@@ -264,6 +303,10 @@ module Parameters
 
   ! Initialization routines.
   public :: setParams
+
+  ! Change the chosen time-dependent Penna model parameter.
+  ! NOTE: This has to be in this module to control the exposed data.
+  public :: incrementTimeDependentParam
 
   ! Routine for memory management.
   public :: freeParamAlloctbls

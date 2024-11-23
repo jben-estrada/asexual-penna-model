@@ -21,6 +21,7 @@ module Penna
     MODEL_START_POP_SIZE,          &
     MODEL_ENTROPY_ORDER,           &
     MODEL_AGE_DSTRB_INIT_TIMESTEP, &
+    MODEL_TIME_DEPENDENT_PARAM_PTR,&
     PROG_REC_FLAG,                 &
     PROG_IN_CSV_FMT,               &
     PROG_SAMPLE_SIZE,              &
@@ -38,6 +39,7 @@ module Penna
     REC_GNM_COUNT,                 &
     SILENT_PRINT,                  &
     setParams,                     &
+    incrementTimeDependentParam,   &
     printProgDetails,              &
     freeParamAlloctbls
 
@@ -150,23 +152,19 @@ contains
 
     ! True if the time step is within the range for recording age demographics
     logical :: withinAgeDemogRange
+    ! True if a model parameter is set to change with time.
+    logical :: incrementingModelParam
 
     integer, pointer :: deathByAge
     integer, pointer :: deathByMutation
     integer, pointer :: deathByVerhulst
 
-    ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
-    ! integer, pointer :: timeDependentParam
-    ! integer, pointer :: timeDependentParam2
-    ! integer, save :: origParamValue  = -1
-    ! integer, save :: origParamValue2 = -1
-    ! ================================================= !
-
     ! Initialize data writers
     recordFlagLen = len(recordFlag)
 
-    ! Initialize inquiry flags for data recording.
+    ! Initialize the inquiry flags.
     withinAgeDemogRange = (maxTimestep <= MODEL_AGE_DSTRB_INIT_TIMESTEP)
+    incrementingModelParam = associated(MODEL_TIME_DEPENDENT_PARAM_PTR)
       
     ! Initialize the death counters.
     deathCount(:) = 0
@@ -185,19 +183,6 @@ contains
         toRecDivIdx .or. toRecGeneDstrb .or. toRecGnmCount &
       )
 
-    ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
-    ! timeDependentParam  => MODEL_R
-    ! timeDependentParam2 => MODEL_R_MAX
-    ! ! Reset the value of the time-dependent parameter.
-    ! if (origParamValue == -1) then
-    !   origParamValue  = timeDependentParam
-    !   origParamValue2 = timeDependentParam2
-    ! else
-    !   timeDependentParam  = origParamValue
-    !   timeDependentParam2 = origParamValue2
-    ! end if
-    ! ================================================= !
-    
     ! Record data of the initial state of the population.
     ! The data that would be obtained at this point in the program
     ! represent the data at t = 0.
@@ -219,17 +204,16 @@ contains
         exit mainLoop
       end if runawayGrowthCheck
 
-      ! Age demogaphics range check.
+      ! Check if the time-dependent model parameter is set to change at the
+      ! current time step.
+      if (incrementingModelParam) then
+        call incrementTimeDependentParam(timeStep)
+      end if
+
+      ! Age demogaphics range check for the current time step.
       withinAgeDemogRange = (                                             &
               (maxTimestep - timeStep) <= MODEL_AGE_DSTRB_INIT_TIMESTEP   &
         )
-
-      ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
-      ! if (modulo(popSize, 200) == 0) then
-      !   timeDependentParam  = timeDependentParam  + 1
-      !   timeDependentParam2 = timeDependentParam2 + 1
-      ! end if
-      ! ================================================= !
 
       ! Ready the population for evaluation in the current time step.
       call population%startCurrStep()
@@ -276,6 +260,11 @@ contains
       if (toRecDeath)    deathCount(:) = 0
       if (toRecAgeDstrb) call resetAgeDstrb()
     end do mainLoop
+
+    ! Reset the time-dependent model parameter to its starting value.
+    if (incrementingModelParam) then
+      call incrementTimeDependentParam(0, reset=.true.)
+    end if
 
     ! Clean up any allocated objects.
     call freeGenomeDstrb()

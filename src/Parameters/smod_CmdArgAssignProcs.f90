@@ -39,7 +39,7 @@ submodule (Parameters) CmdArgAssignProcs
   ! Command line arguments
   ! -------------------------------------------------------------------------- !
   ! Array of all commands
-  type(CmdArgRecord_t) :: cmdArgArr(21)
+  type(CmdArgRecord_t) :: cmdArgArr(23)
 
   ! Model parameters.
   integer, parameter :: IDX_MTTN_THRESHOLD_KV  = 1
@@ -53,18 +53,20 @@ submodule (Parameters) CmdArgAssignProcs
   integer, parameter :: IDX_MAX_TIME_STEP_KV   = 9
   integer, parameter :: IDX_ENTROPY_ORDER_KV   = 10  ! can be any floats
   integer, parameter :: IDX_AGE_DSTRB_TIME_KV  = 11
+  integer, parameter :: IDX_TMDP_PARAM_KV      = 12
+  integer, parameter :: IDX_TMDP_PARAM_DT_KV   = 13
   
   ! Program parameters.
-  integer, parameter :: IDX_SAMPLE_SIZE_KV     = 12
-  integer, parameter :: IDX_RECORD_DATA_KV     = 13  ! String-valued command
-  integer, parameter :: IDX_RNG_CHOICE_KV      = 14  ! Special constraint value
-  integer, parameter :: IDX_RNG_SEED_KV        = 15  ! Any integer
-  integer, parameter :: IDX_PARAM_FILE_PATH_KV = 16  ! String-valued command
-  integer, parameter :: IDX_OUT_FILE_PATH_KV   = 17  ! String-valued command
-  integer, parameter :: IDX_SHOW_PARAM_F       = 18
-  integer, parameter :: IDX_NO_PARAM_F         = 19
-  integer, parameter :: IDX_SHOW_VERSION_F     = 20
-  integer, parameter :: IDX_CSV_FORMAT_F       = 21
+  integer, parameter :: IDX_SAMPLE_SIZE_KV     = 14
+  integer, parameter :: IDX_RECORD_DATA_KV     = 15  ! String-valued command
+  integer, parameter :: IDX_RNG_CHOICE_KV      = 16  ! Special constraint value
+  integer, parameter :: IDX_RNG_SEED_KV        = 17  ! Any integer
+  integer, parameter :: IDX_PARAM_FILE_PATH_KV = 18  ! String-valued command
+  integer, parameter :: IDX_OUT_FILE_PATH_KV   = 19  ! String-valued command
+  integer, parameter :: IDX_SHOW_PARAM_F       = 20
+  integer, parameter :: IDX_NO_PARAM_F         = 21
+  integer, parameter :: IDX_SHOW_VERSION_F     = 22
+  integer, parameter :: IDX_CSV_FORMAT_F       = 23
 
   ! Commands whose value must be positive integers.
   integer, parameter :: CMD_POSITIVE_INT(*) = [ &
@@ -77,7 +79,8 @@ submodule (Parameters) CmdArgAssignProcs
     IDX_INIT_POP_SIZE_KV,  &
     IDX_MAX_TIME_STEP_KV,  &
     IDX_AGE_DSTRB_TIME_KV, &
-    IDX_SAMPLE_SIZE_KV     &
+    IDX_SAMPLE_SIZE_KV,    &
+    IDX_TMDP_PARAM_DT_KV   &
   ]
 
   ! Command group names
@@ -142,6 +145,14 @@ contains
         "a", "age-dstrb-time", CMD_GROUP_REC, KV_S, KV_L,     &
         "Age distribution time step till the final time step" &
       )
+    cmdArgArr(IDX_TMDP_PARAM_KV) = CmdArgRecord_t(                          &
+        "P", "tmdp-param", CMD_GROUP_PENNA, KV_S, KV_L,                     &
+        "Time-dependent model parameter. See 'NOTES' for parameter choices" &
+      )
+    cmdArgArr(IDX_TMDP_PARAM_DT_KV) = CmdArgRecord_t(                          &
+        "Q", "tmdp-param-dt", CMD_GROUP_PENNA, KV_S, KV_L,                     &
+        "Time period between increments of the time-dependent model parameter" &
+      )
 
     ! Program parameters.
     cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord_t(      &
@@ -198,6 +209,9 @@ contains
     cmdArgArr(IDX_ENTROPY_ORDER_KV)   % realValue_ptr => MODEL_ENTROPY_ORDER
     cmdArgArr(IDX_AGE_DSTRB_TIME_KV)  % intValue_ptr  &
       => MODEL_AGE_DSTRB_INIT_TIMESTEP
+    cmdArgArr(IDX_TMDP_PARAM_KV)      % charValue_ptr &
+      => MODEL_TIME_DEPENDENT_PARAM
+    cmdArgArr(IDX_TMDP_PARAM_DT_KV)   % intValue_ptr => MODEL_TMDP_PARAM_DELTA_T
 
     cmdArgArr(IDX_SAMPLE_SIZE_KV) % intValue_ptr => PROG_SAMPLE_SIZE
     cmdArgArr(IDX_RNG_CHOICE_KV)  % intValue_ptr => PROG_RNG
@@ -246,10 +260,10 @@ contains
     end if
 
     ! Get the file path for the parameter listing file.
-    if (                                                   &
+    if (                                                 &
           pennaCmdArgs%hasValue(                         &
               cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName  &
-          )                                                &
+          )                                              &
         ) then
 
       cmdArgArr(IDX_PARAM_FILE_PATH_KV)%charValue_ptr = &
@@ -424,8 +438,87 @@ contains
             )
         end  if
       end if
+
+      ! Assign special values.
+      if (i == IDX_TMDP_PARAM_KV) then
+        call setTimeDependentParam(                          &
+            cmdArgArr(IDX_TMDP_PARAM_KV)%charValue_ptr(1:1)  &
+        )
+      end if
     end do
   end subroutine assignUserProvidedParams
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setTimeDependentParam
+  !>  Assign the pointer for the time-dependent Penna model parameter.
+  ! -------------------------------------------------------------------------- !
+  subroutine setTimeDependentParam(userChoice)
+    character, intent(in) :: userChoice
+    character :: userChoice_lcl
+
+    ! Change the user choice to lower case.
+    userChoice_lcl = achar( ior(iachar(userChoice), 32) )
+
+    select case (userChoice_lcl)
+    case (TMDP_PARAM_BIRTH)
+      MODEL_TIME_DEPENDENT_PARAM_PTR => MODEL_B
+    case (TMDP_PARAM_MTTN_RATE)
+      MODEL_TIME_DEPENDENT_PARAM_PTR => MODEL_M
+    case (TMDP_PARAM_R_AGE)
+      MODEL_TIME_DEPENDENT_PARAM_PTR => MODEL_R
+    case (TMDP_PARAM_MTTN_LIM)
+      MODEL_TIME_DEPENDENT_PARAM_PTR => MODEL_T
+    case (TMDP_PARAM_NULL)
+      MODEL_TIME_DEPENDENT_PARAM_PTR => null()   ! Do nothing
+    case default
+      call raiseError(  &
+        "Invalid choice for a time-dependent Penna model parameter: " // &
+        userChoice // ""  &
+      )
+    end select
+  end subroutine setTimeDependentParam
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: incrementTimeDependentParam
+  !>  Increment the time-dependent parameter if the argument `timeStep` is
+  !!  a multiple of `MODEL_TMDP_PARAM_DELTA_T`.
+  !!  If the optional argument `reset` is true, reset the parameter to its
+  !!  starting value. It is FALSE by default.
+  ! -------------------------------------------------------------------------- !
+  module subroutine incrementTimeDependentParam(timeStep, reset)
+    integer, intent(in)           :: timeStep
+      !! Time step supplied by the Penna model simulation.
+    logical, intent(in), optional :: reset
+      !! Reset the time-dependent parameter if present and true.
+
+    integer, save :: startingValue = -1
+
+    ! Set the starting value.
+    if (startingValue == -1) then
+      startingValue = MODEL_TIME_DEPENDENT_PARAM_PTR
+    end if
+
+    ! Check for reset.
+    if (present(reset)) then
+      if (reset) then
+        MODEL_TIME_DEPENDENT_PARAM_PTR = startingValue
+        return
+      end if
+    end if
+
+    ! Check if the time-dependent is set to change.
+    if (modulo(timeStep, MODEL_TMDP_PARAM_DELTA_T) /= 0) return
+
+    if (associated(MODEL_TIME_DEPENDENT_PARAM_PTR)) then
+      MODEL_TIME_DEPENDENT_PARAM_PTR = MODEL_TIME_DEPENDENT_PARAM_PTR + 1
+
+      if (associated(MODEL_TIME_DEPENDENT_PARAM_PTR, MODEL_R)) then
+        MODEL_R_MAX = MODEL_R_MAX + 1
+      end if
+    end if
+  end subroutine incrementTimeDependentParam
 
 
   ! -------------------------------------------------------------------------- !
@@ -467,8 +560,8 @@ contains
           )
       end if
     end do
-
     
+    ! Check for valid initial mutation input (>= -1)
     if (cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%intValue_ptr < -1) then
       cmdArg = cmdArgArr(IDX_INIT_MTTN_COUNT_KV)
       call raiseError(                                     &
@@ -520,17 +613,35 @@ contains
     call pennaCmdArgs%printHelp(progName, PROG_DESC)
 
     ! Print the additional notes.
-    print "(/a)", "NOTES:"
+    print "(//40(' '), a)", "NOTES"
+    print "(40(' '), a)",  "-----"
+
     print "(' - ', 5(a)/, '  ', 2(a)/)",                                     &
       "Negative values for initial mutation count (-",                       &
-      cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " / --",                    &
+      cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " or --",                   &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdAlias, ")",                       &
       " are interpreted as random initial mutation count for each of the ",  &
       "individuals."
-    print "(' - ', *(a))",                                     &
-      "Valid character values for -", cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
-    write(*, "(8(5(' '), a/)/)", advance="no")                                 &
+
+    print "(' - ', *(a))", &
+      "Choices for time-dependent model parameter (-", &
+      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --", &
+      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdAlias, "):"
+    write(*, "(5(5(' '), a/))", advance="no")  &
+      "x - No time-dependent parameter.",             &
+      "b - Birth rate.",                              &
+      "m - Mutation rate.",                           &
+      "t - Mutation threshold",                       &
+      "m - Minimum and maximum reproduction age. " // &
+        "Note that both of them increment"
+    print "( (3(' '), a/) )", &
+      "One can choose only one parameter to vary with time."
+
+    print "(' - ', *(a))", &
+      "Valid character values for -", &
+      cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, " or --", &
+      cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
+    write(*, "(8(5(' '), a/))", advance="no")                                  &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
       "a - Age distribution in the final time steps.",                         &
@@ -539,6 +650,10 @@ contains
       "b - Bad gene distribution per time step.",                              &
       "t - (Average) elapsed time and its std deviation if applicable",        &
       "c - Number of unique genome counts per time step."
+    print "( 2(3(' '), a/) )", &
+      "Multiple flags can be on simultaneously.", &
+      "e.g. 'psb' for population size, entropy and bad gene distribution " // &
+          "per time."
 
     print "(' - ', *(a))",  &
       "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
@@ -559,14 +674,15 @@ contains
       "Formatting for the output file name -", &
       cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
       " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, ":"
-    write(*, "(2(5(' '), a/), /3(6(' '), a/) /)", advance="no")  &
+    write(*, "(2(5(' '), a/))", advance="no")  &
       "%[N]n - Data set number for multiple samples.",                         &
       "%[N]f - The record data flag provided by -" //                          &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &
-        cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. ",                 &
-      "N is the number of characters padded to the left of the data " //       &
-      "specified by the formatting.", "It is optional and defaults to 0, " //  &
-      "e.g. %5f and %f are valid. ",                                           &
+        cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. "
+    print "(3(3(' '), a/))", &
+      "N is the number of characters padded to the left of the data " // &
+          "specified by the formatting.",                                &
+      "It is optional and defaults to 0, e.g. %5f and %f are valid. ",   &
       "The padding characters are '_' for %f and '0' for %n."
 
     print "(' ', a/)",                                      &
@@ -628,12 +744,15 @@ contains
           "Min reproduction age", MODEL_R, &
           "Max reproduction age", MODEL_R_MAX, &
           "Carrying capacity",    MODEL_K, &
-          "Number of time steps", MODEL_TIME_STEPS, &
+          "Number of time steps", MODEL_TIME_STEPS
+      write(*, "(a20, a9/)", advance="no") &
+          "Time-dependent param", trim(MODEL_TIME_DEPENDENT_PARAM)
+      write(*, "(*(a20, i9/))", advance="no") &
           "Init mutation count",  MODEL_MTTN_COUNT, &
           "Sample size",          PROG_SAMPLE_SIZE, &
           "Starting pop size",    MODEL_START_POP_SIZE
 
-      write(*, "(*(a20, a))", advance="no") &
+      write(*, "(2(a20, a))", advance="no") &
           "Record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
       do k = 1, len(REC_FLAG_ORDER)
         if (scan(PROG_REC_FLAG, REC_FLAG_ORDER(k:k)) > 0) then

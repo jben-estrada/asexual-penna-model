@@ -28,7 +28,9 @@ submodule (Parameters) ReadExtFile
      "ent_order     ", &
      "age_dstrb_time", &
      "v_weight      ", &
-     "genome_mask   " ]
+     "genome_mask   ", &
+     "t_dep_param   ", &
+     "t_dep_param_dt"]
     !! Parameter keys in the parameter listing file.
 contains
 
@@ -40,8 +42,10 @@ contains
   module subroutine readDefaultParamVal()
     type(ParamFileParser_t) :: paramReader
 
-    ! Temporary character for `PROG_REC_FLAG`.
+    ! Temporary characters: `PROG_REC_FLAG`
     character(len=:), allocatable :: tempRecFlag
+    ! Temporary characters: `PROG_REC_FLAG`
+    character(len=:), allocatable :: tempTMDPParam
     integer, allocatable :: tempGenomeMask(:)
 
     ! Array of getter statuses.
@@ -55,6 +59,7 @@ contains
     call paramReader % readFile()
 
     ! Assign scalar parameters one-by-one.
+    ! ------------------------------------------------------------------------ !
     call paramReader % getValue(PARAM_KEYS(1),  MODEL_L,     getStats(1))
     call paramReader % getValue(PARAM_KEYS(2),  MODEL_T,     getStats(2))
     call paramReader % getValue(PARAM_KEYS(3),  MODEL_B,     getStats(3))
@@ -84,18 +89,24 @@ contains
 
     call paramReader % getValue(PARAM_KEYS(17), MODEL_V_WEIGHT, getStats(17))
     call paramReader % getValue(PARAM_KEYS(18), tempGenomeMask, getStats(18))
+    call paramReader % getValue(PARAM_KEYS(19), tempTMDPParam,  getStats(19))
+    call paramReader % getValue(PARAM_KEYS(20), MODEL_TMDP_PARAM_DELTA_T,   &
+      getStats(20))
 
     ! Transfer the obtained default record flag into the program.
     ! --- Record flag
     PROG_REC_FLAG = tempRecFlag
     ! --- Genome mask
     MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASKING_INT)
-
+    ! --- Time-dependent Penna model parameter
+    MODEL_TIME_DEPENDENT_PARAM = tempTMDPParam
+    
+    ! ------------------------------------------------------------------------ !
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)
 
     ! Free all local allocatable variables.
-    deallocate(tempRecFlag, tempGenomeMask)
+    deallocate(tempRecFlag, tempTMDPParam, tempGenomeMask)
   end subroutine readDefaultParamVal
 
 
