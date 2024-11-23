@@ -121,11 +121,14 @@ contains
       tickArr = [(" ", i = self % partition - 1, barLength, -1)]
     end if
 
-    ! Print the character array.
-    write(*, "(a)", advance="no") char(13)
+    ! Print the progress bar.
     write(*, "(*(a))", advance="no") "[", tickArr, "]"
-    write(*, "(f6.1, a)", advance="no") 100*real(self % counter) / &
-        real(self % totalTicks), "%"
+    write(*, "(f6.1, a)", advance="yes") &
+        100 * real(self % counter) / real(self % totalTicks), "%"
+    
+    ! Move the cursor back to the beginning of the progress bar.
+    ! NOTE: This uses ANSI escape codes. May not work on certain terminals.
+    write(*, "(a)", advance="no") achar(27) // "[1A" 
 
     deallocate(tickArr)
   end subroutine progressbar_showProgBar

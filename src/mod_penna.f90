@@ -393,9 +393,13 @@ contains
           1                    &   ! Only one set of data for run analyses
         )
     
-    ! Call and time the `run` subroutine.
+    ! Initialize timing statistics.
     sum = 0._timeRK
     sumSqrd = 0._timeRK
+        
+    ! Show the initial progress bar.
+    if (printProgress) call progBar % showProgBar()
+    ! Call and time the `run` subroutine.
     do i = 1, PROG_SAMPLE_SIZE
       ! Initialize data writing for Penna data.
       call initDataWriter(     &
@@ -433,13 +437,10 @@ contains
       call setSeed(PROG_RNG_SEED + i)
 
       ! Print the progress bar.
-      if (printProgress .and. PROG_SAMPLE_SIZE > 1) then
+      if (printProgress) then
         call progBar % incrCounter(show=.true.)
       end if
     end do
-
-    ! Remove the progress bar.
-    write(*, "(a)", advance="no") char(13)
 
     ! Get average elapsed time and its std deviation.
     meanTime = sum/real(PROG_SAMPLE_SIZE, kind=timeRK)
@@ -450,14 +451,15 @@ contains
     if (printProgress) then
       ! Print elapsed time.
       if (PROG_SAMPLE_SIZE > 1) then
-        print "(a, f12.3, a)", "Average time: ", meanTime, " ms"
+        print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
       else
-        print "(a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+        print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
       end if
 
       ! Print the standard deviation.
-      if (PROG_SAMPLE_SIZE > 1) &
+      if (PROG_SAMPLE_SIZE > 1) then
         print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
+      end if
     end if
 
     ! Record mean time and std deviation.
