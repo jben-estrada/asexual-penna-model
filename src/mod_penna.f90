@@ -156,8 +156,10 @@ contains
     integer, pointer :: deathByVerhulst
 
     ! === MODIFICATION ADDED FOR VARYING PARAMETERS ===
-    ! integer, pointer :: paramToChange
-    ! integer, pointer :: paramToChange2
+    ! integer, pointer :: timeDependentParam
+    ! integer, pointer :: timeDependentParam2
+    ! integer, save :: origParamValue  = -1
+    ! integer, save :: origParamValue2 = -1
     ! ================================================= !
 
     ! Initialize data writers
@@ -177,14 +179,23 @@ contains
     call initGenomeDstrb()
     call resetAgeDstrb()
     call init_Population_t( &
-        population, &
-        startPopSize, &
-        initMttnCount, &
+        population,         &
+        startPopSize,       &
+        initMttnCount,      &
         toRecDivIdx .or. toRecGeneDstrb .or. toRecGnmCount &
       )
 
     ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
-    ! paramToChange  => !!!!!!
+    ! timeDependentParam  => MODEL_R
+    ! timeDependentParam2 => MODEL_R_MAX
+    ! ! Reset the value of the time-dependent parameter.
+    ! if (origParamValue == -1) then
+    !   origParamValue  = timeDependentParam
+    !   origParamValue2 = timeDependentParam2
+    ! else
+    !   timeDependentParam  = origParamValue
+    !   timeDependentParam2 = origParamValue2
+    ! end if
     ! ================================================= !
     
     ! Record data of the initial state of the population.
@@ -215,8 +226,8 @@ contains
 
       ! === MODIFICATION ADDED FOR VARYING PARAMETERS === !
       ! if (modulo(popSize, 200) == 0) then
-      !   paramToChange  = paramToChange  + 1
-      !   paramToChange2 = paramToChange2 + 1
+      !   timeDependentParam  = timeDependentParam  + 1
+      !   timeDependentParam2 = timeDependentParam2 + 1
       ! end if
       ! ================================================= !
 
