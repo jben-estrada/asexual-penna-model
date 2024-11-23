@@ -632,7 +632,7 @@ contains
       "b - Birth rate.",                              &
       "m - Mutation rate.",                           &
       "t - Mutation threshold",                       &
-      "m - Minimum and maximum reproduction age. " // &
+      "r - Minimum and maximum reproduction age. " // &
         "Note that both of them increment"
     print "( (3(' '), a/) )", &
       "One can choose only one parameter to vary with time."
