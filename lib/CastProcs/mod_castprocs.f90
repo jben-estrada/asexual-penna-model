@@ -133,7 +133,7 @@ contains
   !>  Cast the character `char` into a real number of default kind.
   ! -------------------------------------------------------------------------- !
   real function castCharToReal(char, castStat)
-    character(len=*), intent(in) :: char
+    character(len=*),  intent(in) :: char
       !! Character input to be casted to real.
     integer, optional, intent(out) :: castStat
       !! Casting status.

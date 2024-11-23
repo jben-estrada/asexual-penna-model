@@ -40,15 +40,15 @@ module Parameters
   !               w_a  : Verhulst weight at age `a`.
   ! -------------------------------------------------------------------------- !
   use CmdArgParserType, only:  &
-    CmdArgParser,              &
+    CmdArgParser_t,            &
     init_CmdArgParser,         &
     FLAG_S => CMD_TYPE_FLAG_S, &
     FLAG_L => CMD_TYPE_FLAG_L, &
     KV_S => CMD_TYPE_KEYVAL_S, &
     KV_L => CMD_TYPE_KEYVAL_L, &
     FLAG_TOGGLED
-  use ParamFileParserType, only: ParamFileParser, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
+  use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar, isFinite
   use, intrinsic :: iso_fortran_env, only: compiler_version, output_unit
   implicit none

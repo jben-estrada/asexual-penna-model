@@ -58,7 +58,7 @@ module Penna
     DEAD_MUTATION,          &
     DEAD_VERHULST,          &
     Population_t,           &
-    init_Population_t,      &
+    init_Population,        &
     Person_t
   
   use DataWriter, only:  &
@@ -66,7 +66,7 @@ module Penna
     isWriterInitialized, &
     initDataWriter,      &
     closeDataWriter,     &
-    Writer,              &
+    Writer_t,            &
     writeIK,             &
     writeRK,             &
     DATA_WRITER_PENNA,   &
@@ -77,7 +77,7 @@ module Penna
     timeRK => real64
 
   use CastProcs, only: castIntToChar
-  use ProgressBarType, only: ProgressBar, init_ProgressBar
+  use ProgressBarType, only: ProgressBar_t, init_ProgressBar
   use RandNumProcs, only: assignRNGParams, setSeed
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
@@ -178,7 +178,7 @@ contains
     popSize = startPopSize
     call initGenomeDstrb()
     call resetAgeDstrb()
-    call init_Population_t( &
+    call init_Population( &
         population,         &
         startPopSize,       &
         initMttnCount,      &
@@ -288,7 +288,7 @@ contains
     !>  Record data obtained in the subroutine `runOneInstance`.
     ! ------------------------------------------------------------------------ !
     subroutine recordData()
-      type(Writer), pointer :: chosenWriter
+      type(Writer_t), pointer :: chosenWriter
       integer :: i
 
       do i = 1, recordFlagLen
@@ -323,6 +323,10 @@ contains
   end subroutine runOneInstance
 
 
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: setWriterInqFlag
+  !>  Set the global statuses of the data writers based on the user's inputs
+  ! -------------------------------------------------------------------------- !
   subroutine setWriterInqFlag(recordFlags)
     character(len=*), intent(in) :: recordFlags
     integer :: i
@@ -363,8 +367,8 @@ contains
     real(kind=timeRK)    :: sum
     real(kind=timeRK)    :: sumSqrd
 
-    type(Writer), pointer :: timeWriter ! A `Writer` object for writing timings.
-    type(ProgressBar)     :: progBar    ! A `ProgressBar` object.
+    type(Writer_t), pointer :: timeWriter ! Object for writing the timings.
+    type(ProgressBar_t)     :: progBar    ! A progress bar object.
     logical :: printProgress
     integer :: i
 

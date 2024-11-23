@@ -5,38 +5,40 @@ module HashTableType
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing an implementation of hash table.
+  !>  Module containing an implementation of the hash table.
+  !!  NOTE: This only implements character -> character key-value pairs to
+  !!        simplify the code.
   ! ------------------------------------------------------------------------- !
   use, intrinsic :: iso_fortran_env, only: int64
   use ErrorMSG, only: raiseError, raiseWarning
   implicit none
   private
 
-  type :: Mapping
+  type :: Mapping_t
     !! A derived type representing a mapping between `key` and `value`.
     character(len=:), allocatable :: key
       !! Key with which this mapping is identified.
     character(len=:), allocatable :: value
       !! The value corresponding to the `key` attribute.
 
-    type(Mapping), pointer :: next => null()
-      !! The next `Mapping` object in the slot this object would be in.
-  end type Mapping
+    type(Mapping_t), pointer :: next => null()
+      !! The next `Mapping_t` object in the slot this object would be in.
+  end type Mapping_t
 
 
-  type :: Slot
+  type :: Slot_t
     !! A derived type for slots in hash tables. It is a chain (linked-list to be
-    !! more specific) of `Mapping` objects.
-    type(Mapping), pointer :: headMapping_ptr => null()
-      !! Pointer to the head of the chain (i.e. linked-list) of `Mapping`
+    !! more specific) of `Mapping_t` objects.
+    type(Mapping_t), pointer :: headMapping_ptr => null()
+      !! Pointer to the head of the chain (i.e. linked-list) of `Mapping_t`
       !! objects.
-  end type Slot
+  end type Slot_t
 
 
-  type :: HashTable
+  type :: HashTable_t
     !! Hash table type.
     private
-    type(Slot), allocatable :: slotArray(:)
+    type(Slot_t), allocatable :: slotArray(:)
       !! Array of slots (or buckets) containing lists of mappings.
     integer :: slotArrSize = -1
       !! Size of the hash table.
@@ -50,24 +52,24 @@ module HashTableType
       !! Delete an element in the hash table.
     final :: htDestructor
       !! Free allocated attributes.
-  end type HashTable
+  end type HashTable_t
 
 
-  type :: HashTableIterator
-    !! `HashTable` iterator.
+  type :: HashTableIterator_t
+    !! `HashTable_t` iterator.
     private
-    type(HashTable), pointer :: iteratee_ptr => null()
-      !! Pointer to the `HashTable` to be iterated over.
-    integer                  :: currSlotIdx = 1
-      !! Current `Slot` array index.
-    type(Mapping),   pointer :: currMapping_ptr => null()
-      !! Current `Mapping` object in the current `Slot` object.
+    type(HashTable_t), pointer :: iteratee_ptr => null()
+      !! Pointer to the `HashTable_t` to be iterated over.
+    integer                    :: currSlotIdx = 1
+      !! Current `Slot_t` array index.
+    type(Mapping_t),   pointer :: currMapping_ptr => null()
+      !! Current `Mapping_t` object in the current `Slot_t` object.
   contains
     procedure :: getKey => hashtableiterator_getKey
       !! Get key and proceed to the next key-value pair.
     final :: htIterDestructor
       !! Free allocated attributes.
-  end type  HashTableIterator
+  end type  HashTableIterator_t
 
 
   ! ------------------------------------------------------------------------- !
@@ -82,8 +84,8 @@ module HashTableType
   integer, public, parameter :: STAT_OK = 0         ! Success.
   integer, public, parameter :: STAT_NOT_FOUND = 1  ! Failed to find a mapping.
 
-  public :: HashTable
-  public :: HashTableIterator
+  public :: HashTable_t
+  public :: HashTableIterator_t
   public :: init_HashTable
   public :: init_HashTableIterator
   public :: hash
@@ -92,11 +94,11 @@ contains
 
   ! ------------------------------------------------------------------------- !
   ! SUBROUTINE: init_HashTable
-  !>  Initializer for `HashTable` objects.
+  !>  Initializer for `HashTable_t` objects.
   ! ------------------------------------------------------------------------- !
   subroutine init_HashTable(new, tableSize)
-    type(HashTable), intent(inout) :: new
-      !! New `HashTable` object to be initialized.
+    type(HashTable_t), intent(inout) :: new
+      !! New `HashTable_t` object to be initialized.
     integer, optional, intent(in)  :: tableSize
       !! Size of the hash table. The default value is provided by the module
 
@@ -116,7 +118,7 @@ contains
   !!  function implements the formula found in this website:
   !!  https://cp-algorithms.com/string/string-hashing.html
   ! ------------------------------------------------------------------------- !
-  integer(kind=int64) function hash(char, slotSize)
+  pure integer(kind=int64) function hash(char, slotSize)
     character(len=*),    intent(in) :: char
       !! Character to be hashed.
     integer(kind=int64), intent(in) :: slotSize
@@ -145,16 +147,16 @@ contains
   !>  Get the value which corresponds to the given character `key`.
   ! ------------------------------------------------------------------------- !
   function hashtable_get(self, key, status) result(value)
-    class(HashTable),  intent(inout) :: self
-      !! `HashTable` object to be searched.
-    character(len=*),  intent(in)    :: key
+    class(HashTable_t),  intent(inout) :: self
+      !! `HashTable_t` object to be searched.
+    character(len=*),    intent(in)    :: key
       !! The key whose value is to be sought for. 
-    integer, optional, intent(out)   :: status
+    integer, optional,   intent(out)   :: status
       !! Status of this function. Presence of this argument prevents this
       !! function from raising an error and stopping the program.
-    character(len=:), allocatable    :: value
+    character(len=:), allocatable :: value
 
-    type(Mapping), pointer :: currMapping_ptr
+    type(Mapping_t), pointer :: currMapping_ptr
     integer(kind=int64) :: slotIdx
 
     ! Initialize output.
@@ -204,17 +206,17 @@ contains
   !!  `value`.
   ! ------------------------------------------------------------------------- !
   subroutine hashtable_set(self, key, value, status)
-    class(HashTable), intent(inout)  :: self
-      !! `HashTable` object to be searched.
-    character(len=*), intent(in)     :: key
+    class(HashTable_t), intent(inout)  :: self
+      !! `HashTable_t` object to be searched.
+    character(len=*),   intent(in)     :: key
       !! The key whose value is to be sought for. 
-    character(len=*), intent(in)     :: value
+    character(len=*),   intent(in)     :: value
       !! The corresponding value of the mapping.
-    integer, optional, intent(out)   :: status
+    integer, optional, intent(out)     :: status
       !! Status of this function. Presence of this argument prevents this
       !! function from raising an error and stopping the program.
   
-    type(Mapping), pointer :: currMapping_ptr
+    type(Mapping_t), pointer :: currMapping_ptr
     integer(kind=int64) :: slotIdx
 
     ! Find the slot containing the mapping we seek.
@@ -259,7 +261,7 @@ contains
 
   ! ------------------------------------------------------------------------- !
   ! FUNCTION: allocMapping
-  !>  Allocate a new `Mapping` object and initialize its character attributes
+  !>  Allocate a new `Mapping_t` object and initialize its character attributes
   !!  with the passed arguments `key` and `value`.
   ! ------------------------------------------------------------------------- !
   function allocMapping(key, value) result(new)
@@ -268,7 +270,7 @@ contains
     character(len=*), intent(in) :: value
       !! The corresponding value of the mapping.
     
-    type(Mapping), pointer :: new
+    type(Mapping_t), pointer :: new
 
     allocate(new)
 
@@ -279,11 +281,11 @@ contains
 
   ! ------------------------------------------------------------------------- !
   ! SUBROUTINE: htDestructor
-  !>  Destructor for the `HashTable` type.
+  !>  Destructor for the `HashTable_t` type.
   ! ------------------------------------------------------------------------- !
   subroutine htDestructor(self)
-    type(HashTable), intent(inout) :: self
-      !! `HashTable` object to be modified.
+    type(HashTable_t), intent(inout) :: self
+      !! `HashTable_t` object to be destroyed.
 
     integer :: i
 
@@ -308,16 +310,16 @@ contains
   !!  table.
   ! ------------------------------------------------------------------------- !
   subroutine hashtable_delete(self, key, status)
-    class(HashTable), intent(inout) :: self
-      !! `HashTable` object to be modified.
-    character(len=*), intent(in)    :: key
+    class(HashTable_t), intent(inout) :: self
+      !! `HashTable_t` object to be modified.
+    character(len=*),   intent(in)    :: key
       !! Key whose mapping is to be removed.
-    integer, optional, intent(out) :: status
+    integer, optional,  intent(out)   :: status
       !! Status of this function. Presence of this argument prevents this
       !! function from raising an error and stopping the program.
 
-    type(Mapping), pointer :: currMapping_ptr
-    type(Mapping), pointer :: prevMapping_ptr
+    type(Mapping_t), pointer :: currMapping_ptr
+    type(Mapping_t), pointer :: prevMapping_ptr
     integer(kind=int64) :: slotIdx
 
     ! Find the slot containing the mapping we seek.
@@ -371,15 +373,15 @@ contains
 
   ! ------------------------------------------------------------------------- !
   ! SUBROUTINE: freeSlot
-  !>  Deallocate linked-list of `Mapping` object starting from its head
+  !>  Deallocate linked-list of `Mapping_t` object starting from its head
   !!  which `headMapping_ptr` is pointing at.
   ! ------------------------------------------------------------------------- !
   subroutine freeSlot(headMapping_ptr)
-    type(Mapping), pointer, intent(inout) :: headMapping_ptr
+    type(Mapping_t), pointer, intent(inout) :: headMapping_ptr
       !! Pointer to the head of a chain (linekd-list) of mappings.
  
-    type(Mapping), pointer :: currMapping_ptr
-    type(Mapping), pointer :: toBeDealloc_ptr
+    type(Mapping_t), pointer :: currMapping_ptr
+    type(Mapping_t), pointer :: toBeDealloc_ptr
 
     currMapping_ptr => headMapping_ptr
 
@@ -411,9 +413,9 @@ contains
   !>  Initializer for `HashTableIterator` objects.
   ! ------------------------------------------------------------------------- !
   subroutine init_HashTableIterator(new, iteratee_ptr)
-    type(HashTableIterator), intent(inout) :: new
-      !! The new `HashTableIterator` object to be initialized.
-    type(HashTable), pointer, intent(in)   :: iteratee_ptr
+    type(HashTableIterator_t),  intent(inout) :: new
+      !! The new `HashTableIterator_t` object to be initialized.
+    type(HashTable_t), pointer, intent(in)    :: iteratee_ptr
       !! Hash table to be iterated.
 
     new % iteratee_ptr => iteratee_ptr
@@ -427,9 +429,9 @@ contains
   !>  Iterate over the iteratee_ptr of `self` and get the next key.
   ! ------------------------------------------------------------------------- !
   function hashtableiterator_getKey(self, status) result(key)
-    class(HashTableIterator), intent(inout) :: self
-      !! `HashTableIterator` to be iterated over.
-    integer, optional,        intent(out)   :: status
+    class(HashTableIterator_t), intent(inout) :: self
+      !! `HashTableIterator_t` to be iterated over.
+    integer, optional,          intent(out)   :: status
       !! Iteration status.
 
     character(len=:), allocatable :: key
@@ -443,7 +445,7 @@ contains
       if (associated(self % currMapping_ptr)) then
         key = self % currMapping_ptr % key
 
-        ! Go to the next `Mapping` object in the current slot.
+        ! Go to the next `Mapping_t` object in the current slot.
         self % currMapping_ptr => self % currMapping_ptr % next
         exit
 
@@ -473,10 +475,10 @@ contains
   !>  Free allocated attributes of `self` and their own attributes.
   ! ------------------------------------------------------------------------- !
   subroutine htIterDestructor(self)
-    type(HashTableIterator), intent(inout) :: self
-      !! `HashTableIterator` to be modified.
+    type(HashTableIterator_t), intent(inout) :: self
+      !! `HashTableIterator_t` to be destroyed.
 
-    ! `HashTable` pointer attribute is automatically destroyed.
+    ! `HashTable_t` pointer attribute is automatically destroyed.
     self % currMapping_ptr => null()
     self % currSlotIdx = 1
   end subroutine htIterDestructor

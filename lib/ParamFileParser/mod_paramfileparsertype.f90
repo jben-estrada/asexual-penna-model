@@ -9,7 +9,7 @@ module ParamFileParserType
   !!  external files.
   ! -------------------------------------------------------------------------- !
   use HashTableType, only: &
-    HashTable,             &
+    HashTable_t,           &
     init_HashTable,        &
     HSHTBL_STAT_OK => STAT_OK
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar
@@ -17,12 +17,12 @@ module ParamFileParserType
   implicit none
   private
 
-  type :: ParamFileParser
+  type :: ParamFileParser_t
     !! A derived type for reading files listing parameters.
     private
     character(len=:), allocatable :: filePath
       !! Path to the file to be read and parsed.
-    type(HashTable) :: keyValTable
+    type(HashTable_t) :: keyValTable
       !! Table into which obtained parameters from file is stored.
   contains
     procedure :: readFile => paramfileparser_readFile
@@ -43,7 +43,7 @@ module ParamFileParserType
     procedure, private :: paramfileparser_getScalarValue_real
     procedure, private :: paramfileparser_getArrValue_int
     procedure, private :: paramfileparser_getArrValue_real
-  end type
+  end type ParamFileParser_t
 
   ! RESERVED CHARACTERS.
   ! -------------------------------------------------------------------------- !
@@ -88,19 +88,19 @@ module ParamFileParserType
   ! Maximum length of one line.
   integer, parameter :: MAX_LINE_LEN = 256
 
-  public :: ParamFileParser
+  public :: ParamFileParser_t
   public :: init_ParamFileParser
 contains
 
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: paramfileparser_cnstrct
-  !>  Constructor for the  `ParamFileParser` type.
+  !>  Constructor for the  `ParamFileParser_t` type.
   ! -------------------------------------------------------------------------- !
   subroutine init_ParamFileParser(new, filePath)
-    type(ParamFileParser), intent(inout) :: new
-      !! New `ParamFileParser` object to be initialized.
-    character(len=*),      intent(in)    :: filePath
+    type(ParamFileParser_t), intent(inout) :: new
+      !! New `ParamFileParser_t` object to be initialized.
+    character(len=*),        intent(in)    :: filePath
       !! Path to the file to be opened and read.
 
 
@@ -166,12 +166,12 @@ contains
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: storeKeyValuePair
   !>  Separate the key and value characters in `keyValChar` and store them
-  !!  in the `keyValTable` attribute of the `ParamFileParser` object `self`.
+  !!  in the `keyValTable` attribute of the `ParamFileParser_t` object `self`.
   ! -------------------------------------------------------------------------- !
   subroutine storeKeyValuePair(self, keyValChar)
-    class(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be modified.
-    character(len=*),       intent(in)    :: keyValChar
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be modified.
+    character(len=*),         intent(in)    :: keyValChar
       !! Character from which key and value are obtained.
 
     character(len=:), allocatable :: key, value
@@ -228,7 +228,7 @@ contains
     end if
 
     ! Store the obtained key and value to the hash table in the
-    ! `ParamFileParser` object.
+    ! `ParamFileParser_t` object.
     call self % keyValTable % set(key, value)
 
     ! Free local allocated characters.
@@ -242,8 +242,8 @@ contains
   !!  key-value pair or parameters in `self % keyValueTable`.
   ! -------------------------------------------------------------------------- !
   subroutine paramfileparser_readFile(self)
-    class(ParamFileParser), intent(inout) :: self
-      !! Reference to the `ParamFileParser` object.
+    class(ParamFileParser_t), intent(inout) :: self
+      !! Reference to the `ParamFileParser_t` object.
 
     character(len=:), allocatable :: strippedFile
     character(len=:), allocatable :: keyValChar
@@ -276,8 +276,8 @@ contains
 
 
   subroutine paramfileparser_getScalarValue_char(self, key, scalarVal, status)
-    class(ParamFileParser),        intent(inout) :: self
-      !! `ParamFileParser` object to be searched.
+    class(ParamFileParser_t),      intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
     character(len=*),              intent(in)    :: key
       !! Key with which its corresponding value is obtained.
     character(len=:), allocatable, intent(out)   :: scalarVal
@@ -315,13 +315,13 @@ contains
   !>  Get the scalar integer value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
   subroutine paramfileparser_getScalarValue_int(self, key, scalarVal, status)
-    class(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be searched.
-    character(len=*),       intent(in)    :: key
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    integer,                intent(out)   :: scalarVal
+    integer,                  intent(out)   :: scalarVal
       !! Scalar output.
-    integer, optional,      intent(out)   :: status
+    integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
       !! from being able to stop this program.
 
@@ -359,13 +359,13 @@ contains
   !>  Get the scalar real value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
   subroutine paramfileparser_getScalarValue_real(self, key, scalarVal, status)
-    class(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be searched.
-    character(len=*),       intent(in)    :: key
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    real,                   intent(out)   :: scalarVal
+    real,                     intent(out)   :: scalarVal
       !! Scalar output.
-    integer, optional,      intent(out)   :: status
+    integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
       !! from being able to stop this program.
 
@@ -403,13 +403,13 @@ contains
   !>  Get the integer array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
   subroutine paramfileparser_getArrValue_int(self, key, arrVal, status)
-    class(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be searched.
-    character(len=*),       intent(in)    :: key
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    integer,                intent(out)   :: arrVal(:)
+    integer,                  intent(out)   :: arrVal(:)
       !! Output array.
-    integer, optional,      intent(out)   :: status
+    integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
       !! from being able to stop this program.
 
@@ -447,13 +447,13 @@ contains
   !>  Get the real array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
   subroutine paramfileparser_getArrValue_real(self, key, arrVal, status)
-    class(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be searched.
-    character(len=*),       intent(in)    :: key
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    real,                   intent(out)   :: arrVal(:)
+    real,                     intent(out)   :: arrVal(:)
       !! Output array.
-    integer, optional,      intent(out)   :: status
+    integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
       !! from being able to stop this program.
 
@@ -488,13 +488,13 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: destructor
-  !>  Destructor for the `ParamFileParser` type.
+  !>  Destructor for the `ParamFileParser_t` type.
   ! -------------------------------------------------------------------------- !
   subroutine destructor(self)
-    type(ParamFileParser), intent(inout) :: self
-      !! `ParamFileParser` object to be modified.
+    type(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be modified.
 
-    ! `HashTable` attribute is automatically destroyed.
     if (allocated(self % filePath)) deallocate(self % filePath)
+    ! NOTE: `HashTable_t` attribute is automatically destroyed.
   end subroutine destructor
 end module ParamFileParserType

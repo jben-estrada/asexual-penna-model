@@ -5,7 +5,7 @@ module WriterType
   ! AUTHOR: John Benedick A. Estrada
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing the derived type `Writer` for writing numerical data
+  !>  Module containing the derived type `Writer_t` for writing numerical data
   !!  to external files.
   ! -------------------------------------------------------------------------- !
   use, intrinsic :: iso_fortran_env, only: &
@@ -15,7 +15,7 @@ module WriterType
   implicit none
   private
 
-  type :: Writer
+  type :: Writer_t
     !! A derived type for writing numerical data to files.
     private
     character(len=:), allocatable :: filename
@@ -58,14 +58,14 @@ module WriterType
     procedure :: writer_write_intArr
     procedure :: writer_write_realArr
     procedure :: writer_write_charArr
-  end type
+  end type Writer_t
 
   ! Write format bases.
   character(len=*), parameter :: FMT_INT_LEN = "i15"
   character(len=*), parameter :: FMT_REAL_LEN = "f15.6"
   character(len=*), parameter :: FMT_CHAR_LEN = "a"
 
-  public :: Writer
+  public :: Writer_t
   public :: init_Writer
   public :: writeIK
   public :: writeRK
@@ -74,11 +74,11 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_cnstrct
-  !>  Constructor for `Writer` type.
+  !>  Constructor for `Writer_t` type.
   ! -------------------------------------------------------------------------- !
   subroutine init_Writer(new, filename, unit, delim)
-    type(Writer),     intent(inout) :: new
-      !! new `Writer` object to be initialized.
+    type(Writer_t),   intent(inout) :: new
+      !! new `Writer_t` object to be initialized.
     character(len=*), intent(in)    :: filename
       !! Name of the file to which data is to written on.
     integer,          intent(in)    :: unit
@@ -97,11 +97,11 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_openFile
-  !>  Open the file the `Writer` object `self` is initialized with.
+  !>  Open the file the `Writer_t` object `self` is initialized with.
   ! -------------------------------------------------------------------------- !
   subroutine writer_openFile(self)
-    class(Writer), intent(inout) :: self
-      !! `Writer` object to be modified.
+    class(Writer_t), intent(inout) :: self
+      !! `Writer_t` object to be modified.
     integer :: openStat
 
     open(unit=self % unit, file=self % filename, iostat=openStat)
@@ -118,10 +118,10 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: writer_isFileOpen
-  !>  Check if the file associated with the `Writer` object is open for writing.
+  !>  Check if the file associated with the `Writer_t` object is open for writing.
   ! -------------------------------------------------------------------------- !
   logical function writer_isFileOpen(self)
-    class(Writer), intent(in) :: self
+    class(Writer_t), intent(in) :: self
     writer_isFileOpen = self % fileOpen
   end function writer_isFileOpen
 
@@ -131,7 +131,7 @@ contains
   !>  Check if the file to be written on is open. Raises error if not.
   ! -------------------------------------------------------------------------- !
   subroutine checkFileState(writerObj, msg)
-    class(Writer), intent(in) :: writerObj
+    class(Writer_t), intent(in) :: writerObj
       !! 'Writer' object to be checked.
     character(len=*), intent(in) :: msg
       !! Error message.
@@ -146,12 +146,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_intSclr
-  !>  Write integer of rank-0 to file associated with the `Writer` object
+  !>  Write integer of rank-0 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_intSclr(self, scalarData)
-    class(Writer),         intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),       intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     integer(kind=writeIK), intent(in)    :: scalarData
       !! Data to be written to file.
     integer :: writeStat
@@ -168,12 +168,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_realSclr
-  !>  Write real of rank-0 to file associated with the `Writer` object
+  !>  Write real of rank-0 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_realSclr(self, scalarData)
-    class(Writer),      intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),    intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     real(kind=writeRK), intent(in)    :: scalarData
       !! Data to be written to file.
     integer :: writeStat
@@ -189,12 +189,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_charSclr
-  !>  Write character of rank-1 to file associated with the `Writer` object
+  !>  Write character of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_charSclr(self, scalarData)
-    class(Writer),    intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),  intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     character(len=*), intent(in)    :: scalarData
       !! Data to be written to file.
     integer :: writeStat
@@ -210,12 +210,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_intArr
-  !>  Write integer of rank-1 to file associated with the `Writer` object
+  !>  Write integer of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_intArr(self, arrData)
-    class(Writer),         intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),       intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     integer(kind=writeIK), intent(in)    :: arrData(:)
       !! Data to be written to file.
     integer :: writeStat
@@ -231,12 +231,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_realArr
-  !>  Write real of rank-1 to file associated with the `Writer` object
+  !>  Write real of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_realArr(self, arrData)
-    class(Writer),      intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),    intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     real(kind=writeRK), intent(in)    :: arrData(:)
       !! Data to be written to file.
     integer :: writeStat
@@ -252,12 +252,12 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_charArr
-  !>  Write character of rank-1 to file associated with the `Writer` object
+  !>  Write character of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_write_charArr(self, arrData)
-    class(Writer),    intent(inout) :: self
-      !! `Writer` object to write data on file.
+    class(Writer_t),  intent(inout) :: self
+      !! `Writer_t` object to write data on file.
     character(len=*), intent(in)    :: arrData(:)
       !! Data to be written to file.
     integer :: writeStat, i
@@ -276,11 +276,11 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_closeFile
-  !>  Close the file associated with the `Writer` object `self`.
+  !>  Close the file associated with the `Writer_t` object `self`.
   ! -------------------------------------------------------------------------- !
   subroutine writer_closeFile(self)
-    class(Writer), intent(inout) :: self
-      !! `Writer` object to be modified.
+    class(Writer_t), intent(inout) :: self
+      !! `Writer_t` object to be modified.
 
     call checkFileState(self, "Cannot close file.")
     close(self % unit)
@@ -291,11 +291,11 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: destructor
-  !>  Destructor for `Writer` type.
+  !>  Destructor for `Writer_t` type.
   ! -------------------------------------------------------------------------- !
   subroutine destructor(self)
-    type(Writer), intent(inout) :: self
-      !! `Writer` object to be freed.
+    type(Writer_t), intent(inout) :: self
+      !! `Writer_t` object to be freed.
     if (self % fileOpen) close(self % unit)
   end subroutine destructor
 end module WriterType

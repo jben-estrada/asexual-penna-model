@@ -22,7 +22,7 @@ module DataWriter
     REC_FLAG_ORDER
   use ErrorMSG, only: raiseError
   use CastProcs, only: castCharToInt, castIntToChar
-  use WriterType, only: Writer, init_Writer, writeIK, writeRK
+  use WriterType, only: Writer_t, init_Writer, writeIK, writeRK
   implicit none
   private
 
@@ -55,7 +55,7 @@ module DataWriter
   integer, parameter :: BASE_UNIT = 99
 
   ! All writer objects.
-  type(Writer), target  :: writerArr(len(REC_FLAG_ORDER))
+  type(Writer_t), target  :: writerArr(len(REC_FLAG_ORDER))
   logical :: initWriterArr(len(REC_FLAG_ORDER)) = .false.
 
   public :: initDataWriter
@@ -66,7 +66,7 @@ module DataWriter
   public :: DATA_WRITER_PENNA
   public :: DATA_WRITER_PROG
 
-  public :: Writer
+  public :: Writer_t
   public :: writeIK
   public :: writeRK
 contains
@@ -163,7 +163,7 @@ contains
   ! -------------------------------------------------------------------------- !
   function getWriterPtr(recordFlag) result(writerPtr)
     character, intent(in) :: recordFlag
-    type(Writer), pointer :: writerPtr
+    type(Writer_t), pointer :: writerPtr
     integer :: writerIdx
 
     writerIdx = scan(REC_FLAG_ORDER, recordFlag)
@@ -190,7 +190,7 @@ contains
     integer,          intent(in)    :: newWriterUnit
       !! Fortran ID for the file to be written on.
 
-    type(Writer), pointer :: chosenWriter
+    type(Writer_t), pointer :: chosenWriter
     integer :: i, startingAge
 
     chosenWriter => getWriterPtr(recordFlag)
@@ -432,7 +432,7 @@ contains
   subroutine closeDataWriter(dataWriterType)
     integer, intent(in) :: dataWriterType
 
-    type(Writer), pointer :: currWriterPtr
+    type(Writer_t), pointer :: currWriterPtr
     character :: currFlag
     integer   :: i
 

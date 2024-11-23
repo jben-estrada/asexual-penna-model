@@ -11,12 +11,12 @@ module Demographics
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
   use CastProcs, only: isFinite, logicalToInt
-  use StaticBitSetType, only: &
-    StaticBitSet,      &
-    maskBitset,        &
-    hashBitSet,        &
-    bitSetHashKind,    &
-    extractBitSetData, &
+  use BitSetType, only: &
+    BitSet_t,           &
+    maskBitset,         &
+    hashBitSet,         &
+    bitSetHashKind,     &
+    extractBitSetData,  &
     operator(==)
   implicit none
   private
@@ -33,18 +33,18 @@ module Demographics
 
   ! DIVERSITY INDEX, GENOME DISTRIBUTION & BAD GENE DISTRIBUTION.
   ! -------------------------------------------------------------------------- !
-  type :: GenomeBin
+  type :: GenomeBin_t
     !! A bin for the genome distribution containing the genome and its 
     !! number of bearers.
 
-    type(StaticBitSet) :: genome
+    type(BitSet_t) :: genome
       !! The genome of this `GenomeDstrbNode` object.
-    integer            :: count
+    integer        :: count
       !! Count of `Person` objects with the same value for `genome`
       !! as in this `GenomeDstrbNode` object.
-  end type GenomeBin
+  end type GenomeBin_t
 
-  type(GenomeBin), allocatable :: genomeDstrb(:)
+  type(GenomeBin_t), allocatable :: genomeDstrb(:)
     !! A set of genomes in the population with their corresponding bearer count.
   integer :: genomeDstrbSize    = 0
   integer :: genomeDstrbMaxSize = 0
@@ -110,9 +110,9 @@ contains
   !>  Add a genome to the genome distribution.
   ! -------------------------------------------------------------------------- !
   subroutine addGenomeToDstrb(genome, mask)
-    type(StaticBitSet), intent(in) :: genome
-    logical,            intent(in) :: mask(:)
-    type(StaticBitSet) :: maskedGenome
+    type(BitSet_t), intent(in) :: genome
+    logical,        intent(in) :: mask(:)
+    type(BitSet_t) :: maskedGenome
     integer :: genomeIdx
 
     if (real(genomeDstrbSize)/real(genomeDstrbMaxSize) > MAX_LOAD_FACTOR) then
@@ -144,9 +144,9 @@ contains
   !>  Delete a distribution from the genome distribution.
   ! -------------------------------------------------------------------------- !
   subroutine delGenomeFromDstrb(genome, mask)
-    type(StaticBitSet), intent(in) :: genome
-    logical,            intent(in) :: mask(:)
-    type(StaticBitSet) :: maskedGenome
+    type(BitSet_t), intent(in) :: genome
+    logical,        intent(in) :: mask(:)
+    type(BitSet_t) :: maskedGenome
     integer :: genomeIdx
     
     call maskBitset(genome, mask, maskedGenome)
@@ -171,8 +171,8 @@ contains
   subroutine rehashGenomeDstrb(mask)
     logical, intent(in) :: mask(:)
 
-    type(GenomeBin), allocatable :: tempGenomeDstrb(:)
-    type(StaticBitSet) :: maskedGenome
+    type(GenomeBin_t), allocatable :: tempGenomeDstrb(:)
+    type(BitSet_t) :: maskedGenome
     integer :: newSize, genomeIdx, i
 
     newSize = int(genomeDstrbMaxSize * GROWTH_FACTOR)
@@ -224,7 +224,7 @@ contains
   !!  implementation and to ease the finalization of the genome distribition.
   ! -------------------------------------------------------------------------- !
   integer function findGenomeIdx(genome) result(idx)
-    type(StaticBitSet), intent(in)  :: genome
+    type(BitSet_t), intent(in)  :: genome
 
     idx = int(                                          &
         modulo(                                         &
@@ -356,7 +356,7 @@ contains
     integer :: badGeneDstrb(MODEL_L)
     integer :: genomeIntArray(MODEL_L)
     logical :: genomeLgclArray(MODEL_L)
-    type(StaticBitSet) :: genome
+    type(BitSet_t) :: genome
     integer :: genomeCount, i
 
     badGeneDstrb(:) = 0

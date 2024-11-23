@@ -5,12 +5,12 @@ module CmdArgParserType
   ! AUTHOR: John Benedick A. Estrada
   !--------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing the derived type `CmdArgParser` for parsing command
+  !>  Module containing the derived type `CmdArgParser_t` for parsing command
   !!  arguments.
   ! ------------------------------------------------------------------------- !
   use HashTableType, only:  &
-    HashTable,              &
-    HashTableIterator,      &
+    HashTable_t,            &
+    HashTableIterator_t,    &
     init_HashTable,         &
     init_HashTableIterator, &
     HSHTBLE_STAT_OK => STAT_OK
@@ -41,19 +41,19 @@ module CmdArgParserType
   character(len=2), parameter :: LONG_CMD_ID = "--"
   !! Identifier for long commands.
 
-  type :: CmdArgParser
+  type :: CmdArgParser_t
     private
-    type(HashTable) :: cmdTypeTable
+    type(HashTable_t) :: cmdTypeTable
       !! Table of commands and their corresponding types.
-    type(HashTable) :: cmdValueTable
+    type(HashTable_t) :: cmdValueTable
       !! Table of commands and their corresponding values obtained from
       !! command-line arguments.
-    type(HashTable) :: cmdAliasTable
+    type(HashTable_t) :: cmdAliasTable
       !! Table of aliases of commands.
-    type(HashTable) :: cmdUsageTable
+    type(HashTable_t) :: cmdUsageTable
       !! Table of usage message for commands.
     integer :: cmdCount = 0
-      !! Number of defined commands defined in this `CmdArgParser` object.
+      !! Number of defined commands defined in this `CmdArgParser_t` object.
   contains
     procedure :: setCmd => cmdargparser_setCmd
       !! Set a command, its type and its usage text. An alias can be optionally 
@@ -68,14 +68,14 @@ module CmdArgParserType
       !! Get the value of the given key-value command.
     procedure :: isFlagToggled => cmdargparser_isFlagToggled
       !! Determine if a flag command is passed.
-  end type
+  end type CmdArgParser_t
 
   ! -------------------------------------------------------------------------- !
   ! Interface for submodule procedures.
   interface
     module subroutine parseCmdArgs(parserObj)
-      class(CmdArgParser), intent(inout) :: parserObj
-        !! `CmdArgParser` object.
+      class(CmdArgParser_t), intent(inout) :: parserObj
+        !! `CmdArgParser_t` object.
     end subroutine parseCmdArgs
 
     module subroutine sortCharArr(charArr)
@@ -85,7 +85,7 @@ module CmdArgParserType
 
   ! Public elements in this module.
   ! -------------------------------------------------------------------------- !
-  public :: CmdArgParser
+  public :: CmdArgParser_t
   public :: init_CmdArgParser
 
   public :: CMD_TYPE_FLAG_S
@@ -99,10 +99,10 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: init_CmdArgParser
-  !>  Initializer of `CmdArgParser` objects.
+  !>  Initializer of `CmdArgParser_t` objects.
   ! -------------------------------------------------------------------------- !
   subroutine init_CmdArgParser(new)
-    type(CmdArgParser), target, intent(inout) :: new
+    type(CmdArgParser_t), target, intent(inout) :: new
 
     ! Initialize the hash table attributes.
     call init_HashTable(new % cmdTypeTable)
@@ -123,8 +123,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine cmdargparser_setCmd(self, cmdName, cmdType, cmdUsage, cmdAlias, &
     cmdAliasType)
-    class(CmdArgParser),        intent(inout) :: self
-      !! `CmdArgParser` object to be initialized.
+    class(CmdArgParser_t),      intent(inout) :: self
+      !! `CmdArgParser_t` object to be initialized.
     character(len=*),           intent(in)    :: cmdName
       !! Name of the command.
     character(len=*),           intent(in)    :: cmdType
@@ -147,8 +147,8 @@ contains
     dummyChar = self % cmdTypeTable % get(cmdName, getStat)
     if (getStat == HSHTBLE_STAT_OK) then
       call raiseWarning( &
-        "Overwriting the command '(" &
-        // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" // trim(cmdName) // "'" &
+          "Overwriting the command '(" &
+          // SHORT_CMD_ID // "/" // LONG_CMD_ID // ")" // trim(cmdName) // "'" &
         )
     end if
 
@@ -258,9 +258,8 @@ contains
   !>  Read and parse the command-line arguments.
   ! -------------------------------------------------------------------------- !
   subroutine cmdargparser_readCmdArgs(self)
-    class(CmdArgParser), intent(inout) :: self
-      !! `CmdArgParser` object to be modified.
-
+    class(CmdArgParser_t), intent(inout) :: self
+      !! `CmdArgParser_t` object to be modified.
     call parseCmdArgs(self)
   end subroutine cmdargparser_readCmdArgs
 
@@ -270,11 +269,11 @@ contains
   !>  Print the help message.
   ! -------------------------------------------------------------------------- !
   subroutine cmdargparser_printhelp(self, progName, progDesc)
-    class(CmdArgParser), target, intent(inout) :: self
-      !! `CmdArgParser` object.
-    character(len=*),            intent(in)    :: progName
+    class(CmdArgParser_t), target, intent(inout) :: self
+      !! `CmdArgParser_t` object.
+    character(len=*),              intent(in)    :: progName
       !! Name of the program using this module.
-    character(len=*),            intent(in)    :: progDesc
+    character(len=*),              intent(in)    :: progDesc
       !! Program description using this module.
 
 
@@ -286,8 +285,8 @@ contains
     character(len=MAX_CMD_LEN)    :: shortCmd
     character(len=MAX_CMD_LEN)    :: longCmd
 
-    type(HashTable), pointer :: usageTable_ptr
-    type(HashTableIterator)  :: usageTableIter
+    type(HashTable_t), pointer :: usageTable_ptr
+    type(HashTableIterator_t)  :: usageTableIter
 
     ! Initialize hash table iterator.
     usageTable_ptr => self % cmdUsageTable
@@ -352,8 +351,8 @@ contains
   !>  Check if `cmdName` is a short command or not.
   ! -------------------------------------------------------------------------- !
   logical function isShortCmd(cmdParser, cmdName)
-    class(CmdArgParser), intent(inout) :: cmdParser
-    character(len=*),    intent(in)    :: cmdName
+    class(CmdArgParser_t), intent(inout) :: cmdParser
+    character(len=*),      intent(in)    :: cmdName
 
     character :: cmdType
 
@@ -368,8 +367,8 @@ contains
   !>  Append characters around command name `cmdName` depending on its type.
   ! -------------------------------------------------------------------------- !
   function appendCmdID(cmdParser, cmdName) result(cmd)
-    class(CmdArgParser), intent(inout) :: cmdParser
-    character(len=*),    intent(in)    :: cmdName
+    class(CmdArgParser_t), intent(inout) :: cmdParser
+    character(len=*),      intent(in)    :: cmdName
 
     character(len=:),    allocatable   :: cmd
 
@@ -395,9 +394,9 @@ contains
   !>  Get the value of the key-value command `cmdName`.
   ! -------------------------------------------------------------------------- !
   function cmdargparser_getCmdValue(self, cmdName) result(cmdValue)
-    class(CmdArgParser), intent(inout) :: self
-      !! `CmdArgParser` object to be searched.
-    character(len=*),    intent(in)    :: cmdName
+    class(CmdArgParser_t), intent(inout) :: self
+      !! `CmdArgParser_t` object to be searched.
+    character(len=*),      intent(in)    :: cmdName
       !! Name of the command whose value is to be searched.
 
     character(len=:), allocatable :: cmdValue
@@ -444,9 +443,9 @@ contains
   !>  Check if `cmdName` has a value or not.
   ! -------------------------------------------------------------------------- !
   logical function cmdargparser_hasValue(self, cmdName)
-    class(CmdArgParser), intent(inout) :: self
-      !! `CmdArgParser` object to be searched for
-    character(len=*),    intent(in)    :: cmdName
+    class(CmdArgParser_t), intent(inout) :: self
+      !! `CmdArgParser_t` object to be searched for
+    character(len=*),      intent(in)    :: cmdName
       !! Name of the command to be inspected.
 
     character :: dummyChar
@@ -466,9 +465,9 @@ contains
   !>  Check if the flag command `cmdName` is toggled or not.
   ! -------------------------------------------------------------------------- !
   logical function cmdargparser_isFlagToggled(self, cmdName)
-    class(CmdArgParser), intent(inout) :: self
-      !! `CmdArgParser` object to be searched for
-    character(len=*),    intent(in)    :: cmdName
+    class(CmdArgParser_t), intent(inout) :: self
+      !! `CmdArgParser_t` object to be searched for
+    character(len=*),      intent(in)    :: cmdName
       !! Name of the command to be inspected.
     
     character :: cmdType

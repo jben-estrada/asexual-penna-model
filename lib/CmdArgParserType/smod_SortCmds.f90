@@ -51,7 +51,7 @@ contains
   ! FUNCTION: isFirstGreater
   !>  Determine which character has the greater precendence than the other.
   ! -------------------------------------------------------------------------- !
-  logical function isFirstGreater(char1, char2)
+  pure logical function isFirstGreater(char1, char2)
     character(len=*), intent(in) :: char1
       !! Character to be compared with `char1`.
     character(len=*), intent(in) :: char2
@@ -82,7 +82,7 @@ contains
   ! FUNCTION: asciiCodeNoCase
   !>  Get the ASCII code of `char`. All letters are all turned to upper case.
   ! -------------------------------------------------------------------------- !
-  integer function asciiCodeNoCase(char)
+  pure integer function asciiCodeNoCase(char)
     character, intent(in) :: char
 
     asciiCodeNoCase = iachar(char)

@@ -12,7 +12,7 @@ submodule (Parameters) CmdArgAssignProcs
   implicit none
 
 
-  type :: CmdArgRecord
+  type :: CmdArgRecord_t
     !! A handy derived type for collecting command option attributes.
     character(len=:), allocatable :: cmdName
       !! Name of the command.
@@ -37,7 +37,7 @@ submodule (Parameters) CmdArgAssignProcs
   ! Command line arguments
   ! -------------------------------------------------------------------------- !
   ! Array of all commands
-  type(CmdArgRecord) :: cmdArgArr(21)
+  type(CmdArgRecord_t) :: cmdArgArr(21)
 
   ! Model parameters.
   integer, parameter :: IDX_MTTN_THRESHOLD_KV  = 1
@@ -82,82 +82,82 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: initCmdArgRecs
-  !>  Initialize `CmdArgRecord` objects in the `cmdArgArr` array.
+  !>  Initialize `CmdArgRecord_t` objects in the `cmdArgArr` array.
   ! -------------------------------------------------------------------------- !
   subroutine initCmdArgRecs(pennaCmdArgs)
-    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+    type(CmdArgParser_t), target, intent(inout) :: pennaCmdArgs
       !! Command argument parser for this program.
     integer :: i
 
     ! Model parameters.
-    cmdArgArr(IDX_MTTN_THRESHOLD_KV) = CmdArgRecord(      &
+    cmdArgArr(IDX_MTTN_THRESHOLD_KV) = CmdArgRecord_t(    &
         "T", "mttn-lim", KV_S, KV_L, "Mutation threshold" &
       )
-    cmdArgArr(IDX_BIRTH_RATE_KV) = CmdArgRecord(     &
-        "B", "birth-rate", KV_S, KV_L, "Birth rate"  &
+    cmdArgArr(IDX_BIRTH_RATE_KV) = CmdArgRecord_t(  &
+        "B", "birth-rate", KV_S, KV_L, "Birth rate" &
       )
-    cmdArgArr(IDX_MTTN_RATE_KV) = CmdArgRecord(        &
-        "M", "mttn-rate", KV_S, KV_L, "Mutation rate"  &
+    cmdArgArr(IDX_MTTN_RATE_KV) = CmdArgRecord_t(     &
+        "M", "mttn-rate", KV_S, KV_L, "Mutation rate" &
       )
-    cmdArgArr(IDX_R_AGE_MIN_KV) = CmdArgRecord(                  &
+    cmdArgArr(IDX_R_AGE_MIN_KV) = CmdArgRecord_t(                &
         "r", "r-age-min", KV_S, KV_L, "Minimum reproduction age" &
       )
-    cmdArgArr(IDX_R_AGE_MAX_KV) = CmdArgRecord(                   &
+    cmdArgArr(IDX_R_AGE_MAX_KV) = CmdArgRecord_t(                 &
         "R", "r-age-max", KV_S, KV_L, "Maximum reproduction age"  &
       )
-    cmdArgArr(IDX_MAX_POP_SIZE_KV) = CmdArgRecord(       &
+    cmdArgArr(IDX_MAX_POP_SIZE_KV) = CmdArgRecord_t(     &
         "K", "pop-cap", KV_S, KV_L, "Carrying capacity"  &
       )
-    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) = CmdArgRecord(                          &
+    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) = CmdArgRecord_t(                        &
         "m", "init-mttn", KV_S, KV_L, "Initial mutation count per individual"  &
       )
-    cmdArgArr(IDX_INIT_POP_SIZE_KV) = CmdArgRecord(             &
+    cmdArgArr(IDX_INIT_POP_SIZE_KV) = CmdArgRecord_t(           &
         "p", "pop-size", KV_S, KV_L, "Initial population size"  &
       )
-    cmdArgArr(IDX_MAX_TIME_STEP_KV) = CmdArgRecord(        &
+    cmdArgArr(IDX_MAX_TIME_STEP_KV) = CmdArgRecord_t(      &
         "t", "time-step", KV_S, KV_L, "Maximum time step"  &
       )
-    cmdArgArr(IDX_ENTROPY_ORDER_KV) = CmdArgRecord(          &
+    cmdArgArr(IDX_ENTROPY_ORDER_KV) = CmdArgRecord_t(        &
         "O", "ent-order", KV_S, KV_L, "Renyi entropy order"  &
       )
-    cmdArgArr(IDX_AGE_DSTRB_TIME_KV) = CmdArgRecord(          &
+    cmdArgArr(IDX_AGE_DSTRB_TIME_KV) = CmdArgRecord_t(        &
         "a", "age-dstrb-time", KV_S, KV_L,                    &
         "Age distribution time step till the final time step" &
       )
 
     ! Program parameters.
-    cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord(      &
+    cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord_t(    &
         "s", "sample-size", KV_S, KV_L, "Sample size"  &
       )
-    cmdArgArr(IDX_RECORD_DATA_KV) = CmdArgRecord(                 &
+    cmdArgArr(IDX_RECORD_DATA_KV) = CmdArgRecord_t(               &
         "d", "record-data", KV_S, KV_L,                           &
         "Record data. See 'notes' below for recordable data set"  &
       )
-    cmdArgArr(IDX_RNG_CHOICE_KV) = CmdArgRecord(                      &
+    cmdArgArr(IDX_RNG_CHOICE_KV) = CmdArgRecord_t(                    &
         "g", "rng-choice", KV_S, KV_L,                                &
         "Choice of pseduo-RNG. See 'notes' below for available RNGs"  &
       )
-    cmdArgArr(IDX_RNG_SEED_KV) = CmdArgRecord(                    &
+    cmdArgArr(IDX_RNG_SEED_KV) = CmdArgRecord_t(                  &
         "S", "rng-seed", KV_S, KV_L, "RNG seed. Must be integer"  &
       )
-    cmdArgArr(IDX_PARAM_FILE_PATH_KV) = CmdArgRecord(                &
+    cmdArgArr(IDX_PARAM_FILE_PATH_KV) = CmdArgRecord_t(              &
         "f", "param-file", KV_S, KV_L,                               &
         "Path to the file containing the default parameter listing"  &
       )
-    cmdArgArr(IDX_OUT_FILE_PATH_KV) = CmdArgRecord(                      &
+    cmdArgArr(IDX_OUT_FILE_PATH_KV) = CmdArgRecord_t(                    &
         "o", "out", KV_S, KV_L, "Path to file data is to be written in"  &
       )
-    cmdArgArr(IDX_SHOW_PARAM_F) = CmdArgRecord(              &
+    cmdArgArr(IDX_SHOW_PARAM_F) = CmdArgRecord_t(            &
       "v", "verbose", FLAG_S, FLAG_L, "Show all parameters"  &
     )
-    cmdArgArr(IDX_NO_PARAM_F) = CmdArgRecord(      &
+    cmdArgArr(IDX_NO_PARAM_F) = CmdArgRecord_t(    &
         "q", "quiet", FLAG_S, FLAG_L,              &
         "Print nothing when running this program"  &
       )
-    cmdArgArr(IDX_SHOW_VERSION_F) = CmdArgRecord(                           &
+    cmdArgArr(IDX_SHOW_VERSION_F) = CmdArgRecord_t(                         &
         "V", "version", FLAG_S, FLAG_L, "Show the version of this program"  &
       )
-    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord(     &
+    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord_t(   &
         "c", "csv-format", FLAG_S, FLAG_L,          &
         "Set the output files to be in CSV format"  &
       )
@@ -202,7 +202,7 @@ contains
   !>  Assign parameters from external file and command arguments.
   ! -------------------------------------------------------------------------- !
   module subroutine setParams()
-    type(CmdArgParser), target :: pennaCmdArgs
+    type(CmdArgParser_t), target :: pennaCmdArgs
 
     ! Initialize the command argument parser.
     call init_CmdArgParser(pennaCmdArgs)
@@ -281,9 +281,9 @@ contains
   !>  Assign the values obtained from command arguments to parameters.
   ! -------------------------------------------------------------------------- !
   subroutine assignUserProvidedParams(pennaCmdArgs)
-    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+    type(CmdArgParser_t), target, intent(inout) :: pennaCmdArgs
       !! Command argument parser for this program.
-    type(CmdArgRecord) :: currCmdArg
+    type(CmdArgRecord_t) :: currCmdArg
     integer :: i, castStat
 
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
@@ -409,8 +409,8 @@ contains
   !>  Check the assigned model parameters for invalid values.
   ! -------------------------------------------------------------------------- !
   subroutine checkValidParams(pennaCmdArgs)
-    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
-    type(CmdArgRecord) :: cmdArg
+    type(CmdArgParser_t), target, intent(inout) :: pennaCmdArgs
+    type(CmdArgRecord_t) :: cmdArg
 
     logical :: printNoParam, printAllParam
     integer :: i
@@ -485,7 +485,7 @@ contains
   !>  Print the help messages including some notes.
   ! -------------------------------------------------------------------------- !
   subroutine printHelpAndNotesMsgs(pennaCmdArgs)
-    type(CmdArgParser), target, intent(inout) :: pennaCmdArgs
+    type(CmdArgParser_t), target, intent(inout) :: pennaCmdArgs
 
     character(len=:), allocatable :: progName
 
@@ -653,7 +653,7 @@ contains
     ! Free Verhulst weight array.
     if (allocated(MODEL_V_WEIGHT)) deallocate(MODEL_V_WEIGHT)
 
-    ! Free all allocatable attributes of all `CmdArgRecord` objects.
+    ! Free all allocatable attributes of all `CmdArgRecord_t` objects.
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
       ! Free allocatable character attributes.
       if (allocated(cmdArgArr(i)%cmdName)) deallocate(cmdArgArr(i)%cmdName)

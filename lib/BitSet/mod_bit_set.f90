@@ -1,11 +1,11 @@
-module StaticBitSetType
+module BitSetType
   ! -------------------------------------------------------------------------- !
-  ! MODULE: StaticBitSetType
+  ! MODULE: BitSetType
   ! -------------------------------------------------------------------------- !
   ! Author: John Benedick Estrada
   ! -------------------------------------------------------------------------- !
   ! DESCRIPTION:
-  !>  Module containing an implementation of a static bit set.
+  !>  Module containing an implementation of a bit set.
   ! -------------------------------------------------------------------------- !
   use iso_fortran_env, only: logical_kinds, int64
   use CastProcs, only: castIntToChar
@@ -16,7 +16,7 @@ module StaticBitSetType
   integer, parameter :: bitSetKind = logical_kinds(1)
   integer, parameter :: bitSetHashKind = int64
   
-  type :: StaticBitSet
+  type :: BitSet_t
     private
     logical(kind=bitSetKind), allocatable :: data(:)
     integer :: size
@@ -45,23 +45,23 @@ module StaticBitSetType
     procedure :: print => bitSet_print
       !! Print the bit set.
     final :: bitSet_finalizer
-  end type StaticBitSet
+  end type BitSet_t
 
   character, parameter :: LO_BIT_CHAR = "0"
   character, parameter :: HI_BIT_CHAR = "1"
 
-  interface init_StaticBitSet
-      procedure :: init_StaticBitSet_scalar
-      procedure :: init_StaticBitSet_array
-  end interface init_StaticBitSet
+  interface init_BitSet
+      procedure :: init_BitSet_scalar
+      procedure :: init_BitSet_array
+  end interface init_BitSet
 
   interface operator(==)
     module procedure :: cmpr_bitsets
   end interface
 
-  public :: StaticBitSet
-  public :: init_StaticBitSet
-  public :: maskBitset
+  public :: BitSet_t
+  public :: init_BitSet
+  public :: maskBitSet
   public :: extractBitSetData
   public :: operator(==)
 
@@ -71,12 +71,12 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: init_StaticBitSet_scalar
-  !>  Initializer for `StaticBitSet` objects with optional scalar initial value.
+  ! SUBROUTINE: init_BitSet_scalar
+  !>  Initializer for `BitSet_t` objects with optional scalar initial value.
   ! -------------------------------------------------------------------------- !
-  subroutine init_StaticBitSet_scalar(new, setSize, initValue)
-    type(StaticBitSet), intent(inout):: new
-      !! New `BitSet` object to be initialized.
+  subroutine init_BitSet_scalar(new, setSize, initValue)
+    type(BitSet_t),    intent(inout):: new
+      !! New `BitSet_t` object to be initialized.
     integer,           intent(in)    :: setSize
       !! Size of the bit set.
     logical, optional, intent(in)    :: initValue
@@ -90,17 +90,17 @@ contains
     allocate(new%data(setSize))
 
     if (present(initValue)) new%data(:) = initValue
-  end subroutine init_StaticBitSet_scalar
+  end subroutine init_BitSet_scalar
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: init_StaticBitSet_array
-  !>  Initializer for `StaticBitSet` objects with logical array as initializer.
+  ! SUBROUTINE: init_BitSet_array
+  !>  Initializer for `BitSet_t` objects with logical array as initializer.
   ! -------------------------------------------------------------------------- !
-  subroutine init_StaticBitSet_array(newBitSet, lgclArr)
-    type(StaticBitSet), intent(inout)  :: newBitSet
-      !! New `BitSet` object to be initialized.
-    logical,            intent(in)     :: lgclArr(:)
+  subroutine init_BitSet_array(newBitSet, lgclArr)
+    type(BitSet_t), intent(inout)  :: newBitSet
+      !! New `BitSet_t` object to be initialized.
+    logical,        intent(in)     :: lgclArr(:)
       !! Logical array as data for the new bit set.
 
     if (size(lgclArr) == 0) then
@@ -111,13 +111,13 @@ contains
     newBitSet%data(:) = lgclArr(:)
 
     newBitSet%size = size(lgclArr)
-  end subroutine init_StaticBitSet_array
+  end subroutine init_BitSet_array
 
 
   subroutine bitset_changeSize(self, newSetSize, padding)
-    class(StaticBitSet), intent(inout) :: self
-    integer,             intent(in)    :: newSetSize
-    logical, optional,   intent(in)    :: padding
+    class(BitSet_t),   intent(inout) :: self
+    integer,           intent(in)    :: newSetSize
+    logical, optional, intent(in)    :: padding
 
     logical(kind=bitSetKind), allocatable :: temp_arr(:)
 
@@ -143,10 +143,10 @@ contains
 
 
   subroutine bitSet_set(self, value, lo, hi)
-    class(StaticBitSet), intent(inout) :: self
-    logical,             intent(in)    :: value
-    integer,             intent(in)    :: lo
-    integer,             intent(in)    :: hi
+    class(BitSet_t), intent(inout) :: self
+    logical,         intent(in)    :: value
+    integer,         intent(in)    :: lo
+    integer,         intent(in)    :: hi
 
     if (lo > hi) then
       call raiseError(  &
@@ -170,18 +170,18 @@ contains
 
 
   subroutine bitSet_setAll(self, value)
-    class(StaticBitSet), intent(inout) :: self
-    logical,             intent(in)    :: value
+    class(BitSet_t), intent(inout) :: self
+    logical,         intent(in)    :: value
     self%data(:) = value
   end subroutine bitSet_setAll
 
 
   logical function bitSet_get(self, index) result(value)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     integer,             intent(in) :: index
 
     if (index < 1 .or. index > self%size) then
-      call raiseError("StaticBitSet index out of bounds: " // castIntToChar(index))
+      call raiseError("Bit set index out of bounds: " // castIntToChar(index))
     end if
 
     value = self%data(index)
@@ -189,37 +189,37 @@ contains
 
   
   logical function bitSet_any(self) result(res)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     res = any(self%data(:))
   end function bitSet_any
 
 
   logical function bitSet_all(self) result(res)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     res = all(self%data(:))
   end function bitSet_all
 
 
   integer function bitSet_getSize(self) result(setSize)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     setSize = self%size
   end function bitSet_getSize
 
 
   integer function bitSet_count(self) result(countNum)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     countNum = count(self%data(:))
   end function bitSet_count
 
 
   logical function bitSet_isInitialized(self) result(isInit)
-    class(StaticBitSet), intent(in) :: self
+    class(BitSet_t), intent(in) :: self
     isInit = allocated(self%data)
   end function bitSet_isInitialized
 
 
   subroutine bitSet_print(self, lowBitChar, highBitChar, delimChar)
-    class(StaticBitSet),        intent(in) :: self
+    class(BitSet_t),        intent(in) :: self
     character,        optional, intent(in) :: lowBitChar
     character,        optional, intent(in) :: highBitChar
     character(len=*), optional, intent(in) :: delimChar
@@ -235,7 +235,7 @@ contains
 
     if (loChar == hiChar) then
       call raiseError(  &
-          "Characters for high and low bits in StaticBitSet are the same."  &
+          "Characters for high and low bits in bit set are the same."  &
         )
     end if
 
@@ -259,13 +259,12 @@ contains
 
 
   logical function cmpr_bitsets(left, right) result(cmpr_res)
-    type(StaticBitSet), intent(in) :: left
-    type(StaticBitSet), intent(in) :: right
+    type(BitSet_t), intent(in) :: left
+    type(BitSet_t), intent(in) :: right
 
     if (left%size /= right%size) then
       call raiseError( &
-          "Left StaticBitSet does not have the same size as " // &
-          "the right StaticBitSet." &
+          "Left bit set does not have the same size as the right bit set." &
         )
     end if
 
@@ -279,14 +278,14 @@ contains
   !!  just transfer the bit patterns into a 64 bit integer.
   ! -------------------------------------------------------------------------- !
   integer(bitSetHashKind) function hashBitSet(bitSet) result(hash)
-    type(StaticBitSet), intent(in) :: bitSet
+    type(BitSet_t), intent(in) :: bitSet
     integer(bitSetHashKind) :: m
     integer :: i
     m = 1
     hash = 0
 
     if (.not.bitSet_isInitialized(bitSet)) then
-      call raiseError("Hashing an uninitialized BitSet")
+      call raiseError("Hashing an uninitialized bit set")
     end if
 
     do i = lbound(bitSet%data, 1), ubound(bitSet%data, 1)
@@ -297,15 +296,15 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: maskBitset
+  ! SUBROUTINE: maskBitSet
   !>  Create a new bit set out of an exisiting bit set with a logical mask on.
   !!  Note that elements to be masked on must correspond to TRUE in the mask
   !!  array. Otherwise, FALSE.
   ! -------------------------------------------------------------------------- !
-  subroutine maskBitset(srcBitset, mask, destBitset)
-    type(StaticBitSet), intent(in)  :: srcBitset
+  subroutine maskBitSet(srcBitset, mask, destBitset)
+    type(BitSet_t), intent(in)  :: srcBitset
     logical,            intent(in)  :: mask(:)
-    type(StaticBitSet), intent(out) :: destBitset
+    type(BitSet_t), intent(out) :: destBitset
 
     logical :: tempArray(size(mask))
 
@@ -317,7 +316,7 @@ contains
     end if
 
     tempArray(:) = srcBitset%data(:) .or. mask(:)
-    call init_StaticBitSet_array(destBitset, tempArray)
+    call init_BitSet_array(destBitset, tempArray)
   end subroutine maskBitset
 
 
@@ -326,11 +325,11 @@ contains
   !>  Extract data from an input bit set as a logical array.
   ! -------------------------------------------------------------------------- !
   subroutine extractBitSetData(srcBitset, destArray)
-    type(StaticBitSet), intent(in)  :: srcBitset
+    type(BitSet_t), intent(in)  :: srcBitset
     logical,            intent(out) :: destArray(srcBitset%size)
     
     if (.not.allocated(srcBitset%data)) then
-      call raiseError("Source bitset not yet initialized.")
+      call raiseError("Source bit set not yet initialized.")
     end if
 
     destArray(:) = srcBitset%data(:)
@@ -338,9 +337,9 @@ contains
 
 
   subroutine bitSet_finalizer(self)
-    type(StaticBitSet), intent(inout) :: self
+    type(BitSet_t), intent(inout) :: self
 
     if (allocated(self%data)) deallocate(self%data)
     self%size = 0
   end subroutine bitSet_finalizer
-end module StaticBitSetType
+end module BitSetType

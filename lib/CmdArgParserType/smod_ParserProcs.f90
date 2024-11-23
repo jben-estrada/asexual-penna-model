@@ -20,8 +20,8 @@ contains
   !>  Parse command arguments.
   ! -------------------------------------------------------------------------- !
   module subroutine parseCmdArgs(parserObj)
-    class(CmdArgParser), intent(inout) :: parserObj
-      !! `CmdArgParser` object.
+    class(CmdArgParser_t), intent(inout) :: parserObj
+      !! `CmdArgParser_t` object.
 
     character(len=MAX_ARG_LEN) :: rawChar   ! Raw command argument.
     character(len=:), allocatable :: cmdArg ! Cleaned command argument.
@@ -75,12 +75,12 @@ contains
   !!  starting with a single '-' character.
   ! -------------------------------------------------------------------------- !
   subroutine parseShortCmds(parserObj, cmdIdx, cmdArg)
-    type(CmdArgParser),  intent(inout) :: parserObj
-      !! `CmdArgParser` object to be modified.
-    integer,             intent(inout) :: cmdIdx  
+    type(CmdArgParser_t),  intent(inout) :: parserObj
+      !! `CmdArgParser_t` object to be modified.
+    integer,               intent(inout) :: cmdIdx  
       !! Index for indexing command arguments.
       !! NOTE: `cmdIdx` may mutate in this routine.
-    character(len=*),    intent(in)    :: cmdArg
+    character(len=*),      intent(in)    :: cmdArg
       !! Command argument to be parsed. This should not contain the '-'
       !! identifier at the beginning of command arguments.
 
@@ -145,9 +145,9 @@ contains
   !!  starting with two '-' characters.
   ! -------------------------------------------------------------------------- !
   subroutine parseLongCmds(parserObj, cmdArg)
-    class(CmdArgParser), intent(inout) :: parserObj
-      !! `CmdArgParser` object to be modified.
-    character(len=*),    intent(in)    :: cmdArg
+    class(CmdArgParser_t), intent(inout) :: parserObj
+      !! `CmdArgParser_t` object to be modified.
+    character(len=*),      intent(in)    :: cmdArg
       !! Command argument to be parsed. This should not contain the '--'
       !! identifier at the beginning of command arguments.
 
@@ -243,11 +243,11 @@ contains
   !>  Set the value of the alias of the command `cmdName`.
   ! -------------------------------------------------------------------------- !
   subroutine setValToAlias(parserObj, cmdName, valueChar)
-    type(CmdArgParser), intent(inout) :: parserObj
-      !! `CmdArgParser` object to be modified.
-    character(len=*),   intent(in)    :: cmdName
+    type(CmdArgParser_t), intent(inout) :: parserObj
+      !! `CmdArgParser_t` object to be modified.
+    character(len=*),     intent(in)    :: cmdName
       !! Command name.
-    character(len=*),   intent(in)    :: valueChar
+    character(len=*),     intent(in)    :: valueChar
       !! Value for the command `cmdName`.
 
     character(len=:), allocatable :: cmdAlias

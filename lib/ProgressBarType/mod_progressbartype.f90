@@ -10,7 +10,7 @@ module ProgressBarType
   implicit none
   private
 
-  type :: ProgressBar
+  type :: ProgressBar_t
     !! A derived type for displaying progress bars.
     private
     integer   :: partition  !! Number at which `counter` is partitioned.
@@ -23,28 +23,28 @@ module ProgressBarType
     procedure :: incrCounter => progressbar_incrCounter
       !! Increment the progress counter. The increment value, which defaults to
       !! 1, can be optionally changed.
-  end type ProgressBar
+  end type ProgressBar_t
 
   character, parameter :: DEFAULT_CHAR_BIT = ">"
     !! Default character bit.
 
-  public :: ProgressBar
+  public :: ProgressBar_t
   public :: init_ProgressBar
 contains
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: init_ProgressBar
-  !>  Initializer for `ProgressBar` objects.
+  !>  Initializer for `ProgressBar_t` objects.
   ! -------------------------------------------------------------------------- !
   subroutine init_ProgressBar(new, partition, totalTicks, charBit)
-    type(ProgressBar), intent(inout) :: new
+    type(ProgressBar_t), intent(inout) :: new
       !! `ProgressBar` object to be initialized.
-    integer,           intent(in)    :: partition
+    integer,             intent(in)    :: partition
       !! The `partition` for the `partition` attribute of `new`. 
-    integer,           intent(in)    :: totalTicks
+    integer,             intent(in)    :: totalTicks
       !! The `totalTicks` for the `totalTicks` attribute of `new`. 
-    character,         optional      :: charBit
+    character,           optional      :: charBit
       !! The `charBit` for the `charBit` attribute of `new`.
       !! Defaults to `DEFAULT_CHAR_BIT`.
 
@@ -70,11 +70,11 @@ contains
   !!  progress bar as well.
   ! -------------------------------------------------------------------------- !
   subroutine progressbar_incrCounter(self, increment, show)
-    class(ProgressBar), intent(inout) :: self
+    class(ProgressBar_t), intent(inout) :: self
       !! `ProgressBar` object to be updated.
-    integer, optional :: increment
+    integer,              optional      :: increment
       !! Number to increment the `counter` attribute of `self`.
-    logical, optional :: show
+    logical,              optional      :: show
       !! Show the progress bar if true. Deafults to `.false.`
 
     ! End of progress bar case.
@@ -101,7 +101,7 @@ contains
   !>  Print the progress bar.
   ! -------------------------------------------------------------------------- !
   subroutine progressbar_showProgBar(self)
-    class(ProgressBar), intent(in) :: self
+    class(ProgressBar_t), intent(in) :: self
       !! `ProgressBar` object to be shown.
 
     character, allocatable :: tickArr(:)

@@ -38,7 +38,7 @@ contains
   !>  Read default parameter values from an external file.
   ! -------------------------------------------------------------------------- !
   module subroutine readDefaultParamVal()
-    type(ParamFileParser) :: paramReader
+    type(ParamFileParser_t) :: paramReader
 
     ! Temporary character for `PROG_REC_FLAG`.
     character(len=:), allocatable :: tempRecFlag

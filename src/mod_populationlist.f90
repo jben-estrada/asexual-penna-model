@@ -22,7 +22,7 @@ module PopulationList
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
-  use StaticBitSetType,  only: StaticBitSet, init_StaticBitSet
+  use BitSetType,  only: BitSet_t, init_BitSet
   use Demographics, only: addGenomeToDstrb, delGenomeFromDstrb
   use RandNumProcs, only: getRandReal, getRandRange, getRandInt
   use Gene, only: GENE_UNHEALTHY, GENE_HEALTHY
@@ -36,7 +36,7 @@ module PopulationList
   type :: Person_t
     !! A derived type representing individuals in the Penna model.
     ! integer(kind=personIK) :: genome
-    type(StaticBitSet) :: genome
+    type(BitSet_t) :: genome
       !! Genome of this individual.
     integer :: age
       !! The age of this individual.
@@ -133,16 +133,16 @@ module PopulationList
   public :: DEAD_VERHULST
 
   public :: Population_t
-  public :: init_Population_t
+  public :: init_Population
   public :: Person_t
 contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: init_Population_t
+  ! SUBROUTINE: init_Population
   !>  Initializer for `Population_t` objects.
   ! -------------------------------------------------------------------------- !
-  subroutine init_Population_t(                             &
+  subroutine init_Population(                             &
         newPop, startPopsize, initMttnCount, recordGnmDstrb &
       )
     type(Population_t), intent(inout) :: newPop
@@ -180,7 +180,7 @@ contains
     newPop%futureEndIdx = startPopSize
     newPop%popSize = startPopSize
     newPop%recordGnmDstrb = recordGnmDstrb
-  end subroutine init_Population_t
+  end subroutine init_Population
 
 
   ! -------------------------------------------------------------------------- !
@@ -198,13 +198,13 @@ contains
     integer, intent(in) :: initMttnCount
 
     type(PersonPtr_t), allocatable :: personPtrArr(:)
-    type(StaticBitSet) :: pureGenome
+    type(BitSet_t) :: pureGenome
     integer :: i
 
     if (allocated(personPtrArr)) deallocate(personPtrArr)
     allocate(personPtrArr(size))
 
-    call init_StaticBitSet(pureGenome, MODEL_L, GENE_HEALTHY)
+    call init_BitSet(pureGenome, MODEL_L, GENE_HEALTHY)
 
     do i = 1, size
       if (associated(personPtrArr(i)%person)) personPtrArr(i)%person => null()
@@ -354,9 +354,9 @@ contains
   !>  Initialize a new `Person_t` object.
   ! -------------------------------------------------------------------------- !
   subroutine initNewPerson(person, genome, mutationCount)
-    type(Person_t),          intent(inout) :: person
-    type(StaticBitSet),      intent(in)    :: genome
-    integer,                 intent(in)    :: mutationCount
+    type(Person_t), intent(inout) :: person
+    type(BitSet_t), intent(in)    :: genome
+    integer,        intent(in)    :: mutationCount
   
     ! Initialize genome and mutation count.
     person%genome = genome
@@ -375,7 +375,7 @@ contains
   subroutine applyInitialMutations(person, mutationCount)
     type(Person_t), intent(inout) :: person
       !! The `Person_t` object to be modified.
-    integer,      intent(in)    :: mutationCount
+    integer,        intent(in)    :: mutationCount
       !! Number of mutations to apply onto `person_ptr`.
 
     integer, allocatable :: mutationIndcs(:)
@@ -557,7 +557,7 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: checkPersonPtrAssoc
-  !>  Check the whether `Person` pointers in the active population array are
+  !>  Check the whether `Person_t` pointers in the active population array are
   !!  associated or not. Prints warning text if at least one pointer is null.
   ! -------------------------------------------------------------------------- !
   subroutine checkPersonPtrAssoc(self)
