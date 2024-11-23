@@ -20,6 +20,10 @@ Now looking at $w_a$ (which we call as the *Verhulst weight*), if we let $w_a = 
 
 Varying the Verhulst factor can be useful in, say, modelling *survivability*. By letting $w_a$ increase with age, individuals are more likely to survive as they grow older. Conversely, young individuals are more likely to die due to being fragile and less adept in their environment.
 
+#### Genome initialization in the initial population
+
+The number of deleterious random mutations per genome in the initial population can be specified, such that the user can choose starting genomes with no harmful genes. It is also possible to randomize this number per genome to completely randomize the initialization.
+
 Go to [Top](#asexual-penna-model).
 ## Installation
 ### Prerequisite
