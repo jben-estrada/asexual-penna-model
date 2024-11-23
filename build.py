@@ -59,13 +59,15 @@ COMPILER_GNU = CompilerInfo(
         lflags=[],
         build_spec_cflags={
             BuildType.RELEASE : ["-O3", "-g1"],
-            BuildType.DEBUG   : ["-O0", "-g2", "-fcheck=all"],
+            BuildType.DEBUG   : ["-O0", "-g2", "-fcheck=all",
+                                 "-fsanitize=address", "-static-libasan"],
             BuildType.STATIC  : ["-O3", "-g1", "-static"],
             BuildType.NOBUILD : []
         },
         build_spec_lflags={
             BuildType.RELEASE : [],
-            BuildType.DEBUG   : [],
+            BuildType.DEBUG   : ["-O0", "-fsanitize=address",
+                                 "-static-libasan"],
             BuildType.STATIC  : [],
             BuildType.NOBUILD : []
         }
