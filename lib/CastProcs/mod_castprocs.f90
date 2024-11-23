@@ -195,7 +195,7 @@ contains
   !>  Transform TRUE into 1 and FALSE into 0. Being an elemental function,
   !!  it can also accept array dummy arguments.
   ! -------------------------------------------------------------------------- !
-  elemental integer function logicalToInt(input) result(output)
+  pure elemental integer function logicalToInt(input) result(output)
     logical, intent(in) :: input
     if (input) then
       output = 1
@@ -211,7 +211,7 @@ contains
   !!  (signaling and quiet) or infinity. Note that this is a wrapper for
   !!  several procedures from IEEE_ARITHMETIC intrinsic module
   ! -------------------------------------------------------------------------- !
-  logical function isFinite(x)
+  pure logical function isFinite(x)
     real, intent(in) :: x
     isFinite = ( &
       ieee_class(x) /= ieee_quiet_nan     .and. &

@@ -57,12 +57,12 @@ module ParamFileParserType
   ! -------------------------------------------------------------------------- !
   ! Interface for submodule procedures.
   interface
-    module logical function isWhiteSpace(char)
+    module pure logical function isWhiteSpace(char)
       character, intent(in) :: char
         !! Character to be inspected.
     end function isWhiteSpace
 
-    module logical function isAlphanumeric(char)
+    module pure logical function isAlphanumeric(char)
       character, intent(in) :: char
         !! Character to be inspected.
     end function isAlphanumeric

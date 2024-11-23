@@ -218,7 +218,7 @@ contains
   ! FUNCTION: population_getPopSize
   !>  Get the population size.
   ! -------------------------------------------------------------------------- !
-  integer function population_getPopSize(self)
+  pure integer function population_getPopSize(self)
     class(Population_t), intent(in) :: self
     population_getPopSize = self%popSize
   end function population_getPopSize
@@ -240,7 +240,7 @@ contains
   !>  Return a logical value of whether the current `Person_t` is the last
   !!  individual for the current time step.
   ! -------------------------------------------------------------------------- !
-  logical function population_atEndOfPop(self)
+  pure logical function population_atEndOfPop(self)
     class(Population_t), intent(in) :: self
     population_atEndOfPop = (self%currIdx > self%endIdx)
   end function population_atEndOfPop

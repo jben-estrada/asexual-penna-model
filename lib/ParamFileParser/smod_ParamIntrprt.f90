@@ -25,7 +25,7 @@ contains
   ! FUNCTION: isWhiteSpace
   !>  Check the character `char` if it is a whitespace character or not.
   ! -------------------------------------------------------------------------- !
-  module logical function isWhiteSpace(char)
+  module pure logical function isWhiteSpace(char)
     character, intent(in) :: char
       !! Character to be inspected.
 
@@ -40,7 +40,7 @@ contains
   ! FUNCTION: isNumeric
   !>  Check the character `char` if it is a numeric character or not.
   ! -------------------------------------------------------------------------- !
-  logical function isNumeric(char)
+  logical pure function isNumeric(char)
     character, intent(in) :: char
       !! Character to be inspected.
 
@@ -55,7 +55,7 @@ contains
   ! FUNCTION: isAlphanumeric
   !>  Check the character `char` if it is an alphanumeric character or not.
   ! -------------------------------------------------------------------------- !
-  module logical function isAlphanumeric(char)
+  module pure logical function isAlphanumeric(char)
     character, intent(in) :: char
       !! Character to be inspected.
 
@@ -217,7 +217,7 @@ contains
   module subroutine paramArray(paramVal, array)
     character(len=*), intent(in)  :: paramVal
       !! Character to be inspected and casted to integer array.
-    class(*),          intent(out) :: array(:)
+    class(*),         intent(out) :: array(:)
       !! Array output. Its type must be either integer or real.
 
     character(len=:), allocatable :: arrElem  ! Array element.
