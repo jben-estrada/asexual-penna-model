@@ -18,6 +18,8 @@ submodule (Parameters) CmdArgAssignProcs
       !! Name of the command.
     character(len=:), allocatable :: cmdAlias
       !! Alias for `cmdName`.
+    character(len=:), allocatable :: cmdGroup
+      !! Command group.
     character :: cmdType
       !! Command type of `cmdName`.
     character :: cmdAliasType
@@ -77,6 +79,12 @@ submodule (Parameters) CmdArgAssignProcs
     IDX_AGE_DSTRB_TIME_KV, &
     IDX_SAMPLE_SIZE_KV     &
   ]
+
+  ! Command group names
+  character(len=*), parameter :: CMD_GROUP_PENNA = "Penna model"
+  character(len=*), parameter :: CMD_GROUP_PROG  = "Program parameter"
+  character(len=*), parameter :: CMD_GROUP_REC   = "Data recording"
+  character(len=*), parameter :: CMD_GROUP_MISC  = achar(0)
 contains
 
 
@@ -90,76 +98,91 @@ contains
     integer :: i
 
     ! Model parameters.
-    cmdArgArr(IDX_MTTN_THRESHOLD_KV) = CmdArgRecord_t(    &
-        "T", "mttn-lim", KV_S, KV_L, "Mutation threshold" &
+    cmdArgArr(IDX_MTTN_THRESHOLD_KV) = CmdArgRecord_t(  &
+        "T", "mttn-lim", CMD_GROUP_PENNA, KV_S, KV_L,   &
+        "Mutation threshold"                            &
       )
-    cmdArgArr(IDX_BIRTH_RATE_KV) = CmdArgRecord_t(  &
-        "B", "birth-rate", KV_S, KV_L, "Birth rate" &
+    cmdArgArr(IDX_BIRTH_RATE_KV) = CmdArgRecord_t(       &
+        "B", "birth-rate", CMD_GROUP_PENNA, KV_S, KV_L,  &
+        "Birth rate"                                     &
       )
-    cmdArgArr(IDX_MTTN_RATE_KV) = CmdArgRecord_t(     &
-        "M", "mttn-rate", KV_S, KV_L, "Mutation rate" &
+    cmdArgArr(IDX_MTTN_RATE_KV) = CmdArgRecord_t(       &
+        "M", "mttn-rate", CMD_GROUP_PENNA, KV_S, KV_L,  &
+        "Mutation rate"                                 &
       )
-    cmdArgArr(IDX_R_AGE_MIN_KV) = CmdArgRecord_t(                &
-        "r", "r-age-min", KV_S, KV_L, "Minimum reproduction age" &
+    cmdArgArr(IDX_R_AGE_MIN_KV) = CmdArgRecord_t(      &
+        "r", "r-age-min", CMD_GROUP_PENNA, KV_S, KV_L, &
+        "Minimum reproduction age"                     &
       )
-    cmdArgArr(IDX_R_AGE_MAX_KV) = CmdArgRecord_t(                 &
-        "R", "r-age-max", KV_S, KV_L, "Maximum reproduction age"  &
+    cmdArgArr(IDX_R_AGE_MAX_KV) = CmdArgRecord_t(       &
+        "R", "r-age-max", CMD_GROUP_PENNA, KV_S, KV_L,  &
+        "Maximum reproduction age"                      &
       )
-    cmdArgArr(IDX_MAX_POP_SIZE_KV) = CmdArgRecord_t(     &
-        "K", "pop-cap", KV_S, KV_L, "Carrying capacity"  &
+    cmdArgArr(IDX_MAX_POP_SIZE_KV) = CmdArgRecord_t(  &
+        "K", "pop-cap", CMD_GROUP_PENNA, KV_S, KV_L,  &
+        "Carrying capacity"                           &
       )
-    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) = CmdArgRecord_t(                        &
-        "m", "init-mttn", KV_S, KV_L, "Initial mutation count per individual"  &
+    cmdArgArr(IDX_INIT_MTTN_COUNT_KV) = CmdArgRecord_t(  &
+        "m", "init-mttn", CMD_GROUP_PENNA, KV_S, KV_L,   &
+        "Initial mutation count per individual"          &
       )
-    cmdArgArr(IDX_INIT_POP_SIZE_KV) = CmdArgRecord_t(           &
-        "p", "pop-size", KV_S, KV_L, "Initial population size"  &
+    cmdArgArr(IDX_INIT_POP_SIZE_KV) = CmdArgRecord_t(  &
+        "p", "pop-size", CMD_GROUP_PENNA, KV_S, KV_L,  &
+        "Initial population size"                      &
       )
-    cmdArgArr(IDX_MAX_TIME_STEP_KV) = CmdArgRecord_t(      &
-        "t", "time-step", KV_S, KV_L, "Maximum time step"  &
+    cmdArgArr(IDX_MAX_TIME_STEP_KV) = CmdArgRecord_t(  &
+        "t", "time-step", CMD_GROUP_PENNA, KV_S, KV_L, &
+        "Maximum time step"                            &
       )
-    cmdArgArr(IDX_ENTROPY_ORDER_KV) = CmdArgRecord_t(        &
-        "O", "ent-order", KV_S, KV_L, "Renyi entropy order"  &
+    cmdArgArr(IDX_ENTROPY_ORDER_KV) = CmdArgRecord_t(  &
+        "O", "ent-order", CMD_GROUP_REC, KV_S, KV_L,   &
+        "Renyi entropy order"  &
       )
     cmdArgArr(IDX_AGE_DSTRB_TIME_KV) = CmdArgRecord_t(        &
-        "a", "age-dstrb-time", KV_S, KV_L,                    &
+        "a", "age-dstrb-time", CMD_GROUP_REC, KV_S, KV_L,     &
         "Age distribution time step till the final time step" &
       )
 
     ! Program parameters.
-    cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord_t(    &
-        "s", "sample-size", KV_S, KV_L, "Sample size"  &
+    cmdArgArr(IDX_SAMPLE_SIZE_KV) = CmdArgRecord_t(      &
+        "s", "sample-size", CMD_GROUP_PROG, KV_S, KV_L,  &
+        "Sample size"                                    &
       )
-    cmdArgArr(IDX_RECORD_DATA_KV) = CmdArgRecord_t(               &
-        "d", "record-data", KV_S, KV_L,                           &
-        "Record data. See 'notes' below for recordable data set"  &
+    cmdArgArr(IDX_RECORD_DATA_KV) = CmdArgRecord_t(                    &
+        "d", "record-data", CMD_GROUP_REC, KV_S, KV_L,                 &
+        "Record data. See 'NOTES' below for the recordable data sets"  &
       )
-    cmdArgArr(IDX_RNG_CHOICE_KV) = CmdArgRecord_t(                    &
-        "g", "rng-choice", KV_S, KV_L,                                &
-        "Choice of pseduo-RNG. See 'notes' below for available RNGs"  &
+    cmdArgArr(IDX_RNG_CHOICE_KV) = CmdArgRecord_t(              &
+        "g", "rng-choice", CMD_GROUP_PROG, KV_S, KV_L,          &
+        "RNG choice. See 'NOTES' below for the available RNGs"  &
       )
-    cmdArgArr(IDX_RNG_SEED_KV) = CmdArgRecord_t(                  &
-        "S", "rng-seed", KV_S, KV_L, "RNG seed. Must be integer"  &
+    cmdArgArr(IDX_RNG_SEED_KV) = CmdArgRecord_t(      &
+        "S", "rng-seed", CMD_GROUP_PROG, KV_S, KV_L,  &
+        "RNG seed. Must be integer"                   &
       )
     cmdArgArr(IDX_PARAM_FILE_PATH_KV) = CmdArgRecord_t(              &
-        "f", "param-file", KV_S, KV_L,                               &
+        "f", "param-file", CMD_GROUP_PROG, KV_S, KV_L,               &
         "Path to the file containing the default parameter listing"  &
       )
-    cmdArgArr(IDX_OUT_FILE_PATH_KV) = CmdArgRecord_t(                    &
-        "o", "out", KV_S, KV_L, "Path to file data is to be written in"  &
+    cmdArgArr(IDX_OUT_FILE_PATH_KV) = CmdArgRecord_t(   &
+        "o", "out", CMD_GROUP_REC, KV_S, KV_L,          &
+        "Path to the file the data is to be written in" &
       )
-    cmdArgArr(IDX_SHOW_PARAM_F) = CmdArgRecord_t(            &
-      "v", "verbose", FLAG_S, FLAG_L, "Show all parameters"  &
-    )
-    cmdArgArr(IDX_NO_PARAM_F) = CmdArgRecord_t(    &
-        "q", "quiet", FLAG_S, FLAG_L,              &
-        "Print nothing when running this program"  &
+    cmdArgArr(IDX_SHOW_PARAM_F) = CmdArgRecord_t(        &
+        "v", "verbose", CMD_GROUP_MISC, FLAG_S, FLAG_L,  &
+        "Show more information about the current run"    &
       )
-    cmdArgArr(IDX_SHOW_VERSION_F) = CmdArgRecord_t(                         &
-        "V", "version", FLAG_S, FLAG_L, "Show the version of this program"  &
+    cmdArgArr(IDX_NO_PARAM_F) = CmdArgRecord_t(               &
+        "q", "quiet", CMD_GROUP_MISC, FLAG_S, FLAG_L,         &
+        "Show no output on STDOUT when running this program"  &
       )
-    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord_t(   &
-        "c", "csv-format", FLAG_S, FLAG_L,          &
-        "Set the output files to be in CSV format"  &
+    cmdArgArr(IDX_SHOW_VERSION_F) = CmdArgRecord_t(      &
+        "V", "version", CMD_GROUP_MISC, FLAG_S, FLAG_L,  &
+        "Show the version of this program"               &
+      )
+    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord_t(          &
+        "c", "csv-format", CMD_GROUP_REC, FLAG_S, FLAG_L,  &
+        "Write the output files in CSV format"             &
       )
 
     ! Assign pointers.
@@ -186,12 +209,13 @@ contains
 
     ! Set all initialized commands in this routine.
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
-      call pennaCmdArgs%setCmd(     &
-          cmdArgArr(i)%cmdName,     &
-          cmdArgArr(i)%cmdType,     &
-          cmdArgArr(i)%usageTxt,    &
-          cmdArgArr(i)%cmdAlias,    &
-          cmdArgArr(i)%cmdAliasType &
+      call pennaCmdArgs%setCmd(      &
+          cmdArgArr(i)%cmdName,      &
+          cmdArgArr(i)%cmdType,      &
+          cmdArgArr(i)%usageTxt,     &
+          cmdArgArr(i)%cmdAlias,     &
+          cmdArgArr(i)%cmdAliasType, &
+          cmdArgArr(i)%cmdGroup      &
         )
     end do
   end subroutine initCmdArgRecs
@@ -506,7 +530,7 @@ contains
     print "(' - ', *(a))",                                     &
       "Valid character values for -", cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, &
       " or --", cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
-    write(*, "(8(4(' '), a/)/)", advance="no")                                 &
+    write(*, "(8(5(' '), a/)/)", advance="no")                                 &
       "x - Record nothing.",                                                   &
       "p - Population size per time step",                                     &
       "a - Age distribution in the final time steps.",                         &
@@ -519,7 +543,7 @@ contains
     print "(' - ', *(a))",  &
       "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
       " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias, ":"
-    write(*, "(3(4(' '), a/)/)", advance="no")  &
+    write(*, "(3(5(' '), a/)/)", advance="no")  &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
       "Other reals            - Renyi entropy"
@@ -527,7 +551,7 @@ contains
     print "(' - ', *(a))",  &
       "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
       " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias, ":"
-    write(*, "(2(4(' '), a/)/)", advance="no")  &
+    write(*, "(2(5(' '), a/)/)", advance="no")  &
       "0 - Intrinsic RNG by the compiler (" // compiler_version() // ")", &
       "1 - 32-bit Mersenne twister PRNG"
 
@@ -535,7 +559,7 @@ contains
       "Formatting for the output file name -", &
       cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
       " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, ":"
-    write(*, "(2(4(' '), a/), /3(6(' '), a/) /)", advance="no")  &
+    write(*, "(2(5(' '), a/), /3(6(' '), a/) /)", advance="no")  &
       "%[N]n - Data set number for multiple samples.",                         &
       "%[N]f - The record data flag provided by -" //                          &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &

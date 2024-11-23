@@ -52,8 +52,12 @@ module CmdArgParserType
       !! Table of aliases of commands.
     type(HashTable_t) :: cmdUsageTable
       !! Table of usage message for commands.
+    type(HashTable_t) :: cmdGroupTable
+      !! Table of optional command groupings.
     integer :: cmdCount = 0
       !! Number of defined commands defined in this `CmdArgParser_t` object.
+    integer :: cmdGroupCount = 1
+      !! Number of command groupings. All commands belong to a group.
   contains
     procedure :: setCmd => cmdargparser_setCmd
       !! Set a command, its type and its usage text. An alias can be optionally 
@@ -109,6 +113,7 @@ contains
     call init_HashTable(new % cmdValueTable)
     call init_HashTable(new % cmdAliasTable)
     call init_HashTable(new % cmdUsageTable)
+    call init_HashTable(new % cmdGroupTable)
 
     ! Add the command for print the help message.
     call new % setCmd("h", CMD_TYPE_FLAG_S, "Show this help message.", &
@@ -121,8 +126,9 @@ contains
   !>  Set a command, its type and its usage text. An alias can be optionally
   !!  be set.
   ! -------------------------------------------------------------------------- !
-  subroutine cmdargparser_setCmd(self, cmdName, cmdType, cmdUsage, cmdAlias, &
-    cmdAliasType)
+  subroutine cmdargparser_setCmd(   &
+        self, cmdName, cmdType, cmdUsage, cmdAlias, cmdAliasType, cmdGroup  &
+      )
     class(CmdArgParser_t),      intent(inout) :: self
       !! `CmdArgParser_t` object to be initialized.
     character(len=*),           intent(in)    :: cmdName
@@ -135,6 +141,8 @@ contains
       !! Name of the alias for the command `cmdName`.
     character(len=*), optional, intent(in)    :: cmdAliasType
       !! Type of the command `cmdALias`.
+    character(len=*), optional, intent(in)    :: cmdGroup
+      !! Name of the group the command is in. Defaults to None.
 
     character :: dummyChar 
     integer   :: getStat
@@ -152,7 +160,7 @@ contains
         )
     end if
 
-    call self % cmdTypeTable % set(cmdName, cmdType)
+    call self % cmdTypeTable  % set(cmdName, cmdType)
     call self % cmdUsageTable % set(cmdName, cmdUsage)
     call self % cmdValueTable % set(cmdName, VOID_CHAR)
 
@@ -229,12 +237,20 @@ contains
       call self % cmdAliasTable % set(cmdAlias, cmdName)
 
       ! Assign the alias as one of the commands.
-      call self % cmdTypeTable % set(cmdAlias, cmdAliasType)
+      call self % cmdTypeTable  % set(cmdAlias, cmdAliasType)
       call self % cmdUsageTable % set(cmdAlias, cmdUsage)
       call self % cmdValueTable % set(cmdAlias, VOID_CHAR)
 
       ! Increment the number of commands.
       self % cmdCount = self % cmdCount + 1
+    end if
+
+    ! Set the group for the given command.
+    if (present(cmdGroup)) then
+      call self % cmdGroupTable % set(cmdName, cmdGroup)
+      self % cmdGroupCount = self % cmdGroupCount + 1
+    else
+      call self % cmdGroupTable % set(cmdName, VOID_CHAR)
     end if
   end subroutine cmdargparser_setCmd
 
@@ -276,73 +292,152 @@ contains
     character(len=*),              intent(in)    :: progDesc
       !! Program description using this module.
 
-
     integer, parameter :: MAX_CMD_LEN = 25 ! Max length of command to display.
-    integer :: i, j, getStat
+    integer :: cmdIdx, groupIdx, k
+    integer :: cmdGroupCount, uniqueCmdCount
+    integer :: getStat
+    logical :: groupExists, cmdIsShort, aliasIsShort
 
-    character(len=:), allocatable :: cmdNames(:)
-    character(len=MAX_CMD_LEN)    :: cmdAlias
-    character(len=MAX_CMD_LEN)    :: shortCmd
-    character(len=MAX_CMD_LEN)    :: longCmd
+    character(len=MAX_CMD_LEN), allocatable :: cmdNames(:)
+    character(len=MAX_CMD_LEN), allocatable :: cmdGroups(:)
+    character(len=MAX_CMD_LEN), allocatable :: cmdNameGroupMap(:, :)
+    character(len=MAX_CMD_LEN) :: cmdName
+    character(len=MAX_CMD_LEN) :: cmdAlias
+    character(len=MAX_CMD_LEN) :: shortCmd
+    character(len=MAX_CMD_LEN) :: longCmd
+    character(len=MAX_CMD_LEN) :: cmdGroupName
 
-    type(HashTable_t), pointer :: usageTable_ptr
-    type(HashTableIterator_t)  :: usageTableIter
+    character(len=:), allocatable :: groupHeader
 
-    ! Initialize hash table iterator.
-    usageTable_ptr => self % cmdUsageTable
-    call init_HashTableIterator(usageTableIter, usageTable_ptr)
+    ! NOTE: We use the cmdGroupTable since it contains all commands excluding
+    !       their respective aliases if they exist.
+    type(HashTable_t), pointer :: groupTable_ptr
+    type(HashTableIterator_t)  :: groupTableIter
+    
+    ! Initialize the hash table iterator
+    groupTable_ptr => self % cmdGroupTable
+    call init_HashTableIterator(groupTableIter, groupTable_ptr)
 
-    ! Initialize array of command names.
-    allocate(character(len=MAX_CMD_LEN) :: cmdNames(self % cmdCount))
+    allocate(cmdNames(self % cmdCount))
+    allocate(cmdGroups(self % cmdGroupCount))
+    allocate(cmdNameGroupMap(self % cmdGroupCount, 0:self % cmdCount))
 
-    ! Get the command names.
-    do i = 1, self % cmdCount
-      cmdNames(i) = usageTableIter % getKey()
+    cmdGroupCount  = 0
+    uniqueCmdCount = 0
+    ! Get all the command names
+    do
+      cmdName = groupTableIter % getKey(getStat)
+      if (getStat /= 0) exit   ! End of the hash table iterator.
+
+      uniqueCmdCount = uniqueCmdCount + 1
+      cmdNames(uniqueCmdCount) = cmdName
+      cmdGroupName = self % cmdGroupTable % get(cmdName)
+
+      ! Check if the current command's group has already been registered in the
+      ! group array.
+      groupExists = .false.
+      do groupIdx = 1, cmdGroupCount
+        if (cmdGroups(groupIdx) == trim(cmdGroupName)) then
+          groupExists = .true.
+          exit
+        end if
+      end do
+
+      if (.not.groupExists) then
+        cmdGroupCount = cmdGroupCount + 1
+        cmdGroups(cmdGroupCount) = cmdGroupName
+      end if
     end do
 
-    ! Sort the command names.
+    call sortCharArr(cmdGroups)
     call sortCharArr(cmdNames)
 
-    ! Print the header of the help message.
-    print "(3a/)", "Usage: ", trim(progName), " [options]"
-    print "(a/)", trim(progDesc)
-    print "(a)", "Options:"
+    ! Set the header of the command name-group mapping array.
+    cmdNameGroupMap(:, :) = " "
+    cmdNameGroupMap(:, 0) = cmdGroups(:)
 
-    ! Print the commands.
-    do i = 1, self % cmdCount
-      ! Ignore removed commands.
-      if (len_trim(cmdNames(i)) == 0) cycle
+    ! Group the command names by their respective groups.
+    groupingCmd: do cmdIdx = 1, uniqueCmdCount
+      cmdName = cmdNames(cmdIdx)
+      cmdGroupName = self % cmdGroupTable % get(cmdName)
 
-      ! Identify which position in the help message does `cmdNames` occupy.
-      if (isShortCmd(self, cmdNames(i))) then
-        shortCmd = appendCmdID(self, cmdNames(i))
-      else
-        longCmd = appendCmdID(self, cmdNames(i))
-      end if
+      ! Find the current command's group in the cmdname-group mapping array.
+      groupExists = .false.
+      findGroup: do groupIdx = 1, cmdGroupCount
+        if (cmdGroupName == cmdNameGroupMap(groupIdx, 0)) then
+          groupExists = .true.
 
-      ! Check if the current command name has an alias.
-      cmdAlias = self % cmdAliasTable % get(cmdNames(i), getStat)
-      if (getStat == HSHTBLE_STAT_OK) then
+          appendCmdToGroup: do k = 1, uniqueCmdCount
+            if (len_trim(cmdNameGroupMap(groupIdx, k)) == 0) then
+              cmdNameGroupMap(groupIdx, k) = cmdName
+              exit appendCmdToGroup
+            end if
+          end do appendCmdToGroup
 
-        ! Remove the alias command from command name array.
-        do j = i, self % cmdCount
-          if (cmdNames(j) == cmdAlias) cmdNames(j) = ""
-        end do
-
-        ! Identify which position in the help message does `cmdNames` occupy.
-        if (isShortCmd(self, cmdAlias)) then
-          shortCmd = appendCmdID(self, cmdAlias)
-        else
-          longCmd = appendCmdID(self, cmdAlias)
+          exit
         end if
-      end if
+      end do findGroup
 
-      print "(' ', a10, a25, a)", &
-          shortCmd, longCmd, self % cmdUsageTable % get(cmdNames(i))
+      if (.not.groupExists) then
+        call raiseError(  &
+            "Cannot find the group for the command '" // trim(cmdName) // "'"  &
+        )
+      end if
+    end do groupingCmd
+
+    ! Print the header of the help message.
+    print "(3a/)", "Usage: ", trim(progName), " [options...]"
+    print "(a/)", trim(progDesc)
+    print "((40(' '), a))", "PROGRAM OPTIONS"
+    print "((40(' '), a))", repeat("-", 15)
+
+    do groupIdx = 1, cmdGroupCount
+      cmdGroupName = cmdNameGroupMap(groupIdx, 0)
+
+      ! Print the group option header.
+      if (cmdGroupName == VOID_CHAR) then
+        groupHeader = "General options"
+      else
+        groupHeader = trim(cmdGroupName) // " options"
+      end if
+      print "(a, /a)", groupHeader, repeat("-", len(groupHeader)) 
+
+      printCmd: do cmdIdx = 1, uniqueCmdCount
+        cmdName = cmdNameGroupMap(groupIdx, cmdIdx)
+
+        if (len_trim(cmdName) == 0) exit printCmd
+
+        ! Identify which position in the help message `cmdNames` occupies.
+        cmdIsShort = isShortCmd(self, cmdName)
+        if (cmdIsShort) then
+          shortCmd = appendCmdID(self, cmdName)
+        else
+          longCmd = appendCmdID(self, cmdName)
+        end if
+
+        ! Check if the current command has an alias.
+        cmdAlias = self % cmdAliasTable % get(cmdName, getStat)
+        if (getStat == HSHTBLE_STAT_OK) then
+          ! Identify which position in the help message does `cmdNames` occupy.
+          aliasIsShort = isShortCmd(self, cmdAlias)
+          ! NOTE: If the command and its alias are of the same type,
+          !       the original command has higher precendence.
+          if (aliasIsShort .neqv. cmdIsShort) then
+            if (aliasIsShort) then
+              shortCmd = appendCmdID(self, cmdAlias)
+            else
+              longCmd = appendCmdID(self, cmdAlias)
+            end if
+          end if
+        end if
+
+        print "(' ', a10, a25, a)", &
+          shortCmd, longCmd, self % cmdUsageTable % get(cmdName)
+      end do printCmd
     end do
 
-    ! Free local allocated variables.
-    deallocate(cmdNames)
+    if (allocated(groupHeader)) deallocate(groupHeader)
+    deallocate(cmdNames, cmdGroups, cmdNameGroupMap)
   end subroutine cmdargparser_printhelp
 
 
