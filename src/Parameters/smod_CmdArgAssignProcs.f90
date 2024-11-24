@@ -580,7 +580,7 @@ contains
     end if
   end subroutine checkValidParams
 
-
+!=============================!
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: printParams
   !>  Pretty print the model parameters. Can print verbosely or print nothing
@@ -733,32 +733,45 @@ contains
   subroutine printParams()
     ! Pretty print separator.
     integer :: k
-    character, parameter :: PRINT_SEPARATOR(*) = [("=", k = 1, 29)]
+    character(len=*), parameter :: MAJOR_SEPARATOR = repeat("=", 29)
+    character(len=*), parameter :: MINOR_SEPARATOR = repeat(".", 29)
 
     ! ***Header
-    print "(*(a))", PRINT_SEPARATOR 
-    print "(a)", "Asexual Penna model"
-    print "(*(a))", PRINT_SEPARATOR
+    print "(a)", MAJOR_SEPARATOR 
+    print "(5(' '), a)", "Asexual Penna model"
+    print "(a)", MAJOR_SEPARATOR
 
     ! ***Model and program parameters.
     if (PROG_PRINT_STATE == VERBOSE_PRINT) then
-      write(*, "(*(a20, i9/))", advance="no") &
-          "Genome length",        MODEL_L, &
-          "Mutation threshold",   MODEL_T, &
-          "Birth rate",           MODEL_B, &
-          "Mutation rate",        MODEL_M, &
-          "Min reproduction age", MODEL_R, &
-          "Max reproduction age", MODEL_R_MAX, &
-          "Carrying capacity",    MODEL_K, &
+      ! Penna model parameters.
+      write(*, "(*(a20, i9/))", advance="no")           &
+          "Genome length",        MODEL_L,              &
+          "Mutation threshold",   MODEL_T,              &
+          "Birth rate",           MODEL_B,              &
+          "Mutation rate",        MODEL_M,              &
+          "Min reproduction age", MODEL_R,              &
+          "Max reproduction age", MODEL_R_MAX,          &
+          "Starting pop size",    MODEL_START_POP_SIZE, &
+          "Carrying capacity",    MODEL_K,              &
           "Number of time steps", MODEL_TIME_STEPS
-      write(*, "(a20, a9/)", advance="no") &
-          "Time-dependent param", trim(MODEL_TIME_DEPENDENT_PARAM)
-      write(*, "(*(a20, i9/))", advance="no") &
-          "Init mutation count",  MODEL_MTTN_COUNT, &
-          "Sample size",          PROG_SAMPLE_SIZE, &
-          "Starting pop size",    MODEL_START_POP_SIZE
+      
+      print "(a)", MINOR_SEPARATOR
 
-      write(*, "(2(a20, a))", advance="no") &
+      ! New features implemented in this Penna model implementation
+      write(*, "(a20, i9)") "Init mutation count",  MODEL_MTTN_COUNT
+      write(*, "(a20)", advance="no") "t-dependent param"
+      if (trim(MODEL_TIME_DEPENDENT_PARAM) == "x") then  
+        write(*, "(a9)") "(none)"
+      else
+        write(*, "(a9)") trim(MODEL_TIME_DEPENDENT_PARAM)
+      end if
+      write(*, "(a20, i9)") "t-dependent param dt", MODEL_TMDP_PARAM_DELTA_T
+
+      print "(a)", MINOR_SEPARATOR
+
+      ! Program/Data recording parameters.
+      write(*, "(a20, i9, /a20, a)", advance="no") &
+          "Sample size", PROG_SAMPLE_SIZE,         &
           "Record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
       do k = 1, len(REC_FLAG_ORDER)
         if (scan(PROG_REC_FLAG, REC_FLAG_ORDER(k:k)) > 0) then
@@ -776,7 +789,7 @@ contains
         write(*, "(f9.2/, a29/)", advance="no") 1.0, "(Normalized)"
       end if
 
-      print "(*(a))", PRINT_SEPARATOR
+      print "(a)", MAJOR_SEPARATOR
     end if
   end subroutine printParams
 
