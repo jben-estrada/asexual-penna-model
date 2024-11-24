@@ -504,6 +504,11 @@ contains
     if (present(reset)) then
       if (reset) then
         MODEL_TIME_DEPENDENT_PARAM_PTR = startingValue
+
+        ! We make R_max change with R.
+        if (associated(MODEL_TIME_DEPENDENT_PARAM_PTR, MODEL_R)) then
+          MODEL_R_MAX = startingValue
+        end if
         return
       end if
     end if
@@ -514,6 +519,7 @@ contains
     if (associated(MODEL_TIME_DEPENDENT_PARAM_PTR)) then
       MODEL_TIME_DEPENDENT_PARAM_PTR = MODEL_TIME_DEPENDENT_PARAM_PTR + 1
 
+      ! We make R_max change with R.
       if (associated(MODEL_TIME_DEPENDENT_PARAM_PTR, MODEL_R)) then
         MODEL_R_MAX = MODEL_R_MAX + 1
       end if
