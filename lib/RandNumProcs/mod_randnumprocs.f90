@@ -26,6 +26,7 @@ module RandNumProcs
 
   public :: RNG_INTRINSIC
   public :: RNG_MERSENNE_TWISTER  
+  public :: RNG_FLAGS
 
   public :: assignRNGParams
   public :: setSeed

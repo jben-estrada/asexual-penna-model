@@ -388,8 +388,8 @@ contains
     ! Print the header of the help message.
     print "(3a/)", "Usage: ", trim(progName), " [options...]"
     print "(a/)", trim(progDesc)
-    print "((40(' '), a))", "PROGRAM OPTIONS"
-    print "((40(' '), a))", repeat("-", 15)
+    print "((40x, a))", "PROGRAM OPTIONS"
+    print "((40x, a))", repeat("-", 15)
 
     do groupIdx = 1, cmdGroupCount
       cmdGroupName = cmdNameGroupMap(groupIdx, 0)
@@ -431,7 +431,7 @@ contains
           end if
         end if
 
-        print "(' ', a10, a25, a)", &
+        print "(1x, a10, a25, a)", &
           shortCmd, longCmd, self % cmdUsageTable % get(cmdName)
       end do printCmd
     end do

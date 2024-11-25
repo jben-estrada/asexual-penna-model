@@ -18,7 +18,8 @@ module PopulationList
     MODEL_T,            &
     MODEL_K,            &
     MODEL_V_WEIGHT,     &
-    MODEL_GENOME_MASK
+    MODEL_GENOME_MASK,  &
+    MTTN_COUNT_RANDOM
 
   use ErrorMSG, only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
@@ -384,9 +385,14 @@ contains
 
     if (mutationCount >= 0) then
       mutationCount_lcl = mutationCount
-    else
-      ! For the case MTTN_COUNT = -1, randomize the mutation count of the 
+    else if (mutationCount == MTTN_COUNT_RANDOM) then
       mutationCount_lcl = getRandInt(0, MODEL_L)
+    else
+      mutationCount_lcl = -1
+      call raiseError(  &
+          "Internal error: Invalid initial mutation count (" // &
+          castIntToChar(mutationCount) // ")"   &
+        )
     end if
 
     if (mutationCount_lcl > 0) then

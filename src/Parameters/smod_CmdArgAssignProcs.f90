@@ -252,20 +252,8 @@ contains
     ! The default parameter file is in the same directory as the executable.
     FILE_PARAM_LIST = prefixRelFilePath(FILE_PARAM_LIST)
 
-    ! Check if the help message is to be printed. Printing the help message has
-    ! precendence over initialization of program to help first-time users to
-    ! troubleshoot problems.
-    if (pennaCmdArgs%isFlagToggled("help")) then
-      call printHelpAndNotesMsgs(pennaCmdArgs)
-    end if
-
     ! Get the file path for the parameter listing file.
-    if (                                                 &
-          pennaCmdArgs%hasValue(                         &
-              cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName  &
-          )                                              &
-        ) then
-
+    if (pennaCmdArgs%hasValue(cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName)) then
       cmdArgArr(IDX_PARAM_FILE_PATH_KV)%charValue_ptr = &
         pennaCmdArgs%getCmdValue(cmdArgArr(IDX_PARAM_FILE_PATH_KV)%cmdName)
     end if
@@ -279,6 +267,11 @@ contains
     ! Check if the parameters provided by the user from both config file and
     ! command line arguments are valid
     call checkValidParams(pennaCmdArgs)
+
+    ! Check if the help message is to be printed.
+    if (pennaCmdArgs%isFlagToggled("help")) then
+      call printHelpAndNotesMsgs(pennaCmdArgs)
+    end if
   end subroutine setParams
 
   
@@ -536,6 +529,7 @@ contains
     type(CmdArgRecord_t) :: cmdArg
 
     logical :: printNoParam, printAllParam
+    logical :: cmpRNGchoices(size(RNG_ALL_CHOICES))
     integer :: i
 
     printNoParam = (                           &
@@ -559,24 +553,33 @@ contains
     do i = lbound(CMD_POSITIVE_INT, 1), ubound(CMD_POSITIVE_INT, 1)
       cmdArg = cmdArgArr(CMD_POSITIVE_INT(i))
       if (cmdArg%intValue_ptr <= 0) then
-        call raiseError(                                       &
-            "Invalid value for '" // trim(cmdArg%usageTxt ) // &
-            "' (="// castIntToChar(cmdArg%intValue_ptr) //     &
-            "). Must be a positive integer."                   &
+        call raiseError(                                            &
+            "Invalid value for '" // trim(cmdArg%usageTxt)       // &
+            "' (" // castIntToChar(cmdArg%intValue_ptr) // "). " // &
+            "Must be a positive integer."                           &
           )
       end if
     end do
     
     ! Check for valid initial mutation input (>= -1)
-    if (cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%intValue_ptr < -1) then
-      cmdArg = cmdArgArr(IDX_INIT_MTTN_COUNT_KV)
-      call raiseError(                                     &
-          "Invalid value for " //                          &
-          "'Initial mutation count per individual'. (=" // &
-          castIntToChar(cmdArg%intValue_ptr)            // &
-          "Must be either a non-negative integer or "   // &
-          "-1 (for the fully random case)"                 &
+    if (MODEL_MTTN_COUNT < 0 .and. MODEL_MTTN_COUNT /= MTTN_COUNT_RANDOM) then
+      call raiseError(                                       &
+          "Invalid value for the initial mutation count " // &
+          "(" // castIntToChar(MODEL_MTTN_COUNT) // ")."  // &
+          new_line(":D")                                  // &
+          "Must be either a non-negative integer or "     // &
+          castIntToChar(MTTN_COUNT_RANDOM)                // &
+          " for the fully random case."                      &
         )
+    end if
+
+    ! Check for valid RNG choice
+    cmpRNGchoices = (RNG_ALL_CHOICES(:) == PROG_RNG)
+    if (.not.any(cmpRNGchoices)) then
+      call raiseError(  &
+          "Invalid RNG choice (" // castIntToChar(PROG_RNG) // "). " // &
+          "See the HELP message for the valid RNGs."                    &
+      )
     end if
   end subroutine checkValidParams
 
@@ -619,10 +622,10 @@ contains
     call pennaCmdArgs%printHelp(progName, PROG_DESC)
 
     ! Print the additional notes.
-    print "(//40(' '), a)", "NOTES"
-    print "(40(' '), a)",  "-----"
+    print "(//40x, a)", "NOTES"
+    print "(40x, a)",  "-----"
 
-    print "(' - ', 5(a)/, '  ', 2(a)/)",                                     &
+    print "(' - ', 5(a)/, 2x, 2(a)/)",                                       &
       "Negative values for initial mutation count (-",                       &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " or --",                   &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdAlias, ")",                       &
@@ -631,67 +634,70 @@ contains
 
     print "(' - ', *(a))", &
       "Choices for time-dependent model parameter (-", &
-      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --", &
+      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --",  &
       cmdArgArr(IDX_TMDP_PARAM_KV)%cmdAlias, "):"
-    write(*, "(5(5(' '), a/))", advance="no")  &
-      "x - No time-dependent parameter.",             &
-      "b - Birth rate.",                              &
-      "m - Mutation rate.",                           &
-      "t - Mutation threshold",                       &
-      "r - Minimum and maximum reproduction age. " // &
-        "Note that both of them increment"
-    print "( (3(' '), a/) )", &
+    write(*, "(5(5x, a1, ' - ', a/))", advance="no")  &
+      TMDP_PARAM_NULL,      "No time-dependent parameter.",             &
+      TMDP_PARAM_BIRTH,     "Birth rate.",                              &
+      TMDP_PARAM_MTTN_RATE, "Mutation rate.",                           &
+      TMDP_PARAM_MTTN_LIM,  "Mutation threshold",                       &
+      TMDP_PARAM_R_AGE,     "Minimum and maximum reproduction age. " // &
+          "Note that both of them increment"
+    print "( (3x, a/) )", &
       "One can choose only one parameter to vary with time."
 
-    print "(' - ', *(a))", &
-      "Valid character values for -", &
+    print "(' - ', *(a))",                             &
+      "Valid character values for -",                  &
       cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, " or --", &
       cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
-    write(*, "(8(5(' '), a/))", advance="no")                                  &
-      "x - Record nothing.",                                                   &
-      "p - Population size per time step",                                     &
-      "a - Age distribution in the final time steps.",                         &
-      "d - Death count per time step.",                                        &
-      "s - Genetic diversity index per time step (Normalized Shannon index).", &
-      "b - Bad gene distribution per time step.",                              &
-      "t - (Average) elapsed time and its std deviation if applicable",        &
-      "c - Number of unique genome counts per time step."
-    print "( 2(3(' '), a/) )", &
-      "Multiple flags can be on simultaneously.", &
+    write(*, "(8(5x, a1, ' - ', a/))", advance="no")               &
+      REC_NULL,       "Record nothing.",                           &
+      REC_POP,        "Population size per time step",             &
+      REC_AGE_DSTRB,  "Age distribution in the final time steps.", &
+      REC_DEATH,      "Death count per time step.",                &
+      REC_DIV_IDX,                                                 &
+        "(Renyi) entropy as genetic diversity per time step.",     &
+      REC_GENE_DSTRB, "Bad gene distribution per time step.",      &
+      REC_TIME,       "Mean elapsed time and std dev",             &
+      REC_GNM_COUNT,  "Number of unique genome counts per time step."
+    print "( 2(3x, a/) )",                                                    &
+      "Multiple flags can be on simultaneously.",                             &
       "e.g. 'psb' for population size, entropy and bad gene distribution " // &
           "per time."
 
-    print "(' - ', *(a))",  &
+    print "(' - ', *(a))",                                                &
       "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
       " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias, ":"
-    write(*, "(3(5(' '), a/)/)", advance="no")  &
+    write(*, "(3(5x, a/)/)", advance="no")                   &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
       "Other reals            - Renyi entropy"
 
-    print "(' - ', *(a))",  &
+    print "(' - ', *(a))",                                                &
       "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
       " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias, ":"
-    write(*, "(2(5(' '), a/)/)", advance="no")  &
-      "0 - Intrinsic RNG by the compiler (" // compiler_version() // ")", &
-      "1 - 32-bit Mersenne twister PRNG"
+    print "(5x, i1, ' - ', a/, 10x, a)",               &
+      RNG_INTRINSIC, "Intrinsic RNG by the compiler:", &
+          "(" // compiler_version() // ")"
+    print "(5x, i1, ' - ', a)",  &
+      RNG_MERSENNE_TWISTER, "32-bit Mersenne twister PRNG"
 
-    print "(' - ', *(a))",  &
+    print "(' - ', *(a))",                     &
       "Formatting for the output file name -", &
       cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
       " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, ":"
-    write(*, "(2(5(' '), a/))", advance="no")  &
+    write(*, "(2(5x, a/))", advance="no")                                      &
       "%[N]n - Data set number for multiple samples.",                         &
       "%[N]f - The record data flag provided by -" //                          &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. "
-    print "(3(3(' '), a/))", &
+    print "(3(3x, a/))",                                                 &
       "N is the number of characters padded to the left of the data " // &
           "specified by the formatting.",                                &
       "It is optional and defaults to 0, e.g. %5f and %f are valid. ",   &
       "The padding characters are '_' for %f and '0' for %n."
 
-    print "(' ', a/)",                                      &
+    print "(1x, a/)",                                                         &
       "By default, the default values of all key-value options above are " // &
       "listed in '" // trim(FILE_PARAM_LIST) // "'."
     stop
@@ -732,14 +738,16 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printParams()
     ! Pretty print separator.
-    integer :: k
     character(len=*), parameter :: MAJOR_SEPARATOR = repeat("=", 29)
     character(len=*), parameter :: MINOR_SEPARATOR = repeat(".", 29)
 
+    integer :: k
+
     ! ***Header
-    print "(a)", MAJOR_SEPARATOR 
-    print "(5(' '), a)", "Asexual Penna model"
-    print "(a)", MAJOR_SEPARATOR
+    print "(a/, 5x, a/, a)",   &
+        MAJOR_SEPARATOR ,      &
+        "Asexual Penna model", &
+        MAJOR_SEPARATOR
 
     ! ***Model and program parameters.
     if (PROG_PRINT_STATE == VERBOSE_PRINT) then
@@ -753,23 +761,28 @@ contains
           "Max reproduction age", MODEL_R_MAX,          &
           "Starting pop size",    MODEL_START_POP_SIZE, &
           "Carrying capacity",    MODEL_K,              &
-          "Number of time steps", MODEL_TIME_STEPS
+          "Max time steps",       MODEL_TIME_STEPS
       
-      print "(a)", MINOR_SEPARATOR
-
       ! New features implemented in this Penna model implementation
-      write(*, "(a20, i9)") "Init mutation count",  MODEL_MTTN_COUNT
-      write(*, "(a20)", advance="no") "t-dependent param"
-      if (trim(MODEL_TIME_DEPENDENT_PARAM) == "x") then  
-        write(*, "(a9)") "(none)"
-      else
-        write(*, "(a9)") trim(MODEL_TIME_DEPENDENT_PARAM)
-      end if
-      write(*, "(a20, i9)") "t-dependent param dt", MODEL_TMDP_PARAM_DELTA_T
-
       print "(a)", MINOR_SEPARATOR
+      write(*, "(a20)", advance="no") "Init mutation count"
+      if (MODEL_MTTN_COUNT == MTTN_COUNT_RANDOM) then
+        print "(a9)", "(random)"
+      else
+        print "(i9)", MODEL_MTTN_COUNT
+      end if
+
+      write(*, "(a20)", advance="no") "t-dependent param"
+      if (trim(MODEL_TIME_DEPENDENT_PARAM) == TMDP_PARAM_NULL) then  
+        print "(a9)", "(none)"
+      else
+        print "(a9)", trim(MODEL_TIME_DEPENDENT_PARAM)
+      end if
+
+      print "(a20, i9)", "t-dependent param dt", MODEL_TMDP_PARAM_DELTA_T
 
       ! Program/Data recording parameters.
+      print "(a)", MINOR_SEPARATOR
       write(*, "(a20, i9, /a20, a)", advance="no") &
           "Sample size", PROG_SAMPLE_SIZE,         &
           "Record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
@@ -799,7 +812,7 @@ contains
   !>  Print the program version and stop the program.
   ! -------------------------------------------------------------------------- !
   subroutine printVersion()
-    print "(a, ' ', a)", trim(PROG_NAME), trim(PROG_VERSION)
+    print "(a, 1x, a)", trim(PROG_NAME), trim(PROG_VERSION)
     stop
   end subroutine printVersion
 

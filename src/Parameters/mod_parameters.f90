@@ -47,9 +47,19 @@ module Parameters
     KV_S => CMD_TYPE_KEYVAL_S, &
     KV_L => CMD_TYPE_KEYVAL_L, &
     FLAG_TOGGLED
-  use ErrorMSG, only: raiseError, raiseWarning
+  use RandNumProcs, only: &
+    RNG_INTRINSIC,        &
+    RNG_MERSENNE_TWISTER, &
+    RANDNUMPROCS_RNG_FLAGS => RNG_FLAGS
+
+  use CastProcs, only: &
+    castCharToInt,     &
+    castCharToReal,    &
+    castIntToChar,     &
+    isFinite
   use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
-  use CastProcs, only: castCharToInt, castCharToReal, castIntToChar, isFinite
+  use ErrorMSG, only: raiseError, raiseWarning
+
   use, intrinsic :: iso_fortran_env, only: compiler_version, output_unit
   implicit none
   private
@@ -62,6 +72,8 @@ module Parameters
     !! Placeholder integer value.
   real,    parameter :: VOID_REAL = tiny(1.0)
     !! Placeholder real value.
+  character(len=*), parameter :: VOID_CHAR = achar(0)
+    !! Placeholder character value.
 
   ! Print states.
   integer, parameter :: NORMAL_PRINT = 0
@@ -106,6 +118,40 @@ module Parameters
   character(len=MAX_LEN), target, protected :: PROG_OUT_FILE_NAME = "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
 
+  ! --- Defined values for program parameters --- !
+  ! PROG_RNG (RNG Choice)
+  integer, parameter :: RNG_ALL_CHOICES(*) = RANDNUMPROCS_RNG_FLAGS
+    !! List of all RNGs available.
+
+  ! PROG_REC_FLAG (Record flags)
+  character, parameter :: REC_NULL = "x"
+    !! Nothing (do not record).
+  character, parameter :: REC_POP = "p"
+    !! Population size per time step.
+  character, parameter :: REC_AGE_DSTRB = "a"
+    !! Age distribution in the last 300 time steps
+  character, parameter :: REC_DEATH = "d"
+    !! Death counts (death by age, by mutation, by Verhulst factor) 
+    !! per time step.
+  character, parameter :: REC_DIV_IDX = "s"
+    !! Genetic diversity index per time step (Normalized Shannon index)
+  character, parameter :: REC_GENE_DSTRB = "b"
+    !! Bad gene distribution per time step.
+  character, parameter :: REC_TIME = "t"
+    !! (Average) elapsed time and standard deviation if applicable.
+  character, parameter :: REC_GNM_COUNT = "c"
+    !! Number of unique genomes per time step.
+  character(len=*), parameter :: REC_FLAG_PENNA = &
+      REC_POP // REC_AGE_DSTRB // REC_DEATH // REC_DIV_IDX // REC_GENE_DSTRB //&
+      REC_GNM_COUNT
+    !! Record flags for Penna data.
+  character(len=*), parameter :: REC_FLAG_PROG = REC_TIME
+    !! Record flags for program run data.
+  character(len=*), parameter :: REC_FLAG_ORDER = &
+      REC_FLAG_PENNA // REC_FLAG_PROG
+    !! Record flags and their respective order as position in the string.
+
+
   ! MODEL PARAMETERS
   ! -------------------------------------------------------------------------- !
   ! Parameters whose values are from an external config file.
@@ -135,8 +181,43 @@ module Parameters
   integer, target, protected :: MODEL_AGE_DSTRB_INIT_TIMESTEP = VOID_INT
     !! The intial time step till the final time step where the age distribution
     !! is taken.
+  
+  ! Time-dependent Penna model parameter
+  character(len=MAX_LEN), target, protected :: &
+      MODEL_TIME_DEPENDENT_PARAM = VOID_CHAR
+    !! User's choice on time-dependent Penna model parameter. Defaults to none. 
+  integer, pointer, protected :: MODEL_TIME_DEPENDENT_PARAM_PTR => null()
+    !! Penna model parameter chosen to vary with time.
+  integer, target,  protected :: MODEL_TMDP_PARAM_DELTA_T = VOID_INT
+    !! Period between increments of the time-dependent Penna model parameter.
+  
+  ! Verhulst weight
+  real, allocatable, protected :: MODEL_V_WEIGHT(:)
+    !! Verhulst weights.
 
-  ! --- TIME DEPENDENT MODEL PARAMETERS --- !
+  ! Genome mask
+  logical, allocatable, protected :: MODEL_GENOME_MASK(:)
+    !! Genome mask. NOTE: TRUE is a masking value while FALSE is non-masking.
+
+
+  ! --- DEFINED VALUES FOR PENNA MODEL PARAMETERS --- !
+  ! MODEL_V_WEIGHT (Verhulst weight)
+  real, parameter :: VWEIGHT_DEFAULT = 0.
+    !! Default Verhulst weight.
+
+  ! MODEL_GENOME_MASK (Genome mask)
+  logical, parameter :: GENOME_MASK_DEFAULT   = .false.
+    !! Default value for the genome mask element.
+  integer, parameter :: GENOME_MASKING_INT    = 1
+    !! The corresponding integer value for the masking value TRUE.
+  integer, parameter :: GENOME_NONMASKING_INT = 0
+    !! The corresponding integer value for the non-masking value FALSE.
+
+  ! MODEL_MTTN_COUNT (Initial mutation count)
+  integer, parameter :: MTTN_COUNT_RANDOM = -1
+    !! Value for completely random initial mutation count.
+
+  ! MODEL_TIME_DEPENDENT_PARAM (Choices for time-dependent model parameters)
   character, parameter :: TMDP_PARAM_BIRTH     = "b"
     !! Time-dependent parameter choice: Birth rate
   character, parameter :: TMDP_PARAM_MTTN_RATE = "m"
@@ -152,59 +233,6 @@ module Parameters
       = TMDP_PARAM_BIRTH // TMDP_PARAM_MTTN_RATE // TMDP_PARAM_R_AGE &
       // TMDP_PARAM_MTTN_LIM // TMDP_PARAM_NULL
     !! All possible choices for time-dependent Penna model parameter.
-
-  character(len=MAX_LEN), target, protected :: MODEL_TIME_DEPENDENT_PARAM   &
-      = TMDP_PARAM_NULL
-    !! User's choice on time-dependent Penna model parameter. Defaults to none. 
-  integer, pointer, protected :: MODEL_TIME_DEPENDENT_PARAM_PTR => null()
-    !! Penna model parameter chosen to vary with time.
-  integer, target,  protected :: MODEL_TMDP_PARAM_DELTA_T = VOID_INT
-    !! Period between increments of the time-dependent Penna model parameter.
-  
-  ! --- VERHULST WEIGHTS --- !
-  real, allocatable, protected :: MODEL_V_WEIGHT(:)
-    !! Verhulst weights.
-  real, parameter :: VWEIGHT_DEFAULT = 0.
-    !! Default Verhulst weight.
-
-  ! --- GENOME MASK --- !
-  logical, allocatable, protected :: MODEL_GENOME_MASK(:)
-    !! Genome mask. NOTE: TRUE is a masking value while FALSE is non-masking.
-  logical, parameter :: GENOME_MASK_DEFAULT = .false.
-    !! Default value for the genome mask element.
-  integer, parameter :: GENOME_MASKING_INT    = 1
-    !! The corresponding integer value for the masking value TRUE.
-  integer, parameter :: GENOME_NONMASKING_INT = 0
-    !! The corresponding integer value for the non-masking value FALSE.
-
-  ! RECORD FLAGS
-  ! -------------------------------------------------------------------------- !
-  character, parameter :: REC_NULL = "x"
-    !! Nothing (do not record).
-  character, parameter :: REC_POP = "p"
-    !! Population size per time step.
-  character, parameter :: REC_AGE_DSTRB = "a"
-    !! Age distribution in the last 300 time steps
-  character, parameter :: REC_DEATH = "d"
-    !! Death counts (death by age, by mutation, by Verhulst factor) 
-    !! per time step.
-  character, parameter :: REC_DIV_IDX = "s"
-    !! Genetic diversity index per time step (Normalized Shannon index)
-  character, parameter :: REC_GENE_DSTRB = "b"
-    !! Bad gene distribution per time step.
-  character, parameter :: REC_TIME = "t"
-    !! (Average) elapsed time and standard deviation if applicable.
-  character, parameter :: REC_GNM_COUNT = "c"
-    !! Number of unique genomes per time step.
-  character(len=*), parameter :: REC_FLAG_PENNA = &
-      REC_POP // REC_AGE_DSTRB // REC_DEATH // REC_DIV_IDX // REC_GENE_DSTRB //&
-      REC_GNM_COUNT
-    !! Record flags for Penna data.
-  character(len=*), parameter :: REC_FLAG_PROG = REC_TIME
-    !! Record flags for program run data.
-  character(len=*), parameter :: REC_FLAG_ORDER = &
-      REC_FLAG_PENNA // REC_FLAG_PROG
-    !! Record flags and their respective order as position in the string.
 
 
   ! PARAMETER LISTING FILE PATHS
@@ -285,6 +313,9 @@ module Parameters
   public :: MODEL_TIME_DEPENDENT_PARAM_PTR
   public :: MODEL_TMDP_PARAM_DELTA_T
 
+  ! Special values for initial mutation count 
+  public :: MTTN_COUNT_RANDOM
+
   ! Record flags
   public :: REC_NULL
   public :: REC_POP
@@ -297,6 +328,9 @@ module Parameters
   public :: REC_FLAG_PENNA
   public :: REC_FLAG_PROG
   public :: REC_FLAG_ORDER
+
+  ! RNG choices
+  public :: RNG_ALL_CHOICES
 
   ! Parameter listing file.
   public :: FILE_PARAM_LIST
