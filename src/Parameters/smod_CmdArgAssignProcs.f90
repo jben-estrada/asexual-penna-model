@@ -560,7 +560,20 @@ contains
           )
       end if
     end do
-    
+
+    ! Check for invalid Renyi entropy order
+    ! (must be non-negative or non-finite)
+    if (isFinite(MODEL_ENTROPY_ORDER)) then
+      if (MODEL_ENTROPY_ORDER < 0.0) then
+        call raiseError( &
+          "Invalid value for the Renyi entropy order " //          &
+          "(" // castRealToChar(MODEL_ENTROPY_ORDER)   // "). " // &
+          "Must be either non-negative or non-finite " //          &
+          "(default, Normalized Shannon)." &
+        )
+      end if
+    end if
+
     ! Check for valid initial mutation input (>= -1)
     if (MODEL_MTTN_COUNT < 0 .and. MODEL_MTTN_COUNT /= MTTN_COUNT_RANDOM) then
       call raiseError(                                       &

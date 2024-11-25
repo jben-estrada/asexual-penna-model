@@ -7,22 +7,23 @@ module DataWriter
   ! DESCRIPTION:
   !>  Module containing procedures for writing data onto files.
   ! -------------------------------------------------------------------------- !
-  use Parameters, only: &
-    MODEL_L,            &
-    REC_NULL,           &
-    REC_POP,            &
-    REC_AGE_DSTRB,      &
-    REC_DEATH,          &
-    REC_DIV_IDX,        &
-    REC_GENE_DSTRB,     &
-    REC_GNM_COUNT,      &
-    REC_TIME,           &
-    REC_FLAG_PENNA,     &
-    REC_FLAG_PROG,      &
+  use Parameters, only:  &
+    MODEL_L,             &
+    MODEL_ENTROPY_ORDER, &
+    REC_NULL,            &
+    REC_POP,             &
+    REC_AGE_DSTRB,       &
+    REC_DEATH,           &
+    REC_DIV_IDX,         &
+    REC_GENE_DSTRB,      &
+    REC_GNM_COUNT,       &
+    REC_TIME,            &
+    REC_FLAG_PENNA,      &
+    REC_FLAG_PROG,       &
     REC_FLAG_ORDER
   use ErrorMSG, only: raiseError
-  use CastProcs, only: castCharToInt, castIntToChar
   use WriterType, only: Writer_t, init_Writer, writeIK, writeRK
+  use CastProcs, only: castCharToInt, castIntToChar, castRealToChar, isFinite
   implicit none
   private
 
@@ -268,15 +269,30 @@ contains
         
 
       case (REC_DIV_IDX)
+      divIdx: block
+        character(len=:), allocatable :: entOrderStr
+
+        if (isFinite(MODEL_ENTROPY_ORDER)) then
+          entOrderStr = castRealToChar(MODEL_ENTROPY_ORDER)
+        else
+          entOrderStr = "1.0 (Normalized)"
+        end if
+
         ! Data description. 
-        call chosenWriter%write("DATA: Genetic diversity index per time step.")
+        call chosenWriter%write(                            &
+          "DATA: Renyi Entropy of order " // entOrderStr // &
+          " as genetic diversity per time step."            &
+        )
 
         ! Header of the list.
         if (.not.isInCSVFormat) &
             call chosenWriter%write(DIVIDER)
-        call chosenWriter%write("Diversity idx")
+        call chosenWriter%write("Genetic diversity index")
         if (.not.isInCSVFormat) &
             call chosenWriter%write(DIVIDER)
+
+        deallocate(entOrderStr)
+      end block divIdx
       
 
       case (REC_TIME)

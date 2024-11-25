@@ -56,6 +56,7 @@ module Parameters
     castCharToInt,     &
     castCharToReal,    &
     castIntToChar,     &
+    castRealToChar,    &
     isFinite
   use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
