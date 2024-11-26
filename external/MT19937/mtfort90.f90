@@ -72,6 +72,14 @@
 !
 ! Changes made by John Benedick Estrada (jbestrada@nip.edu.ph) on
 ! 21 April 2023 
+!***********************************************************************
+! Note on the email address by John Benedick Estrada indicated above:
+!   Kindly use jaestrada2@up.edu.ph instead. Both email addresses are
+!   active but the former one (jbestrada@nip.edu.ph) might become
+!   inactive soon.
+!
+! Note added by John Benedick Estrada (jaestrada2@up.edu.ph)
+! on 2024 November 26.
 
  module Mtmod
     private

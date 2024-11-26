@@ -1,5 +1,8 @@
 # Asexual Penna model
 
+**Author**:
+John Benedick A. Estrada (jaestrada2@up.edu.ph)
+
 ## Model description
 
 An implementation of a biological aging model in Fortran 2008 as first introduced by T.J.P. Penna \[[1, 2](#reference)\]. This program follows the original model with some important changes.
@@ -22,7 +25,11 @@ Varying the Verhulst factor can be useful in, say, modelling *survivability*. By
 
 #### Genome initialization in the initial population
 
-The number of deleterious random mutations per genome in the initial population can be specified, such that the user can choose starting genomes with no harmful genes. It is also possible to randomize this number per genome to completely randomize the initialization.
+The number of deleterious random mutations per genome in the initial population can be specified. It is also possible to randomize this number per genome to completely randomize the initialization.
+
+#### Time-dependent model parameters
+
+In this implementation of the Penna model, it is also possible to specify one of the select model parameters and make them vary with time. At the moment, only birth rate $B$, mutation rate $M$, minimum and maximum reproduction ages $R$ and $R_{max}$, and mutation threshold $T$ can be chosen. Note that for $R$ and $R_{max}$, both parameters vary at the same rate. The rate of change is also positive, incrementing by 1 every $\Delta t$ time steps where $\Delta t$ is specified by the user.
 
 Go to [Top](#asexual-penna-model).
 ## Installation
@@ -72,13 +79,13 @@ Go to [Top](#asexual-penna-model).
 
 Running the executable in the `bin/` directory runs the Penna model program with the default parameters indicated in `bin/model.cfg`.
 
-For more information, run the Penna model program with the `--help` option.
+For more thorough and complete information, run the Penna model program with the `--help` option.
 
 ```bash
-bin/penna.out --help
+bin/penna --help
 ```
 
-WIP
+*WIP*
 
 Go to [Top](#asexual-penna-model).
 
