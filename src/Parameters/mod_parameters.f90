@@ -58,6 +58,8 @@ module Parameters
     castIntToChar,     &
     castRealToChar,    &
     isFinite
+  
+  use ASCIIProcedure, only: toLower
   use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
 

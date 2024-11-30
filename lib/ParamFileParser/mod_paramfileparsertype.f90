@@ -13,6 +13,7 @@ module ParamFileParserType
     init_HashTable,        &
     HSHTBL_STAT_OK => STAT_OK
   use CastProcs, only: castCharToInt, castCharToReal, castIntToChar
+  use ASCIIProcedure, only: isWhiteSpace, isAlphaNumeric, isDigit
   use ErrorMSG, only: raiseError
   implicit none
   private
@@ -57,16 +58,6 @@ module ParamFileParserType
   ! -------------------------------------------------------------------------- !
   ! Interface for submodule procedures.
   interface
-    module pure logical function isWhiteSpace(char)
-      character, intent(in) :: char
-        !! Character to be inspected.
-    end function isWhiteSpace
-
-    module pure logical function isAlphanumeric(char)
-      character, intent(in) :: char
-        !! Character to be inspected.
-    end function isAlphanumeric
-
     module subroutine paramScalar(paramVal, scalar)
       character(len=*), intent(in)  :: paramVal
         !! Character to be inspected and casted to either integer or real.

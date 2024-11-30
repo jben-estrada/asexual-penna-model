@@ -83,6 +83,11 @@ submodule (Parameters) CmdArgAssignProcs
     IDX_TMDP_PARAM_DT_KV   &
   ]
 
+  integer, parameter :: CMD_CASE_INSENSITIVE(*) = [ &
+    IDX_RECORD_DATA_KV,  &
+    IDX_TMDP_PARAM_KV    &
+  ]
+
   ! Command group names
   character(len=*), parameter :: CMD_GROUP_PENNA = "Penna model"
   character(len=*), parameter :: CMD_GROUP_PROG  = "Program parameter"
@@ -363,6 +368,10 @@ contains
             currCmdArg%charValue_ptr = &
               pennaCmdArgs%getCmdValue(currCmdArg%cmdName)
           end if
+          ! By convention, no-case -> lowercase
+          if (any(i == CMD_CASE_INSENSITIVE)) then
+            currCmdArg%charValue_ptr = toLower(currCmdArg%charValue_ptr)
+          end if
 
         else
           call raiseError( &
@@ -448,12 +457,8 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine setTimeDependentParam(userChoice)
     character, intent(in) :: userChoice
-    character :: userChoice_lcl
 
-    ! Change the user choice to lower case.
-    userChoice_lcl = achar( ior(iachar(userChoice), 32) )
-
-    select case (userChoice_lcl)
+    select case (userChoice)
     case (TMDP_PARAM_BIRTH)
       MODEL_TIME_DEPENDENT_PARAM_PTR => MODEL_B
     case (TMDP_PARAM_MTTN_RATE)
@@ -596,7 +601,7 @@ contains
     end if
   end subroutine checkValidParams
 
-!=============================!
+
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: printParams
   !>  Pretty print the model parameters. Can print verbosely or print nothing
@@ -646,8 +651,8 @@ contains
       "individuals."
 
     print "(' - ', *(a))", &
-      "Choices for time-dependent model parameter (-", &
-      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --",  &
+      "Valid flags for time-dependent model parameter (-", &
+      cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --",      &
       cmdArgArr(IDX_TMDP_PARAM_KV)%cmdAlias, "):"
     write(*, "(5(5x, a1, ' - ', a/))", advance="no")  &
       TMDP_PARAM_NULL,      "No time-dependent parameter.",             &
@@ -657,10 +662,11 @@ contains
       TMDP_PARAM_R_AGE,     "Minimum and maximum reproduction age. " // &
           "Note that both of them increment"
     print "( (3x, a/) )", &
-      "One can choose only one parameter to vary with time."
+      "One can choose only one parameter to vary with time. " //  &
+      "The flags are also case-insensitive."
 
     print "(' - ', *(a))",                             &
-      "Valid character values for -",                  &
+      "Valid character flags for -",                  &
       cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, " or --", &
       cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
     write(*, "(8(5x, a1, ' - ', a/))", advance="no")               &
@@ -674,7 +680,8 @@ contains
       REC_TIME,       "Mean elapsed time and std dev",             &
       REC_GNM_COUNT,  "Number of unique genome counts per time step."
     print "( 2(3x, a/) )",                                                    &
-      "Multiple flags can be on simultaneously.",                             &
+      "The flags are case-insensitive. Multiple flags can also be on " //     &
+        "simultaneously.", &
       "e.g. 'psb' for population size, entropy and bad gene distribution " // &
           "per time."
 

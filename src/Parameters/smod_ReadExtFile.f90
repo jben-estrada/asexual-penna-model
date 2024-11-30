@@ -94,12 +94,12 @@ contains
       getStats(20))
 
     ! Transfer the obtained default record flag into the program.
-    ! --- Record flag
-    PROG_REC_FLAG = tempRecFlag
+    ! --- Record flag  (Case-insensitive)
+    PROG_REC_FLAG = toLower(tempRecFlag)
     ! --- Genome mask
     MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASKING_INT)
-    ! --- Time-dependent Penna model parameter
-    MODEL_TIME_DEPENDENT_PARAM = tempTMDPParam
+    ! --- Time-dependent Penna model parameter (Case-insensitive)
+    MODEL_TIME_DEPENDENT_PARAM = toLower(tempTMDPParam)
     
     ! ------------------------------------------------------------------------ !
     ! Check if all the getters succeeded in obtaining the parameters.

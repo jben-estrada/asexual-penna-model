@@ -22,53 +22,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isWhiteSpace
-  !>  Check the character `char` if it is a whitespace character or not.
-  ! -------------------------------------------------------------------------- !
-  module pure logical function isWhiteSpace(char)
-    character, intent(in) :: char
-      !! Character to be inspected.
-
-    integer :: asciiCode
-    asciiCode = iachar(char)
-
-    isWhiteSpace = (8 <= asciiCode .and. asciiCode <= 13) .or. asciiCode == 32
-  end function isWhiteSpace
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isNumeric
-  !>  Check the character `char` if it is a numeric character or not.
-  ! -------------------------------------------------------------------------- !
-  logical pure function isNumeric(char)
-    character, intent(in) :: char
-      !! Character to be inspected.
-
-    integer :: asciiCode
-    asciiCode = iachar(char)
-
-    isNumeric = (48 <= asciiCode .and. asciiCode <= 57)
-  end function isNumeric
-
-
-  ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isAlphanumeric
-  !>  Check the character `char` if it is an alphanumeric character or not.
-  ! -------------------------------------------------------------------------- !
-  module pure logical function isAlphanumeric(char)
-    character, intent(in) :: char
-      !! Character to be inspected.
-
-    integer :: asciiCode
-    asciiCode = iachar(char)
-
-    isAlphanumeric = isNumeric(char) .or. &
-                    (65 <= asciiCode .and. asciiCode <= 90) .or. &
-                    (97 <= asciiCode .and. asciiCode <= 122)
-  end function isAlphanumeric
-
-
-  ! -------------------------------------------------------------------------- !
   ! FUNCTION: paramInt
   !>  Convert the character `paramVal` to integer.
   ! -------------------------------------------------------------------------- !
@@ -94,7 +47,7 @@ contains
       currChar = paramVal(i:i)
 
       ! Only get numeric characters.
-      if (isNumeric(currChar)) then
+      if (isDigit(currChar)) then
         cleanParamVal = cleanParamVal // currChar
 
       ! Skip integer delimiter.

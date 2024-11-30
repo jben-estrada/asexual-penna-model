@@ -7,9 +7,9 @@ module BitSetType
   ! DESCRIPTION:
   !>  Module containing an implementation of a bit set.
   ! -------------------------------------------------------------------------- !
-  use iso_fortran_env, only: logical_kinds, int64
   use CastProcs, only: castIntToChar
-  use ErrorMSG, only: raiseError
+  use ErrorMSG,  only: raiseError
+  use, intrinsic :: iso_fortran_env, only: logical_kinds, int64
   implicit none
   private
 
