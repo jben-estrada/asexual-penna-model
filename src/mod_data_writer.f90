@@ -52,9 +52,6 @@ module DataWriter
   integer, parameter :: DATA_WRITER_PENNA = 0
   integer, parameter :: DATA_WRITER_PROG  = 1
 
-  ! Base IO unit.
-  integer, parameter :: BASE_UNIT = 99
-
   ! All writer objects.
   type(Writer_t), target  :: writerArr(len(REC_FLAG_ORDER))
   logical :: initWriterArr(len(REC_FLAG_ORDER)) = .false.
@@ -183,13 +180,11 @@ contains
   ! SUBROUTINE: initChosenWriter
   !>  Initialize a writer as specified by the provided record flag.
   ! -------------------------------------------------------------------------- !
-  subroutine initChosenWriter(recordFlag, saveFilename, newWriterUnit)
+  subroutine initChosenWriter(recordFlag, saveFilename)
     character,        intent(in)    :: recordFlag
       !! Record flag. Values can be found in `WriterOptions`.
     character(len=*), intent(in)    :: saveFilename
       !! Directory of the file to be written on.
-    integer,          intent(in)    :: newWriterUnit
-      !! Fortran ID for the file to be written on.
 
     type(Writer_t), pointer :: chosenWriter
     integer :: i, startingAge
@@ -204,7 +199,7 @@ contains
     end if
 
     ! Initialize the chosen data writer.
-    call init_Writer(chosenWriter, saveFilename, newWriterUnit, delim)
+    call init_Writer(chosenWriter, saveFilename, delim)
     ! Open file for writing.
     call chosenWriter%openFile()
 
@@ -434,7 +429,7 @@ contains
           trim(saveFileName), newSaveFileName, currFlag, dataSetNum &
         )
 
-      call initChosenWriter(currFlag, newSaveFilename, BASE_UNIT + i)
+      call initChosenWriter(currFlag, newSaveFilename)
 
       deallocate(newSaveFilename)
     end do

@@ -15,18 +15,19 @@ module WriterType
   implicit none
   private
 
+  integer, parameter :: UNIT_NULL = -1
+    !! Placeholder value for the I/O unit.
+
   type :: Writer_t
     !! A derived type for writing numerical data to files.
     private
     character(len=:), allocatable :: filename
       !! Name of the file data are to be written on.
-    integer :: unit
+    integer :: unit = UNIT_NULL
       !! Unit with which the file is to be identified within the program.
     logical :: fileOpen = .false.
       !! Writable state.
 
-    character :: delim = ""
-      !! Data delimiters
     character(len=:), allocatable :: fmtInt
       !! Write format for integers.
     character(len=:), allocatable :: fmtReal
@@ -41,6 +42,8 @@ module WriterType
       !! Close file.
     procedure, public :: IsFileOpen => writer_isFileOpen
       !! Check if the file is open for writing.
+    procedure, public :: getUnit => writer_getUnit
+      !! Get the unit used to access the file.
     generic,   public :: write => &
       writer_write_intSclr,       &
       writer_write_realSclr,      &
@@ -76,20 +79,21 @@ contains
   ! SUBROUTINE: writer_cnstrct
   !>  Constructor for `Writer_t` type.
   ! -------------------------------------------------------------------------- !
-  subroutine init_Writer(new, filename, unit, delim)
-    type(Writer_t),   intent(inout) :: new
+  subroutine init_Writer(new, filename, delim, unit)
+    type(Writer_t),    intent(inout) :: new
       !! new `Writer_t` object to be initialized.
-    character(len=*), intent(in)    :: filename
+    character(len=*),  intent(in)    :: filename
       !! Name of the file to which data is to written on.
-    integer,          intent(in)    :: unit
+    character(len=*),  intent(in)    :: delim
+      !! Delimiter between data points in a row.
+    integer, optional, intent(in)    :: unit
       !! Unit with which the file is identified within the program.
-    character,        intent(in)    :: delim
+      !! If not provided, the program will choose the unit.
 
     new % filename = trim(filename)
-    new % unit = unit
-    new % delim = delim
+    if (present(unit))  new % unit = unit
 
-    new % fmtInt = "(*(" // FMT_INT_LEN // ",:,'" // delim // "'))"
+    new % fmtInt  = "(*(" // FMT_INT_LEN // ",:,'" // delim // "'))"
     new % fmtReal = "(*(" // FMT_REAL_LEN // ",:,'" // delim // "'))"
     new % fmtChar = "(*(" // FMT_CHAR_LEN // ",:,'" // delim // "'))"
   end subroutine init_Writer
@@ -104,12 +108,16 @@ contains
       !! `Writer_t` object to be modified.
     integer :: openStat
 
-    open(unit=self % unit, file=self % filename, iostat=openStat)
+    if (self % unit == UNIT_NULL) then
+      open(newunit=self % unit, file=self % filename, iostat=openStat)
+    else
+      open(   unit=self % unit, file=self % filename, iostat=openStat)
+    end if
+
     if (openStat /= 0) then
-      call raiseError(&
-        "'" // self % filename // &
-        "' cannot be opened or its directory does not exist." &
-        )
+      call raiseError(  &
+        "'" // self % filename // "' cannot be opened." &
+      )
     end if
 
     self % fileOpen = .true.
@@ -272,6 +280,16 @@ contains
       call raiseError("Cannot write to '" // self % filename // "'.")
     end if
   end subroutine writer_write_charArr
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: writer_getUnit
+  !>  Get the unit used to access the file. -1 means the unit is not yet chosen.
+  ! -------------------------------------------------------------------------- !
+  pure integer function writer_getUnit(self)
+    class(Writer_t), intent(in) :: self
+    writer_getUnit = self%unit
+  end function writer_getUnit
 
 
   ! -------------------------------------------------------------------------- !

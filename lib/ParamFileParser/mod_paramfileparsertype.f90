@@ -74,8 +74,6 @@ module ParamFileParserType
   end interface
 
   ! -------------------------------------------------------------------------- !
-  ! Standard unit in this module for opening and reading files.
-  integer, parameter :: STD_UNIT = 50
   ! Maximum length of one line.
   integer, parameter :: MAX_LINE_LEN = 256
 
@@ -121,10 +119,10 @@ contains
 
     character(len=MAX_LINE_LEN) :: bufferChar
     character :: currChar
-    integer   :: i, status
+    integer   :: i, status, readUnit
 
     ! Open file for reading.
-    open(unit=STD_UNIT, file=filePath, status="old", iostat=status)
+    open(newunit=readUnit, file=filePath, status="old", iostat=status)
     if (status /= 0) call raiseError("Cannot read '" // trim(filePath) // "'")
 
     ! Initialize output.
@@ -133,7 +131,7 @@ contains
 
     do
       ! Read one line from file.
-      read(STD_UNIT, "(a)", iostat=status) bufferChar
+      read(readUnit, "(a)", iostat=status) bufferChar
       if (status /= 0) exit  ! Exit condition.
 
       do i = 1, len(trim(bufferChar))
@@ -150,7 +148,7 @@ contains
       strippedFile = strippedFile // EOL
     end do
 
-    close(STD_UNIT)
+    close(readUnit)
   end subroutine readStripFile
 
 
