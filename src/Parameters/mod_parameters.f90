@@ -63,7 +63,10 @@ module Parameters
   use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
   use ErrorMSG, only: raiseError, raiseWarning
 
-  use, intrinsic :: iso_fortran_env, only: compiler_version, output_unit
+  use, intrinsic :: iso_fortran_env, only: &
+    compiler_version, &
+    output_unit,      &
+    real64
   implicit none
   private
 
@@ -179,7 +182,8 @@ module Parameters
     !! Total time steps
   integer, target, protected :: MODEL_MTTN_COUNT = VOID_INT
     !! Initial mutation count of individuals in starting pop.
-  real,    target, protected :: MODEL_ENTROPY_ORDER = VOID_REAL
+
+  real(kind=real64), target, protected :: MODEL_ENTROPY_ORDER = VOID_REAL
     !! Renyi entropy order value  
   integer, target, protected :: MODEL_AGE_DSTRB_INIT_TIMESTEP = VOID_INT
     !! The intial time step till the final time step where the age distribution
