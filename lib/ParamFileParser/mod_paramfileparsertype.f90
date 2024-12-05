@@ -12,9 +12,15 @@ module ParamFileParserType
     HashTable_t,           &
     init_HashTable,        &
     HSHTBL_STAT_OK => STAT_OK
-  use CastProcs, only: castCharToInt, castCharToReal, castIntToChar
+  use CastProcs, only: &
+    castCharToInt,     &
+    castCharToReal32,  &
+    castCharToReal64,  &
+    castIntToChar
   use ASCIIProcedure, only: isWhiteSpace, isAlphaNumeric, isDigit
   use ErrorMSG, only: raiseError
+
+  use, intrinsic :: iso_fortran_env, only: real64, real32
   implicit none
   private
 
@@ -29,11 +35,13 @@ module ParamFileParserType
     procedure :: readFile => paramfileparser_readFile
       !! Read the file and store the obtained parameter values.
     generic   :: getValue => &
-        paramfileparser_getScalarValue_char, &
-        paramfileparser_getScalarValue_int, &
-        paramfileparser_getScalarValue_real, &
-        paramfileparser_getArrValue_int, &
-        paramfileparser_getArrValue_real
+        paramfileparser_getScalarValue_char,   &
+        paramfileparser_getScalarValue_int,    &
+        paramfileparser_getScalarValue_real32, &
+        paramfileparser_getScalarValue_real64, &
+        paramfileparser_getArrValue_int,    &
+        paramfileparser_getArrValue_real32, &
+        paramfileparser_getArrValue_real64
       !! Get parameter values.
     final :: destructor
       !! Free allocated atrtibutes.
@@ -41,9 +49,11 @@ module ParamFileParserType
     ! Specific procedures for generic ones.
     procedure, private :: paramfileparser_getScalarValue_char
     procedure, private :: paramfileparser_getScalarValue_int
-    procedure, private :: paramfileparser_getScalarValue_real
+    procedure, private :: paramfileparser_getScalarValue_real32
+    procedure, private :: paramfileparser_getScalarValue_real64
     procedure, private :: paramfileparser_getArrValue_int
-    procedure, private :: paramfileparser_getArrValue_real
+    procedure, private :: paramfileparser_getArrValue_real32
+    procedure, private :: paramfileparser_getArrValue_real64
   end type ParamFileParser_t
 
   ! RESERVED CHARACTERS.
@@ -344,15 +354,15 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: paramfileparser_getScalarValue_real
-  !>  Get the scalar real value associated with the character `key`.
+  ! SUBROUTINE: paramfileparser_getScalarValue_real32
+  !>  Get the scalar real32 value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getScalarValue_real(self, key, scalarVal, status)
+  subroutine paramfileparser_getScalarValue_real32(self, key, scalarVal, status)
     class(ParamFileParser_t), intent(inout) :: self
       !! `ParamFileParser_t` object to be searched.
     character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    real,                     intent(out)   :: scalarVal
+    real(kind=real32),        intent(out)   :: scalarVal
       !! Scalar output.
     integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
@@ -384,7 +394,51 @@ contains
 
     ! Finally convert character to the desired type.
     call paramScalar(valueChar, scalarVal)
-  end subroutine paramfileparser_getScalarValue_real
+  end subroutine paramfileparser_getScalarValue_real32
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: paramfileparser_getScalarValue_real64
+  !>  Get the scalar real32 value associated with the character `key`.
+  ! -------------------------------------------------------------------------- !
+  subroutine paramfileparser_getScalarValue_real64(self, key, scalarVal, status)
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    real(kind=real64),        intent(out)   :: scalarVal
+      !! Scalar output.
+    integer, optional,        intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
+
+    integer :: getStat
+    character(len=:), allocatable :: valueChar
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
+
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      if (present(status)) then
+        status = getStat
+        scalarVal = -1    ! Assign some value to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
+    end if
+
+    ! Finally convert character to the desired type.
+    call paramScalar(valueChar, scalarVal)
+  end subroutine paramfileparser_getScalarValue_real64
 
 
   ! -------------------------------------------------------------------------- !
@@ -432,15 +486,15 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: paramfileparser_getArrValue_real
-  !>  Get the real array value associated with the character `key`.
+  ! SUBROUTINE: paramfileparser_getArrValue_real32
+  !>  Get the real32 array value associated with the character `key`.
   ! -------------------------------------------------------------------------- !
-  subroutine paramfileparser_getArrValue_real(self, key, arrVal, status)
+  subroutine paramfileparser_getArrValue_real32(self, key, arrVal, status)
     class(ParamFileParser_t), intent(inout) :: self
       !! `ParamFileParser_t` object to be searched.
     character(len=*),         intent(in)    :: key
       !! Key with which its corresponding value is obtained.
-    real,                     intent(out)   :: arrVal(:)
+    real(kind=real32),        intent(out)   :: arrVal(:)
       !! Output array.
     integer, optional,        intent(out)   :: status
       !! Status of this routine. Presence of `status` prevents this routine
@@ -472,7 +526,51 @@ contains
     
     ! Finally convert character to the desired type.
     call paramArray(valueChar, arrVal)
-  end subroutine paramfileparser_getArrValue_real
+  end subroutine paramfileparser_getArrValue_real32
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: paramfileparser_getArrValue_real64
+  !>  Get the real32 array value associated with the character `key`.
+  ! -------------------------------------------------------------------------- !
+  subroutine paramfileparser_getArrValue_real64(self, key, arrVal, status)
+    class(ParamFileParser_t), intent(inout) :: self
+      !! `ParamFileParser_t` object to be searched.
+    character(len=*),         intent(in)    :: key
+      !! Key with which its corresponding value is obtained.
+    real(kind=real64),        intent(out)   :: arrVal(:)
+      !! Output array.
+    integer, optional,        intent(out)   :: status
+      !! Status of this routine. Presence of `status` prevents this routine
+      !! from being able to stop this program.
+
+    character(len=:), allocatable :: valueChar
+    integer :: getStat
+
+    ! Initialize `status` output.
+    if (present(status)) status = 0
+
+    allocate(character(len=0) :: valueChar)
+    valueChar = self % keyValTable % get(key, getStat)
+
+    ! Handle error in this function, not from within the `HashTableType` module
+    if (getStat /= HSHTBL_STAT_OK) then
+      if (present(status)) then
+        status = getStat
+        arrVal(:) = -1    ! Assign some values to the output.
+        return
+      else
+        call raiseError( &
+          "The key '" &
+          // trim(key) // &
+          "' is not found in the parameter listing." &
+          )
+      end if
+    end if
+    
+    ! Finally convert character to the desired type.
+    call paramArray(valueChar, arrVal)
+  end subroutine paramfileparser_getArrValue_real64
 
 
   ! -------------------------------------------------------------------------- !

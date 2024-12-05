@@ -73,16 +73,30 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: paramReal
-  !>  Convert the character `paramVal` to real.
+  !>  Convert the character `paramVal` to real32.
   ! -------------------------------------------------------------------------- !
-  real function paramReal(paramVal)
+  real(kind=real32) function paramReal32(paramVal)
     character(len=*), intent(in) :: paramVal
       !! Character to be inspected and casted to real.
 
     ! No need for extra syntax check; syntax for valid char for casting to real
     ! is handled by Fortran already.
-    paramReal = castCharToReal(paramVal)
-  end function paramReal
+    paramReal32 = castCharToReal32(paramVal)
+  end function paramReal32
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: paramReal64
+  !>  Convert the character `paramVal` to real64.
+  ! -------------------------------------------------------------------------- !
+  real(kind=real64) function paramReal64(paramVal)
+    character(len=*), intent(in) :: paramVal
+      !! Character to be inspected and casted to real.
+
+    ! No need for extra syntax check; syntax for valid char for casting to real
+    ! is handled by Fortran already.
+    paramReal64 = castCharToReal64(paramVal)
+  end function paramReal64
 
 
   ! -------------------------------------------------------------------------- !
@@ -99,10 +113,14 @@ contains
     select type(scalar)
       type is (integer)
         scalar = paramInt(paramVal)
-      type is (real)
-        scalar = paramReal(paramVal)
+      type is (real(kind=real32))
+        scalar = paramReal32(paramVal)
+      type is (real(kind=real64))
+        scalar = paramReal64(paramVal)
       class default
-        call raiseError("Invalid scalar type. Must be either integer or real.")
+        call raiseError( &
+            "Invalid scalar type. Must be either integer, real32 or real64." &
+        )
     end select
   end subroutine paramScalar
 
@@ -363,12 +381,16 @@ contains
       select type(array)
         type is (integer)
           array(lowIdx: hiIdx) = paramInt(elemChar)
-        type is (real)
-          array(lowIdx: hiIdx) = paramReal(elemChar)
+        type is (real(kind=real32))
+          array(lowIdx: hiIdx) = paramReal32(elemChar)
+        type is (real(kind=real64))
+          array(lowIdx: hiIdx) = paramReal64(elemChar)
         type is (character(len=*))
           array(lowIdx: hiIdx) = elemChar
         class default
-          call raiseError("Invalid array type. Must be either integer or real.")
+          call raiseError(  &
+            "Invalid array type. Must be either integer, real32, or real64." &
+          )
       end select
     end subroutine assignToArray
   end subroutine paramArray

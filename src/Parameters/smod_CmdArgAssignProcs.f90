@@ -32,8 +32,10 @@ submodule (Parameters) CmdArgAssignProcs
       !! Pointer to the character parameter `cmdName` modifies.
     integer,                pointer :: intValue_ptr => null()
       !! Pointer to the integer parameter `cmdName` modifies.
-    real,                   pointer :: realValue_ptr => null()
-      !! Pointer to the real parameter `cmdName` modifies
+    real,                   pointer :: real32Value_ptr => null()
+      !! Pointer to the real parameter of default kind `cmdName` modifies
+    real(kind=real64),      pointer :: real64Value_ptr => null()
+      !! Pointer to the real64 parameter `cmdName` modifies
   end type
 
   ! Command line arguments
@@ -211,7 +213,7 @@ contains
     cmdArgArr(IDX_INIT_MTTN_COUNT_KV) % intValue_ptr  => MODEL_MTTN_COUNT
     cmdArgArr(IDX_INIT_POP_SIZE_KV)   % intValue_ptr  => MODEL_START_POP_SIZE
     cmdArgArr(IDX_MAX_TIME_STEP_KV)   % intValue_ptr  => MODEL_TIME_STEPS
-    cmdArgArr(IDX_ENTROPY_ORDER_KV)   % realValue_ptr => MODEL_ENTROPY_ORDER
+    cmdArgArr(IDX_ENTROPY_ORDER_KV)   % real64Value_ptr => MODEL_ENTROPY_ORDER
     cmdArgArr(IDX_AGE_DSTRB_TIME_KV)  % intValue_ptr  &
       => MODEL_AGE_DSTRB_INIT_TIMESTEP
     cmdArgArr(IDX_TMDP_PARAM_KV)      % charValue_ptr &
@@ -345,11 +347,28 @@ contains
             end if
           end if
         
-        else if (associated(currCmdArg%realValue_ptr)) then
+        else if (associated(currCmdArg%real32Value_ptr)) then
           ! Check if the current key-value command has a value.
           if (pennaCmdArgs%hasValue(currCmdArg%cmdName)) then
             ! Get the value and cast it to real
-            currCmdArg%realValue_ptr = castCharToReal( &
+            currCmdArg%real32Value_ptr = castCharToReal32( &
+              pennaCmdArgs%getCmdValue(currCmdArg%cmdName), castStat &
+            )
+
+            ! Check casting status
+            if (castStat /= 0) then
+              call raiseError( &
+                "Invalid value for '-" // currCmdArg%cmdName // &
+                "' or '--" // currCmdArg%cmdAlias // "'. Must be real." &
+              )
+            end if
+          end if
+
+        else if (associated(currCmdArg%real64Value_ptr)) then
+          ! Check if the current key-value command has a value.
+          if (pennaCmdArgs%hasValue(currCmdArg%cmdName)) then
+            ! Get the value and cast it to real
+            currCmdArg%real64Value_ptr = castCharToReal64( &
               pennaCmdArgs%getCmdValue(currCmdArg%cmdName), castStat &
             )
 
@@ -568,12 +587,12 @@ contains
 
     ! Check for invalid Renyi entropy order
     ! (must be non-negative or non-finite)
-    if (isFinite(MODEL_ENTROPY_ORDER)) then
-      if (MODEL_ENTROPY_ORDER < 0.0) then
+    if (isFinite64(MODEL_ENTROPY_ORDER)) then
+      if (MODEL_ENTROPY_ORDER < 0.0_real64) then
         call raiseError( &
-          "Invalid value for the Renyi entropy order " //          &
-          "(" // castRealToChar(MODEL_ENTROPY_ORDER)   // "). " // &
-          "Must be either non-negative or non-finite " //          &
+          "Invalid value for the Renyi entropy order " //            &
+          "(" // castReal64ToChar(MODEL_ENTROPY_ORDER)   // "). " // &
+          "Must be either non-negative or non-finite " //            &
           "(default, Normalized Shannon)." &
         )
       end if
@@ -816,7 +835,7 @@ contains
       write(*, "(a)")
       
       write(*, "(a20)", advance="no") "Renyi entropy order"
-      if (isFinite(MODEL_ENTROPY_ORDER)) then
+      if (isFinite64(MODEL_ENTROPY_ORDER)) then
         write(*, "(f9.2/)", advance="no") MODEL_ENTROPY_ORDER
       else
         write(*, "(f9.2/, a29/)", advance="no") 1.0, "(Normalized)"

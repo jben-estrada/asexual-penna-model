@@ -10,7 +10,7 @@ module Demographics
   use Parameters, only: MODEL_L, MODEL_AGE_DSTRB_INIT_TIMESTEP
   use Gene, only: GENE_UNHEALTHY
   use ErrorMSG, only: raiseError
-  use CastProcs, only: isFinite, logicalToInt
+  use CastProcs, only: isFinite64, logicalToInt
   use BitSetType, only: &
     BitSet_t,           &
     maskBitset,         &
@@ -18,6 +18,8 @@ module Demographics
     bitSetHashKind,     &
     extractBitSetData,  &
     operator(==)
+  
+  use, intrinsic :: iso_fortran_env, only: real64
   implicit none
   private
   
@@ -255,8 +257,8 @@ contains
   !>  Calculate the unnormalized Shannon entropy
   ! -------------------------------------------------------------------------- !
   function getShannonEntropy() result(entropy)
+    real(kind=real64) :: entropy, probability
     integer :: i, genomeIdx, genomeCount
-    real :: entropy, probability
 
     ! Initialize the Shannon diversity index
     entropy = 0.0
@@ -268,7 +270,7 @@ contains
 
       if (genomeCount == 0) cycle
 
-      probability = real(genomeCount) / real(totalGenomeCount)
+      probability = real(genomeCount) / real(totalGenomeCount, real64)
       entropy = entropy - probability * log(probability)
     end do
   end function getShannonEntropy
@@ -280,12 +282,12 @@ contains
   !!  a generalization of different entropies including Shannon entropy.
   ! -------------------------------------------------------------------------- !
   function getRenyiEntropy(alpha) result(entropy)
-    real, intent(in) :: alpha
+    real(kind=real64), intent(in) :: alpha
     
-    real    :: entropy, probabilitySum, probability
+    real(kind=real64) :: entropy, probabilitySum, probability
     integer :: i, genomeIdx, genomeCount
 
-    real, parameter :: zeroCmpEpsilon = 1e-6
+    real(kind=real64), parameter :: zeroCmpEpsilon = 1e-6
   
     ! Initialize output
     entropy = 0.0
@@ -303,7 +305,7 @@ contains
 
       if (genomeCount == 0) cycle
 
-      probability = genomeCount / real(totalGenomeCount)
+      probability = genomeCount / real(totalGenomeCount, real64)
       probabilitySum = probabilitySum + (probability ** alpha)
     end do
 
@@ -320,8 +322,8 @@ contains
   !!  normalized Shannon entropy which is also the default behavior.
   ! -------------------------------------------------------------------------- !
   function getDiversityIdx(alpha) result(diversityIdx)
-    real, intent(in), optional :: alpha
-    real :: diversityIdx
+    real(kind=real64), intent(in), optional :: alpha
+    real(kind=real64) :: diversityIdx
     
     ! If the population goes extinct, we set the diversity index to 0
     if (totalGenomeCount == 0) then
@@ -330,7 +332,7 @@ contains
     end if
 
     if (present(alpha)) then
-      if (isFinite(alpha)) then
+      if (isFinite64(alpha)) then
         diversityIdx = getRenyiEntropy(alpha)
         return
       end if
@@ -338,12 +340,12 @@ contains
 
     ! Get the *Normalized* Shannon entropy
     if (totalGenomeCount > 1) then
-      diversityIdx = getShannonEntropy() / log(real(totalGenomeCount))
+      diversityIdx = getShannonEntropy() / log(real(totalGenomeCount, real64))
     else
       ! Since we get a 0/0 case when totalGenomeCount = 0, we just set it to 0
       ! to be in line with the behavior for the unnormalized Shannon entropy
       ! (also 0.0 at totalGenomeCount = 0)
-      diversityIdx = 0.0
+      diversityIdx = 0.0_real64
     end if
   end function getDiversityIdx
 

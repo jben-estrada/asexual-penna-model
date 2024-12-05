@@ -21,9 +21,13 @@ module DataWriter
     REC_FLAG_PENNA,      &
     REC_FLAG_PROG,       &
     REC_FLAG_ORDER
+  use CastProcs, only: &
+    castCharToInt,     &
+    castIntToChar,     &
+    castReal64ToChar,  &
+    isFinite64
   use ErrorMSG, only: raiseError
   use WriterType, only: Writer_t, init_Writer, writeIK, writeRK
-  use CastProcs, only: castCharToInt, castIntToChar, castRealToChar, isFinite
   implicit none
   private
 
@@ -267,8 +271,8 @@ contains
       divIdx: block
         character(len=:), allocatable :: entOrderStr
 
-        if (isFinite(MODEL_ENTROPY_ORDER)) then
-          entOrderStr = castRealToChar(MODEL_ENTROPY_ORDER)
+        if (isFinite64(MODEL_ENTROPY_ORDER)) then
+          entOrderStr = castReal64ToChar(MODEL_ENTROPY_ORDER)
         else
           entOrderStr = "1.0 (Normalized)"
         end if

@@ -9,6 +9,7 @@ module CastProcs
   !!  to another.
   ! -------------------------------------------------------------------------- !
   use ErrorMSG, only: raiseError
+  use, intrinsic :: iso_fortran_env, only: real64, real32
   use, intrinsic :: ieee_arithmetic
   implicit none
   private
@@ -23,10 +24,13 @@ module CastProcs
   public :: castCharToInt
   public :: castIntToChar
   public :: castIntPtrToChar
-  public :: castRealToChar
-  public :: castCharToReal
+  public :: castReal32ToChar
+  public :: castReal64ToChar
+  public :: castCharToReal32
+  public :: castCharToReal64
   public :: logicalToInt
-  public :: isFinite
+  public :: isFinite32
+  public :: isFinite64
 contains
 
 
@@ -130,9 +134,9 @@ contains
 
   ! -------------------------------------------------------------------------- !
   ! FUNCTION: castCharToReal
-  !>  Cast the character `char` into a real number of default kind.
+  !>  Cast the character `char` into a real32.
   ! -------------------------------------------------------------------------- !
-  real function castCharToReal(char, castStat)
+  real(kind=real32) function castCharToReal32(char, castStat)
     character(len=*),  intent(in) :: char
       !! Character input to be casted to real.
     integer, optional, intent(out) :: castStat
@@ -142,7 +146,7 @@ contains
     ! Initialize status.
     status = 0
 
-    read(char, *, iostat=status) castCharToReal
+    read(char, *, iostat=status) castCharToReal32
 
     ! Let other routines to handle casting errors.
     if (present(castStat)) then
@@ -152,15 +156,42 @@ contains
       if (status /= 0) &
           call raiseError("'" // trim(char) // "' is not numeric.")
     end if
-  end function castCharToReal
+  end function castCharToReal32
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: castRealToChar
-  !>  Cast the real number `realNum` into a 64 long character.
+  ! FUNCTION: castCharToReal64
+  !>  Cast the character `char` into real64.
   ! -------------------------------------------------------------------------- !
-  function castRealToChar(realNum, castStat) result(charReal)
-    real,              intent(in) :: realNum
+  real(kind=real64) function castCharToReal64(char, castStat)
+    character(len=*),  intent(in) :: char
+      !! Character input to be casted to real.
+    integer, optional, intent(out) :: castStat
+      !! Casting status.
+    
+    integer :: status
+    ! Initialize status.
+    status = 0
+
+    read(char, *, iostat=status) castCharToReal64
+
+    ! Let other routines to handle casting errors.
+    if (present(castStat)) then
+      castStat = status
+    else
+      ! By default, stop the program if casting failed.
+      if (status /= 0) &
+          call raiseError("'" // trim(char) // "' is not numeric.")
+    end if
+  end function castCharToReal64
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: castReal32ToChar
+  !>  Cast the real32 number `realNum` into a 64 long character.
+  ! -------------------------------------------------------------------------- !
+  function castReal32ToChar(realNum, castStat) result(charReal)
+    real(kind=real32), intent(in) :: realNum
       !! Real number to cast to character.
     integer, optional, intent(out) :: castStat
 
@@ -187,7 +218,42 @@ contains
       ! By default, stop the program if casting failed.
       if (status /= 0) call raiseError("Casting real to char failed.")
     end if
-  end function castRealToChar
+  end function castReal32ToChar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: castReal64ToChar
+  !>  Cast the real64 number `realNum` into a 64 long character.
+  ! -------------------------------------------------------------------------- !
+  function castReal64ToChar(realNum, castStat) result(charReal)
+    real(kind=real64), intent(in) :: realNum
+      !! Real number to cast to character.
+    integer, optional, intent(out) :: castStat
+
+    character(len=:), allocatable :: charReal
+    character(len=MAX_LEN) :: rawCharReal
+    
+    integer :: status
+
+    ! Initialize status.
+    status = 0
+
+    ! Initialize output.
+    allocate(character(len=0) :: charReal)
+
+    write(rawCharReal, DEF_REAL_FORMAT, iostat=status) realNum
+    
+    ! Trim whitespaces and adjust character to the left.
+    if (status == 0)  charReal = trim(adjustl(rawCharReal))
+
+    ! Let other routines to handle casting errors.
+    if (present(castStat)) then
+      castStat = status
+    else
+      ! By default, stop the program if casting failed.
+      if (status /= 0) call raiseError("Casting real to char failed.")
+    end if
+  end function castReal64ToChar
 
 
   ! -------------------------------------------------------------------------- !
@@ -206,18 +272,35 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isFinite
-  !>  Determine if the input real value is finite, i.e. not NaN 
+  ! FUNCTION: isFinite32
+  !>  Determine if the input real32 value is finite, i.e. not NaN 
   !!  (signaling and quiet) or infinity. Note that this is a wrapper for
   !!  several procedures from IEEE_ARITHMETIC intrinsic module
   ! -------------------------------------------------------------------------- !
-  pure logical function isFinite(x)
-    real, intent(in) :: x
-    isFinite = ( &
+  pure logical function isFinite32(x)
+    real(kind=real32), intent(in) :: x
+    isFinite32 = ( &
       ieee_class(x) /= ieee_quiet_nan     .and. &
       ieee_class(x) /= ieee_signaling_nan .and. &
       ieee_class(x) /= ieee_positive_inf  .and. &
       ieee_class(x) /= ieee_negative_inf        &
     )
-  end function isFinite
+  end function isFinite32
+
+
+  ! -------------------------------------------------------------------------- !
+  ! FUNCTION: isFinite64
+  !>  Determine if the input real32 value is finite, i.e. not NaN 
+  !!  (signaling and quiet) or infinity. Note that this is a wrapper for
+  !!  several procedures from IEEE_ARITHMETIC intrinsic module
+  ! -------------------------------------------------------------------------- !
+  pure logical function isFinite64(x)
+    real(kind=real64), intent(in) :: x
+    isFinite64 = ( &
+      ieee_class(x) /= ieee_quiet_nan     .and. &
+      ieee_class(x) /= ieee_signaling_nan .and. &
+      ieee_class(x) /= ieee_positive_inf  .and. &
+      ieee_class(x) /= ieee_negative_inf        &
+    )
+  end function isFinite64
 end module CastProcs

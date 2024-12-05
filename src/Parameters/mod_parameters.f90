@@ -54,10 +54,11 @@ module Parameters
 
   use CastProcs, only: &
     castCharToInt,     &
-    castCharToReal,    &
+    castCharToReal32,  &
+    castCharToReal64,  &
     castIntToChar,     &
-    castRealToChar,    &
-    isFinite
+    castReal64ToChar,  &
+    isFinite64
   
   use ASCIIProcedure, only: toLower
   use ParamFileParserType, only: ParamFileParser_t, init_ParamFileParser
