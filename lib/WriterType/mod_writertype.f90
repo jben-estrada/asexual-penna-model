@@ -45,8 +45,6 @@ module WriterType
       !! Write format for characters.
 
     ! --- Attributes for binary mode --- !
-    integer :: indivBitSize
-      !! Mold value for the record length
     integer :: indivRecl
       !! Record length of each data points.
     integer :: colLen
