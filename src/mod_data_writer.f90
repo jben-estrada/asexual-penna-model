@@ -27,6 +27,7 @@ module DataWriter
     castReal64ToChar,  &
     isFinite64
   use ErrorMSG, only: raiseError
+  use ASCIIProcedure, only: isDigit
   use WriterType, only: Writer_t, init_Writer, writeIK, writeRK
   implicit none
   private
@@ -75,19 +76,6 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
-  ! FUNCTION: isNumber
-  !>  Returns TRUE if the input character is a number, otherwise FALSE.
-  ! -------------------------------------------------------------------------- !
-  pure logical function isNumber(c)
-    character, intent(in) :: c
-    integer :: cint
-
-    cint = iachar(c)
-    isNumber = (48 <= cint .and. cint <= 57)
-  end function isNumber
-
-
-  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: evalOutFileNameFmt
   !>  Parse the output file name and substitute in the specified data.
   ! -------------------------------------------------------------------------- !
@@ -123,8 +111,8 @@ contains
       fmtPos = i
       c = srcStr(i:i)
 
-      if (isNumber(c)) then
-        do while( isNumber(srcStr(i:i)) )
+      if (isDigit(c)) then
+        do while( isDigit(srcStr(i:i)) )
           i = i + 1
         end do
         parsedInt = castCharToInt( srcStr(fmtPos:i-1) )
