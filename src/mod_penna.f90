@@ -37,6 +37,7 @@ module Penna
     REC_GENE_DSTRB,                &
     REC_TIME,                      &
     REC_GNM_COUNT,                 &
+    NORMAL_PRINT,                  &
     SILENT_PRINT,                  &
     setParams,                     &
     incrementTimeDependentParam,   &
@@ -79,9 +80,9 @@ module Penna
     timeRK => real64
 
   use CastProcs, only: castIntToChar
-  use ProgressBarType, only: ProgressBar_t, init_ProgressBar
   use RandNumProcs, only: assignRNGParams, setSeed
   use ErrorMSG, only: raiseError, raiseWarning
+  use ProgressBarType, only: ProgressBar_t, init_ProgressBar, cursorToLeft
   implicit none
   private
 
@@ -438,16 +439,17 @@ contains
 
     ! Print timing statistics.
     if (printProgress) then
+      ! Remove the progress bar.
+      if (PROG_PRINT_STATE == NORMAL_PRINT) then
+        call cursorToLeft()
+      end if
+
       ! Print elapsed time.
       if (PROG_SAMPLE_SIZE > 1) then
         print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
+        print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
       else
         print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
-      end if
-
-      ! Print the standard deviation.
-      if (PROG_SAMPLE_SIZE > 1) then
-        print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
       end if
     end if
 

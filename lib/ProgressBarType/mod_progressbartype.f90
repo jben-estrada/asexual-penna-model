@@ -30,6 +30,7 @@ module ProgressBarType
 
   public :: ProgressBar_t
   public :: init_ProgressBar
+  public :: cursorToLeft
 contains
 
 
@@ -132,4 +133,13 @@ contains
 
     deallocate(tickArr)
   end subroutine progressbar_showProgBar
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: cursorToLeft
+  !>  Move the cursor to the leftmost column.
+  ! -------------------------------------------------------------------------- !
+  subroutine cursorToLeft()
+    write(*, "(a)", advance="no") achar(27) // "[1A"
+  end subroutine cursorToLeft
 end module ProgressBarType
