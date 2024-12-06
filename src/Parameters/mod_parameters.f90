@@ -83,7 +83,9 @@ module Parameters
   character(len=*), parameter :: VOID_CHAR = achar(0)
     !! Placeholder character value.
 
-  ! Print states.
+  ! PROGRAM PARAMETERS
+  ! -------------------------------------------------------------------------- !
+  ! Terminal output states.
   integer, parameter :: NORMAL_PRINT = 0
     !! Flag corresponding to default printing of model parameters.
   integer, parameter :: VERBOSE_PRINT = 1
@@ -93,9 +95,6 @@ module Parameters
   integer, parameter :: VERSION_PRINT = 3
     !! Flag corresponding to printing of the program version.
 
-
-  ! PROGRAM PARAMETERS
-  ! -------------------------------------------------------------------------- !
   character(len=*), parameter :: PROG_NAME = &
       "Asexual Penna model simulation"
     !! Name of the program
@@ -118,13 +117,13 @@ module Parameters
   integer, target, protected :: PROG_RNG_SEED = VOID_INT
     !! RNG seed.
     !! NOTE: Default value is obtained from config files.
-  logical, target, protected :: PROG_IN_CSV_FMT = .false.
-    !! Output files in CSV format.
   character(len=MAX_LEN), target, protected :: PROG_REC_FLAG
     !! List of record flags.
     !! NOTE: Default value is obtained from config files.
   character(len=MAX_LEN), target, protected :: PROG_OUT_FILE_NAME = "./out.csv"
     !! Name of the file to which output of data to be recorded is to be written.
+  character(len=MAX_LEN), target, protected :: PROG_OUT_FMT
+    !! Format of the output file.
 
   ! --- Defined values for program parameters --- !
   ! PROG_RNG (RNG Choice)
@@ -158,6 +157,19 @@ module Parameters
   character(len=*), parameter :: REC_FLAG_ORDER = &
       REC_FLAG_PENNA // REC_FLAG_PROG
     !! Record flags and their respective order as position in the string.
+  
+  ! PROG_OUT_FMT
+  character(len=*), parameter :: OUT_FMT_READABLE = "read  "
+    !! Human readable format (default).
+  character(len=*), parameter :: OUT_FMT_CSV      = "csv   "
+    !! CSV format
+  character(len=*), parameter :: OUT_FMT_BINARY   = "binary"
+    !! Binary format
+  character(len=*), parameter :: OUT_FMT_CHOICES(*) = [ &
+      OUT_FMT_READABLE, &
+      OUT_FMT_CSV,      &
+      OUT_FMT_BINARY    &
+    ]
 
 
   ! MODEL PARAMETERS
@@ -294,8 +306,8 @@ module Parameters
   public :: PROG_RNG
   public :: PROG_RNG_SEED
   public :: PROG_REC_FLAG
-  public :: PROG_IN_CSV_FMT
   public :: PROG_OUT_FILE_NAME
+  public :: PROG_OUT_FMT
   
   ! Values for `PROG_PRINT_STATE`.
   public :: NORMAL_PRINT
@@ -337,6 +349,12 @@ module Parameters
   public :: REC_FLAG_PENNA
   public :: REC_FLAG_PROG
   public :: REC_FLAG_ORDER
+
+  ! Output file format
+  public :: OUT_FMT_READABLE
+  public :: OUT_FMT_CSV
+  public :: OUT_FMT_BINARY
+  public :: OUT_FMT_CHOICES
 
   ! RNG choices
   public :: RNG_ALL_CHOICES

@@ -23,12 +23,12 @@ module Penna
     MODEL_AGE_DSTRB_INIT_TIMESTEP, &
     MODEL_TIME_DEPENDENT_PARAM_PTR,&
     PROG_REC_FLAG,                 &
-    PROG_IN_CSV_FMT,               &
     PROG_SAMPLE_SIZE,              &
     PROG_PRINT_STATE,              &
     PROG_RNG,                      &
     PROG_RNG_SEED,                 &
     PROG_OUT_FILE_NAME,            &
+    PROG_OUT_FMT,                  &
     REC_NULL,                      &
     REC_POP,                       &
     REC_AGE_DSTRB,                 &
@@ -362,7 +362,7 @@ contains
     integer :: i
 
     ! Print separator for pretty printing.
-    character, parameter :: PRINT_SEPARATOR(*) = [("=", i = 1, 29)]
+    character(len=*), parameter :: PRINT_SEPARATOR = repeat("=", 29)
 
     ! Shorthand form
     printProgress = PROG_PRINT_STATE /= SILENT_PRINT
@@ -377,7 +377,7 @@ contains
     call initDataWriter(       &
           trim(PROG_REC_FLAG), &
           PROG_OUT_FILE_NAME,  &
-          PROG_IN_CSV_FMT,     &
+          PROG_OUT_FMT,        &
           DATA_WRITER_PROG,    &
           1                    &   ! Only one set of data for run analyses
         )
@@ -394,7 +394,7 @@ contains
       call initDataWriter(     &
           trim(PROG_REC_FLAG), &
           PROG_OUT_FILE_NAME,  &
-          PROG_IN_CSV_FMT,     &
+          PROG_OUT_FMT,        &
           DATA_WRITER_PENNA,   &
           i                    &
         )
@@ -468,6 +468,6 @@ contains
     ! Close the other data writers.
     call closeDataWriter(DATA_WRITER_PROG)
 
-    if (printProgress) print "(*(a))", PRINT_SEPARATOR
+    if (printProgress) print "(a)", PRINT_SEPARATOR
   end subroutine run
 end module Penna

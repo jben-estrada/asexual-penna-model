@@ -30,7 +30,8 @@ submodule (Parameters) ReadExtFile
      "v_weight      ", &
      "genome_mask   ", &
      "t_dep_param   ", &
-     "t_dep_param_dt"]
+     "t_dep_param_dt", &
+     "out_fmt       "]
     !! Parameter keys in the parameter listing file.
 contains
 
@@ -46,6 +47,8 @@ contains
     character(len=:), allocatable :: tempRecFlag
     ! Temporary characters: `PROG_REC_FLAG`
     character(len=:), allocatable :: tempTMDPParam
+    ! Temporary characters: `PROG_OUT_FMT`
+    character(len=:), allocatable :: tempOutFmtParam
     integer, allocatable :: tempGenomeMask(:)
 
     ! Array of getter statuses.
@@ -92,21 +95,24 @@ contains
     call paramReader % getValue(PARAM_KEYS(19), tempTMDPParam,  getStats(19))
     call paramReader % getValue(PARAM_KEYS(20), MODEL_TMDP_PARAM_DELTA_T,   &
       getStats(20))
+    call paramReader % getValue(PARAM_KEYS(21), tempOutFmtParam, getStats(21))
 
     ! Transfer the obtained default record flag into the program.
-    ! --- Record flag  (Case-insensitive)
-    PROG_REC_FLAG = toLower(tempRecFlag)
     ! --- Genome mask
     MODEL_GENOME_MASK(:) = (tempGenomeMask(:) == GENOME_MASKING_INT)
+    ! --- Record flag  (Case-insensitive)
+    PROG_REC_FLAG = toLower(trim(tempRecFlag))
     ! --- Time-dependent Penna model parameter (Case-insensitive)
-    MODEL_TIME_DEPENDENT_PARAM = toLower(tempTMDPParam)
+    MODEL_TIME_DEPENDENT_PARAM = toLower(trim(tempTMDPParam))
+    ! --- Time-dependent Penna model parameter (Case-insensitive)
+    PROG_OUT_FMT = toLower(trim(tempOutFmtParam))
     
     ! ------------------------------------------------------------------------ !
     ! Check if all the getters succeeded in obtaining the parameters.
     call checkParamExistence(getStats)
 
     ! Free all local allocatable variables.
-    deallocate(tempRecFlag, tempTMDPParam, tempGenomeMask)
+    deallocate(tempRecFlag, tempTMDPParam, tempGenomeMask, tempOutFmtParam)
   end subroutine readDefaultParamVal
 
 

@@ -67,7 +67,7 @@ submodule (Parameters) CmdArgAssignProcs
   integer, parameter :: IDX_SHOW_PARAM_F       = 20
   integer, parameter :: IDX_NO_PARAM_F         = 21
   integer, parameter :: IDX_SHOW_VERSION_F     = 22
-  integer, parameter :: IDX_CSV_FORMAT_F       = 23
+  integer, parameter :: IDX_OUT_FMT_KV         = 23
 
   ! Commands whose value must be positive integers.
   integer, parameter :: CMD_POSITIVE_INT(*) = [ &
@@ -86,7 +86,8 @@ submodule (Parameters) CmdArgAssignProcs
 
   integer, parameter :: CMD_CASE_INSENSITIVE(*) = [ &
     IDX_RECORD_DATA_KV,  &
-    IDX_TMDP_PARAM_KV    &
+    IDX_TMDP_PARAM_KV,   &
+    IDX_OUT_FMT_KV       &
   ]
 
   ! Command group names
@@ -197,9 +198,9 @@ contains
         "V", "version", CMD_GROUP_MISC, FLAG_S, FLAG_L,  &
         "Show the version of this program"               &
       )
-    cmdArgArr(IDX_CSV_FORMAT_F) = CmdArgRecord_t(          &
-        "c", "csv-format", CMD_GROUP_REC, FLAG_S, FLAG_L,  &
-        "Write the output files in CSV format"             &
+    cmdArgArr(IDX_OUT_FMT_KV) = CmdArgRecord_t(              &
+        "F", "out-format", CMD_GROUP_REC, KV_S, KV_L,        &
+        "Output file format. See 'NOTES' below for choices." &
       )
 
     ! Assign pointers.
@@ -226,6 +227,7 @@ contains
     cmdArgArr(IDX_RECORD_DATA_KV)     % charValue_ptr => PROG_REC_FLAG
     cmdArgArr(IDX_PARAM_FILE_PATH_KV) % charValue_ptr => FILE_PARAM_LIST
     cmdArgArr(IDX_OUT_FILE_PATH_KV)   % charValue_ptr => PROG_OUT_FILE_NAME
+    cmdArgArr(IDX_OUT_FMT_KV)         % charValue_ptr => PROG_OUT_FMT
 
     ! Set all initialized commands in this routine.
     do i = lbound(cmdArgArr, 1), ubound(cmdArgArr, 1)
@@ -441,17 +443,6 @@ contains
             PROG_PRINT_STATE = VERSION_PRINT
           end if
 
-        ! === CSV Format flag ================================================ !
-        else if (                                    &
-              currCmdArg%cmdName ==                  &
-              cmdArgArr(IDX_CSV_FORMAT_F)%cmdName  &
-            ) then
-          PROG_IN_CSV_FMT = (                          &
-              pennaCmdArgs%isFlagToggled(              &
-                cmdArgArr(IDX_CSV_FORMAT_F)%cmdName  &
-              )                                        &
-          )
-
         else
           call raiseError( &
               "Unknown flag command '" //  currCmdArg%cmdName // "'." &
@@ -553,6 +544,7 @@ contains
 
     logical :: printNoParam, printAllParam
     logical :: cmpRNGchoices(size(RNG_ALL_CHOICES))
+    logical :: isValidFileFmt
     integer :: i
 
     printNoParam = (                           &
@@ -615,6 +607,19 @@ contains
       call raiseError(  &
           "Invalid RNG choice (" // castIntToChar(PROG_RNG) // "). " // &
           "See the HELP message for the valid RNGs."                    &
+      )
+    end if
+
+    ! Check for valid output file choices
+    isValidFileFmt = .false.
+    do i = lbound(OUT_FMT_CHOICES, 1), ubound(OUT_FMT_CHOICES, 1)
+      isValidFileFmt = (trim(OUT_FMT_CHOICES(i)) == trim(PROG_OUT_FMT))
+      if (isValidFileFmt) exit
+    end do
+    if (.not. isValidFileFmt) then
+      call raiseError(  &
+        "Invalid output format ('" // trim(PROG_OUT_FMT) // "'). " // &
+        "See the HELP message for valid output file formats."   &
       )
     end if
   end subroutine checkValidParams
@@ -821,9 +826,9 @@ contains
 
       ! Program/Data recording parameters.
       print "(a)", MINOR_SEPARATOR
-      write(*, "(a20, i9, /a20, a)", advance="no") &
-          "Sample size", PROG_SAMPLE_SIZE,         &
-          "Record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
+      write(*, "(a20, i9)") "Sample size", PROG_SAMPLE_SIZE
+      write(*, "(a20, a)", advance="no") &
+          "Data record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
       do k = 1, len(REC_FLAG_ORDER)
         if (scan(PROG_REC_FLAG, REC_FLAG_ORDER(k:k)) > 0) then
           write(*, "(a)", advance="no") REC_FLAG_ORDER(k:k)
@@ -831,7 +836,7 @@ contains
           write(*, "(a)", advance="no") "-"
         end if
       end do
-      write(*, "(a)")
+      write(*, "(/a20, a9)") "Data format", trim(PROG_OUT_FMT)
       
       write(*, "(a20)", advance="no") "Renyi entropy order"
       if (isFinite64(MODEL_ENTROPY_ORDER)) then
