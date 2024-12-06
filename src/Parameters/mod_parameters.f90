@@ -67,6 +67,7 @@ module Parameters
   use, intrinsic :: iso_fortran_env, only: &
     compiler_version, &
     output_unit,      &
+    real32,           &
     real64
   implicit none
   private

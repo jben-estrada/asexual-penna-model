@@ -11,7 +11,6 @@ submodule (Parameters) CmdArgAssignProcs
   ! -------------------------------------------------------------------------- !
   implicit none
 
-
   type :: CmdArgRecord_t
     !! A handy derived type for collecting command option attributes.
     character(len=:), allocatable :: cmdName
@@ -32,7 +31,7 @@ submodule (Parameters) CmdArgAssignProcs
       !! Pointer to the character parameter `cmdName` modifies.
     integer,                pointer :: intValue_ptr => null()
       !! Pointer to the integer parameter `cmdName` modifies.
-    real,                   pointer :: real32Value_ptr => null()
+    real(kind=real32),      pointer :: real32Value_ptr => null()
       !! Pointer to the real parameter of default kind `cmdName` modifies
     real(kind=real64),      pointer :: real64Value_ptr => null()
       !! Pointer to the real64 parameter `cmdName` modifies
