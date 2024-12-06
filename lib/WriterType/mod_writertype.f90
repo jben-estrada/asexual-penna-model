@@ -10,7 +10,8 @@ module WriterType
   ! -------------------------------------------------------------------------- !
   use, intrinsic :: iso_fortran_env, only: &
     writeIK =>  int64,  &
-    writeRK =>  real64
+    writeRK =>  real64, &
+    int32
   use ErrorMSG,  only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
   implicit none
@@ -19,6 +20,7 @@ module WriterType
   integer, parameter :: UNIT_NULL = -1
     !! Placeholder value for the I/O unit.
 
+  ! Write modes
   integer, parameter :: WRITEMODE_READABLE = 0
   integer, parameter :: WRITEMODE_BINARY   = 1
 
@@ -43,12 +45,15 @@ module WriterType
       !! Write format for characters.
 
     ! --- Attributes for binary mode --- !
-    integer :: dataLen
-      !! Length of each data points written to file. This is just record size.
+    integer :: indivRecl
+      !! Record length of each data points.
     integer :: colLen
-      !! Number of datapoints the writer object expects to receive per call
-      !! of the write subroutines.
-    contains
+      !! Number of data points per row.
+    integer :: recl
+      !! Actual record length, i.e. recl * colLen.
+    integer :: currRec = -1
+      !! The current record the data to be written to.
+  contains
     private
     procedure, public :: openFile => writer_openFile
       !! Open file for writing.
@@ -68,11 +73,6 @@ module WriterType
       writer_write_realArr,       &
       writer_write_charArr
       !! Write data of either rank-0 or rank-1 to opened file.
-    generic,   public :: writeBin => &
-      writer_writebin_int,           &
-      writer_writebin_real,          &
-      writer_writebin_char
-      !! Write data in binary mode.
 
     final :: destructor
 
@@ -82,18 +82,15 @@ module WriterType
     procedure :: writer_write_intArr
     procedure :: writer_write_realArr
     procedure :: writer_write_charArr
-    procedure :: writer_writebin_int
-    procedure :: writer_writebin_real
-    procedure :: writer_writebin_char
   end type Writer_t
 
   interface init_Writer
-    module procedure :: init_Writer_readable
-    module procedure :: init_Writer_binary
+    procedure :: init_Writer_readable
+    procedure :: init_Writer_binary
   end interface init_Writer
 
   ! Write format bases.
-  character(len=*), parameter :: FMT_INT_LEN = "i15"
+  character(len=*), parameter :: FMT_INT_LEN  = "i15"
   character(len=*), parameter :: FMT_REAL_LEN = "f15.6"
   character(len=*), parameter :: FMT_CHAR_LEN = "a"
 
@@ -110,7 +107,7 @@ contains
   ! SUBROUTINE: init_Writer_readable
   !>  Constructor for `Writer_t` type. (Readable mode)
   ! -------------------------------------------------------------------------- !
-  module subroutine init_Writer_readable(new, filename, delim)
+  subroutine init_Writer_readable(new, filename, delim)
     type(Writer_t),    intent(inout) :: new
       !! new `Writer_t` object to be initialized.
     character(len=*),  intent(in)    :: filename
@@ -118,12 +115,12 @@ contains
     character(len=*),  intent(in)    :: delim
       !! Delimiter between data points in a row.
 
-    new % filename  = trim(filename)
-    new % writeMode = WRITEMODE_READABLE
+    new%filename  = trim(filename)
+    new%writeMode = WRITEMODE_READABLE
 
-    new % fmtInt  = "(*(" // FMT_INT_LEN  // ",:,'" // delim // "'))"
-    new % fmtReal = "(*(" // FMT_REAL_LEN // ",:,'" // delim // "'))"
-    new % fmtChar = "(*(" // FMT_CHAR_LEN // ",:,'" // delim // "'))"
+    new%fmtInt  = "(*(" // FMT_INT_LEN  // ",:,'" // delim // "'))"
+    new%fmtReal = "(*(" // FMT_REAL_LEN // ",:,'" // delim // "'))"
+    new%fmtChar = "(*(" // FMT_CHAR_LEN // ",:,'" // delim // "'))"
   end subroutine init_Writer_readable
 
 
@@ -131,50 +128,110 @@ contains
   ! SUBROUTINE: init_Writer_readable
   !>  Constructor for `Writer_t` type. (Binary mode)
   ! -------------------------------------------------------------------------- !
-  module  subroutine init_Writer_binary(new, filename, dataLen, colLen)
+  subroutine init_Writer_binary(new, filename, indivRecl, colLen)
     type(Writer_t),    intent(inout) :: new
+      !! new `Writer_t` object to be initialized.
     character(len=*),  intent(in)    :: filename
-    integer,           intent(in)    :: dataLen
+      !! Name of the file to which data is to written on.
+    integer,           intent(in)    :: indivRecl
+      !! Record length. The size of each data points in the file.
+      !! NOTE: This could vary with different compilers and compiler options.
+      !!       e.g. Intel Fortran may use 1 unit : 4 bytes, while gfortran may
+      !!            use 1 unit : 1 byte.
     integer,           intent(in)    :: colLen
+      !! Number of data points per row. This has no bearing on the actual size
+      !! of the data points in the file. This is purely for post-processing.
 
-    new % filename  = trim(filename)
-    new % writeMode = WRITEMODE_BINARY
-    new % dataLen   = dataLen
-    new % colLen    = colLen
+    if (indivRecl == 0) then
+      call raiseError("Invalid record length: " // castIntToChar(indivRecl))
+    end if
+    if (colLen == 0) then
+      call raiseError("Invalid column number: " // castIntToChar(colLen))
+    end if
+
+    new%filename  = trim(filename)
+    new%writeMode = WRITEMODE_BINARY
+    new%indivRecl = indivRecl
+    new%colLen    = colLen
+    new%recl      = indivRecl * colLen
   end subroutine init_Writer_binary
+
+
+  ! -------------------------------------------------------------------------- !
+  ! SUBROUTINE: raiseOpenFileError
+  !>  Raise an error if the file cannot be opened for writing.
+  ! -------------------------------------------------------------------------- !
+  subroutine raiseOpenFileError(filename, iomsg)
+    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: iomsg
+    call raiseError(  &
+          "'" // filename // "' cannot be opened for writing. "  // iomsg  &
+        )
+  end subroutine raiseOpenFileError
 
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_openFile
   !>  Open the file the `Writer_t` object `self` is initialized with.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_openFile(self)
-    class(Writer_t), intent(inout) :: self
+  subroutine writer_openFile(self, addHeaderInfo)
+    class(Writer_t),   intent(inout) :: self
       !! `Writer_t` object to be modified.
+    integer, optional, intent(in)    :: addHeaderInfo(:)
+
+    character(len=256) :: openMsg
     integer :: openStat
+    integer :: int32recl, headerLen
+    integer :: i
 
-    if (self % writeMode == WRITEMODE_READABLE) then
-      open(newunit=self % unit, file=self % filename, access="sequential", &
-           action="write", status="replace", iostat=openStat)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      open(newunit=self%unit, file=self%filename, access="sequential", &
+           action="write", status="replace", iostat=openStat, iomsg=openMsg)
+
+      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
     else
-      open(newunit=self % unit, file=self % filename, access="direct",  &
-           recl=self % datalen, action="write", status="replace",       &
-           iostat=openStat)
-    end if
 
-    if (openStat /= 0) then
-      call raiseError(  &
-        "'" // self % filename // "' cannot be opened for writing." &
+      ! Get the record length of int32
+      inquire(iolength=int32recl) 1_int32
+
+      ! Append relevant information (1 standard record length each) to the file.
+      open( &
+        newunit=self%unit, file=self%filename, access="direct", &
+        recl=int32recl, action="write", status="replace",       &
+        iostat=openStat, iomsg=openMsg &
       )
-    end if
+      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
 
-    if (self % writeMode == WRITEMODE_BINARY) then
       ! Write the header information to the file.
-      write(self % unit, rec=self % dataLen) self % dataLen
-      write(self % unit, rec=self % dataLen) self % colLen
+      write(self%unit, rec=1) int(self%indivRecl, kind=int32)
+      write(self%unit, rec=2) int(self%colLen, kind=int32)
+      self%currRec = 3
+
+      ! Append additional header information.
+      if (present(addHeaderInfo)) then
+        do i = lbound(addHeaderInfo, 1), ubound(addHeaderInfo, 1)
+          write(self%unit, rec=self%currRec) int(addHeaderInfo(i), int32)
+          self%currRec = self%currRec + 1
+        end do
+      end if
+    
+      write(self%unit, rec=self%currRec) 0_int32  ! Padding
+      headerLen = self%currRec * int32recl
+
+      close(self%unit)
+
+      self%currRec = ceiling(real(headerLen / self%recl)) + 1
+
+      ! Finally open the file for writing.
+      open(  &
+        newunit=self%unit, file=self%filename, access="direct", &
+        recl=self%recl, action="write", status="old",           &
+        iostat=openStat, iomsg=openMsg                          &
+      )
+      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
     end if
 
-    self % fileOpen = .true.
+    self%fileOpen = .true.
   end subroutine writer_openFile
 
 
@@ -185,7 +242,7 @@ contains
   ! -------------------------------------------------------------------------- !
   logical function writer_isFileOpen(self)
     class(Writer_t), intent(in) :: self
-    writer_isFileOpen = self % fileOpen
+    writer_isFileOpen = self%fileOpen
   end function writer_isFileOpen
 
 
@@ -193,31 +250,20 @@ contains
   ! SUBROUTINE: raiseWriteError
   !>  Raise an error with message specific for the writer object.
   ! -------------------------------------------------------------------------- !
-  subroutine raiseWriteError(writeObj, writeStat, requiredWriteMode)
+  subroutine raiseWriteError(writeObj, writeStat)
     class(Writer_t), intent(in) :: writeObj
     integer,         intent(in) :: writeStat
-    integer,         intent(in) :: requiredWriteMode
 
     character(len=:), allocatable :: errMsg
     logical :: hasAddError
 
-    errMsg = "Cannot write to '" // writeObj % filename // &
-        "' with IO status " // castIntToChar(writeStat)
+    errMsg = "Cannot write to '" // writeObj%filename // &
+             "' with IO status " // castIntToChar(writeStat)
 
     hasAddError = .false.
 
-    if (.not. writeObj % fileOpen) then
+    if (.not. writeObj%fileOpen) then
       errMsg = errMsg // new_line("") // "File not opened. "
-      hasAddError = .true.
-    end if
-
-    if (writeObj % writeMode /= requiredWriteMode) then
-      errMsg = errMsg // new_line("") // "Attempted to write with wrong mode."
-      if (writeObj % writeMode == WRITEMODE_READABLE) then
-        errMsg = errMsg // "Must call the 'write' subroutine. "
-      else
-        errMsg = errMsg // "Must call the 'writeBin' subroutine. "
-      end if
       hasAddError = .true.
     end if
 
@@ -235,17 +281,21 @@ contains
   !>  Write integer of rank-0 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_intSclr(self, scalarData)
+  subroutine writer_write_intSclr(self, intScalarData)
     class(Writer_t),       intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    integer(kind=writeIK), intent(in)    :: scalarData
+    integer(kind=writeIK), intent(in)    :: intScalarData
       !! Data to be written to file.
     integer :: writeStat
 
-    write(self % unit, self % fmtInt, iostat=writeStat) scalarData
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      write(self%unit, self%fmtInt, iostat=writeStat) intScalarData
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) intScalarData
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_intSclr
 
 
@@ -254,17 +304,21 @@ contains
   !>  Write real of rank-0 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_realSclr(self, scalarData)
+  subroutine writer_write_realSclr(self, realScalarData)
     class(Writer_t),    intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    real(kind=writeRK), intent(in)    :: scalarData
+    real(kind=writeRK), intent(in)    :: realScalarData
       !! Data to be written to file.
     integer :: writeStat
 
-    write(self % unit, self % fmtReal, iostat=writeStat) scalarData
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      write(self%unit, self%fmtReal, iostat=writeStat) realScalarData
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) realScalarData
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_realSclr
 
 
@@ -273,17 +327,21 @@ contains
   !>  Write character of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_charSclr(self, scalarData)
+  subroutine writer_write_charSclr(self, charScalarData)
     class(Writer_t),  intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    character(len=*), intent(in)    :: scalarData
+    character(len=*), intent(in)    :: charScalarData
       !! Data to be written to file.
     integer :: writeStat
 
-    write(self % unit, self % fmtChar, iostat=writeStat) scalarData
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      write(self%unit, self%fmtChar, iostat=writeStat) charScalarData
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) charScalarData
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_charSclr
 
 
@@ -292,17 +350,21 @@ contains
   !>  Write integer of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_intArr(self, arrData)
+  subroutine writer_write_intArr(self, intArrData)
     class(Writer_t),       intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    integer(kind=writeIK), intent(in)    :: arrData(:)
+    integer(kind=writeIK), intent(in)    :: intArrData(:)
       !! Data to be written to file.
     integer :: writeStat
 
-    write(self % unit, self % fmtInt, iostat=writeStat) arrData
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      write(self%unit, self%fmtInt, iostat=writeStat) intArrData
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) intArrData
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_intArr
 
 
@@ -311,82 +373,49 @@ contains
   !>  Write real of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_realArr(self, arrData)
+  subroutine writer_write_realArr(self, realArrData)
     class(Writer_t),    intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    real(kind=writeRK), intent(in)    :: arrData(:)
+    real(kind=writeRK), intent(in)    :: realArrData(:)
       !! Data to be written to file.
     integer :: writeStat
 
-    write(self % unit, self % fmtReal, iostat=writeStat) arrData
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    if (self%writeMode == WRITEMODE_READABLE) then
+      write(self%unit, self%fmtReal, iostat=writeStat) realArrData
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) realArrData
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_realArr
-  
+
 
   ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_write_charArr
   !>  Write character of rank-1 to file associated with the `Writer_t` object
   !!  `self`.
   ! -------------------------------------------------------------------------- !
-  subroutine writer_write_charArr(self, arrData)
+  subroutine writer_write_charArr(self, charArrData)
     class(Writer_t),  intent(inout) :: self
       !! `Writer_t` object to write data on file.
-    character(len=*), intent(in)    :: arrData(:)
+    character(len=*), intent(in)    :: charArrData(:)
       !! Data to be written to file.
     integer :: writeStat, i
 
-    ! Write the array data with an implied loop to satisfy check requirements.
-    write(self % unit, self % fmtChar, iostat=writeStat) &
-        (arrData(i), i = lbound(arrData, 1), ubound(arrData, 1))
-
-    if (writeStat /= 0) then
-      call raiseWriteError(self, writeStat, WRITEMODE_READABLE)
+    
+    if (self%writeMode == WRITEMODE_READABLE) then
+      ! Write the array data with an implied loop to satisfy check requirements.
+      write(self%unit, self%fmtChar, iostat=writeStat) &
+          (charArrData(i), i = lbound(charArrData, 1), ubound(charArrData, 1))
+    else
+      write(self%unit, rec=self%currRec, iostat=writeStat) &
+        (charArrData(i), i = lbound(charArrData, 1), ubound(charArrData, 1))
+      self%currRec = self%currRec + 1
     end if
+
+    if (writeStat /= 0) call raiseWriteError(self, writeStat)
   end subroutine writer_write_charArr
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writer_writebin_int
-  !>  Write an integer to file in binary mode.
-  ! -------------------------------------------------------------------------- !
-  subroutine writer_writebin_int(self, intdata)
-    class(Writer_t),       intent(inout) :: self
-    integer(kind=writeIK), intent(in)    :: intData
-    integer :: writeStat
-
-    write(self % unit, rec=self % dataLen, iostat=writeStat) intData
-    if (writeStat /= 0) call raiseWriteError(self, writeStat, WRITEMODE_BINARY)
-  end subroutine writer_writebin_int
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writer_writebin_real
-  !>  Write a real number to file in binary mode.
-  ! -------------------------------------------------------------------------- !
-  subroutine writer_writebin_real(self, realData)
-    class(Writer_t),    intent(inout) :: self
-    real(kind=writeRK), intent(in)    :: realData
-    integer :: writeStat
-
-    write(self % unit, rec=self % dataLen, iostat=writeStat) realData
-    if (writeStat /= 0) call raiseWriteError(self, writeStat, WRITEMODE_BINARY)
-  end subroutine writer_writebin_real
-
-
-  ! -------------------------------------------------------------------------- !
-  ! SUBROUTINE: writer_writebin_int
-  !>  Write a string to file in binary mode.
-  ! -------------------------------------------------------------------------- !
-  subroutine writer_writebin_char(self, charData)
-    class(Writer_t),  intent(inout) :: self
-    character(len=*), intent(in)    :: charData
-    integer :: writeStat
-
-    write(self % unit, rec=self % dataLen, iostat=writeStat) charData
-    if (writeStat /= 0) call raiseWriteError(self, writeStat, WRITEMODE_BINARY)
-  end subroutine writer_writebin_char
 
 
   ! -------------------------------------------------------------------------- !
@@ -395,7 +424,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure integer function writer_getMode(self)
     class(Writer_t), intent(in) :: self
-    writer_getMode = self % writeMode
+    writer_getMode = self%writeMode
   end function writer_getMode
 
 
@@ -405,7 +434,7 @@ contains
   ! -------------------------------------------------------------------------- !
   pure integer function writer_getUnit(self)
     class(Writer_t), intent(in) :: self
-    writer_getUnit = self % unit
+    writer_getUnit = self%unit
   end function writer_getUnit
 
 
@@ -417,13 +446,13 @@ contains
     class(Writer_t), intent(inout) :: self
       !! `Writer_t` object to be modified.
 
-    if (.not. self % fileOpen) then
+    if (.not. self%fileOpen) then
       call raiseError("Cannot close an unopened file.")
     end if
 
-    close(self % unit)
+    close(self%unit)
 
-    self % fileOpen = .false.
+    self%fileOpen = .false.
   end subroutine writer_closeFile
 
 
@@ -434,6 +463,6 @@ contains
   subroutine destructor(self)
     type(Writer_t), intent(inout) :: self
       !! `Writer_t` object to be freed.
-    if (self % fileOpen) close(self % unit)
+    if (self%fileOpen) close(self%unit)
   end subroutine destructor
 end module WriterType
