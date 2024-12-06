@@ -9,6 +9,7 @@ test/
 bin/penna.out
 bin/penna
 *.csv
+*.bin
 *.mod
 *.smod
 *.code-workspace
