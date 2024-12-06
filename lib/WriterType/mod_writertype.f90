@@ -11,7 +11,7 @@ module WriterType
   use, intrinsic :: iso_fortran_env, only: &
     writeIK =>  int64,  &
     writeRK =>  real64, &
-    int32
+    int32, int64
   use ErrorMSG,  only: raiseError, raiseWarning
   use CastProcs, only: castIntToChar
   implicit none
@@ -45,6 +45,8 @@ module WriterType
       !! Write format for characters.
 
     ! --- Attributes for binary mode --- !
+    integer :: indivBitSize
+      !! Mold value for the record length
     integer :: indivRecl
       !! Record length of each data points.
     integer :: colLen
@@ -171,6 +173,17 @@ contains
 
 
   ! -------------------------------------------------------------------------- !
+  ! FUNCTION: deduceBytePerRecord
+  !>  Deduce the bytes per record in "direct"/binary writing.
+  ! -------------------------------------------------------------------------- !
+  integer function deduceBytePerRecord()
+    integer :: int64recl
+    inquire(iolength=int64recl) 1_int64
+    deduceBytePerRecord = (storage_size(1_int64) / 8) / int64recl
+  end function deduceBytePerRecord
+
+
+  ! -------------------------------------------------------------------------- !
   ! SUBROUTINE: writer_openFile
   !>  Open the file the `Writer_t` object `self` is initialized with.
   ! -------------------------------------------------------------------------- !
@@ -181,7 +194,7 @@ contains
 
     character(len=256) :: openMsg
     integer :: openStat
-    integer :: int32recl, headerLen
+    integer :: int32recl, headerLen, bytePerRecord
     integer :: i
 
     if (self%writeMode == WRITEMODE_READABLE) then
@@ -202,8 +215,11 @@ contains
       )
       if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
 
+      ! Get bytes per record to be able to encode the header in terms of bytes.
+      bytePerRecord = deduceBytePerRecord()
+
       ! Write the header information to the file.
-      write(self%unit, rec=1) int(self%indivRecl, kind=int32)
+      write(self%unit, rec=1) int(self%indivRecl * bytePerRecord, kind=int32)
       write(self%unit, rec=2) int(self%colLen, kind=int32)
       self%currRec = 3
 
@@ -220,7 +236,7 @@ contains
 
       close(self%unit)
 
-      self%currRec = ceiling(real(headerLen / self%recl)) + 1
+      self%currRec = ceiling(real(headerLen) / real(self%recl)) + 1
 
       ! Finally open the file for writing.
       open(  &
