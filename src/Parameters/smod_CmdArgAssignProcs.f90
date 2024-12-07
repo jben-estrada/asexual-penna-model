@@ -666,6 +666,7 @@ contains
     print "(//40x, a)", "NOTES"
     print "(40x, a)",  "-----"
 
+    ! Initial mutation values.
     print "(' - ', 5(a)/, 2x, 2(a)/)",                                       &
       "Negative values for initial mutation count (-",                       &
       cmdArgArr(IDX_INIT_MTTN_COUNT_KV)%cmdName, " or --",                   &
@@ -673,6 +674,7 @@ contains
       " are interpreted as random initial mutation count for each of the ",  &
       "individuals."
 
+    ! Data record flags.
     print "(' - ', *(a))", &
       "Valid flags for time-dependent model parameter (-", &
       cmdArgArr(IDX_TMDP_PARAM_KV)%cmdName, " or --",      &
@@ -688,10 +690,11 @@ contains
       "One can choose only one parameter to vary with time. " //  &
       "The flags are also case-insensitive."
 
+    ! Data record flags.
     print "(' - ', *(a))",                             &
-      "Valid character flags for -",                  &
+      "Valid character values for record flags (-",    &
       cmdArgArr(IDX_RECORD_DATA_KV)%cmdName, " or --", &
-      cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, ":"
+      cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias, "):"
     write(*, "(8(5x, a1, ' - ', a/))", advance="no")               &
       REC_NULL,       "Record nothing.",                           &
       REC_POP,        "Population size per time step",             &
@@ -708,36 +711,67 @@ contains
       "e.g. 'psb' for population size, entropy and bad gene distribution " // &
           "per time."
 
-    print "(' - ', *(a))",                                                &
-      "Valid real values for -", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias, ":"
-    write(*, "(3(5x, a/)/)", advance="no")                   &
+    ! Valid Renyi entropy order values.
+    print "(' - ', *(a))",                               &
+      "Valid real values for Renyi entropy order (-",    &
+      cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdName, " or --", &
+      cmdArgArr(IDX_ENTROPY_ORDER_KV)%cmdAlias, "):"
+    write(*, "(3(5x, a/))", advance="no")                    &
       "NaN/infinity (default) - Normalized Shannon entropy", &
       "1.0                    - Shannon entropy",            &
       "Other reals            - Renyi entropy"
+    print "(3x, a)", ""   ! No additional notes
 
-    print "(' - ', *(a))",                                                &
-      "Valid integer values for -", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias, ":"
+    ! RNG choices.
+    print "(' - ', *(a))",                            &
+      "Valid integer values for RNG choices (-",      &
+      cmdArgArr(IDX_RNG_CHOICE_KV)%cmdName, " or --", &
+      cmdArgArr(IDX_RNG_CHOICE_KV)%cmdAlias, "):"
     print "(5x, i1, ' - ', a/, 10x, a)",               &
       RNG_INTRINSIC, "Intrinsic RNG by the compiler:", &
           "(" // compiler_version() // ")"
     print "(5x, i1, ' - ', a)",  &
       RNG_MERSENNE_TWISTER, "32-bit Mersenne twister PRNG"
+    print "(3x, a)", ""   ! No additional notes
+    
+    ! Output file formats.
+    print "(' - ', *(a))",                          &
+      "Valid string values for output format (-",   &
+      cmdArgArr(IDX_OUT_FMT_KV)%cmdName, " or --",  &
+      cmdArgArr(IDX_OUT_FMT_KV)%cmdAlias, "):"
+    write(*, "(3(5x, a6, ' - ', a/))", advance="no") &
+      OUT_FMT_READABLE, "Human-readable format",     &
+      OUT_FMT_CSV,      "CSV format",                &
+      OUT_FMT_BINARY,   "Binary format"
+    print "( 2(3x, a/), 4(5x, a/), 4(3x, a/))", &
+      "In binary-formatted output files, the initial 16 bytes contain " // &
+        "the header. ",                                                    &
+      "It is divided into 4, 4 bytes each, which represent the following:", &
+        "1. The size of each data points in bytes",         &
+        "2. The number of data points in each row of data", &
+        "3. The type of data the file contains",            &
+        "4. Padding as protection from buffer overwrite",   &
+      "The data proper in the binary-formatted files consists of rows of " // &
+        "data, internally represented as 'records'.",                        &
+      "The size of each rows is obtained by multiplying header " // &
+        "values (1) and (2).",                                      &
+      "The counting of records start from the beginning of the file, " // &
+        "such that the header is within the first record(s)."
 
-    print "(' - ', *(a))",                     &
-      "Formatting for the output file name -", &
-      cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName, &
-      " or --", cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, ":"
+    ! Output file name formatting.
+    print "(' - ', *(a))",                      &
+      "Formatting for the output file name (-", &
+      cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdName,  " or --", &
+      cmdArgArr(IDX_OUT_FILE_PATH_KV)%cmdAlias, "):"
     write(*, "(2(5x, a/))", advance="no")                                      &
       "%[N]n - Data set number for multiple samples.",                         &
       "%[N]f - The record data flag provided by -" //                          &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdName // " or --" //                   &
         cmdArgArr(IDX_RECORD_DATA_KV)%cmdAlias // " option. "
-    print "(3(3x, a/))",                                                 &
-      "N is the number of characters padded to the left of the data " // &
-          "specified by the formatting.",                                &
-      "It is optional and defaults to 0, e.g. %5f and %f are valid. ",   &
+    print "(3(3x, a/))",                                                   &
+      "`N` is the number of characters padded to the left of the data " // &
+          "specified by the formatting.",                                  &
+      "It is optional and defaults to 0, e.g. %5f and %f are valid. ",     &
       "The padding characters are '_' for %f and '0' for %n."
 
     print "(1x, a/)",                                                         &
