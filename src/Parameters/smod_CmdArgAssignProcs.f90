@@ -756,7 +756,8 @@ contains
       "The size of each rows is obtained by multiplying header " // &
         "values (1) and (2).",                                      &
       "The counting of records start from the beginning of the file, " // &
-        "such that the header is within the first record(s)."
+        "such that the header is within the first record(s).", &
+      "All data in this format is little-endian."
 
     ! Output file name formatting.
     print "(' - ', *(a))",                      &
