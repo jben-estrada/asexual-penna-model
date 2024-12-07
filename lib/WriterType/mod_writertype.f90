@@ -94,6 +94,9 @@ module WriterType
   character(len=*), parameter :: FMT_REAL_LEN = "f15.6"
   character(len=*), parameter :: FMT_CHAR_LEN = "a"
 
+  ! Message from IO statements like `open` and `write`.
+  character(len=256) :: iomsg
+
   public :: Writer_t
   public :: init_Writer
   public :: writeIK
@@ -161,11 +164,12 @@ contains
   ! SUBROUTINE: raiseOpenFileError
   !>  Raise an error if the file cannot be opened for writing.
   ! -------------------------------------------------------------------------- !
-  subroutine raiseOpenFileError(filename, iomsg)
+  subroutine raiseOpenFileError(filename, iomsg_lcl)
     character(len=*), intent(in) :: filename
-    character(len=*), intent(in) :: iomsg
+    character(len=*), intent(in) :: iomsg_lcl
     call raiseError(  &
-          "'" // filename // "' cannot be opened for writing. "  // iomsg  &
+          "'" // filename // "' cannot be opened for writing. "  // &
+            trim(iomsg_lcl)                                         &
         )
   end subroutine raiseOpenFileError
 
@@ -190,16 +194,15 @@ contains
       !! `Writer_t` object to be modified.
     integer, optional, intent(in)    :: addHeaderInfo(:)
 
-    character(len=256) :: openMsg
     integer :: openStat
     integer :: int32recl, headerLen, bytePerRecord
     integer :: i
 
     if (self%writeMode == WRITEMODE_READABLE) then
       open(newunit=self%unit, file=self%filename, access="sequential", &
-           action="write", status="replace", iostat=openStat, iomsg=openMsg)
+           action="write", status="replace", iostat=openStat, iomsg=iomsg)
 
-      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
+      if (openStat /= 0) call raiseOpenFileError(self%filename, iomsg)
     else
 
       ! Get the record length of int32
@@ -209,9 +212,9 @@ contains
       open( &
         newunit=self%unit, file=self%filename, access="direct", &
         recl=int32recl, action="write", status="replace",       &
-        iostat=openStat, iomsg=openMsg &
+        iostat=openStat, iomsg=iomsg                            &
       )
-      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
+      if (openStat /= 0) call raiseOpenFileError(self%filename, iomsg)
 
       ! Get bytes per record to be able to encode the header in terms of bytes.
       bytePerRecord = deduceBytePerRecord()
@@ -240,9 +243,9 @@ contains
       open(  &
         newunit=self%unit, file=self%filename, access="direct", &
         recl=self%recl, action="write", status="old",           &
-        iostat=openStat, iomsg=openMsg                          &
+        iostat=openStat, iomsg=iomsg                            &
       )
-      if (openStat /= 0) call raiseOpenFileError(self%filename, openMsg)
+      if (openStat /= 0) call raiseOpenFileError(self%filename, iomsg)
     end if
 
     self%fileOpen = .true.
@@ -264,28 +267,16 @@ contains
   ! SUBROUTINE: raiseWriteError
   !>  Raise an error with message specific for the writer object.
   ! -------------------------------------------------------------------------- !
-  subroutine raiseWriteError(writeObj, writeStat)
-    class(Writer_t), intent(in) :: writeObj
-    integer,         intent(in) :: writeStat
+  subroutine raiseWriteError(writeObj, writemsg_lcl)
+    class(Writer_t),  intent(in) :: writeObj
+      !! `Writer_t` object.
+    character(len=*), intent(in) :: writemsg_lcl
+      !! Additional error message from I/O.
 
     character(len=:), allocatable :: errMsg
-    logical :: hasAddError
 
-    errMsg = "Cannot write to '" // writeObj%filename // &
-             "' with IO status " // castIntToChar(writeStat)
-
-    hasAddError = .false.
-
-    if (.not. writeObj%fileOpen) then
-      errMsg = errMsg // new_line("") // "File not opened. "
-      hasAddError = .true.
-    end if
-
-    if (hasAddError) then
-      errMsg = errMsg // new_line("") // &
-        "(NOTE: Error may be cased by more factors.)"
-    end if
-
+    errMsg = "Cannot write to '" // writeObj%filename // "'. " // &
+        trim(writemsg_lcl)
     call raiseError(errMsg)
   end subroutine raiseWriteError
 
@@ -303,13 +294,15 @@ contains
     integer :: writeStat
 
     if (self%writeMode == WRITEMODE_READABLE) then
-      write(self%unit, self%fmtInt, iostat=writeStat) intScalarData
+      write(self%unit, self%fmtInt, iostat=writeStat, iomsg=ioMsg) &
+        intScalarData
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) intScalarData
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
+        intScalarData
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_intSclr
 
 
@@ -326,13 +319,15 @@ contains
     integer :: writeStat
 
     if (self%writeMode == WRITEMODE_READABLE) then
-      write(self%unit, self%fmtReal, iostat=writeStat) realScalarData
+      write(self%unit, self%fmtReal, iostat=writeStat, iomsg=ioMsg) &
+        realScalarData
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) realScalarData
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
+        realScalarData
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_realSclr
 
 
@@ -349,13 +344,15 @@ contains
     integer :: writeStat
 
     if (self%writeMode == WRITEMODE_READABLE) then
-      write(self%unit, self%fmtChar, iostat=writeStat) charScalarData
+      write(self%unit, self%fmtChar, iostat=writeStat, iomsg=ioMsg) &
+        charScalarData
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) charScalarData
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
+        charScalarData
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_charSclr
 
 
@@ -372,13 +369,15 @@ contains
     integer :: writeStat
 
     if (self%writeMode == WRITEMODE_READABLE) then
-      write(self%unit, self%fmtInt, iostat=writeStat) intArrData
+      write(self%unit, self%fmtInt, iostat=writeStat, iomsg=ioMsg) &
+        intArrData
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) intArrData
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
+        intArrData
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_intArr
 
 
@@ -395,13 +394,15 @@ contains
     integer :: writeStat
 
     if (self%writeMode == WRITEMODE_READABLE) then
-      write(self%unit, self%fmtReal, iostat=writeStat) realArrData
+      write(self%unit, self%fmtReal, iostat=writeStat, iomsg=ioMsg) &
+        realArrData
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) realArrData
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
+        realArrData
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_realArr
 
 
@@ -420,15 +421,15 @@ contains
     
     if (self%writeMode == WRITEMODE_READABLE) then
       ! Write the array data with an implied loop to satisfy check requirements.
-      write(self%unit, self%fmtChar, iostat=writeStat) &
+      write(self%unit, self%fmtChar, iostat=writeStat, iomsg=ioMsg) &
           (charArrData(i), i = lbound(charArrData, 1), ubound(charArrData, 1))
     else
-      write(self%unit, rec=self%currRec, iostat=writeStat) &
+      write(self%unit, rec=self%currRec, iostat=writeStat, iomsg=ioMsg) &
         (charArrData(i), i = lbound(charArrData, 1), ubound(charArrData, 1))
       self%currRec = self%currRec + 1
     end if
 
-    if (writeStat /= 0) call raiseWriteError(self, writeStat)
+    if (writeStat /= 0) call raiseWriteError(self, ioMsg)
   end subroutine writer_write_charArr
 
 
