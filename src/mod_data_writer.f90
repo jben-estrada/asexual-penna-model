@@ -258,9 +258,18 @@ contains
 
 
       case(REC_GENE_DSTRB, REC_AGE_DSTRB)
+        ! Get the starting age of the distributions.
+        if (recordFlag == REC_AGE_DSTRB) then
+          startingAge = 0
+        else
+          startingAge = 1
+        end if
+
         if (setOutputFormat == trim(OUT_FMT_BINARY)) then
+          ! For age distributions, the row size is MODEL_L + 1.
           call initBinaryWriter(  &
-            chosenWriter, saveFilename, recordFlag, intRecordLen, MODEL_L  &
+            chosenWriter, saveFilename, recordFlag, intRecordLen, &
+            MODEL_L - (startingAge - 1)                           &
           )
         else
         recDstrb: block
@@ -269,10 +278,8 @@ contains
           ! Data description.
           if (recordFlag == REC_AGE_DSTRB) then
             call chosenWriter%write("DATA: Age distribution per time step")
-            startingAge = 0  ! Get the starting age of the distribution as well.
           else
             call chosenWriter%write("DATA: Bad gene distribution per time step")
-            startingAge = 1  ! Get the starting age of the distribution as well.
           end if
 
           ! NOTE: For some reason, implicit do loop truncate numbers.
