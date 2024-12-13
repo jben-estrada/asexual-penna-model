@@ -816,21 +816,57 @@ contains
   ! -------------------------------------------------------------------------- !
   subroutine printParams()
     ! Pretty print separator.
-    character(len=*), parameter :: MAJOR_SEPARATOR = repeat("=", 29)
-    character(len=*), parameter :: MINOR_SEPARATOR = repeat(".", 29)
+    character(len=*), parameter :: MAJOR_SEPARATOR = repeat("=", TERM_OUT_WIDTH)
+    character(len=*), parameter :: MINOR_SEPARATOR = repeat(".", TERM_OUT_WIDTH)
 
+    integer, parameter :: FMT_STR_LEN = 8
+    character(len=:), allocatable :: descLenStr     ! Description length
+    character(len=:), allocatable :: valueLenStr    ! Value length
+    character(len=:), allocatable :: descAbsDistStr ! Dist from left to value
+    
+    ! Print formatting for parameter descriptions
+    character(len=FMT_STR_LEN) :: descFmt
+    character(len=FMT_STR_LEN) :: descFmtComplete
+    
+    ! Print formatting for parameter values
+    character(len=FMT_STR_LEN) :: valueIntFmt
+    character(len=FMT_STR_LEN) :: valueRealFmt
+    character(len=FMT_STR_LEN) :: valueCharFmt
+    character(len=FMT_STR_LEN) :: valueCharLineFmt
+
+    character(len=FMT_STR_LEN) :: progNameSpacingStr
+    integer :: progNameSpacing
     integer :: k
 
-    ! ***Header
-    print "(a/, 5x, a/, a)",   &
-        MAJOR_SEPARATOR ,      &
-        "Asexual Penna model", &
+    descLenStr     = castIntToChar(TERM_OUT_DESC_LEN)
+    valueLenStr    = castIntToChar(TERM_OUT_VAL_LEN)
+    descAbsDistStr = castIntToChar(TERM_OUT_DESC_LEN + TERM_OUT_VAL_LEN)
+
+    descFmt = "a" // descLenStr
+    descFmtComplete = "(" // trim(descFmt) // ")"
+
+    valueIntFmt      = "i" // valueLenStr
+    valueRealFmt     = "f" // valueLenStr // ".6"
+    valueCharFmt     = "a" // valueLenStr
+    valueCharLineFmt = "a" // castIntToChar(TERM_OUT_DESC_LEN + TERM_OUT_VAL_LEN)
+
+    progNameSpacing = aint((TERM_OUT_WIDTH - len_trim(PROG_NAME_ALIAS)) / 2.0)
+    if (progNameSpacing > 0) then
+      progNameSpacingStr = castIntToChar(progNameSpacing) // "x, "
+    else
+      progNameSpacingStr = ""
+    end if
+
+    ! === Header === !
+    print "(a/, " // trim(progNameSpacingStr) // "a/, a)", &
+        MAJOR_SEPARATOR , &
+        PROG_NAME_ALIAS,  &
         MAJOR_SEPARATOR
 
-    ! ***Model and program parameters.
+    ! ==== Model and program parameters === !
     if (PROG_PRINT_STATE == VERBOSE_PRINT) then
       ! Penna model parameters.
-      write(*, "(*(a20, i9/))", advance="no")           &
+      write(*, "(*(" // descFmt // "," // valueIntFmt // "/))", advance="no") &
           "Genome length",        MODEL_L,              &
           "Mutation threshold",   MODEL_T,              &
           "Birth rate",           MODEL_B,              &
@@ -843,41 +879,47 @@ contains
       
       ! New features implemented in this Penna model implementation
       print "(a)", MINOR_SEPARATOR
-      write(*, "(a20)", advance="no") "Init mutation count"
+      write(*, descFmtComplete, advance="no") "Init mutation count"
       if (MODEL_MTTN_COUNT == MTTN_COUNT_RANDOM) then
-        print "(a9)", "(random)"
+        print "(" // valueCharFmt // ")", "(random)"
       else
-        print "(i9)", MODEL_MTTN_COUNT
+        print "(" // valueIntFmt // ")", MODEL_MTTN_COUNT
       end if
 
-      write(*, "(a20)", advance="no") "t-dependent param"
+      write(*, descFmtComplete, advance="no") "t-dependent param"
       if (trim(MODEL_TIME_DEPENDENT_PARAM) == TMDP_PARAM_NULL) then  
-        print "(a9)", "(none)"
+        print "(" // valueCharFmt // ")", "(none)"
       else
-        print "(a9)", trim(MODEL_TIME_DEPENDENT_PARAM)
+        print "(" // valueCharFmt // ")", trim(MODEL_TIME_DEPENDENT_PARAM)
       end if
 
-      print "(a20, i9)", "t-dependent param dt", MODEL_TMDP_PARAM_DELTA_T
+      print "(" // descFmt // "," // valueIntFmt // ")", &
+          "t-dependent param dt", MODEL_TMDP_PARAM_DELTA_T
 
       ! Program/Data recording parameters.
       print "(a)", MINOR_SEPARATOR
-      write(*, "(a20, i9)") "Sample size", PROG_SAMPLE_SIZE
-      write(*, "(a20, a)", advance="no") &
-          "Data record flag", repeat(" ", 9 - len(REC_FLAG_ORDER))
+      print "(" // descFmt // "," // valueIntFmt // ")", &
+          "Sample size", PROG_SAMPLE_SIZE
+      write(*, "(" // descFmt // ", a)", advance="no") &
+          "Data record flag", &
+          repeat(" ", TERM_OUT_VAL_LEN - len(REC_FLAG_ORDER))
       do k = 1, len(REC_FLAG_ORDER)
         if (scan(PROG_REC_FLAG, REC_FLAG_ORDER(k:k)) > 0) then
-          write(*, "(a)", advance="no") REC_FLAG_ORDER(k:k)
+          write(*, "(a1)", advance="no") REC_FLAG_ORDER(k:k)
         else
-          write(*, "(a)", advance="no") "-"
+          write(*, "(a1)", advance="no") "-"
         end if
       end do
-      write(*, "(/a20, a9)") "Data format", trim(PROG_OUT_FMT)
+      print "(/" // descFmt // "," // valueCharFmt //")", &
+          "Data format", trim(PROG_OUT_FMT)
       
-      write(*, "(a20)", advance="no") "Renyi entropy order"
+      write(*, descFmtComplete, advance="no") "Renyi entropy order"
       if (isFinite64(MODEL_ENTROPY_ORDER)) then
-        write(*, "(f9.2/)", advance="no") MODEL_ENTROPY_ORDER
+        write(*, "(" // valueRealFmt // "/)", advance="no") &
+            MODEL_ENTROPY_ORDER
       else
-        write(*, "(f9.2/, a29/)", advance="no") 1.0, "(Normalized)"
+        write(*, "(" // valueRealFmt // "/, a" // descAbsDistStr // "/)", &
+              advance="no") 1.0, "(Normalized)"
       end if
 
       print "(a)", MAJOR_SEPARATOR

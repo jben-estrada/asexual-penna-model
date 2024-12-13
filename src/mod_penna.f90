@@ -29,6 +29,7 @@ module Penna
     PROG_RNG_SEED,                 &
     PROG_OUT_FILE_NAME,            &
     PROG_OUT_FMT,                  &
+    TERM_OUT_WIDTH,                &
     REC_NULL,                      &
     REC_POP,                       &
     REC_AGE_DSTRB,                 &
@@ -82,7 +83,7 @@ module Penna
   use CastProcs, only: castIntToChar
   use RandNumProcs, only: assignRNGParams, setSeed
   use ErrorMSG, only: raiseError, raiseWarning
-  use ProgressBarType, only: ProgressBar_t, init_ProgressBar, cursorToLeft
+  use ProgressBarType, only: ProgressBar_t, init_ProgressBar
   implicit none
   private
 
@@ -359,17 +360,33 @@ contains
 
     type(Writer_t), pointer :: timeWriter ! Object for writing the timings.
     type(ProgressBar_t)     :: progBar    ! A progress bar object.
-    logical :: printProgress
-    integer :: i
 
     ! Print separator for pretty printing.
-    character(len=*), parameter :: PRINT_SEPARATOR = repeat("=", 29)
+    character(len=*), parameter :: PRINT_SEPARATOR = repeat("=", TERM_OUT_WIDTH)
+
+    integer, parameter :: T_UNIT_LEN = 2
+    integer, parameter :: T_STR_LEN  = 8
+
+    character(len=T_UNIT_LEN), parameter :: TIMING_UNIT_MS  = "ms"
+    character(len=T_UNIT_LEN), parameter :: TIMING_UNIT_S   = "s "
+    integer, parameter :: TIMING_TIME_DESC_LEN = 20 - (T_UNIT_LEN + 1)
+    integer, parameter :: TIMING_TIME_VAL_LEN  = 10
+
+    character(len=T_STR_LEN) :: timing_desc_fmt
+    character(len=T_STR_LEN) :: timing_val_fmt
+    character(len=T_STR_LEN) :: timing_unit
+    logical :: printProgress
+    integer :: i
 
     ! Shorthand form
     printProgress = PROG_PRINT_STATE /= SILENT_PRINT
 
+    timing_unit = TIMING_UNIT_MS
+    timing_desc_fmt = "a" // castIntToChar(TIMING_TIME_DESC_LEN)
+    timing_val_fmt  = "f" // castIntToChar(TIMING_TIME_VAL_LEN) // ".3"
+
     ! Initialize the progress bar.
-    call init_ProgressBar(progBar, 20, PROG_SAMPLE_SIZE)
+    call init_ProgressBar(progBar, PROG_SAMPLE_SIZE, totalBarLen=TERM_OUT_WIDTH)
 
     ! Set the global inquiry flags for data to be recorded.
     call setWriterInqFlag(trim(PROG_REC_FLAG))
@@ -441,15 +458,27 @@ contains
     if (printProgress) then
       ! Remove the progress bar.
       if (PROG_PRINT_STATE == NORMAL_PRINT) then
-        call cursorToLeft()
+        call progBar % clear()
+      end if
+
+      ! Turn milliseconds to seconds if the elapsed time is too large to read
+      if (meanTime > 0.0) then
+        if (floor(log10(meanTime)) + 1 >= 4) then
+          meanTime   = meanTime / 1000.0   ! From milliseconds to seconds
+          stdDevTime = stdDevTime / 1000.0
+          timing_unit = TIMING_UNIT_S
+        end if
       end if
 
       ! Print elapsed time.
       if (PROG_SAMPLE_SIZE > 1) then
-        print "(/a, f12.3, a)", "Average time: ", meanTime, " ms"
-        print "(a, f11.3, a)", "Std deviation: ", stdDevTime, " ms"
+        print "(/" // timing_desc_fmt // "," // timing_val_fmt // ", x, a2)", &
+            "Average time:", meanTime, timing_unit
+        print "(" // timing_desc_fmt // "," // timing_val_fmt // ", x, a2)",  &
+            "Std deviation:", stdDevTime, timing_unit
       else
-        print "(/a, f12.3, a)", "Elapsed time: ", meanTime, " ms"
+        print "(/" // timing_desc_fmt // "," // timing_val_fmt // ", x, a2)", &
+            "Elapsed time: ", meanTime, timing_unit
       end if
     end if
 

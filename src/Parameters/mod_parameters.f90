@@ -95,9 +95,16 @@ module Parameters
   integer, parameter :: VERSION_PRINT = 3
     !! Flag corresponding to printing of the program version.
 
+  ! Terminal output dimension values
+  integer, parameter :: TERM_OUT_WIDTH    = 30
+  integer, parameter :: TERM_OUT_DESC_LEN = 20
+  integer, parameter :: TERM_OUT_VAL_LEN  = 10
+
   character(len=*), parameter :: PROG_NAME = &
       "Asexual Penna model simulation"
     !! Name of the program
+  character(len=*), parameter :: PROG_NAME_ALIAS = "Asexual Penna model"
+    !! Other name of the program
   character(len=*), parameter :: PROG_DESC = &
       "Asexual Penna model: A computer model for biological aging based " // &
       "on mutation accumulation."
@@ -314,6 +321,9 @@ module Parameters
   public :: VERBOSE_PRINT
   public :: SILENT_PRINT
   public :: VERSION_PRINT
+
+  ! Terminal output dimension
+  public :: TERM_OUT_WIDTH
 
   ! Model parameters.
   public :: MODEL_L
