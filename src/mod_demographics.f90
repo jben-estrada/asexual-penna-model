@@ -400,7 +400,7 @@ contains
   !>  Reset the age distribution.
   ! -------------------------------------------------------------------------- !
   subroutine resetAgeDstrb()
-    if (.not.allocated(ageDistribution)) allocate(ageDistribution(0:MODEL_L))
+    if (.not.allocated(ageDistribution)) allocate(ageDistribution(MODEL_L))
     ageDistribution(:) = 0
   end subroutine resetAgeDstrb
 

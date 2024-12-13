@@ -217,7 +217,6 @@ contains
       !! Directory of the file to be written on.
 
     type(Writer_t), pointer :: chosenWriter
-    integer :: startingAge
     integer :: i
 
     chosenWriter => getWriterPtr(recordFlag)
@@ -258,18 +257,10 @@ contains
 
 
       case(REC_GENE_DSTRB, REC_AGE_DSTRB)
-        ! Get the starting age of the distributions.
-        if (recordFlag == REC_AGE_DSTRB) then
-          startingAge = 0
-        else
-          startingAge = 1
-        end if
-
         if (setOutputFormat == trim(OUT_FMT_BINARY)) then
-          ! For age distributions, the row size is MODEL_L + 1.
           call initBinaryWriter(  &
-            chosenWriter, saveFilename, recordFlag, intRecordLen, &
-            MODEL_L - (startingAge - 1)                           &
+            chosenWriter, saveFilename, recordFlag, &
+            intRecordLen, MODEL_L                   &
           )
         else
         recDstrb: block
@@ -283,8 +274,8 @@ contains
           end if
 
           ! NOTE: For some reason, implicit do loop truncate numbers.
-          allocate(headerArr(startingAge:MODEL_L))
-          do i = startingAge, MODEL_L
+          allocate(headerArr(MODEL_L))
+          do i = 1, MODEL_L
             headerArr(i) = "AGE " // trim(castIntToChar(i))
           end do
 
