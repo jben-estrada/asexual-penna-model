@@ -109,7 +109,7 @@ module Parameters
       "Asexual Penna model: A computer model for biological aging based " // &
       "on mutation accumulation."
     !! Description of the program
-  character(len=*), parameter :: PROG_VERSION = "v2024.12.0"
+  character(len=*), parameter :: PROG_VERSION = "v2024.12.1"
     !! Program version.
     !! This is based on the year and month the program is released.
 
