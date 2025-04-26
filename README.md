@@ -109,21 +109,21 @@ Do note that the parameter values in the custom parameter file effectively becom
 
 Options related to Penna model simulations are summarized in the following table:
 
-| Model parameter name    | Command-line option                      |
-| ----------------------- | ---------------------------------------- | 
-| Birth  rate             | -B *\<int>* &ensp; --birth-rate=*\<int>* |
-| Mutation rate           | -M *\<int>* &ensp; --mttn-rate=*\<int>*  |
-| Mutation threshold      | -T *\<int>* &ensp; --mttn-lim=*\<int>*   |
-| Min. reproduction age   | -r *\<int>* &ensp; --r-age-min=*\<int>*  |
-| Max. reproduction age   | -R *\<int>* &ensp;  --r-age-max=*\<int>* |
-| Initial population size | -p *\<int>* &ensp; --pop-size=*\<int>*   |
-| Max. population size    | -K *\<int>* &ensp; --pop-cap=*\<int>*    |
-| Init. mutations per individual<sup>1</sup>       | -m *\<int>* &ensp; --init-mttn=*\<int>*     |
-| Time-dependent model param.<sup>2</sup>          | -P *\<char>* &ensp; --tmdp-param=*\<char>*  |
-| Time-dependent model param. interval<sup>2</sup> | -Q *\<int>* &ensp; --tmdp-param-dt=*\<int>* |
+| Model parameter name    | Command-line option                          |
+| ----------------------- | -------------------------------------------- | 
+| Birth  rate             | `-B` *\<int>* &ensp; `--birth-rate=`*\<int>* |
+| Mutation rate           | `-M` *\<int>* &ensp; `--mttn-rate=`*\<int>*  |
+| Mutation threshold      | `-T` *\<int>* &ensp; `--mttn-lim=`*\<int>*   |
+| Min. reproduction age   | `-r` *\<int>* &ensp; `--r-age-min=`*\<int>*  |
+| Max. reproduction age   | `-R` *\<int>* &ensp; `--r-age-max=`*\<int>*  |
+| Initial population size | `-p` *\<int>* &ensp; `--pop-size=`*\<int>*   |
+| Max. population size    | `-K` *\<int>* &ensp; `--pop-cap=`*\<int>*    |
+| Init. mutations per individual<sup>1</sup>       | `-m` *\<int>* &ensp;  `--init-mttn=`*\<int>*     |
+| Time-dependent model param.<sup>2</sup>          | `-P` *\<char>* &ensp; `--tmdp-param=`*\<char>*   |
+| Time-dependent model param. interval<sup>2</sup> | `-Q` *\<int>* &ensp;  `--tmdp-param-dt=`*\<int>* |
 
 *Table notes:*
-- *\<int>* stands for an integer, and *\<char>* for a single character.
+- *\<int>* stands for an integer, *\<float>* for a floating point number, *\<char>* for a *single* character, and *\<str>* for a string or a sequence of characters.
 
 - <sup>1</sup> - This is the number of random mutations each individual has at the beginning of a Penna model simulation. If this value is negative, then the number of random mutation is randomized for each individual.
 
@@ -191,9 +191,8 @@ To illustrate what we know so far, here is what you might use:
 ## Assuming you are in the bin/ directory of the program.
 
 ./penna -f ./my-custom-parameters.txt -d psba -s 100 -S 42 -g 1
-# Run the Penna model 100 times with 42 as the starting RNG seed while
-# recording the data corresponding to p, s, b and a.
-# Mersenne Twister is used for the RNG
+# Run the Penna model 100 times with 42 as the starting RNG seed while recording the data corresponding to p, s, b and a.
+# Mersenne Twister is used for the RNG.
 ```
 
 #### C. Formatting the output file
@@ -223,15 +222,15 @@ To illustrate everything discussed here, here is an example:
 
 Listed below is a summary of command-line options relevant to data recording.
 
-| Description             | Command-line options                      |
-| ----------------------- | ----------------------------------------- |
-| Record data             | -d *\<str>* &ensp; --record-data=*\<str>* |
-| Sample size             | -s *\<int>* &ensp; --sample-size=*\<int>* |
-| RNG seed                | -S *\<int>* &ensp; --rng-seed=*\<int>*    |
-| Path to the output file | -o *\<str>* &ensp; --out=*\<str>*         |
-| Data format             | -F *\<str>* &ensp; --out-format=*\<str>*  |
-| Distribution age range from the final time step | -a *\<int>* &ensp; --age-dstrb-time=*\<int>* |
-| Renyi entropy order                             | -O *\<float>* &ensp; --ent-order=*\<float>*  |
+| Description             | Command-line options                          |
+| ----------------------- | --------------------------------------------- |
+| Record data             | `-d` *\<str>* &ensp; `--record-data=`*\<str>* |
+| Sample size             | `-s` *\<int>* &ensp; `--sample-size=`*\<int>* |
+| RNG seed                | `-S` *\<int>* &ensp; `--rng-seed=`*\<int>*    |
+| Path to the output file | `-o` *\<str>* &ensp; `--out=`*\<str>*         |
+| Data format             | `-F` *\<str>* &ensp; `--out-format=`*\<str>*  |
+| Distribution age range from the final time step | `-a` *\<int>* &ensp; `--age-dstrb-time=`*\<int>* |
+| Renyi entropy order                             | `-O` *\<float>* &ensp; `--ent-order=`*\<float>*  |
 
 ### III. More command-line options
 
